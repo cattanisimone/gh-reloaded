@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>GitHub Dependency Graph — Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>GitHub Sub-Issues Dependency Graph</h1>
+      <p class="hint">
+        This extension reads sub-issues and their "blocked by" relationships
+        via the GitHub API to draw a left-to-right dependency graph below the
+        sub-issues list on an issue page. It needs a personal access token to
+        do that.
+      </p>
+      <p class="hint">
+        Use a <strong>fine-grained token</strong>, scoped only to the
+        repositories you actually need, with the
+        <strong>Issues: Read-only</strong> permission — nothing else.
+      </p>
+
+      <label for="token">GitHub token</label>
+      <input id="token" type="password" placeholder="github_pat_..." autocomplete="off" />
+
+      <div class="row">
+        <button id="save">Save</button>
+        <button id="test" class="secondary">Test connection</button>
+        <button id="clear" class="danger">Remove token</button>
+      </div>
+
+      <p id="status" class="status"></p>
+
+      <hr />
+      <p class="hint">
+        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">
+          Create a fine-grained token →
+        </a>
+      </p>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

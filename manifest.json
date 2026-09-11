@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub Sub-Issues Dependency Graph",
+  "version": "0.1.0",
+  "description": "Injects a left-to-right dependency graph below the sub-issues list on GitHub issue pages.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://api.github.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "GitHub Dependency Graph — Settings"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/*/issues/*"],
+      "js": ["content/layout.js", "content/content.js"],
+      "css": ["content/content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

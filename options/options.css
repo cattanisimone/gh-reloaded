@@ -1,0 +1,122 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  padding: 32px;
+  background: #ffffff;
+  color: #1f2328;
+  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+main {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.hint {
+  color: #656d76;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+label {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+input[type="password"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: ui-monospace, monospace;
+}
+
+.row {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #d0d7de;
+  background: #f6f8fa;
+  cursor: pointer;
+  font-size: 13px;
+}
+button:hover {
+  background: #eef1f4;
+}
+button#save {
+  background: #1f883d;
+  border-color: #1a7f37;
+  color: #fff;
+}
+button#save:hover {
+  background: #1a7f37;
+}
+button.danger {
+  color: #cf222e;
+}
+
+.status {
+  margin-top: 12px;
+  font-size: 13px;
+  min-height: 1.2em;
+}
+.status.ok {
+  color: #1a7f37;
+}
+.status.error {
+  color: #cf222e;
+}
+
+hr {
+  margin: 24px 0;
+  border: none;
+  border-top: 1px solid #d0d7de;
+}
+
+a {
+  color: #0969da;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0d1117;
+    color: #e6edf3;
+  }
+  .hint {
+    color: #8b949e;
+  }
+  input[type="password"] {
+    background: #161b22;
+    border-color: #30363d;
+    color: #e6edf3;
+  }
+  button {
+    background: #161b22;
+    border-color: #30363d;
+    color: #e6edf3;
+  }
+  button:hover {
+    background: #1c232b;
+  }
+  hr {
+    border-top-color: #30363d;
+  }
+}
