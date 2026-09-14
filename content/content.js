@@ -216,6 +216,15 @@
     return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
   }
 
+  // A straight/S-curve between two adjacent columns is fine, but across 2+
+  // columns it can cut right across an unrelated card sitting in one of
+  // the columns in between. Route those as a "hump" over the top instead
+  // — attaches to the top-center of both nodes and arcs up into the clear
+  // band layout.js reserves above row 0, staying clear of every column.
+  function arcOverPathD(x1, y1, x2, y2, clearY) {
+    return `M ${x1} ${y1} C ${x1} ${clearY}, ${x2} ${clearY}, ${x2} ${y2}`;
+  }
+
   function renderGraph(body, graph, theme) {
     const { nodes, edges } = graph;
     body.innerHTML = "";
@@ -226,7 +235,7 @@
     }
 
     const { positions, width, height } = window.GHDG_LAYOUT.layout(nodes, edges);
-    const { NODE_W: nodeW, NODE_H: nodeH } = window.GHDG_LAYOUT;
+    const { NODE_W: nodeW, NODE_H: nodeH, COL_GAP: colGap, ARC_CLEAR_Y: clearY } = window.GHDG_LAYOUT;
     const externalIds = new Set(nodes.filter((n) => n.external).map((n) => n.id));
 
     const scroll = document.createElement("div");
@@ -258,10 +267,13 @@
       const to = positions.get(e.to);
       if (!from || !to) continue;
       const isExternal = externalIds.has(e.from) || externalIds.has(e.to);
+      const colsApart = Math.round((to.x - from.x) / (nodeW + colGap));
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
       path.setAttribute(
         "d",
-        edgePathD(from.x + nodeW, from.y + nodeH / 2, to.x, to.y + nodeH / 2)
+        colsApart >= 2
+          ? arcOverPathD(from.x + nodeW / 2, from.y, to.x + nodeW / 2, to.y, clearY)
+          : edgePathD(from.x + nodeW, from.y + nodeH / 2, to.x, to.y + nodeH / 2)
       );
       path.setAttribute(
         "class",

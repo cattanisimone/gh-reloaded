@@ -16,6 +16,12 @@
   const COL_GAP = 64;
   const ROW_GAP = 18;
   const PADDING = 24;
+  // Extra clear space above row 0, reserved for edges that skip 2+ columns
+  // — those arc up and over instead of cutting across whatever card sits
+  // in an intermediate column (see content.js). ARC_CLEAR_Y is where that
+  // arc's apex sits; it must stay comfortably above PADDING + TOP_EXTRA.
+  const TOP_EXTRA = 24;
+  const ARC_CLEAR_Y = 10;
 
   // Column assignment: a two-pass "as-early / as-late" scheme rather than
   // pure longest-path-from-source.
@@ -105,16 +111,16 @@
       col.forEach((n, i) => {
         positions.set(n.id, {
           x: PADDING + c * (NODE_W + COL_GAP),
-          y: PADDING + i * (NODE_H + ROW_GAP),
+          y: PADDING + TOP_EXTRA + i * (NODE_H + ROW_GAP),
         });
       });
     }
 
     const width = PADDING * 2 + (maxCol + 1) * NODE_W + maxCol * COL_GAP;
-    const height = PADDING * 2 + maxRows * NODE_H + Math.max(0, maxRows - 1) * ROW_GAP;
+    const height = PADDING * 2 + TOP_EXTRA + maxRows * NODE_H + Math.max(0, maxRows - 1) * ROW_GAP;
 
     return { positions, width, height };
   }
 
-  global.GHDG_LAYOUT = { layout, NODE_W, NODE_H };
+  global.GHDG_LAYOUT = { layout, NODE_W, NODE_H, COL_GAP, ARC_CLEAR_Y };
 })(window);
