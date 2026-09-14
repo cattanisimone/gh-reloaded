@@ -83,11 +83,8 @@
   background: #d0d7de;
   transition: background 0.15s;
 }
-/* Same gray the "backward" (correct-order) arrows use below — the
-   switch's "on" color intentionally matches that, not an unrelated
-   accent color. */
 #ghbd-toggle[aria-checked="true"] .ghbd-switch-track {
-  background: #57606a;
+  background: #bc4c00;
 }
 
 #ghbd-toggle .ghbd-switch-knob {
@@ -113,6 +110,6 @@
     background: #30363d;
   }
   #ghbd-toggle[aria-checked="true"] .ghbd-switch-track {
-    background: #8b949e;
+    background: #db6d28;
   }
 }
