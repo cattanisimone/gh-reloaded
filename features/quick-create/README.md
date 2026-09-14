@@ -2,6 +2,10 @@
 
 A button (or stack of buttons) on every GitHub Projects page, sitting in the project's own top bar between its last two button groups (Insights/Workflows, and Project details/"..."), each linking straight to "new issue" for a repo you've configured — handy when the repo you actually file work into isn't the one the board itself lives in (e.g. a triage board that spans several repos, or a board where requests go to a different tracker entirely). Falls back to a floating button if that top bar can't be found.
 
+![Quick-create button mockup](../../screenshots/quick-create.svg)
+
+_Mockup illustrating the layout and colors — not a literal screenshot._
+
 ## Configuring it
 
 Settings → **Quick-create shortcuts**. Each shortcut is:

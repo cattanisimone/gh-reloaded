@@ -4,6 +4,10 @@ On a GitHub Projects **Board** (kanban) view, stretches the board to the full wi
 
 On by default (unlike Board dependency arrows, which is opt-in). No in-page control — this is a layout default you either want or don't, toggled once from Settings, not something to flip per session.
 
+![Full-width board mockup](../../screenshots/full-width-board.svg)
+
+_Mockup illustrating the layout — not a literal screenshot._
+
 ## What it does
 
 - Detects a Board view the same way Board dependency arrows does (the selected view tab's own icon), and while enabled:

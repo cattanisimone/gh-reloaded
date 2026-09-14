@@ -7,7 +7,7 @@
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-4285F4.svg">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.4.0-orange.svg">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.4.1-orange.svg">
   <a href="CONTRIBUTING.md"><img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
 </p>
 
@@ -47,9 +47,13 @@ Back in the extension's Settings page: paste the token, **Save**, then **Test co
 
 ## Features
 
+_Screenshots below are mockups illustrating each feature's layout and colors (matched to the extension's actual dark-theme CSS) — not literal captures of a live GitHub page._
+
 ### Dependency graph — [features/dependency-graph](features/dependency-graph)
 
 On a GitHub issue page (or a Projects board's issue-preview side panel) that has sub-issues, injects a left-to-right dependency graph below the sub-issues list.
+
+![Dependency graph mockup: a left-to-right graph of sub-issue cards below a "Sub-issues" heading, with the longest chain highlighted in orange as the critical path and dimmed dashed cards for dependencies outside the sub-issue set](screenshots/dependency-graph.svg)
 
 - Fetches the issue's direct sub-issues, their "blocked by" / "blocking" relationships, Projects v2 Status, and the org-level Team / Business Value / Effort custom fields (when available).
 - Lays the graph out left → right, colored by each card's real board status, with dependencies outside the sub-issue set shown as dimmed, dashed "external" nodes.
@@ -59,13 +63,19 @@ On a GitHub issue page (or a Projects board's issue-preview side panel) that has
 
 A small floating button (or stack of buttons) on a GitHub Projects board view, each linking straight to "new issue" for a repo you configure in Settings — handy when the repo you actually file work into isn't the one the board itself lives in. Fully user-defined (label, URL, color, and an optional "only on this board" project match); nothing is preset.
 
+![Quick-create button mockup: a project's top bar with two colored "+ New Bug" and "+ New Request" buttons inserted between the native Insights/Workflows icons and the project details button](screenshots/quick-create.svg)
+
 ### Board dependency arrows — [features/board-dependencies](features/board-dependencies)
 
 On a GitHub Projects **Board** (kanban) view, draws an arrow directly between any two currently-visible cards where one blocks the other — red if the blocker is behind the card it blocks, gray otherwise — no need to open either issue to see the dependency. Off by default; a switch next to the view tabs (shown only while a Board view is selected) turns it on, and the choice is remembered (also switchable from Settings).
 
+![Board dependency arrows mockup: a four-column kanban board with a red arrow from a Backlog card to an In Review card (blocker behind) and a gray arrow from a Done card to an In Progress card (blocker resolved)](screenshots/board-dependencies.svg)
+
 ### Full-width board — [features/full-width-board](features/full-width-board)
 
 On a GitHub Projects **Board** (kanban) view, stretches the board to the full window width instead of the page's normal centered column — more room for columns before they need to scroll horizontally. On by default; switchable from Settings.
+
+![Full-width board mockup: before/after comparison of a kanban board squeezed into a centered padded column with a horizontal scrollbar, versus the same board stretched edge-to-edge with wider columns and no scrollbar](screenshots/full-width-board.svg)
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 

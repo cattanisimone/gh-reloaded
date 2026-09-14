@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 z" fill="#6e7681"/>
+    </marker>
+    <marker id="arrow-crit" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 z" fill="#db6d28"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="460" fill="#0d1117"/>
+
+  <!-- fake issue-page context above the injected panel -->
+  <text x="24" y="34" fill="#e6edf3" font-size="16" font-weight="600">Sub-issues</text>
+  <text x="1176" y="34" fill="#8b949e" font-size="13" text-anchor="end">2 of 4</text>
+  <rect x="24" y="46" width="1152" height="1" fill="#21262d"/>
+
+  <!-- injected panel: #ghdg-root -->
+  <rect x="16" y="66" width="1168" height="374" rx="8" fill="#0d1117" stroke="#30363d"/>
+  <line x1="16" y1="112" x2="1184" y2="112" stroke="#30363d"/>
+  <text x="32" y="95" fill="#8b949e" font-size="11" font-weight="700" letter-spacing="0.6">DEPENDENCY GRAPH</text>
+
+  <rect x="748" y="82" width="216" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
+  <text x="762" y="98" fill="#e6edf3" font-size="11">Pull toward dependents ▾</text>
+  <rect x="976" y="82" width="176" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
+  <text x="990" y="98" fill="#e6edf3" font-size="11">Show external ▾</text>
+
+  <!-- edges (drawn first, under nodes) -->
+  <path d="M208,292 C244,292 244,212 280,212" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.75" marker-end="url(#arrow)"/>
+  <path d="M448,212 L520,212" fill="none" stroke="#db6d28" stroke-width="2.5" marker-end="url(#arrow-crit)"/>
+  <path d="M448,372 C484,372 484,212 520,212" fill="none" stroke="#6e7681" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M688,212 L760,260" fill="none" stroke="#db6d28" stroke-width="2.5" marker-end="url(#arrow-crit)"/>
+  <path d="M688,372 C724,372 724,292 760,292" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.75" marker-end="url(#arrow)"/>
+
+  <!-- N1: external, dimmed, dashed -->
+  <g>
+    <rect x="40" y="260" width="168" height="64" rx="6" fill="#12161c" stroke="#30363d" stroke-dasharray="4 3"/>
+    <circle cx="55" cy="276" r="3.5" fill="#8b949e"/>
+    <text x="64" y="280" fill="#8b949e" font-size="10" font-weight="600">#118</text>
+    <text x="52" y="298" fill="#8b949e" font-size="11">Auth service</text>
+    <text x="52" y="312" fill="#8b949e" font-size="11">rework</text>
+  </g>
+
+  <!-- N2: open -->
+  <g>
+    <rect x="280" y="180" width="168" height="64" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="295" cy="196" r="3.5" fill="#3fb950"/>
+    <text x="304" y="200" fill="#8b949e" font-size="10" font-weight="600">#142</text>
+    <rect x="424" y="188" width="18" height="14" rx="3" fill="#0d1117" fill-opacity="0.7" stroke="#ffffff" stroke-opacity="0.13"/>
+    <text x="433" y="198" fill="#e6edf3" font-size="9" font-weight="700" text-anchor="middle">5</text>
+    <text x="292" y="216" fill="#e6edf3" font-size="11">Add OAuth callback</text>
+    <text x="292" y="230" fill="#e6edf3" font-size="11">route</text>
+    <rect x="292" y="236" width="60" height="14" rx="3" fill="#0d1117" fill-opacity="0.7" stroke="#ffffff" stroke-opacity="0.13"/>
+    <text x="322" y="246" fill="#8b949e" font-size="9" text-anchor="middle">Platform</text>
+  </g>
+
+  <!-- N3: closed -->
+  <g>
+    <rect x="280" y="340" width="168" height="64" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="295" cy="356" r="3.5" fill="#a371f7"/>
+    <text x="304" y="360" fill="#8b949e" font-size="10" font-weight="600">#139</text>
+    <rect x="424" y="348" width="18" height="14" rx="3" fill="#0d1117" fill-opacity="0.7" stroke="#ffffff" stroke-opacity="0.13"/>
+    <text x="433" y="358" fill="#8b949e" font-size="9" font-weight="700" text-anchor="middle">3</text>
+    <text x="292" y="376" fill="#8b949e" font-size="11">Write token refresh</text>
+    <text x="292" y="390" fill="#8b949e" font-size="11">tests</text>
+  </g>
+
+  <!-- N4: critical, open -->
+  <g>
+    <rect x="518" y="178" width="172" height="68" rx="7" fill="none" stroke="#db6d28" stroke-width="2"/>
+    <rect x="520" y="180" width="168" height="64" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="535" cy="196" r="3.5" fill="#3fb950"/>
+    <text x="544" y="200" fill="#8b949e" font-size="10" font-weight="600">#151</text>
+    <rect x="664" y="188" width="18" height="14" rx="3" fill="#0d1117" fill-opacity="0.7" stroke="#ffffff" stroke-opacity="0.13"/>
+    <text x="673" y="198" fill="#e6edf3" font-size="9" font-weight="700" text-anchor="middle">8</text>
+    <text x="532" y="216" fill="#e6edf3" font-size="11">Wire login UI to</text>
+    <text x="532" y="230" fill="#e6edf3" font-size="11">new auth flow</text>
+    <rect x="532" y="236" width="60" height="14" rx="3" fill="#0d1117" fill-opacity="0.7" stroke="#ffffff" stroke-opacity="0.13"/>
+    <text x="562" y="246" fill="#8b949e" font-size="9" text-anchor="middle">Platform</text>
+  </g>
+
+  <!-- N5: external, dimmed, dashed -->
+  <g>
+    <rect x="520" y="340" width="168" height="64" rx="6" fill="#12161c" stroke="#30363d" stroke-dasharray="4 3"/>
+    <circle cx="535" cy="356" r="3.5" fill="#8b949e"/>
+    <text x="544" y="360" fill="#8b949e" font-size="10" font-weight="600">#204</text>
+    <text x="532" y="378" fill="#8b949e" font-size="11">Update mobile app</text>
+  </g>
+
+  <!-- N6: critical, open -->
+  <g>
+    <rect x="758" y="258" width="172" height="68" rx="7" fill="none" stroke="#db6d28" stroke-width="2"/>
+    <rect x="760" y="260" width="168" height="64" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="775" cy="276" r="3.5" fill="#3fb950"/>
+    <text x="784" y="280" fill="#8b949e" font-size="10" font-weight="600">#158</text>
+    <rect x="904" y="268" width="18" height="14" rx="3" fill="#0d1117" fill-opacity="0.7" stroke="#ffffff" stroke-opacity="0.13"/>
+    <text x="913" y="278" fill="#e6edf3" font-size="9" font-weight="700" text-anchor="middle">2</text>
+    <text x="772" y="296" fill="#e6edf3" font-size="11">Ship auth v2</text>
+    <text x="772" y="310" fill="#e6edf3" font-size="11">behind flag</text>
+  </g>
+
+  <!-- legend -->
+  <g font-size="11" fill="#8b949e">
+    <rect x="990" y="298" width="14" height="3" fill="#db6d28"/>
+    <text x="1010" y="303">critical path</text>
+    <rect x="990" y="318" width="14" height="0" stroke="#6e7681" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <line x1="990" y1="318" x2="1004" y2="318" stroke="#6e7681" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <text x="1010" y="322">external dep.</text>
+  </g>
+</svg>

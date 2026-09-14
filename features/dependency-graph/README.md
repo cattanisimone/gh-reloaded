@@ -2,6 +2,10 @@
 
 Injects a left-to-right dependency graph below the "Sub-issues" section on a GitHub issue page, and inside a GitHub Projects board's issue-preview side panel.
 
+![Dependency graph mockup](../../screenshots/dependency-graph.svg)
+
+_Mockup illustrating the layout and colors — not a literal screenshot._
+
 ## What it does
 
 - Fetches the issue's direct sub-issues (REST), and for each one its "blocked by" / "blocking" relationships ([Issue Dependencies](https://github.blog/changelog/2025-08-21-dependencies-on-issues/), REST), Projects v2 Status (GraphQL), and the org-level Team / Business Value / Effort custom fields (REST), when available.

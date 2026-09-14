@@ -4,6 +4,10 @@ On a GitHub Projects **Board** (kanban) view, draws an arrow directly between an
 
 Off by default. A switch next to the view tabs — shown only while the selected view is actually a Board, since an arrow between two points doesn't mean much anywhere else — turns it on/off, and the choice is remembered (and can also be flipped from Settings).
 
+![Board dependency arrows mockup](../../screenshots/board-dependencies.svg)
+
+_Mockup illustrating the layout and colors — not a literal screenshot._
+
 ## What it does
 
 - Finds every issue/PR link currently in the DOM — card discovery itself is layout-agnostic (just "any issue/PR link on the page right now"), but the switch that turns the feature on only appears on a Board view, detected from the selected view tab's own icon.
