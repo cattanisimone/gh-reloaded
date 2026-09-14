@@ -15,58 +15,82 @@
 
 #ghbd-root .ghbd-edge {
   fill: none;
-  stroke: #bc4c00;
+  stroke: #57606a;
   stroke-width: 2;
   opacity: 0.85;
 }
+#ghbd-root .ghbd-edge.is-reversed {
+  stroke: #cf222e;
+}
 
 #ghbd-root .ghbd-arrowhead {
-  fill: #bc4c00;
+  fill: #57606a;
+}
+#ghbd-root .ghbd-arrowhead-reversed {
+  fill: #cf222e;
 }
 
 @media (prefers-color-scheme: dark) {
   #ghbd-root .ghbd-edge {
-    stroke: #db6d28;
+    stroke: #8b949e;
+  }
+  #ghbd-root .ghbd-edge.is-reversed {
+    stroke: #e5534b;
   }
   #ghbd-root .ghbd-arrowhead {
-    fill: #db6d28;
+    fill: #8b949e;
+  }
+  #ghbd-root .ghbd-arrowhead-reversed {
+    fill: #e5534b;
   }
 }
 
+/* Mounted inline in the view tabs bar's own trailing controls, next to
+   the "view options" button — sized and spaced to sit comfortably among
+   icon-sized siblings there, not as a separate floating pill. */
 #ghbd-toggle {
-  position: fixed;
-  top: 12px;
-  right: 20px;
-  z-index: 2147483647;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid #d0d7de;
-  background: #f6f8fa;
-  color: #656d76;
-  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  background: none;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
-#ghbd-toggle:hover {
-  filter: brightness(0.97);
+
+#ghbd-toggle .ghbd-switch-track {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  background: #d0d7de;
+  transition: background 0.15s;
 }
-#ghbd-toggle.is-on {
-  border-color: #bc4c00;
-  background: #fff1e5;
-  color: #bc4c00;
+#ghbd-toggle[aria-checked="true"] .ghbd-switch-track {
+  background: #1f883d;
+}
+
+#ghbd-toggle .ghbd-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s;
+}
+#ghbd-toggle[aria-checked="true"] .ghbd-switch-knob {
+  transform: translateX(14px);
 }
 
 @media (prefers-color-scheme: dark) {
-  #ghbd-toggle {
-    border-color: #30363d;
-    background: #161b22;
-    color: #8b949e;
+  #ghbd-toggle .ghbd-switch-track {
+    background: #30363d;
   }
-  #ghbd-toggle.is-on {
-    border-color: #db6d28;
-    background: rgba(219, 109, 40, 0.15);
-    color: #db6d28;
+  #ghbd-toggle[aria-checked="true"] .ghbd-switch-track {
+    background: #238636;
   }
 }

@@ -61,7 +61,7 @@ A small floating button (or stack of buttons) on a GitHub Projects board view, e
 
 ### Board dependency arrows — [features/board-dependencies](features/board-dependencies)
 
-On a GitHub Projects board, draws an arrow directly between any two currently-visible cards where one blocks the other — no need to open either issue to see the dependency. Off by default; a toggle in the top-right corner of the page turns it on, and the choice is remembered (also switchable from Settings).
+On a GitHub Projects **Board** (kanban) view, draws an arrow directly between any two currently-visible cards where one blocks the other — red if the blocker is behind the card it blocks, gray otherwise — no need to open either issue to see the dependency. Off by default; a switch next to the view tabs (shown only while a Board view is selected) turns it on, and the choice is remembered (also switchable from Settings).
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
