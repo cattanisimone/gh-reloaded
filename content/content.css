@@ -21,7 +21,7 @@
   --ghdg-node-hover: #eef1f4;
   --ghdg-external-bg: rgba(110, 119, 129, 0.06);
   --ghdg-chip-bg: rgba(255, 255, 255, 0.85);
-  --ghdg-critical: #cf222e;
+  --ghdg-critical: #bc4c00;
 }
 
 #ghdg-root[data-theme="dark"] {
@@ -36,7 +36,7 @@
   --ghdg-node-hover: #1c232b;
   --ghdg-external-bg: rgba(139, 148, 158, 0.08);
   --ghdg-chip-bg: rgba(13, 17, 23, 0.7);
-  --ghdg-critical: #f85149;
+  --ghdg-critical: #db6d28;
 }
 
 #ghdg-root .ghdg-header {
@@ -189,7 +189,10 @@
   font-size: 10px;
   font-weight: 700;
   color: var(--ghdg-muted);
-  padding-left: 4px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--ghdg-chip-bg);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 #ghdg-root .ghdg-node-title {
@@ -234,8 +237,7 @@
   display: none;
 }
 #ghdg-root .ghdg-node.has-status .ghdg-node-num,
-#ghdg-root .ghdg-node.has-status .ghdg-node-title,
-#ghdg-root .ghdg-node.has-status .ghdg-node-effort {
+#ghdg-root .ghdg-node.has-status .ghdg-node-title {
   color: rgba(255, 255, 255, 0.92);
 }
 

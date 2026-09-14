@@ -383,9 +383,12 @@
 
       const header = container.querySelector(".ghdg-header");
       if (header) {
+        const { criticalPathEffort: eff, criticalPathLength: len } = resp.graph;
         header.textContent =
-          resp.graph.criticalPathEffort > 0
-            ? `Dependency graph · Critical path effort: ${resp.graph.criticalPathEffort}`
+          len > 1
+            ? eff > 0
+              ? `Dependency graph · Critical path effort: ${eff} (${len} steps)`
+              : `Dependency graph · Critical path: ${len} steps`
             : "Dependency graph";
       }
     });

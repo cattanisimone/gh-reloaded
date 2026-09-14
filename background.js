@@ -151,46 +151,89 @@ function externalKey(owner, repo, num) {
   return `${owner}/${repo}#${num}`;
 }
 
+function isDoneStatus(status) {
+  return !!status && /\bdone\b/i.test(status.name || "");
+}
+
 /**
  * Longest path by total "Effort", restricted to internal nodes/edges only
  * (external dependencies aren't part of this feature's own estimate).
- * Missing effort is treated as 0, so the path degrades to "most hops" when
- * effort isn't set anywhere rather than failing outright.
+ *
+ * "Done" sub-issues are ignored entirely — completed work shouldn't show
+ * up in a path meant to highlight what's left. Rather than just zeroing
+ * their effort, they're removed from the graph and their predecessors are
+ * bridged directly to their successors, so the path skips transparently
+ * over finished work instead of stopping there or routing through it.
+ *
+ * Missing effort is treated as 0; at equal (or all-zero) total effort, the
+ * longer chain wins the tie-break, so the path still degrades to "most
+ * hops" when effort isn't set anywhere rather than picking arbitrarily.
  */
 function computeCriticalPath(internalNodes, edges) {
+  const nodeById = new Map(internalNodes.map((n) => [n.id, n]));
   const ids = new Set(internalNodes.map((n) => n.id));
-  const effortOf = new Map(internalNodes.map((n) => [n.id, Number(n.effort) || 0]));
-  const incoming = new Map(internalNodes.map((n) => [n.id, []]));
+  const isDone = (id) => isDoneStatus(nodeById.get(id)?.status);
+
+  const rawIncoming = new Map(internalNodes.map((n) => [n.id, []]));
   for (const e of edges) {
-    if (ids.has(e.from) && ids.has(e.to)) incoming.get(e.to).push(e.from);
+    if (ids.has(e.from) && ids.has(e.to)) rawIncoming.get(e.to).push(e.from);
   }
 
-  const best = new Map(); // id -> { total, prev }
+  const ancestorMemo = new Map();
+  function activeAncestorsOf(id) {
+    if (ancestorMemo.has(id)) return ancestorMemo.get(id);
+    const result = new Set();
+    ancestorMemo.set(id, result); // set early — cycle guard
+    for (const p of rawIncoming.get(id) || []) {
+      if (isDone(p)) {
+        for (const pp of activeAncestorsOf(p)) result.add(pp);
+      } else {
+        result.add(p);
+      }
+    }
+    return result;
+  }
+
+  const activeNodes = internalNodes.filter((n) => !isDone(n.id));
+  const incoming = new Map(activeNodes.map((n) => [n.id, Array.from(activeAncestorsOf(n.id))]));
+  const effortOf = new Map(activeNodes.map((n) => [n.id, Number(n.effort) || 0]));
+
+  const best = new Map(); // id -> { total, hops, prev }
   const visiting = new Set();
   function bestOf(id) {
     if (best.has(id)) return best.get(id);
-    if (visiting.has(id)) return { total: effortOf.get(id) || 0, prev: null }; // cycle guard
+    if (visiting.has(id)) return { total: effortOf.get(id) || 0, hops: 1, prev: null }; // cycle guard
     visiting.add(id);
     const own = effortOf.get(id) || 0;
-    let result = { total: own, prev: null };
+    let result = { total: own, hops: 1, prev: null };
     for (const p of incoming.get(id) || []) {
       const pBest = bestOf(p);
-      if (pBest.total + own > result.total) result = { total: pBest.total + own, prev: p };
+      const candTotal = pBest.total + own;
+      const candHops = pBest.hops + 1;
+      if (candTotal > result.total || (candTotal === result.total && candHops > result.hops)) {
+        result = { total: candTotal, hops: candHops, prev: p };
+      }
     }
     visiting.delete(id);
     best.set(id, result);
     return result;
   }
-  for (const n of internalNodes) bestOf(n.id);
+  for (const n of activeNodes) bestOf(n.id);
 
   let endId = null;
-  let endTotal = -Infinity;
-  for (const n of internalNodes) {
+  let endBest = { total: -Infinity, hops: 0 };
+  for (const n of activeNodes) {
     const b = best.get(n.id);
-    if (b.total > endTotal) {
-      endTotal = b.total;
+    if (b.total > endBest.total || (b.total === endBest.total && b.hops > endBest.hops)) {
+      endBest = b;
       endId = n.id;
     }
+  }
+
+  // A single, edge-less node "winning" by default isn't a real critical
+  // path — don't highlight anything in that case.
+  if (!activeNodes.length || endBest.hops <= 1) {
+    return { pathIds: new Set(), pathEdges: new Set(), totalEffort: 0, length: 0 };
   }
 
   const pathIds = new Set();
@@ -199,11 +242,11 @@ function computeCriticalPath(internalNodes, edges) {
     pathIds.add(cur);
     const prev = best.get(cur).prev;
     if (prev == null) break;
-    pathEdges.add(`${prev}->${cur}`);
+    pathEdges.add(`${prev}->${cur}`); // may be a bridged (non-literal) edge when it skips a Done node
     cur = prev;
   }
 
-  return { pathIds, pathEdges, totalEffort: internalNodes.length ? Math.max(0, endTotal) : 0 };
+  return { pathIds, pathEdges, totalEffort: Math.max(0, endBest.total), length: endBest.hops };
 }
 
 /**
@@ -307,7 +350,12 @@ async function fetchDependencyGraph({ owner, repo, issueNumber }) {
     critical: critical.pathEdges.has(`${e.from}->${e.to}`),
   }));
 
-  return { nodes, edges: markedEdges, criticalPathEffort: critical.totalEffort };
+  return {
+    nodes,
+    edges: markedEdges,
+    criticalPathEffort: critical.totalEffort,
+    criticalPathLength: critical.length,
+  };
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
