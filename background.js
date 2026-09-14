@@ -206,14 +206,26 @@ function transitiveReduce(ids, edgeList) {
  * their successors, so the path skips transparently over finished work
  * instead of stopping there or routing through it.
  *
- * Missing effort is treated as 0; at equal (or all-zero) total effort, the
- * longer chain wins the tie-break, so the path still degrades to "most
- * hops" when effort isn't set anywhere rather than picking arbitrarily.
+ * An unestimated sub-issue doesn't count as 0 effort — that would
+ * artificially shrink the critical path just because someone hasn't sized
+ * a story yet. It's assumed to cost the median of whatever IS estimated
+ * elsewhere in this same feature instead. With nothing estimated anywhere,
+ * that median is 0 and the path degrades to "most hops", as before.
  */
+function median(values) {
+  if (!values.length) return 0;
+  const sorted = values.slice().sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
 function computeCriticalPath(internalNodes, edges) {
   const nodeById = new Map(internalNodes.map((n) => [n.id, n]));
   const ids = new Set(internalNodes.map((n) => n.id));
   const isDone = (id) => nodeById.get(id)?.state === "closed";
+  const assumedEffort = median(
+    internalNodes.filter((n) => n.effort != null).map((n) => Number(n.effort))
+  );
 
   const rawIncoming = new Map(internalNodes.map((n) => [n.id, []]));
   for (const e of edges) {
@@ -237,7 +249,9 @@ function computeCriticalPath(internalNodes, edges) {
 
   const activeNodes = internalNodes.filter((n) => !isDone(n.id));
   const incoming = new Map(activeNodes.map((n) => [n.id, Array.from(activeAncestorsOf(n.id))]));
-  const effortOf = new Map(activeNodes.map((n) => [n.id, Number(n.effort) || 0]));
+  const effortOf = new Map(
+    activeNodes.map((n) => [n.id, n.effort != null ? Number(n.effort) : assumedEffort])
+  );
 
   const best = new Map(); // id -> { total, hops, prev }
   const visiting = new Set();
