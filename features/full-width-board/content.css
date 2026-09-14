@@ -19,13 +19,19 @@ body.ghfw-active [class*="Board-module__boardContainer"] {
    columnCount × each column's own configured width — sized to always
    fit every column at full width regardless of how much room the
    page actually gives it. That's what keeps the horizontal scrollbar
-   alive even inside an already-full-width outer box. Zero it out and
-   let each column become a flexible (shrinkable) flex item instead of
-   a fixed-width one. */
+   alive even inside an already-full-width outer box. Zeroing that
+   min-width out removes the forced-large floor, but on its own just
+   lets the row shrink to whatever its children's own minimums add up
+   to — it needs an explicit width to actually EXPAND and use the
+   room `boardContainer` now has, which is what lets each column's
+   flex-grow below have real extra space to fill instead of sitting
+   at its bare minimum. */
+body.ghfw-active [class*="Board-module__boardView"],
 body.ghfw-active [class*="Board-module__horizontalGroupAreaContainer"],
 body.ghfw-active [class*="Board-module__horizontalGroupContainer"],
 body.ghfw-active [class*="Board-module__horizontalGroupHeader"] {
   min-width: 0 !important;
+  width: 100% !important;
 }
 
 body.ghfw-active [class*="column-frame-module__Box__"] {
