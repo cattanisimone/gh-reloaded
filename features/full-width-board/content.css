@@ -9,8 +9,8 @@ body.ghfw-active [class*="Board-module__boardContainer"] {
   max-width: 100vw !important;
   margin-left: calc(50% - 50vw) !important;
   margin-right: calc(50% - 50vw) !important;
-  padding-left: 24px !important;
-  padding-right: 24px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
   box-sizing: border-box !important;
 }
 
