@@ -4,30 +4,31 @@
 
 (function () {
   const ROOT_ID = "ghdg-root";
-  const DONE_PURPLE = { light: "#8250df", dark: "#a371f7" };
 
-  // GitHub Primer-ish palette for ProjectV2 single-select field colors
-  // (Status, Business Value, ...). Colors come back as e.g. "BLUE"/"blue"
-  // depending on the API (GraphQL vs REST) — always upper-cased before lookup.
+  // Approximating the actual pastel pill colors GitHub's own Projects board
+  // renders for each single-select option color, not the punchier Primer
+  // "text" scale (which reads fine as text but is too loud as a fill).
+  // Colors come back as e.g. "BLUE"/"blue" depending on the API (GraphQL vs
+  // REST) — always upper-cased before lookup.
   const STATUS_PALETTE = {
     light: {
-      GRAY: { fg: "#6e7781", bg: "rgba(110,119,129,.10)" },
-      BLUE: { fg: "#0969da", bg: "rgba(9,105,218,.10)" },
-      GREEN: { fg: "#1a7f37", bg: "rgba(26,127,55,.10)" },
-      YELLOW: { fg: "#9a6700", bg: "rgba(154,103,0,.12)" },
-      ORANGE: { fg: "#bc4c00", bg: "rgba(188,76,0,.10)" },
-      RED: { fg: "#cf222e", bg: "rgba(207,34,46,.10)" },
-      PINK: { fg: "#bf3989", bg: "rgba(191,57,137,.10)" },
-      PURPLE: { fg: "#8250df", bg: "rgba(130,80,223,.10)" },
+      GRAY: { fg: "#6e7781", bg: "#eef0f2" },
+      BLUE: { fg: "#1f6feb", bg: "#ddf4ff" },
+      GREEN: { fg: "#2da44e", bg: "#dafbe1" },
+      YELLOW: { fg: "#d4a72c", bg: "#fff8c5" },
+      ORANGE: { fg: "#e16f24", bg: "#fff1e5" },
+      RED: { fg: "#d1242f", bg: "#ffebe9" },
+      PINK: { fg: "#c66eaf", bg: "#ffeff7" },
+      PURPLE: { fg: "#8250df", bg: "#fbefff" },
     },
     dark: {
-      GRAY: { fg: "#848d97", bg: "rgba(132,141,151,.16)" },
+      GRAY: { fg: "#9198a1", bg: "rgba(145,152,161,.16)" },
       BLUE: { fg: "#4493f8", bg: "rgba(68,147,248,.16)" },
-      GREEN: { fg: "#3fb950", bg: "rgba(63,185,80,.16)" },
-      YELLOW: { fg: "#d4a72c", bg: "rgba(212,167,44,.18)" },
-      ORANGE: { fg: "#db6d28", bg: "rgba(219,109,40,.16)" },
-      RED: { fg: "#f85149", bg: "rgba(248,81,73,.16)" },
-      PINK: { fg: "#db61a2", bg: "rgba(219,97,162,.16)" },
+      GREEN: { fg: "#57ab5a", bg: "rgba(87,171,90,.16)" },
+      YELLOW: { fg: "#daaa3f", bg: "rgba(218,170,63,.18)" },
+      ORANGE: { fg: "#e0823d", bg: "rgba(224,130,61,.16)" },
+      RED: { fg: "#e5534b", bg: "rgba(229,83,75,.16)" },
+      PINK: { fg: "#e078b3", bg: "rgba(224,120,179,.16)" },
       PURPLE: { fg: "#a371f7", bg: "rgba(163,113,247,.16)" },
     },
   };
@@ -39,6 +40,35 @@
 
   function isDoneStatus(status) {
     return !!status && /\bdone\b/i.test(status.name || "");
+  }
+
+  // Shared between internal and external cards so status reads identically
+  // either way. "Done" is a deliberate exception — it's always rendered as
+  // the purple entry regardless of the option's actual configured color —
+  // but otherwise gets the exact same soft tint as any other status, not a
+  // separate heavier treatment (that read as too saturated).
+  function statusStyle(node, theme) {
+    const done = isDoneStatus(node.status);
+    const statusName = node.status && node.status.name;
+    const closed = node.state === "closed";
+    const cls = [];
+    let style = "";
+    let dotStyle = "";
+
+    if (done) {
+      cls.push("is-done");
+      const p = paletteFor("PURPLE", theme);
+      style = `background:${p.bg}; border-color:${p.fg};`;
+      dotStyle = `background:${p.fg};`;
+    } else if (statusName) {
+      const p = paletteFor(node.status.color, theme);
+      style = `background:${p.bg}; border-color:${p.fg};`;
+      dotStyle = `background:${p.fg};`;
+    } else {
+      dotStyle = closed ? "background:var(--ghdg-closed);" : "background:var(--ghdg-open);";
+    }
+
+    return { cls, style, dotStyle, statusName, closed };
   }
 
   function debounce(fn, ms) {
@@ -137,33 +167,13 @@
 
   function internalNodeHtml(node, x, y, theme) {
     const { NODE_W: w, NODE_H: h } = window.GHDG_LAYOUT;
-    const closed = node.state === "closed";
-    const done = isDoneStatus(node.status);
     const title = escapeHtml(node.title || "");
-    const statusName = node.status && node.status.name;
     const bv = node.businessValue; // { value, color } | null
+    const s = statusStyle(node, theme);
 
-    const cls = ["ghdg-node", "is-internal", closed ? "is-closed" : "is-open"];
+    const cls = ["ghdg-node", "is-internal", s.closed ? "is-closed" : "is-open", ...s.cls];
     if (node.critical) cls.push("is-critical");
-    let style = `left:${x}px; top:${y}px; width:${w}px; height:${h}px;`;
-    let dotStyle = "";
-
-    // Status gets a soft tinted fill (background + border in the field's
-    // color) rather than a fully saturated one — reads clearly without
-    // being loud, especially for a heavy color like plain gray. "Done" is
-    // the deliberate exception: always a solid purple fill, regardless of
-    // the option's actual configured color.
-    if (done) {
-      cls.push("is-done");
-      const solid = DONE_PURPLE[theme] || DONE_PURPLE.light;
-      style += `background:${solid}; border-color:${solid};`;
-    } else if (statusName) {
-      const p = paletteFor(node.status.color, theme);
-      style += `background:${p.bg}; border-color:${p.fg};`;
-      dotStyle = `background:${p.fg};`;
-    } else {
-      dotStyle = closed ? "background:var(--ghdg-closed);" : "background:var(--ghdg-open);";
-    }
+    const style = `left:${x}px; top:${y}px; width:${w}px; height:${h}px; ${s.style}`;
 
     const bvHtml = bv
       ? `<span class="ghdg-node-bv" style="color:${paletteFor(bv.color, theme).fg}">${escapeHtml(bv.value)}</span>`
@@ -172,7 +182,7 @@
       node.effort != null ? `<span class="ghdg-node-effort" title="Effort: ${node.effort}">${escapeHtml(node.effort)} pts</span>` : "";
 
     const titleAttr = escapeHtml(
-      `#${node.number} ${node.title || ""}${statusName ? ` — ${statusName}` : ""}${
+      `#${node.number} ${node.title || ""}${s.statusName ? ` — ${s.statusName}` : ""}${
         node.effort != null ? ` — Effort: ${node.effort}` : ""
       }${node.critical ? " — on critical path" : ""}`
     );
@@ -181,7 +191,7 @@
       <div class="${cls.join(" ")}" title="${titleAttr}" style="${style}">
         ${linkIconHtml(node.url, `Open #${node.number}`)}
         <span class="ghdg-node-top">
-          <span class="ghdg-node-dot" style="${dotStyle}"></span>
+          <span class="ghdg-node-dot" style="${s.dotStyle}"></span>
           <span class="ghdg-node-num">#${node.number}</span>
           ${effortHtml}
         </span>
@@ -190,20 +200,26 @@
       </div>`;
   }
 
-  function externalNodeHtml(node, x, y) {
+  function externalNodeHtml(node, x, y, theme) {
     const { NODE_W: w, NODE_H: h } = window.GHDG_LAYOUT;
     const title = escapeHtml(node.title || "");
     const label = `${escapeHtml(node.owner)}/${escapeHtml(node.repo)}#${node.number}`;
     const teamHtml = node.team
       ? `<span class="ghdg-node-team">${escapeHtml(node.team)}</span>`
       : "";
-    const titleAttr = escapeHtml(`${node.owner}/${node.repo}#${node.number} ${node.title || ""}`);
+    const s = statusStyle(node, theme);
+    const cls = ["ghdg-node", "is-external", ...s.cls];
+    const style = `left:${x}px; top:${y}px; width:${w}px; height:${h}px; ${s.style}`;
+
+    const titleAttr = escapeHtml(
+      `${node.owner}/${node.repo}#${node.number} ${node.title || ""}${s.statusName ? ` — ${s.statusName}` : ""}`
+    );
 
     return `
-      <div class="ghdg-node is-external" title="${titleAttr}"
-           style="left:${x}px; top:${y}px; width:${w}px; height:${h}px;">
+      <div class="${cls.join(" ")}" title="${titleAttr}" style="${style}">
         ${linkIconHtml(node.url, `Open ${node.owner}/${node.repo}#${node.number}`)}
         <span class="ghdg-node-top">
+          <span class="ghdg-node-dot" style="${s.dotStyle}"></span>
           <span class="ghdg-node-num">${label}</span>
         </span>
         <span class="ghdg-node-title">${title}</span>
@@ -289,13 +305,29 @@
     nodesLayer.innerHTML = nodes
       .map((n) => {
         const p = positions.get(n.id);
-        return n.external ? externalNodeHtml(n, p.x, p.y) : internalNodeHtml(n, p.x, p.y, theme);
+        return n.external ? externalNodeHtml(n, p.x, p.y, theme) : internalNodeHtml(n, p.x, p.y, theme);
       })
       .join("");
     stage.appendChild(nodesLayer);
 
     scroll.appendChild(stage);
     body.appendChild(scroll);
+  }
+
+  // "full": everything. "open": drop external nodes that aren't actually
+  // active anymore (closed, or status Done) — a resolved dependency isn't
+  // blocking (or blocked) in any way that still matters. "off": internal
+  // sub-issues only.
+  function applyDependencyMode(graph, mode) {
+    if (mode === "full") return graph;
+    const nodes = graph.nodes.filter((n) => {
+      if (!n.external) return true;
+      if (mode === "off") return false;
+      return n.state !== "closed" && !isDoneStatus(n.status);
+    });
+    const ids = new Set(nodes.map((n) => n.id));
+    const edges = graph.edges.filter((e) => ids.has(e.from) && ids.has(e.to));
+    return { ...graph, nodes, edges };
   }
 
   function renderStatus(body, kind, text) {
@@ -357,18 +389,40 @@
 
     document.getElementById(ROOT_ID)?.remove(); // clear any leftover from a previous attempt
 
+    const { ghdgDepMode } = await chrome.storage.local.get("ghdgDepMode");
+    const initialMode = ghdgDepMode || "full";
+
+    // The URL may have changed again while we were waiting on storage too.
+    if (parseIssueUrl()?.issueNumber !== info.issueNumber) return;
+
     const theme = githubTheme();
     const container = document.createElement("div");
     container.id = ROOT_ID;
     container.className = "ghdg-root";
     container.dataset.theme = theme;
     container.innerHTML =
-      '<div class="ghdg-header">Dependency graph</div>' +
+      '<div class="ghdg-header">' +
+      '<span class="ghdg-header-title">Dependency graph</span>' +
+      '<select class="ghdg-mode-select" title="External dependencies">' +
+      '<option value="full">Full dependencies</option>' +
+      '<option value="open">Open dependencies only</option>' +
+      '<option value="off">Hide external dependencies</option>' +
+      "</select>" +
+      "</div>" +
       '<div class="ghdg-body"><div class="ghdg-status">Loading dependency graph…</div></div>';
     anchor.insertAdjacentElement("afterend", container);
 
     const body = container.querySelector(".ghdg-body");
+    const headerTitle = container.querySelector(".ghdg-header-title");
+    const modeSelect = container.querySelector(".ghdg-mode-select");
+    modeSelect.value = initialMode;
     state = { key, phase: "done" };
+
+    let lastGraph = null;
+    modeSelect.addEventListener("change", () => {
+      chrome.storage.local.set({ ghdgDepMode: modeSelect.value });
+      if (lastGraph) renderGraph(body, applyDependencyMode(lastGraph, modeSelect.value), theme);
+    });
 
     chrome.runtime.sendMessage({ type: "GHDG_FETCH_GRAPH", payload: info }, (resp) => {
       if (chrome.runtime.lastError) {
@@ -393,12 +447,12 @@
         return;
       }
 
-      renderGraph(body, resp.graph, theme);
+      lastGraph = resp.graph;
+      renderGraph(body, applyDependencyMode(lastGraph, modeSelect.value), theme);
 
-      const header = container.querySelector(".ghdg-header");
-      if (header) {
+      if (headerTitle) {
         const { criticalPathEffort: eff, criticalPathLength: len } = resp.graph;
-        header.textContent =
+        headerTitle.textContent =
           len > 1
             ? eff > 0
               ? `Dependency graph · Critical path effort: ${eff} (${len} steps)`

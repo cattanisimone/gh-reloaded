@@ -19,7 +19,7 @@
   --ghdg-edge: #8c959f;
   --ghdg-node-bg: #f6f8fa;
   --ghdg-node-hover: #eef1f4;
-  --ghdg-external-bg: rgba(110, 119, 129, 0.06);
+  --ghdg-external-bg: rgba(110, 119, 129, 0.16);
   --ghdg-chip-bg: rgba(255, 255, 255, 0.85);
   --ghdg-critical: #bc4c00;
 }
@@ -34,19 +34,40 @@
   --ghdg-edge: #6e7681;
   --ghdg-node-bg: #161b22;
   --ghdg-node-hover: #1c232b;
-  --ghdg-external-bg: rgba(139, 148, 158, 0.08);
+  --ghdg-external-bg: rgba(139, 148, 158, 0.2);
   --ghdg-chip-bg: rgba(13, 17, 23, 0.7);
   --ghdg-critical: #db6d28;
 }
 
 #ghdg-root .ghdg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 8px 12px;
-  font-weight: 600;
   border-bottom: 1px solid var(--ghdg-border);
+}
+
+#ghdg-root .ghdg-header-title {
+  font-weight: 600;
   color: var(--ghdg-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ghdg-root .ghdg-mode-select {
+  flex: 0 0 auto;
+  font-size: 11px;
+  padding: 2px 6px;
+  border: 1px solid var(--ghdg-border);
+  border-radius: 5px;
+  background: var(--ghdg-node-bg);
+  color: var(--ghdg-text);
+  cursor: pointer;
 }
 
 #ghdg-root .ghdg-status {
@@ -151,12 +172,6 @@
   opacity: 1;
   background: rgba(0, 0, 0, 0.08);
 }
-#ghdg-root .ghdg-node.is-done .ghdg-node-link {
-  color: rgba(255, 255, 255, 0.85);
-}
-#ghdg-root .ghdg-node.is-done .ghdg-node-link:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
 
 #ghdg-root .ghdg-node-top {
   display: flex;
@@ -226,16 +241,6 @@
 }
 #ghdg-root .ghdg-node-team {
   color: var(--ghdg-muted);
-}
-
-/* "Done" is the one status rendered as a solid fill (not a soft tint), so
-   it alone needs the dot hidden and light text forced for contrast. */
-#ghdg-root .ghdg-node.is-done .ghdg-node-dot {
-  display: none;
-}
-#ghdg-root .ghdg-node.is-done .ghdg-node-num,
-#ghdg-root .ghdg-node.is-done .ghdg-node-title {
-  color: rgba(255, 255, 255, 0.92);
 }
 
 #ghdg-root .ghdg-node.is-external {

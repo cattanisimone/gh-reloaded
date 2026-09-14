@@ -377,8 +377,11 @@ async function fetchDependencyGraph({ owner, repo, issueNumber }) {
     ),
     Promise.all(
       Array.from(externalByKey.values()).map(async (n) => {
-        const fields = await safeFields(n.owner, n.repo, n.number);
-        return { ...n, team: fields["Team"]?.value || null };
+        const [fields, status] = await Promise.all([
+          safeFields(n.owner, n.repo, n.number),
+          safeStatus(n.owner, n.repo, n.number),
+        ]);
+        return { ...n, team: fields["Team"]?.value || null, status };
       })
     ),
   ]);
