@@ -1,0 +1,41 @@
+options/options.js
+  s_fd2c10d007ff79::t_397bffbfc1fb2d 159-181,184-190,193-195,198
+features/board-dependencies/content.css
+  s_fd2c10d007ff79::t_b3c0f782ae151b 54-55
+options/options.css
+  s_fd2c10d007ff79::t_19e126308e79c5 91,100-110
+  s_fd2c10d007ff79::t_140aaeb8d052e3 213-214,217-218
+  s_fd2c10d007ff79::t_ab157bfa76ce6b 18-22
+  s_fd2c10d007ff79::t_54197baac87d05 111
+  s_fd2c10d007ff79::t_653f9e14ce157b 219
+options/options.html
+  s_fd2c10d007ff79::t_97a7a5778bec68 10,16-33
+  s_fd2c10d007ff79::t_7916c539c179fd 89-90
+  s_fd2c10d007ff79::t_ed03c170e48489 34-36
+features/quick-create/content.js
+  s_fd2c10d007ff79::t_9ab36d088de368 62-71,73-77
+  s_fd2c10d007ff79::t_be9d87a5572808 148
+  s_fd2c10d007ff79::t_1a720a36383a51 121-128
+features/board-dependencies/content.js
+  s_fd2c10d007ff79::t_441fc2f50bf392 196
+  s_fd2c10d007ff79::t_6824c5d2798f9b 19-24
+features/dependency-graph/content.js
+  s_fd2c10d007ff79::t_ad8ea866be073b 507-510
+  s_fd2c10d007ff79::t_78515bc4be03df 364-369
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "d9b4bf5f5c00cf769bd2fecf688daa4eaa08a6a4",
+  "prompts": {},
+  "sessions": {
+    "s_fd2c10d007ff79": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e4273577-c876-4b7e-a90a-48b02da7d75a",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
