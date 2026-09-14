@@ -91,6 +91,18 @@ A push to `main` that bumps `manifest.json`'s `"version"` field is packaged and 
 
 A push that doesn't change the version is a no-op for this workflow — the Chrome Web Store refuses to re-accept a version it already has, so re-submitting unchanged would just fail every time.
 
+### Requiring a version bump on every PR
+
+[`.github/workflows/require-version-bump.yml`](.github/workflows/require-version-bump.yml) runs on every pull request into `main` and fails if `manifest.json`'s `"version"` isn't strictly higher than what's currently on `main` — so a feature branch needs its version bump before opening (or before merging) a PR.
+
+By itself this only shows as a pass/fail check on the PR; to actually block the merge button, mark it **required**:
+
+1. Repo → **Settings → Branches** (or **Rules → Rulesets**) → add/edit a protection rule for `main`.
+2. Enable **Require status checks to pass before merging**.
+3. Add **`Require Version Bump / check-version`** to the required list (it only appears in the picker after the workflow has run at least once on a PR).
+
+This repo's own settings aren't something this workflow file can change — it needs to be turned on by a repo admin from the GitHub UI (or via the API) the same way any other required check would be.
+
 ### One-time store setup
 
 The API can only update an *existing* Chrome Web Store listing — the first submission has to happen by hand:
