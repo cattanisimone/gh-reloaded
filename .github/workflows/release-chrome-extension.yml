@@ -1,0 +1,95 @@
+name: Release Chrome Extension
+
+# Runs on every push to main, but only actually packages/publishes a release
+# when manifest.json's "version" field changed in that push — the Chrome Web
+# Store rejects re-uploading a package with a version it already has, so
+# pushing without a version bump would just fail every time otherwise.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "manifest.json"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect version bump
+        id: version
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          current=$(jq -r '.version' manifest.json)
+          previous=""
+          if [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE_SHA" 2>/dev/null; then
+            previous=$(git show "$BEFORE_SHA:manifest.json" 2>/dev/null | jq -r '.version // empty' || true)
+          fi
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          if [ "$current" != "$previous" ]; then
+            echo "bumped=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "bumped=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip (no version bump)
+        if: steps.version.outputs.bumped != 'true'
+        run: echo "manifest.json version is unchanged (${{ steps.version.outputs.current }}) — nothing to release."
+
+      - name: Package extension
+        if: steps.version.outputs.bumped == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          zip -r "dist/gh-reloaded-${{ steps.version.outputs.current }}.zip" \
+            manifest.json background.js background features icons lib options \
+            -x "*.DS_Store"
+
+      - name: Check Chrome Web Store credentials
+        if: steps.version.outputs.bumped == 'true'
+        id: creds
+        env:
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: |
+          if [ -n "$CHROME_EXTENSION_ID" ] && [ -n "$CHROME_PUBLISHER_ID" ] && [ -n "$CHROME_CLIENT_ID" ] && [ -n "$CHROME_CLIENT_SECRET" ] && [ -n "$CHROME_REFRESH_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Chrome Web Store secrets are not fully configured — packaged a GitHub Release only, skipped the store upload. See README's 'Releasing' section."
+          fi
+
+      # Requires the extension to already exist on the Chrome Web Store
+      # (first submission has to go through the Developer Dashboard by hand —
+      # Google doesn't let the API create a brand-new listing). See README.
+      - name: Upload & publish to Chrome Web Store
+        if: steps.version.outputs.bumped == 'true' && steps.creds.outputs.configured == 'true'
+        uses: mnao305/chrome-extension-upload@v7.0.0
+        with:
+          file-path: dist/gh-reloaded-${{ steps.version.outputs.current }}.zip
+          extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+          publisher-id: ${{ secrets.CHROME_PUBLISHER_ID }}
+          client-id: ${{ secrets.CHROME_CLIENT_ID }}
+          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          publish: true
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.bumped == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.current }}
+          name: v${{ steps.version.outputs.current }}
+          files: dist/gh-reloaded-${{ steps.version.outputs.current }}.zip
+          generate_release_notes: true

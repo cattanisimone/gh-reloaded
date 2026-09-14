@@ -1,0 +1,66 @@
+name: Require Version Bump
+
+# A status check for PRs targeting main: fails unless manifest.json's
+# "version" is strictly higher than what's currently on main. On its own
+# this only reports pass/fail on the PR — to actually BLOCK merging, add
+# "Require Version Bump / check-version" as a required status check in the
+# repo's branch protection settings for main (see README's "Releasing"
+# section). Kept separate from release-chrome-extension.yml, which is the
+# workflow that actually ships the bumped version once the PR lands.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  check-version:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+
+      - name: Fetch base branch
+        run: |
+          git fetch origin "${{ github.event.pull_request.base.ref }}":"refs/remotes/origin/${{ github.event.pull_request.base.ref }}" --depth=1
+
+      - name: Compare manifest.json version to base
+        shell: bash
+        run: |
+          set -euo pipefail
+          head_version=$(jq -r '.version' manifest.json)
+          base_version=$(git show "origin/${{ github.event.pull_request.base.ref }}:manifest.json" | jq -r '.version')
+          echo "base (${{ github.event.pull_request.base.ref }}): $base_version — head (this PR): $head_version"
+
+          for v in "$head_version" "$base_version"; do
+            if ! [[ "$v" =~ ^[0-9]+(\.[0-9]+){0,3}$ ]]; then
+              echo "::error file=manifest.json::Could not parse \"$v\" as a dot-separated version number."
+              exit 1
+            fi
+          done
+
+          version_gt() {
+            local IFS=.
+            local -a a=($1) b=($2)
+            local len=${#a[@]}
+            ((${#b[@]} > len)) && len=${#b[@]}
+            for ((i = 0; i < len; i++)); do
+              local ai=${a[i]:-0} bi=${b[i]:-0}
+              ((10#$ai > 10#$bi)) && return 0
+              ((10#$ai < 10#$bi)) && return 1
+            done
+            return 1
+          }
+
+          if ! version_gt "$head_version" "$base_version"; then
+            echo "::error file=manifest.json::\"version\" ($head_version) must be bumped past main's current $base_version before this PR can merge — the release workflow ships whatever version lands on main, and the Chrome Web Store rejects re-uploading a version it already has."
+            exit 1
+          fi
+
+          echo "OK: version bump $base_version -> $head_version"
