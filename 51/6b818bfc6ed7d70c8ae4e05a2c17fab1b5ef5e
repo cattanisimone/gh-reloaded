@@ -1,0 +1,19 @@
+features/board-dependencies/content.js
+  s_fd2c10d007ff79::t_f4eb3cc4a5b716 70,72-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "516b818bfc6ed7d70c8ae4e05a2c17fab1b5ef5e",
+  "prompts": {},
+  "sessions": {
+    "s_fd2c10d007ff79": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e4273577-c876-4b7e-a90a-48b02da7d75a",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
