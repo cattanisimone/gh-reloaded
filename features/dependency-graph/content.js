@@ -5,6 +5,19 @@
 (function () {
   const ROOT_ID = "ghdg-root";
 
+  // Reloading/updating the extension while this content script is still
+  // running on an already-open tab orphans it: chrome.* calls start
+  // throwing "Extension context invalidated" instead of doing anything.
+  // There's nothing useful to do at that point except stop trying — the
+  // tab needs a real reload to get a fresh, working instance.
+  function extensionAlive() {
+    try {
+      return !!(chrome.runtime && chrome.runtime.id);
+    } catch {
+      return false;
+    }
+  }
+
   // Approximating the actual pastel pill colors GitHub's own Projects board
   // renders for each single-select option color, not the punchier Primer
   // "text" scale (which reads fine as text but is too loud as a fill).
@@ -347,6 +360,7 @@
   let state = { key: null, phase: "idle" }; // phase: 'idle' | 'pending' | 'done'
 
   async function init() {
+    if (!extensionAlive()) return;
     const info = parseIssueUrl();
     const key = info ? `${info.owner}/${info.repo}#${info.issueNumber}` : null;
 
@@ -485,7 +499,11 @@
   document.addEventListener("pjax:end", debouncedInit);
 
   let lastUrl = location.href;
-  setInterval(() => {
+  const pollId = setInterval(() => {
+    if (!extensionAlive()) {
+      clearInterval(pollId);
+      return;
+    }
     if (location.href !== lastUrl) {
       lastUrl = location.href;
       debouncedInit();

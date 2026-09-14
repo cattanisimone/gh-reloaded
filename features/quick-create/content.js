@@ -9,6 +9,19 @@
 (function () {
   const ROOT_ID = "ghqc-root";
 
+  // Reloading/updating the extension while this content script is still
+  // running on an already-open tab orphans it: chrome.* calls start
+  // throwing "Extension context invalidated" instead of doing anything.
+  // There's nothing useful to do at that point except stop trying — the
+  // tab needs a real reload to get a fresh, working instance.
+  function extensionAlive() {
+    try {
+      return !!(chrome.runtime && chrome.runtime.id);
+    } catch {
+      return false;
+    }
+  }
+
   // "owner/number" for the project the current page is on, or null if
   // we're not on a Projects board view at all.
   function currentProjectKey() {
@@ -93,6 +106,7 @@
   }
 
   async function load() {
+    if (!extensionAlive()) return;
     const { quickCreateShortcuts } = await chrome.storage.local.get("quickCreateShortcuts");
     render((quickCreateShortcuts || []).filter((s) => s && s.url));
   }
@@ -101,7 +115,11 @@
   // change without a full page load) and whenever Settings are edited
   // while a board tab is open.
   let lastUrl = location.href;
-  setInterval(() => {
+  const pollId = setInterval(() => {
+    if (!extensionAlive()) {
+      clearInterval(pollId);
+      return;
+    }
     if (location.href !== lastUrl) {
       lastUrl = location.href;
       load();
@@ -109,7 +127,7 @@
   }, 800);
 
   chrome.storage.onChanged.addListener((changes) => {
-    if (changes.quickCreateShortcuts) load();
+    if (extensionAlive() && changes.quickCreateShortcuts) load();
   });
 
   load();
