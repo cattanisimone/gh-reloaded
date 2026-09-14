@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="130" viewBox="0 0 1200 130" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+  <rect x="0" y="0" width="1200" height="130" fill="#0d1117"/>
+  <rect x="0" y="0" width="1200" height="64" fill="#0d1117"/>
+  <line x1="0" y1="64" x2="1200" y2="64" stroke="#21262d"/>
+
+  <!-- project title -->
+  <text x="24" y="27" fill="#8b949e" font-size="11">acme-corp</text>
+  <text x="24" y="46" fill="#e6edf3" font-size="16" font-weight="600">Team Roadmap</text>
+
+  <!-- native: Insights / Workflows icon buttons -->
+  <rect x="772" y="16" width="32" height="32" rx="6" fill="none" stroke="#30363d"/>
+  <g stroke="#8b949e" stroke-width="1.6" stroke-linecap="round">
+    <line x1="782" y1="38" x2="782" y2="28"/>
+    <line x1="788" y1="38" x2="788" y2="24"/>
+    <line x1="794" y1="38" x2="794" y2="32"/>
+  </g>
+  <rect x="812" y="16" width="32" height="32" rx="6" fill="none" stroke="#30363d"/>
+  <g fill="#8b949e">
+    <circle cx="822" cy="32" r="2.2"/>
+    <circle cx="828" cy="32" r="2.2"/>
+    <circle cx="834" cy="32" r="2.2"/>
+  </g>
+
+  <line x1="864" y1="12" x2="864" y2="52" stroke="#21262d"/>
+
+  <!-- injected: quick-create shortcuts -->
+  <g>
+    <rect x="884" y="16" width="104" height="32" rx="6" fill="#cf222e"/>
+    <text x="900" y="36" fill="#ffffff" font-size="12" font-weight="600">+</text>
+    <text x="912" y="36" fill="#ffffff" font-size="12" font-weight="600">New Bug</text>
+  </g>
+  <g>
+    <rect x="996" y="16" width="132" height="32" rx="6" fill="#1f6feb"/>
+    <text x="1012" y="36" fill="#ffffff" font-size="12" font-weight="600">+</text>
+    <text x="1024" y="36" fill="#ffffff" font-size="12" font-weight="600">New Request</text>
+  </g>
+
+  <!-- native: project details kebab -->
+  <circle cx="1160" cy="32" r="16" fill="none" stroke="#30363d"/>
+  <g fill="#8b949e">
+    <circle cx="1154" cy="32" r="1.6"/>
+    <circle cx="1160" cy="32" r="1.6"/>
+    <circle cx="1166" cy="32" r="1.6"/>
+  </g>
+
+  <!-- callout -->
+  <line x1="990" y1="66" x2="990" y2="80" stroke="#db6d28" stroke-dasharray="3 2"/>
+  <text x="990" y="96" fill="#db6d28" font-size="12" text-anchor="middle">quick-create shortcuts — added by GH Reloaded</text>
+</svg>

@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="bd-arrow-red" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 z" fill="#e5534b"/>
+    </marker>
+    <marker id="bd-arrow-gray" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 z" fill="#8b949e"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="600" fill="#0d1117"/>
+
+  <!-- view tabs -->
+  <text x="61" y="38" fill="#e6edf3" font-size="14" font-weight="600">Board</text>
+  <rect x="61" y="48" width="42" height="2" fill="#db6d28"/>
+  <text x="127" y="38" fill="#8b949e" font-size="14">Table</text>
+  <text x="185" y="38" fill="#8b949e" font-size="14">Roadmap</text>
+  <line x1="0" y1="62" x2="1200" y2="62" stroke="#21262d"/>
+
+  <!-- dependency-arrows toggle (feature UI) -->
+  <text x="1080" y="34" fill="#8b949e" font-size="12" text-anchor="end">Show dependencies</text>
+  <rect x="1094" y="17" width="34" height="20" rx="10" fill="#db6d28"/>
+  <circle cx="1118" cy="27" r="7" fill="#ffffff"/>
+
+  <!-- column dividers -->
+  <line x1="324" y1="80" x2="324" y2="560" stroke="#21262d"/>
+  <line x1="600" y1="80" x2="600" y2="560" stroke="#21262d"/>
+  <line x1="876" y1="80" x2="876" y2="560" stroke="#21262d"/>
+
+  <!-- column headers -->
+  <g font-size="13" font-weight="600" fill="#e6edf3">
+    <text x="61" y="98">Backlog</text>
+    <text x="337" y="98">In Progress</text>
+    <text x="613" y="98">In Review</text>
+    <text x="889" y="98">Done</text>
+  </g>
+  <g font-size="11" fill="#8b949e">
+    <text x="118" y="98">3</text>
+    <text x="425" y="98">2</text>
+    <text x="690" y="98">2</text>
+    <text x="928" y="98">2</text>
+  </g>
+
+  <!-- ===== arrows (under cards' text but the cards are opaque so draw before cards? draw after column chrome, before card fills would hide under; draw last so they read clearly like the real overlay) ===== -->
+
+  <!-- ===== cards ===== -->
+  <!-- Backlog -->
+  <g>
+    <rect x="69" y="114" width="234" height="76" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="85" cy="132" r="4" fill="#3fb950"/>
+    <text x="95" y="136" fill="#e6edf3" font-size="11" font-weight="600">#88</text>
+    <rect x="233" y="124" width="58" height="16" rx="8" fill="#d29922" fill-opacity="0.15" stroke="#d29922" stroke-opacity="0.4"/>
+    <text x="262" y="135" fill="#d29922" font-size="9" text-anchor="middle">tech-debt</text>
+    <text x="85" y="154" fill="#e6edf3" font-size="12">Refactor auth</text>
+    <text x="85" y="170" fill="#e6edf3" font-size="12">types</text>
+  </g>
+  <g>
+    <rect x="69" y="208" width="234" height="76" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="85" cy="226" r="4" fill="#3fb950"/>
+    <text x="95" y="230" fill="#e6edf3" font-size="11" font-weight="600">#90</text>
+    <rect x="247" y="218" width="44" height="16" rx="8" fill="#1f6feb" fill-opacity="0.15" stroke="#1f6feb" stroke-opacity="0.4"/>
+    <text x="269" y="229" fill="#58a6ff" font-size="9" text-anchor="middle">spike</text>
+    <text x="85" y="248" fill="#e6edf3" font-size="12">Spike: rate</text>
+    <text x="85" y="264" fill="#e6edf3" font-size="12">limiting</text>
+  </g>
+  <g>
+    <rect x="69" y="302" width="234" height="76" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="85" cy="320" r="4" fill="#3fb950"/>
+    <text x="95" y="324" fill="#e6edf3" font-size="11" font-weight="600">#93</text>
+    <rect x="259" y="312" width="32" height="16" rx="8" fill="#e5534b" fill-opacity="0.15" stroke="#e5534b" stroke-opacity="0.4"/>
+    <text x="275" y="323" fill="#ff7b72" font-size="9" text-anchor="middle">bug</text>
+    <text x="85" y="342" fill="#e6edf3" font-size="12">Investigate</text>
+    <text x="85" y="358" fill="#e6edf3" font-size="12">flaky test</text>
+  </g>
+
+  <!-- In Progress -->
+  <g>
+    <rect x="345" y="114" width="234" height="76" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="361" cy="132" r="4" fill="#3fb950"/>
+    <text x="371" y="136" fill="#e6edf3" font-size="11" font-weight="600">#99</text>
+    <rect x="505" y="124" width="50" height="16" rx="8" fill="#a371f7" fill-opacity="0.15" stroke="#a371f7" stroke-opacity="0.4"/>
+    <text x="530" y="135" fill="#d2a8ff" font-size="9" text-anchor="middle">design</text>
+    <text x="361" y="154" fill="#e6edf3" font-size="12">Add empty</text>
+    <text x="361" y="170" fill="#e6edf3" font-size="12">states</text>
+  </g>
+  <g>
+    <rect x="345" y="208" width="234" height="76" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="361" cy="226" r="4" fill="#3fb950"/>
+    <text x="371" y="230" fill="#e6edf3" font-size="11" font-weight="600">#95</text>
+    <rect x="497" y="218" width="58" height="16" rx="8" fill="#3fb950" fill-opacity="0.15" stroke="#3fb950" stroke-opacity="0.4"/>
+    <text x="526" y="229" fill="#7ee787" font-size="9" text-anchor="middle">feature</text>
+    <text x="361" y="248" fill="#e6edf3" font-size="12">Add dashboard</text>
+    <text x="361" y="264" fill="#e6edf3" font-size="12">filters</text>
+  </g>
+
+  <!-- In Review -->
+  <g>
+    <rect x="621" y="114" width="234" height="76" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="637" cy="132" r="4" fill="#3fb950"/>
+    <text x="647" y="136" fill="#e6edf3" font-size="11" font-weight="600">#101</text>
+    <rect x="777" y="124" width="58" height="16" rx="8" fill="#3fb950" fill-opacity="0.15" stroke="#3fb950" stroke-opacity="0.4"/>
+    <text x="806" y="135" fill="#7ee787" font-size="9" text-anchor="middle">feature</text>
+    <text x="637" y="154" fill="#e6edf3" font-size="12">Ship new</text>
+    <text x="637" y="170" fill="#e6edf3" font-size="12">dashboard</text>
+  </g>
+  <g>
+    <rect x="621" y="208" width="234" height="76" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="637" cy="226" r="4" fill="#3fb950"/>
+    <text x="647" y="230" fill="#e6edf3" font-size="11" font-weight="600">#97</text>
+    <rect x="791" y="218" width="44" height="16" rx="8" fill="#d29922" fill-opacity="0.15" stroke="#d29922" stroke-opacity="0.4"/>
+    <text x="813" y="229" fill="#d29922" font-size="9" text-anchor="middle">copy</text>
+    <text x="637" y="248" fill="#e6edf3" font-size="12">Update onboarding</text>
+    <text x="637" y="264" fill="#e6edf3" font-size="12">copy</text>
+  </g>
+
+  <!-- Done (closed) -->
+  <g>
+    <rect x="897" y="114" width="234" height="76" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="913" cy="132" r="4" fill="#a371f7"/>
+    <text x="923" y="136" fill="#8b949e" font-size="11" font-weight="600">#77</text>
+    <rect x="1051" y="124" width="42" height="16" rx="8" fill="#1f6feb" fill-opacity="0.15" stroke="#1f6feb" stroke-opacity="0.4"/>
+    <text x="1072" y="135" fill="#58a6ff" font-size="9" text-anchor="middle">infra</text>
+    <text x="913" y="154" fill="#8b949e" font-size="12">Migrate DB</text>
+    <text x="913" y="170" fill="#8b949e" font-size="12">schema</text>
+  </g>
+  <g>
+    <rect x="897" y="208" width="234" height="76" rx="6" fill="#161b22" stroke="#30363d"/>
+    <circle cx="913" cy="226" r="4" fill="#a371f7"/>
+    <text x="923" y="230" fill="#8b949e" font-size="11" font-weight="600">#80</text>
+    <rect x="1039" y="218" width="54" height="16" rx="8" fill="#8b949e" fill-opacity="0.15" stroke="#8b949e" stroke-opacity="0.4"/>
+    <text x="1066" y="229" fill="#8b949e" font-size="9" text-anchor="middle">cleanup</text>
+    <text x="913" y="248" fill="#8b949e" font-size="12">Remove legacy</text>
+    <text x="913" y="264" fill="#8b949e" font-size="12">flag</text>
+  </g>
+
+  <!-- arrows overlay, drawn last so they read on top like the real feature -->
+  <path d="M186,114 C186,54 738,54 738,114" fill="none" stroke="#e5534b" stroke-width="2.5" opacity="0.9" marker-end="url(#bd-arrow-red)"/>
+  <path d="M897,152 C 755,152 715,246 583,246" fill="none" stroke="#8b949e" stroke-width="2.5" opacity="0.9" marker-end="url(#bd-arrow-gray)"/>
+
+  <!-- legend -->
+  <g font-size="12" fill="#8b949e">
+    <line x1="61" y1="540" x2="85" y2="540" stroke="#e5534b" stroke-width="2.5"/>
+    <text x="93" y="544">blocker is behind &#8212; still open, card ahead shouldn't be moving yet</text>
+    <line x1="61" y1="562" x2="85" y2="562" stroke="#8b949e" stroke-width="2.5"/>
+    <text x="93" y="566">blocker is at/ahead &#8212; resolved or on track</text>
+  </g>
+</svg>
