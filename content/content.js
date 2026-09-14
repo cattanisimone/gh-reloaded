@@ -121,6 +121,20 @@
     })[c]);
   }
 
+  // A tiny "open in new tab" icon, kept separate from the rest of the card
+  // so the card itself isn't one giant link (avoids stealing clicks meant
+  // for future in-card interaction, and makes "navigate" an explicit,
+  // deliberate action rather than an easy misclick).
+  function linkIconHtml(url, label) {
+    return `
+      <a class="ghdg-node-link" href="${url}" target="_blank" rel="noopener"
+         title="${escapeHtml(label)}" onclick="event.stopPropagation()">
+        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true">
+          <path d="M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Zm6.854-1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L13.03 4.03 9.28 7.78a.751.751 0 0 1-1.062-1.06l3.75-3.75-1.543-1.543A.25.25 0 0 1 10.604 1Z"></path>
+        </svg>
+      </a>`;
+  }
+
   function internalNodeHtml(node, x, y, theme) {
     const { NODE_W: w, NODE_H: h } = window.GHDG_LAYOUT;
     const closed = node.state === "closed";
@@ -133,20 +147,23 @@
     let style = `left:${x}px; top:${y}px; width:${w}px; height:${h}px;`;
     let dotStyle = "";
 
+    // The status color now fills the whole card (not just a dot) so the
+    // state reads at a glance. "Done" always renders as a solid purple
+    // fill regardless of the option's actual configured color.
     if (done) {
-      cls.push("is-done");
+      cls.push("is-done", "has-status");
       const solid = DONE_PURPLE[theme] || DONE_PURPLE.light;
       style += `background:${solid}; border-color:${solid};`;
     } else if (statusName) {
+      cls.push("has-status");
       const p = paletteFor(node.status.color, theme);
-      style += `background:${p.bg}; border-color:${p.fg};`;
-      dotStyle = `background:${p.fg};`;
+      style += `background:${p.fg}; border-color:${p.fg};`;
     } else {
       dotStyle = closed ? "background:var(--ghdg-closed);" : "background:var(--ghdg-open);";
     }
 
     const bvHtml = bv
-      ? `<span class="ghdg-node-bv"${done ? "" : ` style="color:${paletteFor(bv.color, theme).fg}"`}>${escapeHtml(bv.value)}</span>`
+      ? `<span class="ghdg-node-bv" style="color:${paletteFor(bv.color, theme).fg}">${escapeHtml(bv.value)}</span>`
       : "";
 
     const titleAttr = escapeHtml(
@@ -154,14 +171,15 @@
     );
 
     return `
-      <a class="${cls.join(" ")}" href="${node.url}" title="${titleAttr}" style="${style}">
+      <div class="${cls.join(" ")}" title="${titleAttr}" style="${style}">
+        ${linkIconHtml(node.url, `Open #${node.number}`)}
         <span class="ghdg-node-top">
           <span class="ghdg-node-dot" style="${dotStyle}"></span>
           <span class="ghdg-node-num">#${node.number}</span>
         </span>
         <span class="ghdg-node-title">${title}</span>
         ${bvHtml}
-      </a>`;
+      </div>`;
   }
 
   function externalNodeHtml(node, x, y) {
@@ -174,14 +192,15 @@
     const titleAttr = escapeHtml(`${node.owner}/${node.repo}#${node.number} ${node.title || ""}`);
 
     return `
-      <a class="ghdg-node is-external" href="${node.url}" title="${titleAttr}"
-         style="left:${x}px; top:${y}px; width:${w}px; height:${h}px;">
+      <div class="ghdg-node is-external" title="${titleAttr}"
+           style="left:${x}px; top:${y}px; width:${w}px; height:${h}px;">
+        ${linkIconHtml(node.url, `Open ${node.owner}/${node.repo}#${node.number}`)}
         <span class="ghdg-node-top">
           <span class="ghdg-node-num">${label}</span>
         </span>
         <span class="ghdg-node-title">${title}</span>
         ${teamHtml}
-      </a>`;
+      </div>`;
   }
 
   function edgePathD(x1, y1, x2, y2) {

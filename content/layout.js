@@ -12,42 +12,76 @@
 
 (function (global) {
   const NODE_W = 150; // ~2/3 of the original 220, per request
-  const NODE_H = 64; // tall enough for dot+number, title, and a business-value/team line
+  const NODE_H = 84; // room for dot+number, a 2-line title, and a business-value/team chip
   const COL_GAP = 64;
-  const ROW_GAP = 16;
+  const ROW_GAP = 18;
   const PADDING = 24;
 
-  // rank(node) = 0 if nothing blocks it, else 1 + max(rank(blocker)).
-  // "Blockers" render to the left, the issues they block render to the
-  // right — matching the requested left-to-right dependency flow. This
-  // also naturally pushes external blockers further left and external
-  // blocked-issues further right of the internal sub-issue columns.
+  // Column assignment: a two-pass "as-early / as-late" scheme rather than
+  // pure longest-path-from-source.
+  //
+  // Pass 1 (ASAP) gives every node the minimum rank a predecessor allows —
+  // this is what guarantees correctness (a blocker always renders strictly
+  // left of what it blocks).
+  //
+  // Pass 2 pulls any node that HAS an outgoing edge as far right as
+  // possible — "put a card right before its nearest downstream" — without
+  // violating that floor. A node with no outgoing edge (nothing depends on
+  // it, including fully isolated nodes) simply keeps its ASAP rank, which
+  // for an isolated node is column 0 — i.e. it stays on the left.
   function computeRanks(nodes, edges) {
+    const outgoing = new Map(nodes.map((n) => [n.id, []]));
     const incoming = new Map(nodes.map((n) => [n.id, []]));
     for (const e of edges) {
+      if (outgoing.has(e.from)) outgoing.get(e.from).push(e.to);
       if (incoming.has(e.to)) incoming.get(e.to).push(e.from);
     }
 
-    const rank = new Map();
-    const visiting = new Set(); // cycle guard — dependencies shouldn't cycle, but don't hang if they do
-
-    function rankOf(id) {
-      if (rank.has(id)) return rank.get(id);
-      if (visiting.has(id) || !incoming.has(id)) return 0;
-      visiting.add(id);
+    const asap = new Map();
+    const visitingAsap = new Set();
+    function asapOf(id) {
+      if (asap.has(id)) return asap.get(id);
+      if (visitingAsap.has(id) || !incoming.has(id)) return 0; // cycle guard
+      visitingAsap.add(id);
       const preds = incoming.get(id) || [];
-      const r = preds.length === 0 ? 0 : 1 + Math.max(...preds.map(rankOf));
-      visiting.delete(id);
-      rank.set(id, r);
+      const r = preds.length === 0 ? 0 : 1 + Math.max(...preds.map(asapOf));
+      visitingAsap.delete(id);
+      asap.set(id, r);
       return r;
     }
+    for (const n of nodes) asapOf(n.id);
 
-    for (const n of nodes) rankOf(n.id);
-    return rank;
+    const finalRank = new Map();
+    const visitingFinal = new Set();
+    function finalOf(id) {
+      if (finalRank.has(id)) return finalRank.get(id);
+      if (visitingFinal.has(id) || !outgoing.has(id)) return asap.get(id) ?? 0; // cycle guard
+      visitingFinal.add(id);
+      const succs = outgoing.get(id) || [];
+      let r = asap.get(id) ?? 0;
+      if (succs.length > 0) {
+        const desired = Math.min(...succs.map(finalOf)) - 1;
+        r = Math.max(r, desired); // never earlier than the ASAP floor
+      }
+      visitingFinal.delete(id);
+      finalRank.set(id, r);
+      return r;
+    }
+    for (const n of nodes) finalOf(n.id);
+
+    return finalRank;
   }
 
   function layout(nodes, edges) {
     const rank = computeRanks(nodes, edges);
+
+    // Vertical order within a column: nodes with more connections (in +
+    // out edges) float to the top, per request.
+    const degree = new Map(nodes.map((n) => [n.id, 0]));
+    for (const e of edges) {
+      if (degree.has(e.from)) degree.set(e.from, degree.get(e.from) + 1);
+      if (degree.has(e.to)) degree.set(e.to, degree.get(e.to) + 1);
+    }
 
     const columns = new Map();
     for (const n of nodes) {
@@ -61,9 +95,12 @@
     let maxRows = 1;
 
     for (let c = 0; c <= maxCol; c++) {
-      const col = (columns.get(c) || [])
-        .slice()
-        .sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true }));
+      const col = (columns.get(c) || []).slice().sort((a, b) => {
+        const da = degree.get(a.id) ?? 0;
+        const db = degree.get(b.id) ?? 0;
+        if (db !== da) return db - da; // higher degree first (towards the top)
+        return String(a.id).localeCompare(String(b.id), undefined, { numeric: true });
+      });
       maxRows = Math.max(maxRows, col.length);
       col.forEach((n, i) => {
         positions.set(n.id, {

@@ -1,11 +1,12 @@
 #ghdg-root {
-  margin-top: 16px;
+  margin: 16px 0 8px;
   border: 1px solid var(--ghdg-border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--ghdg-bg);
   color: var(--ghdg-text);
   font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
   font-size: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 #ghdg-root[data-theme="light"] {
@@ -19,6 +20,7 @@
   --ghdg-node-bg: #f6f8fa;
   --ghdg-node-hover: #eef1f4;
   --ghdg-external-bg: rgba(110, 119, 129, 0.06);
+  --ghdg-chip-bg: rgba(255, 255, 255, 0.85);
 }
 
 #ghdg-root[data-theme="dark"] {
@@ -32,6 +34,7 @@
   --ghdg-node-bg: #161b22;
   --ghdg-node-hover: #1c232b;
   --ghdg-external-bg: rgba(139, 148, 158, 0.08);
+  --ghdg-chip-bg: rgba(13, 17, 23, 0.7);
 }
 
 #ghdg-root .ghdg-header {
@@ -66,7 +69,7 @@
 
 #ghdg-root .ghdg-graph-scroll {
   overflow-x: auto;
-  padding: 16px;
+  padding: 20px;
 }
 
 #ghdg-root .ghdg-graph-stage {
@@ -103,21 +106,41 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
-  padding: 6px 8px;
+  gap: 3px;
+  padding: 7px 9px;
   box-sizing: border-box;
   border: 1px solid var(--ghdg-border);
   border-radius: 6px;
   background: var(--ghdg-node-bg);
   color: var(--ghdg-text);
-  text-decoration: none;
-  overflow: hidden;
 }
 #ghdg-root .ghdg-node:hover {
-  filter: brightness(0.97);
+  box-shadow: inset 0 0 0 1px var(--ghdg-muted);
 }
-#ghdg-root[data-theme="dark"] .ghdg-node:hover {
-  filter: brightness(1.15);
+
+#ghdg-root .ghdg-node-link {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--ghdg-muted);
+  opacity: 0.55;
+  text-decoration: none;
+}
+#ghdg-root .ghdg-node-link:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.08);
+}
+#ghdg-root .ghdg-node.has-status .ghdg-node-link {
+  color: rgba(255, 255, 255, 0.85);
+}
+#ghdg-root .ghdg-node.has-status .ghdg-node-link:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 #ghdg-root .ghdg-node-top {
@@ -125,6 +148,7 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
+  padding-right: 14px; /* keep clear of the link icon */
 }
 
 #ghdg-root .ghdg-node-dot {
@@ -147,34 +171,46 @@
 #ghdg-root .ghdg-node-title {
   font-size: 12px;
   line-height: 1.25;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-#ghdg-root .ghdg-node-bv,
-#ghdg-root .ghdg-node-team {
-  font-size: 10px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--ghdg-muted);
+  white-space: normal;
+  padding-right: 14px; /* keep clear of the link icon on short cards */
 }
 
 #ghdg-root .ghdg-node.is-closed .ghdg-node-title {
   color: var(--ghdg-muted);
 }
 
+#ghdg-root .ghdg-node-bv,
+#ghdg-root .ghdg-node-team {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--ghdg-chip-bg);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+#ghdg-root .ghdg-node-team {
+  color: var(--ghdg-muted);
+}
+
 /* Status-driven fill/border colors are set inline (they're data, not fixed
-   classes) — this block only handles the "Done" and "external" overrides,
-   which must win regardless of whatever inline status color was set. */
-#ghdg-root .ghdg-node.is-done .ghdg-node-dot {
+   classes) — this handles what must win regardless of that inline color:
+   hide the (now redundant) dot, and force light text for readability on a
+   solid-colored card. The bv/team chips manage their own contrast and are
+   deliberately excluded here. */
+#ghdg-root .ghdg-node.has-status .ghdg-node-dot {
   display: none;
 }
-#ghdg-root .ghdg-node.is-done .ghdg-node-num,
-#ghdg-root .ghdg-node.is-done .ghdg-node-title,
-#ghdg-root .ghdg-node.is-done .ghdg-node-bv {
+#ghdg-root .ghdg-node.has-status .ghdg-node-num,
+#ghdg-root .ghdg-node.has-status .ghdg-node-title {
   color: rgba(255, 255, 255, 0.92);
 }
 
@@ -183,9 +219,7 @@
   background: var(--ghdg-external-bg);
   color: var(--ghdg-muted);
 }
-#ghdg-root .ghdg-node.is-external .ghdg-node-num {
-  color: var(--ghdg-muted);
-}
+#ghdg-root .ghdg-node.is-external .ghdg-node-num,
 #ghdg-root .ghdg-node.is-external .ghdg-node-title {
   color: var(--ghdg-muted);
 }
