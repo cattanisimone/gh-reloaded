@@ -20,6 +20,11 @@ h1 {
   margin-bottom: 8px;
 }
 
+h2 {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
 .hint {
   color: #656d76;
   font-size: 13px;
@@ -85,6 +90,44 @@ button.danger {
   color: #cf222e;
 }
 
+.shortcut-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.shortcut-row .sc-label {
+  flex: 0 0 30%;
+}
+.shortcut-row .sc-url {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.shortcut-row .sc-color {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+.shortcut-row .sc-remove {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  line-height: 1;
+  color: #cf222e;
+}
+.shortcut-row input[type="text"],
+.shortcut-row input[type="url"] {
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
 hr {
   margin: 24px 0;
   border: none;
@@ -103,10 +146,15 @@ a {
   .hint {
     color: #8b949e;
   }
-  input[type="password"] {
+  input[type="password"],
+  .shortcut-row input[type="text"],
+  .shortcut-row input[type="url"] {
     background: #161b22;
     border-color: #30363d;
     color: #e6edf3;
+  }
+  .shortcut-row .sc-color {
+    border-color: #30363d;
   }
   button {
     background: #161b22;

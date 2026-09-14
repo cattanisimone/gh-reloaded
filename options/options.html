@@ -2,22 +2,26 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>GitHub Dependency Graph — Settings</title>
+    <title>GH Reloaded — Settings</title>
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
     <main>
-      <h1>GitHub Sub-Issues Dependency Graph</h1>
+      <h1>GH Reloaded</h1>
+      <p class="hint">Settings are shared across every feature this extension injects into GitHub.</p>
+
+      <hr />
+
+      <h2>GitHub token</h2>
       <p class="hint">
-        This extension reads sub-issues and their "blocked by" relationships
-        via the GitHub API to draw a left-to-right dependency graph below the
-        sub-issues list on an issue page. It needs a personal access token to
-        do that.
+        Used by the <strong>Dependency graph</strong> feature to read sub-issues, their
+        "blocked by" relationships, Projects v2 Status, and org-level custom fields via
+        the GitHub API.
       </p>
       <p class="hint">
-        Use a <strong>fine-grained token</strong>, scoped only to the
-        repositories you actually need, with the
-        <strong>Issues: Read-only</strong> permission — nothing else.
+        Use a <strong>fine-grained token</strong>, scoped only to the repositories you
+        actually need, with <strong>Issues: Read-only</strong> and
+        <strong>Projects: Read-only</strong> — nothing else.
       </p>
 
       <label for="token">GitHub token</label>
@@ -31,12 +35,28 @@
 
       <p id="status" class="status"></p>
 
-      <hr />
       <p class="hint">
         <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">
           Create a fine-grained token →
         </a>
       </p>
+
+      <hr />
+
+      <h2>Quick-create shortcuts</h2>
+      <p class="hint">
+        Used by the <strong>Quick-create button</strong> feature: adds a small floating
+        button to every GitHub Projects board view, linking straight to "new issue" for
+        whichever repo you use for that — handy when the repo you file into isn't the
+        one the board itself lives in. Nothing is preset; add your own.
+      </p>
+
+      <div id="shortcuts"></div>
+      <div class="row">
+        <button id="add-shortcut" type="button" class="secondary">+ Add shortcut</button>
+        <button id="save-shortcuts" type="button">Save shortcuts</button>
+      </div>
+      <p id="shortcuts-status" class="status"></p>
     </main>
     <script src="options.js"></script>
   </body>

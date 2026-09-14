@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "GH Reloaded",
-  "version": "0.2.0",
-  "description": "A growing set of small injected UI enhancements for GitHub. First feature: a left-to-right dependency graph below an issue's sub-issues list.",
+  "version": "0.3.0",
+  "description": "A growing set of small injected UI enhancements for GitHub: a dependency graph below an issue's sub-issues list, and a configurable quick-create button on Projects boards.",
   "permissions": ["storage"],
   "host_permissions": ["https://api.github.com/*"],
   "background": {
@@ -35,6 +35,15 @@
       ],
       "js": ["features/dependency-graph/layout.js", "features/dependency-graph/content.js"],
       "css": ["features/dependency-graph/content.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://github.com/orgs/*/projects/*",
+        "https://github.com/users/*/projects/*"
+      ],
+      "js": ["features/quick-create/content.js"],
+      "css": ["features/quick-create/content.css"],
       "run_at": "document_idle"
     }
   ]
