@@ -1,0 +1,27 @@
+content/content.js
+  s_49702424c7a4e7::t_f37eedb27fa3ba 386,388-391
+content/content.css
+  s_49702424c7a4e7::t_f71cf7a4130924 192-195
+  s_49702424c7a4e7::t_bf993ad899d9eb 240
+  s_49702424c7a4e7::t_7aee29e9991f73 39
+  s_49702424c7a4e7::t_b51ecf933cf909 24
+background.js
+  s_49702424c7a4e7::t_7d6f47fd48f167 154-157,161-170,173,175-177,179,182-201,205,208,211-215,221,224-225,227-228,233-238,245,249
+  s_49702424c7a4e7::t_62c462926f2dfa 353-358
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "babd90a52aae1f1eb4090464d7504ba87fced83e",
+  "prompts": {},
+  "sessions": {
+    "s_49702424c7a4e7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c1676399-d320-4a4f-864a-706605ce3cfb",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
