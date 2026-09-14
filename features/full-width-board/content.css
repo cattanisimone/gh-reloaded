@@ -1,0 +1,15 @@
+/* Full-bleed override: pulls the board's own container out of whatever
+   centered, max-width, padded column its ancestors put it in, without
+   needing to know or touch those ancestors' own (unstable, hashed)
+   class names — this trick works regardless of how many levels of
+   centering sit above it. `!important` because this is fighting a live
+   React app's own CSS-module rules, not page author styles we control. */
+body.ghfw-active [class*="Board-module__boardContainer"] {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  box-sizing: border-box !important;
+}

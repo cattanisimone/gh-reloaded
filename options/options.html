@@ -29,6 +29,10 @@
           <input id="feature-ghbd" type="checkbox" />
           Board dependency arrows — on Projects Board views
         </label>
+        <label class="checkbox-row">
+          <input id="feature-ghfw" type="checkbox" />
+          Full-width board — stretches a Board view to the full window width
+        </label>
       </div>
       <p id="features-status" class="status"></p>
 
@@ -88,6 +92,14 @@
         two currently-visible cards where one blocks the other — red if the blocker is behind
         the card it blocks, gray otherwise. Off by default (see <strong>Features</strong> above,
         or the switch next to the view tabs — only shown while a Board view is selected).
+      </p>
+
+      <h2>Full-width board</h2>
+      <p class="hint">
+        On a GitHub Projects <strong>Board</strong> (kanban) view, stretches the board to the
+        full window width instead of the page's normal centered column — more room for
+        columns before they need to scroll horizontally. On by default (see
+        <strong>Features</strong> above).
       </p>
     </main>
     <script src="options.js"></script>

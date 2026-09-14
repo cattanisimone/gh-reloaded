@@ -168,6 +168,7 @@ const FEATURE_TOGGLES = [
   { key: "ghdgEnabled", id: "feature-ghdg", defaultOn: true },
   { key: "quickCreateEnabled", id: "feature-quick-create", defaultOn: true },
   { key: "ghbdEnabled", id: "feature-ghbd", defaultOn: false },
+  { key: "ghfwEnabled", id: "feature-ghfw", defaultOn: true },
 ];
 
 const featuresStatus = document.getElementById("features-status");

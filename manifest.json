@@ -54,6 +54,15 @@
       "js": ["features/board-dependencies/content.js"],
       "css": ["features/board-dependencies/content.css"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://github.com/orgs/*/projects/*",
+        "https://github.com/users/*/projects/*"
+      ],
+      "js": ["features/full-width-board/content.js"],
+      "css": ["features/full-width-board/content.css"],
+      "run_at": "document_idle"
     }
   ]
 }
