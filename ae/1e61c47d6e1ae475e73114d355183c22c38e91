@@ -1,0 +1,22 @@
+features/full-width-board/content.css
+  s_fd2c10d007ff79::t_2ed090f692d157 51-59
+features/full-width-board/content.js
+  s_fd2c10d007ff79::t_2d801eced50d03 87-91
+  s_fd2c10d007ff79::t_973f1c70e74749 26-46,52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ae1e61c47d6e1ae475e73114d355183c22c38e91",
+  "prompts": {},
+  "sessions": {
+    "s_fd2c10d007ff79": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e4273577-c876-4b7e-a90a-48b02da7d75a",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
