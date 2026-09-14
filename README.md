@@ -57,7 +57,11 @@ On a GitHub issue page (or a Projects board's issue-preview side panel) that has
 
 ### Quick-create button — [features/quick-create](features/quick-create)
 
-A small floating button (or stack of buttons) on every GitHub Projects board view, each linking straight to "new issue" for a repo you configure in Settings — handy when the repo you actually file work into isn't the one the board itself lives in. Fully user-defined (label, URL, color); nothing is preset.
+A small floating button (or stack of buttons) on a GitHub Projects board view, each linking straight to "new issue" for a repo you configure in Settings — handy when the repo you actually file work into isn't the one the board itself lives in. Fully user-defined (label, URL, color, and an optional "only on this board" project match); nothing is preset.
+
+### Board dependency arrows — [features/board-dependencies](features/board-dependencies)
+
+On a GitHub Projects board, draws an arrow directly between any two currently-visible cards where one blocks the other — no need to open either issue to see the dependency. Off by default; a toggle in the top-right corner of the page turns it on, and the choice is remembered (also switchable from Settings).
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
@@ -69,7 +73,7 @@ background.js                       Service worker entry point: opens Settings, 
 lib/github-api.js                   Shared GitHub REST/GraphQL client (auth, caching) used by every feature
 background/<feature>.js             One feature's server-side logic (GitHub calls, computation) + its MESSAGE_TYPE
 features/<feature>/                 One feature's content-script side: DOM injection, rendering, styling
-options/                             Settings page (GitHub token input + connection test)
+options/                             Settings page (GitHub token, quick-create shortcuts, feature toggles)
 icons/                               Toolbar/extensions-page icons
 ```
 

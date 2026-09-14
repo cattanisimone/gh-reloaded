@@ -56,8 +56,12 @@ document.getElementById("test").addEventListener("click", async () => {
 });
 
 // --- Quick-create shortcuts ---
-// A user-defined list of {label, url, color} — this feature doesn't know
-// or assume anything about any specific repo or project.
+// A user-defined list of {label, url, project, color} — this feature
+// doesn't know or assume anything about any specific repo or project.
+// `project` is optional: blank means "show on every board"; set means
+// "only on this one" (owner/number, matching the board's own URL).
+
+const SWATCHES = ["#1f883d", "#0969da", "#8250df", "#bf3989", "#cf222e", "#bc4c00", "#9a6700", "#57606a"];
 
 const shortcutsContainer = document.getElementById("shortcuts");
 const shortcutsStatus = document.getElementById("shortcuts-status");
@@ -71,13 +75,30 @@ function escapeAttr(s) {
   return String(s).replace(/"/g, "&quot;");
 }
 
+function swatchesHtml(selected) {
+  const sel = (selected || SWATCHES[0]).toLowerCase();
+  return (
+    `<div class="sc-swatches" data-selected="${escapeAttr(sel)}">` +
+    SWATCHES.map(
+      (c) =>
+        `<button type="button" class="sc-swatch${c.toLowerCase() === sel ? " is-selected" : ""}" data-color="${c}" style="background:${c};" title="${c}" aria-label="${c}"></button>`
+    ).join("") +
+    `</div>`
+  );
+}
+
 function shortcutRowHtml(s) {
   return `
     <div class="shortcut-row">
-      <input type="text" class="sc-label" placeholder="New Request" value="${escapeAttr(s.label || "")}" />
-      <input type="url" class="sc-url" placeholder="https://github.com/owner/repo/issues/new/choose" value="${escapeAttr(s.url || "")}" />
-      <input type="color" class="sc-color" value="${escapeAttr(s.color || "#1f883d")}" />
-      <button type="button" class="sc-remove" title="Remove">×</button>
+      <div class="shortcut-row-main">
+        <input type="text" class="sc-label" placeholder="New Request" value="${escapeAttr(s.label || "")}" />
+        <input type="url" class="sc-url" placeholder="https://github.com/owner/repo/issues/new/choose" value="${escapeAttr(s.url || "")}" />
+        <button type="button" class="sc-remove" title="Remove">×</button>
+      </div>
+      <div class="shortcut-row-sub">
+        <input type="text" class="sc-project" placeholder="owner/number — optional, e.g. satispay-tech/67 (blank = every board)" value="${escapeAttr(s.project || "")}" />
+        ${swatchesHtml(s.color)}
+      </div>
     </div>`;
 }
 
@@ -90,7 +111,8 @@ function readShortcutsFromForm() {
     .map((row) => ({
       label: row.querySelector(".sc-label").value.trim(),
       url: row.querySelector(".sc-url").value.trim(),
-      color: row.querySelector(".sc-color").value,
+      project: row.querySelector(".sc-project").value.trim(),
+      color: row.querySelector(".sc-swatches").dataset.selected,
     }))
     .filter((s) => s.label && s.url);
 }
@@ -100,11 +122,18 @@ function readShortcutsFromForm() {
 shortcutsContainer.addEventListener("click", (e) => {
   if (e.target.classList.contains("sc-remove")) {
     e.target.closest(".shortcut-row").remove();
+    return;
+  }
+  if (e.target.classList.contains("sc-swatch")) {
+    const swatches = e.target.closest(".sc-swatches");
+    swatches.dataset.selected = e.target.dataset.color;
+    swatches.querySelectorAll(".sc-swatch").forEach((b) => b.classList.remove("is-selected"));
+    e.target.classList.add("is-selected");
   }
 });
 
 document.getElementById("add-shortcut").addEventListener("click", () => {
-  shortcutsContainer.insertAdjacentHTML("beforeend", shortcutRowHtml({ color: "#1f883d" }));
+  shortcutsContainer.insertAdjacentHTML("beforeend", shortcutRowHtml({ color: SWATCHES[0] }));
 });
 
 document.getElementById("save-shortcuts").addEventListener("click", async () => {
@@ -126,3 +155,28 @@ async function loadShortcuts() {
 
 load();
 loadShortcuts();
+
+// --- Board dependency arrows ---
+// A single on/off flag, shared with (and toggleable from) the button the
+// feature itself adds to Projects board pages — storage.onChanged is what
+// keeps the two in sync, in either direction.
+
+const boardArrowsCheckbox = document.getElementById("board-arrows-enabled");
+const boardArrowsStatus = document.getElementById("board-arrows-status");
+
+async function loadBoardArrows() {
+  const { ghbdEnabled } = await chrome.storage.local.get("ghbdEnabled");
+  boardArrowsCheckbox.checked = !!ghbdEnabled;
+}
+
+boardArrowsCheckbox.addEventListener("change", async () => {
+  await chrome.storage.local.set({ ghbdEnabled: boardArrowsCheckbox.checked });
+  boardArrowsStatus.textContent = boardArrowsCheckbox.checked ? "Enabled." : "Disabled.";
+  boardArrowsStatus.className = "status ok";
+});
+
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.ghbdEnabled) boardArrowsCheckbox.checked = !!changes.ghbdEnabled.newValue;
+});
+
+loadBoardArrows();

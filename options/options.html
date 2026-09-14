@@ -57,6 +57,21 @@
         <button id="save-shortcuts" type="button">Save shortcuts</button>
       </div>
       <p id="shortcuts-status" class="status"></p>
+
+      <hr />
+
+      <h2>Board dependency arrows</h2>
+      <p class="hint">
+        On a GitHub Projects board, draws an arrow between any two currently-visible cards
+        where one blocks the other. Off by default — turn it on here, or from the toggle
+        it adds to the top-right corner of any Projects board page.
+      </p>
+
+      <label class="checkbox-row">
+        <input id="board-arrows-enabled" type="checkbox" />
+        Enable board dependency arrows
+      </label>
+      <p id="board-arrows-status" class="status"></p>
     </main>
     <script src="options.js"></script>
   </body>
