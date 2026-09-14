@@ -26,7 +26,16 @@
   async function sync() {
     const { [STORAGE_KEY]: enabled } = await chrome.storage.local.get(STORAGE_KEY);
     const shouldApply = enabled !== false && isProjectsPage() && isBoardLayout();
+    const changed = document.body.classList.contains(BODY_CLASS) !== shouldApply;
     document.body.classList.toggle(BODY_CLASS, shouldApply);
+    // Anything that measured card/column positions before this class
+    // flip (board-dependencies' arrows, for one) is now holding stale
+    // coordinates — the class change itself fires no DOM event a
+    // MutationObserver would catch (it's on <body>, and it's an
+    // attribute, not a childList change). A synthetic resize is a
+    // generic "layout changed, re-measure" signal any such feature is
+    // already listening for, without this needing to know who.
+    if (changed) requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
   }
 
   chrome.storage.onChanged.addListener((changes) => {
