@@ -1,10 +1,13 @@
-// features/quick-create/content.js — a button (or row of buttons) right
-// after a GitHub Projects board's own title, each linking straight to
+// features/quick-create/content.js — a small floating button (or stack
+// of buttons) on GitHub Projects board views, each linking straight to
 // "new issue" for a repo you've configured in Settings.
 //
 // Deliberately knows nothing about any specific repo, org, or project:
 // every shortcut is user-defined (label, target URL, project scope,
-// color) via the Settings page.
+// color) via the Settings page. Floating rather than anchored to a
+// specific piece of GitHub's own markup, on purpose: Projects board
+// markup isn't a stable place to anchor on, and this sidesteps that
+// entirely at the cost of not looking quite as "native."
 
 (function () {
   const ROOT_ID = "ghqc-root";
@@ -46,37 +49,6 @@
     })[c]);
   }
 
-  function waitFor(fn, { timeout = 4000, interval = 200 } = {}) {
-    return new Promise((resolve) => {
-      const start = Date.now();
-      const tick = () => {
-        const v = fn();
-        if (v) return resolve(v);
-        if (Date.now() - start > timeout) return resolve(null);
-        setTimeout(tick, interval);
-      };
-      tick();
-    });
-  }
-
-  // The board's own title row (lock icon + editable name + pencil
-  // button, wrapped in a "memex-title-module__Box" container) is the
-  // real "after the title" anchor. A plain `document.querySelector("h1")`
-  // isn't specific enough: GitHub pages often carry an earlier,
-  // visually-hidden <h1> elsewhere for accessibility, and that one wins
-  // a bare tag match — landing our button somewhere invisible instead.
-  // Anchoring on the whole title row (not just the inner <h1>) also
-  // means our button renders as its own line below the title, rather
-  // than getting wedged between the title text and its edit-pencil
-  // button inside that row's own flex layout.
-  function findTitleAnchor() {
-    return (
-      document.querySelector('[class*="memex-title-module__Box__"]') ||
-      document.querySelector('[class*="memex-title-module__Box"] h1') ||
-      document.querySelector("h1")
-    );
-  }
-
   function buildRoot(shortcuts) {
     const root = document.createElement("div");
     root.id = ROOT_ID;
@@ -95,25 +67,15 @@
     return root;
   }
 
-  async function render(shortcuts) {
+  function render(shortcuts) {
     document.getElementById(ROOT_ID)?.remove();
     const currentKey = currentProjectKey();
     const visible = shortcuts.filter((s) => matchesProject(s, currentKey));
     if (!currentKey || !visible.length) return;
 
     const root = buildRoot(visible);
-    const anchor = await waitFor(findTitleAnchor);
-
-    if (document.getElementById(ROOT_ID)) return; // a later render() already handled this
-    if (anchor) {
-      anchor.insertAdjacentElement("afterend", root);
-    } else {
-      // Couldn't find the title (GitHub redesign, or it just hasn't
-      // rendered yet) — fall back to a floating button rather than
-      // showing nothing.
-      root.classList.add("is-floating");
-      document.body.appendChild(root);
-    }
+    root.classList.add("is-floating");
+    document.body.appendChild(root);
   }
 
   async function load() {
