@@ -23,11 +23,33 @@
     return !!icon && icon.classList.contains("octicon-project");
   }
 
+  // The "+" (add column) button has no class of its own to select —
+  // it's a bare <div><button ...></button></div>, identified only by
+  // its tooltip's text. Its wrapper sits as the header row's own
+  // sibling rather than inside it, so once the row's columns expand to
+  // fill the new width, the button just gets knocked out of its normal
+  // spot with nothing to realign it against — simplest fix is to hide
+  // it rather than fight that layout. Tagged with a class (rather than
+  // hidden directly) so the CSS rule stays scoped to ghfw-active and
+  // the button reappears on its own the moment this feature is off.
+  const ADD_COLUMN_CLASS = "ghfw-add-column";
+
+  function tagAddColumnButton() {
+    for (const btn of document.querySelectorAll("button[aria-labelledby]")) {
+      if (btn.parentElement?.classList.contains(ADD_COLUMN_CLASS)) continue;
+      const label = document.getElementById(btn.getAttribute("aria-labelledby"));
+      if (label && /add a new column to the board/i.test(label.textContent || "")) {
+        btn.parentElement?.classList.add(ADD_COLUMN_CLASS);
+      }
+    }
+  }
+
   async function sync() {
     const { [STORAGE_KEY]: enabled } = await chrome.storage.local.get(STORAGE_KEY);
     const shouldApply = enabled !== false && isProjectsPage() && isBoardLayout();
     const changed = document.body.classList.contains(BODY_CLASS) !== shouldApply;
     document.body.classList.toggle(BODY_CLASS, shouldApply);
+    if (shouldApply) tagAddColumnButton();
     // Anything that measured card/column positions before this class
     // flip (board-dependencies' arrows, for one) is now holding stale
     // coordinates — the class change itself fires no DOM event a
@@ -62,6 +84,11 @@
     if (location.href !== lastUrl) {
       lastUrl = location.href;
       debouncedSync();
+    } else if (document.body.classList.contains(BODY_CLASS)) {
+      // A re-render (adding/removing a column, filtering, etc.) can
+      // recreate the "+" button without any URL change — re-tag it
+      // whenever full width is active, not just right after sync().
+      tagAddColumnButton();
     }
   }, 800);
 

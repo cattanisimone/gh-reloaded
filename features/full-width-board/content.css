@@ -48,3 +48,12 @@ body.ghfw-active [class*="column-frame-module__Box__"] {
   width: 0 !important;
   min-width: 140px !important;
 }
+
+/* The "+" (add column) button (tagged .ghfw-add-column by content.js —
+   it has no class of its own to select). Repositioning it to line up
+   with the now-wider header row didn't hold up across layout changes;
+   hiding it is the reliable fix. Scoped under ghfw-active so it comes
+   back the moment this feature is turned off. */
+body.ghfw-active .ghfw-add-column {
+  display: none !important;
+}
