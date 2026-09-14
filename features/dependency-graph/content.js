@@ -361,6 +361,12 @@
 
   async function init() {
     if (!extensionAlive()) return;
+    const { ghdgEnabled } = await chrome.storage.local.get("ghdgEnabled");
+    if (ghdgEnabled === false) {
+      document.getElementById(ROOT_ID)?.remove();
+      state = { key: null, phase: "idle" };
+      return;
+    }
     const info = parseIssueUrl();
     const key = info ? `${info.owner}/${info.repo}#${info.issueNumber}` : null;
 
@@ -497,6 +503,10 @@
   document.addEventListener("turbo:load", debouncedInit);
   document.addEventListener("turbo:render", debouncedInit);
   document.addEventListener("pjax:end", debouncedInit);
+
+  chrome.storage.onChanged.addListener((changes) => {
+    if (extensionAlive() && changes.ghdgEnabled) debouncedInit();
+  });
 
   let lastUrl = location.href;
   const pollId = setInterval(() => {

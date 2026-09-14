@@ -7,8 +7,30 @@
   </head>
   <body>
     <main>
+      <p class="logo"><img src="../icons/icon128.png" width="64" height="64" alt="" /></p>
       <h1>GH Reloaded</h1>
       <p class="hint">Settings are shared across every feature this extension injects into GitHub.</p>
+
+      <hr />
+
+      <h2>Features</h2>
+      <p class="hint">Turn any feature off entirely — it stops running on github.com right away.</p>
+
+      <div class="features-panel">
+        <label class="checkbox-row">
+          <input id="feature-ghdg" type="checkbox" />
+          Dependency graph — on an issue page's sub-issues list
+        </label>
+        <label class="checkbox-row">
+          <input id="feature-quick-create" type="checkbox" />
+          Quick-create button — on Projects board views
+        </label>
+        <label class="checkbox-row">
+          <input id="feature-ghbd" type="checkbox" />
+          Board dependency arrows — on Projects Board views
+        </label>
+      </div>
+      <p id="features-status" class="status"></p>
 
       <hr />
 
@@ -64,15 +86,9 @@
       <p class="hint">
         On a GitHub Projects <strong>Board</strong> (kanban) view, draws an arrow between any
         two currently-visible cards where one blocks the other — red if the blocker is behind
-        the card it blocks, gray otherwise. Off by default — turn it on here, or from the
-        switch it adds next to the view tabs, only shown while a Board view is selected.
+        the card it blocks, gray otherwise. Off by default (see <strong>Features</strong> above,
+        or the switch next to the view tabs — only shown while a Board view is selected).
       </p>
-
-      <label class="checkbox-row">
-        <input id="board-arrows-enabled" type="checkbox" />
-        Enable board dependency arrows
-      </label>
-      <p id="board-arrows-status" class="status"></p>
     </main>
     <script src="options.js"></script>
   </body>

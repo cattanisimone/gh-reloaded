@@ -51,6 +51,8 @@
 #ghbd-toggle {
   display: inline-flex;
   align-items: center;
+  align-self: center;
+  flex-shrink: 0;
   margin-left: 8px;
   padding: 0;
   border: none;

@@ -156,27 +156,43 @@ async function loadShortcuts() {
 load();
 loadShortcuts();
 
-// --- Board dependency arrows ---
-// A single on/off flag, shared with (and toggleable from) the button the
-// feature itself adds to Projects board pages — storage.onChanged is what
-// keeps the two in sync, in either direction.
+// --- Features ---
+// One on/off flag per feature, shared with (and toggleable from) whatever
+// switch the feature itself adds on github.com — storage.onChanged is what
+// keeps this panel and that in-page control in sync, in either direction.
+// Dependency graph and Quick-create predate having a flag at all, so an
+// unset value means "on" for those two; Board dependency arrows is new and
+// opt-in, so unset means "off" for that one.
 
-const boardArrowsCheckbox = document.getElementById("board-arrows-enabled");
-const boardArrowsStatus = document.getElementById("board-arrows-status");
+const FEATURE_TOGGLES = [
+  { key: "ghdgEnabled", id: "feature-ghdg", defaultOn: true },
+  { key: "quickCreateEnabled", id: "feature-quick-create", defaultOn: true },
+  { key: "ghbdEnabled", id: "feature-ghbd", defaultOn: false },
+];
 
-async function loadBoardArrows() {
-  const { ghbdEnabled } = await chrome.storage.local.get("ghbdEnabled");
-  boardArrowsCheckbox.checked = !!ghbdEnabled;
+const featuresStatus = document.getElementById("features-status");
+
+async function loadFeatureToggles() {
+  const stored = await chrome.storage.local.get(FEATURE_TOGGLES.map((f) => f.key));
+  for (const f of FEATURE_TOGGLES) {
+    const checkbox = document.getElementById(f.id);
+    const value = stored[f.key];
+    checkbox.checked = value === undefined ? f.defaultOn : !!value;
+  }
 }
 
-boardArrowsCheckbox.addEventListener("change", async () => {
-  await chrome.storage.local.set({ ghbdEnabled: boardArrowsCheckbox.checked });
-  boardArrowsStatus.textContent = boardArrowsCheckbox.checked ? "Enabled." : "Disabled.";
-  boardArrowsStatus.className = "status ok";
-});
+for (const f of FEATURE_TOGGLES) {
+  document.getElementById(f.id).addEventListener("change", async (e) => {
+    await chrome.storage.local.set({ [f.key]: e.target.checked });
+    featuresStatus.textContent = e.target.checked ? "Enabled." : "Disabled.";
+    featuresStatus.className = "status ok";
+  });
+}
 
 chrome.storage.onChanged.addListener((changes) => {
-  if (changes.ghbdEnabled) boardArrowsCheckbox.checked = !!changes.ghbdEnabled.newValue;
+  for (const f of FEATURE_TOGGLES) {
+    if (changes[f.key]) document.getElementById(f.id).checked = !!changes[f.key].newValue;
+  }
 });
 
-loadBoardArrows();
+loadFeatureToggles();

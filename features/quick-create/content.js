@@ -59,11 +59,22 @@
     });
   }
 
-  // The board's own title is the most reliable "after the title" anchor —
-  // it's the one true <h1> GitHub renders for this kind of page,
-  // regardless of what the project happens to be named.
+  // The board's own title row (lock icon + editable name + pencil
+  // button, wrapped in a "memex-title-module__Box" container) is the
+  // real "after the title" anchor. A plain `document.querySelector("h1")`
+  // isn't specific enough: GitHub pages often carry an earlier,
+  // visually-hidden <h1> elsewhere for accessibility, and that one wins
+  // a bare tag match — landing our button somewhere invisible instead.
+  // Anchoring on the whole title row (not just the inner <h1>) also
+  // means our button renders as its own line below the title, rather
+  // than getting wedged between the title text and its edit-pencil
+  // button inside that row's own flex layout.
   function findTitleAnchor() {
-    return document.querySelector("h1");
+    return (
+      document.querySelector('[class*="memex-title-module__Box__"]') ||
+      document.querySelector('[class*="memex-title-module__Box"] h1') ||
+      document.querySelector("h1")
+    );
   }
 
   function buildRoot(shortcuts) {
@@ -107,7 +118,14 @@
 
   async function load() {
     if (!extensionAlive()) return;
-    const { quickCreateShortcuts } = await chrome.storage.local.get("quickCreateShortcuts");
+    const { quickCreateShortcuts, quickCreateEnabled } = await chrome.storage.local.get([
+      "quickCreateShortcuts",
+      "quickCreateEnabled",
+    ]);
+    if (quickCreateEnabled === false) {
+      document.getElementById(ROOT_ID)?.remove();
+      return;
+    }
     render((quickCreateShortcuts || []).filter((s) => s && s.url));
   }
 
@@ -127,7 +145,7 @@
   }, 800);
 
   chrome.storage.onChanged.addListener((changes) => {
-    if (extensionAlive() && changes.quickCreateShortcuts) load();
+    if (extensionAlive() && (changes.quickCreateShortcuts || changes.quickCreateEnabled)) load();
   });
 
   load();
