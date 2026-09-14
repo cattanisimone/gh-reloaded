@@ -96,7 +96,7 @@ function shortcutRowHtml(s) {
         <button type="button" class="sc-remove" title="Remove">×</button>
       </div>
       <div class="shortcut-row-sub">
-        <input type="text" class="sc-project" placeholder="owner/number — optional, e.g. satispay-tech/67 (blank = every board)" value="${escapeAttr(s.project || "")}" />
+        <input type="text" class="sc-project" placeholder="owner/number — optional, e.g. my-org/12 (blank = every board)" value="${escapeAttr(s.project || "")}" />
         ${swatchesHtml(s.color)}
       </div>
     </div>`;
