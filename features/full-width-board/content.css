@@ -13,3 +13,23 @@ body.ghfw-active [class*="Board-module__boardContainer"] {
   padding-right: 24px !important;
   box-sizing: border-box !important;
 }
+
+/* Widening the outer container above isn't enough on its own: the
+   columns row itself carries an inline `min-width` computed as
+   columnCount × each column's own configured width — sized to always
+   fit every column at full width regardless of how much room the
+   page actually gives it. That's what keeps the horizontal scrollbar
+   alive even inside an already-full-width outer box. Zero it out and
+   let each column become a flexible (shrinkable) flex item instead of
+   a fixed-width one. */
+body.ghfw-active [class*="Board-module__horizontalGroupAreaContainer"],
+body.ghfw-active [class*="Board-module__horizontalGroupContainer"],
+body.ghfw-active [class*="Board-module__horizontalGroupHeader"] {
+  min-width: 0 !important;
+}
+
+body.ghfw-active [class*="column-frame-module__Box__"] {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+  min-width: 140px !important;
+}
