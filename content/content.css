@@ -19,7 +19,7 @@
   --ghdg-edge: #8c959f;
   --ghdg-node-bg: #f6f8fa;
   --ghdg-node-hover: #eef1f4;
-  --ghdg-external-bg: rgba(110, 119, 129, 0.16);
+  --ghdg-external-bg: rgba(110, 119, 129, 0.1);
   --ghdg-chip-bg: rgba(255, 255, 255, 0.85);
   --ghdg-critical: #bc4c00;
 }
@@ -34,7 +34,7 @@
   --ghdg-edge: #6e7681;
   --ghdg-node-bg: #161b22;
   --ghdg-node-hover: #1c232b;
-  --ghdg-external-bg: rgba(139, 148, 158, 0.2);
+  --ghdg-external-bg: rgba(139, 148, 158, 0.13);
   --ghdg-chip-bg: rgba(13, 17, 23, 0.7);
   --ghdg-critical: #db6d28;
 }

@@ -38,24 +38,24 @@
     return t[(colorName || "GRAY").toUpperCase()] || t.GRAY;
   }
 
-  function isDoneStatus(status) {
-    return !!status && /\bdone\b/i.test(status.name || "");
-  }
-
   // Shared between internal and external cards so status reads identically
-  // either way. "Done" is a deliberate exception — it's always rendered as
-  // the purple entry regardless of the option's actual configured color —
-  // but otherwise gets the exact same soft tint as any other status, not a
-  // separate heavier treatment (that read as too saturated).
+  // either way. "Done" is a deliberate exception, always rendered as the
+  // purple entry regardless of the option's actual configured color — but
+  // otherwise gets the exact same soft tint as any other status.
+  //
+  // What counts as "done" is GitHub's own issue `state` (open/closed), not
+  // the Status field's option name — every board can call its terminal
+  // column whatever it wants ("Done", "Completed", "Chiuso", ...), so
+  // matching a hardcoded name is fragile. `state` is always there and
+  // always means the same thing, regardless of board conventions.
   function statusStyle(node, theme) {
-    const done = isDoneStatus(node.status);
-    const statusName = node.status && node.status.name;
     const closed = node.state === "closed";
+    const statusName = node.status && node.status.name;
     const cls = [];
     let style = "";
     let dotStyle = "";
 
-    if (done) {
+    if (closed) {
       cls.push("is-done");
       const p = paletteFor("PURPLE", theme);
       style = `background:${p.bg}; border-color:${p.fg};`;
@@ -65,7 +65,7 @@
       style = `background:${p.bg}; border-color:${p.fg};`;
       dotStyle = `background:${p.fg};`;
     } else {
-      dotStyle = closed ? "background:var(--ghdg-closed);" : "background:var(--ghdg-open);";
+      dotStyle = "background:var(--ghdg-open);"; // open, no project Status set
     }
 
     return { cls, style, dotStyle, statusName, closed };
@@ -315,15 +315,14 @@
   }
 
   // "full": everything. "open": drop external nodes that aren't actually
-  // active anymore (closed, or status Done) — a resolved dependency isn't
-  // blocking (or blocked) in any way that still matters. "off": internal
-  // sub-issues only.
+  // active anymore (closed) — a resolved dependency isn't blocking (or
+  // blocked) in any way that still matters. "off": internal sub-issues only.
   function applyDependencyMode(graph, mode) {
     if (mode === "full") return graph;
     const nodes = graph.nodes.filter((n) => {
       if (!n.external) return true;
       if (mode === "off") return false;
-      return n.state !== "closed" && !isDoneStatus(n.status);
+      return n.state !== "closed";
     });
     const ids = new Set(nodes.map((n) => n.id));
     const edges = graph.edges.filter((e) => ids.has(e.from) && ids.has(e.to));

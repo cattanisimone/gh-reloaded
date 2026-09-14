@@ -194,19 +194,17 @@ function transitiveReduce(ids, edgeList) {
   return edgeList.filter((e) => !redundant.has(`${e.from}->${e.to}`));
 }
 
-function isDoneStatus(status) {
-  return !!status && /\bdone\b/i.test(status.name || "");
-}
-
 /**
  * Longest path by total "Effort", restricted to internal nodes/edges only
  * (external dependencies aren't part of this feature's own estimate).
  *
- * "Done" sub-issues are ignored entirely — completed work shouldn't show
- * up in a path meant to highlight what's left. Rather than just zeroing
- * their effort, they're removed from the graph and their predecessors are
- * bridged directly to their successors, so the path skips transparently
- * over finished work instead of stopping there or routing through it.
+ * "Done" sub-issues (GitHub's own issue `state`, not a Status option name
+ * — every board can call its terminal column whatever it wants) are
+ * ignored entirely: completed work shouldn't show up in a path meant to
+ * highlight what's left. Rather than just zeroing their effort, they're
+ * removed from the graph and their predecessors are bridged directly to
+ * their successors, so the path skips transparently over finished work
+ * instead of stopping there or routing through it.
  *
  * Missing effort is treated as 0; at equal (or all-zero) total effort, the
  * longer chain wins the tie-break, so the path still degrades to "most
@@ -215,7 +213,7 @@ function isDoneStatus(status) {
 function computeCriticalPath(internalNodes, edges) {
   const nodeById = new Map(internalNodes.map((n) => [n.id, n]));
   const ids = new Set(internalNodes.map((n) => n.id));
-  const isDone = (id) => isDoneStatus(nodeById.get(id)?.status);
+  const isDone = (id) => nodeById.get(id)?.state === "closed";
 
   const rawIncoming = new Map(internalNodes.map((n) => [n.id, []]));
   for (const e of edges) {
