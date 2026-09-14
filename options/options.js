@@ -176,23 +176,27 @@ const featuresStatus = document.getElementById("features-status");
 async function loadFeatureToggles() {
   const stored = await chrome.storage.local.get(FEATURE_TOGGLES.map((f) => f.key));
   for (const f of FEATURE_TOGGLES) {
-    const checkbox = document.getElementById(f.id);
     const value = stored[f.key];
-    checkbox.checked = value === undefined ? f.defaultOn : !!value;
+    const on = value === undefined ? f.defaultOn : !!value;
+    document.getElementById(f.id).setAttribute("aria-checked", String(on));
   }
 }
 
 for (const f of FEATURE_TOGGLES) {
-  document.getElementById(f.id).addEventListener("change", async (e) => {
-    await chrome.storage.local.set({ [f.key]: e.target.checked });
-    featuresStatus.textContent = e.target.checked ? "Enabled." : "Disabled.";
+  document.getElementById(f.id).addEventListener("click", async (e) => {
+    const next = e.currentTarget.getAttribute("aria-checked") !== "true";
+    e.currentTarget.setAttribute("aria-checked", String(next));
+    await chrome.storage.local.set({ [f.key]: next });
+    featuresStatus.textContent = next ? "Enabled." : "Disabled.";
     featuresStatus.className = "status ok";
   });
 }
 
 chrome.storage.onChanged.addListener((changes) => {
   for (const f of FEATURE_TOGGLES) {
-    if (changes[f.key]) document.getElementById(f.id).checked = !!changes[f.key].newValue;
+    if (changes[f.key]) {
+      document.getElementById(f.id).setAttribute("aria-checked", String(!!changes[f.key].newValue));
+    }
   }
 });
 

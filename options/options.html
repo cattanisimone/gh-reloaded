@@ -17,22 +17,30 @@
       <p class="hint">Turn any feature off entirely — it stops running on github.com right away.</p>
 
       <div class="features-panel">
-        <label class="checkbox-row">
-          <input id="feature-ghdg" type="checkbox" />
-          Dependency graph — on an issue page's sub-issues list
-        </label>
-        <label class="checkbox-row">
-          <input id="feature-quick-create" type="checkbox" />
-          Quick-create button — on Projects board views
-        </label>
-        <label class="checkbox-row">
-          <input id="feature-ghbd" type="checkbox" />
-          Board dependency arrows — on Projects Board views
-        </label>
-        <label class="checkbox-row">
-          <input id="feature-ghfw" type="checkbox" />
-          Full-width board — stretches a Board view to the full window width
-        </label>
+        <div class="checkbox-row">
+          <button id="feature-ghdg" type="button" role="switch" aria-checked="false" class="switch">
+            <span class="switch-track"><span class="switch-knob"></span></span>
+          </button>
+          <span>Dependency graph — on an issue page's sub-issues list</span>
+        </div>
+        <div class="checkbox-row">
+          <button id="feature-quick-create" type="button" role="switch" aria-checked="false" class="switch">
+            <span class="switch-track"><span class="switch-knob"></span></span>
+          </button>
+          <span>Quick-create button — on Projects board views</span>
+        </div>
+        <div class="checkbox-row">
+          <button id="feature-ghbd" type="button" role="switch" aria-checked="false" class="switch">
+            <span class="switch-track"><span class="switch-knob"></span></span>
+          </button>
+          <span>Board dependency arrows — on Projects Board views</span>
+        </div>
+        <div class="checkbox-row">
+          <button id="feature-ghfw" type="button" role="switch" aria-checked="false" class="switch">
+            <span class="switch-track"><span class="switch-knob"></span></span>
+          </button>
+          <span>Full-width board — stretches a Board view to the full window width</span>
+        </div>
       </div>
       <p id="features-status" class="status"></p>
 
