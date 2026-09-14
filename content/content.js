@@ -144,6 +144,7 @@
     const bv = node.businessValue; // { value, color } | null
 
     const cls = ["ghdg-node", "is-internal", closed ? "is-closed" : "is-open"];
+    if (node.critical) cls.push("is-critical");
     let style = `left:${x}px; top:${y}px; width:${w}px; height:${h}px;`;
     let dotStyle = "";
 
@@ -165,9 +166,13 @@
     const bvHtml = bv
       ? `<span class="ghdg-node-bv" style="color:${paletteFor(bv.color, theme).fg}">${escapeHtml(bv.value)}</span>`
       : "";
+    const effortHtml =
+      node.effort != null ? `<span class="ghdg-node-effort" title="Effort: ${node.effort}">E ${escapeHtml(node.effort)}</span>` : "";
 
     const titleAttr = escapeHtml(
-      `#${node.number} ${node.title || ""}${statusName ? ` — ${statusName}` : ""}`
+      `#${node.number} ${node.title || ""}${statusName ? ` — ${statusName}` : ""}${
+        node.effort != null ? ` — Effort: ${node.effort}` : ""
+      }${node.critical ? " — on critical path" : ""}`
     );
 
     return `
@@ -176,6 +181,7 @@
         <span class="ghdg-node-top">
           <span class="ghdg-node-dot" style="${dotStyle}"></span>
           <span class="ghdg-node-num">#${node.number}</span>
+          ${effortHtml}
         </span>
         <span class="ghdg-node-title">${title}</span>
         ${bvHtml}
@@ -239,6 +245,10 @@
                 markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" class="ghdg-arrowhead"></path>
         </marker>
+        <marker id="ghdg-arrow-critical" viewBox="0 0 10 10" refX="8" refY="5"
+                markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" class="ghdg-arrowhead-critical"></path>
+        </marker>
       </defs>`;
 
     for (const e of edges) {
@@ -251,8 +261,11 @@
         "d",
         edgePathD(from.x + nodeW, from.y + nodeH / 2, to.x, to.y + nodeH / 2)
       );
-      path.setAttribute("class", "ghdg-edge" + (isExternal ? " is-external" : ""));
-      path.setAttribute("marker-end", "url(#ghdg-arrow)");
+      path.setAttribute(
+        "class",
+        "ghdg-edge" + (isExternal ? " is-external" : "") + (e.critical ? " is-critical" : "")
+      );
+      path.setAttribute("marker-end", e.critical ? "url(#ghdg-arrow-critical)" : "url(#ghdg-arrow)");
       svg.appendChild(path);
     }
     stage.appendChild(svg);
@@ -367,6 +380,14 @@
       }
 
       renderGraph(body, resp.graph, theme);
+
+      const header = container.querySelector(".ghdg-header");
+      if (header) {
+        header.textContent =
+          resp.graph.criticalPathEffort > 0
+            ? `Dependency graph · Critical path effort: ${resp.graph.criticalPathEffort}`
+            : "Dependency graph";
+      }
     });
   }
 

@@ -152,6 +152,61 @@ function externalKey(owner, repo, num) {
 }
 
 /**
+ * Longest path by total "Effort", restricted to internal nodes/edges only
+ * (external dependencies aren't part of this feature's own estimate).
+ * Missing effort is treated as 0, so the path degrades to "most hops" when
+ * effort isn't set anywhere rather than failing outright.
+ */
+function computeCriticalPath(internalNodes, edges) {
+  const ids = new Set(internalNodes.map((n) => n.id));
+  const effortOf = new Map(internalNodes.map((n) => [n.id, Number(n.effort) || 0]));
+  const incoming = new Map(internalNodes.map((n) => [n.id, []]));
+  for (const e of edges) {
+    if (ids.has(e.from) && ids.has(e.to)) incoming.get(e.to).push(e.from);
+  }
+
+  const best = new Map(); // id -> { total, prev }
+  const visiting = new Set();
+  function bestOf(id) {
+    if (best.has(id)) return best.get(id);
+    if (visiting.has(id)) return { total: effortOf.get(id) || 0, prev: null }; // cycle guard
+    visiting.add(id);
+    const own = effortOf.get(id) || 0;
+    let result = { total: own, prev: null };
+    for (const p of incoming.get(id) || []) {
+      const pBest = bestOf(p);
+      if (pBest.total + own > result.total) result = { total: pBest.total + own, prev: p };
+    }
+    visiting.delete(id);
+    best.set(id, result);
+    return result;
+  }
+  for (const n of internalNodes) bestOf(n.id);
+
+  let endId = null;
+  let endTotal = -Infinity;
+  for (const n of internalNodes) {
+    const b = best.get(n.id);
+    if (b.total > endTotal) {
+      endTotal = b.total;
+      endId = n.id;
+    }
+  }
+
+  const pathIds = new Set();
+  const pathEdges = new Set();
+  for (let cur = endId; cur != null; ) {
+    pathIds.add(cur);
+    const prev = best.get(cur).prev;
+    if (prev == null) break;
+    pathEdges.add(`${prev}->${cur}`);
+    cur = prev;
+  }
+
+  return { pathIds, pathEdges, totalEffort: internalNodes.length ? Math.max(0, endTotal) : 0 };
+}
+
+/**
  * Builds the dependency graph for the direct sub-issues of one issue.
  *
  * Nodes:
@@ -230,6 +285,7 @@ async function fetchDependencyGraph({ owner, repo, issueNumber }) {
           status, // { name, color } | null
           businessValue: fields["Business Value"] || null, // { value, color } | null
           team: fields["Team"]?.value || null,
+          effort: fields["Effort"]?.value ?? null,
         };
       })
     ),
@@ -241,7 +297,17 @@ async function fetchDependencyGraph({ owner, repo, issueNumber }) {
     ),
   ]);
 
-  return { nodes: [...internalNodes, ...externalNodes], edges };
+  const critical = computeCriticalPath(internalNodes, edges);
+  const nodes = [
+    ...internalNodes.map((n) => ({ ...n, critical: critical.pathIds.has(n.id) })),
+    ...externalNodes.map((n) => ({ ...n, critical: false })),
+  ];
+  const markedEdges = edges.map((e) => ({
+    ...e,
+    critical: critical.pathEdges.has(`${e.from}->${e.to}`),
+  }));
+
+  return { nodes, edges: markedEdges, criticalPathEffort: critical.totalEffort };
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
