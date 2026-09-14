@@ -39,15 +39,12 @@
   }
 
   // Shared between internal and external cards so status reads identically
-  // either way. "Done" is a deliberate exception, always rendered as the
-  // purple entry regardless of the option's actual configured color — but
-  // otherwise gets the exact same soft tint as any other status.
-  //
-  // What counts as "done" is GitHub's own issue `state` (open/closed), not
-  // the Status field's option name — every board can call its terminal
-  // column whatever it wants ("Done", "Completed", "Chiuso", ...), so
-  // matching a hardcoded name is fragile. `state` is always there and
-  // always means the same thing, regardless of board conventions.
+  // either way. Always trusts whatever the board's own Status field says —
+  // no hardcoded override for "done" or any other state. If the actual
+  // "done" column on the board is colored green, the card is green; there's
+  // no assumption baked in here about what that column should look like.
+  // Only falls back to a plain open/closed dot when there's no project
+  // Status data at all (not in a project, or the field couldn't be read).
   function statusStyle(node, theme) {
     const closed = node.state === "closed";
     const statusName = node.status && node.status.name;
@@ -55,17 +52,12 @@
     let style = "";
     let dotStyle = "";
 
-    if (closed) {
-      cls.push("is-done");
-      const p = paletteFor("PURPLE", theme);
-      style = `background:${p.bg}; border-color:${p.fg};`;
-      dotStyle = `background:${p.fg};`;
-    } else if (statusName) {
+    if (statusName) {
       const p = paletteFor(node.status.color, theme);
       style = `background:${p.bg}; border-color:${p.fg};`;
       dotStyle = `background:${p.fg};`;
     } else {
-      dotStyle = "background:var(--ghdg-open);"; // open, no project Status set
+      dotStyle = closed ? "background:var(--ghdg-closed);" : "background:var(--ghdg-open);";
     }
 
     return { cls, style, dotStyle, statusName, closed };
