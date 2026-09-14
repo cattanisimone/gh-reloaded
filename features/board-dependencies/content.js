@@ -67,13 +67,18 @@
 
   // Walks up from the matching <a> (which is usually just the issue
   // title, a small element) to the actual card box, so the arrow anchors
-  // on the whole card rather than on a sliver of text. Board cards don't
-  // carry a stable class or ARIA role to key off, but they DO have a
-  // roughly fixed width regardless of how many wrapper <div>s sit between
-  // the title and the card's outer edge — so climb until the next parent
-  // is clearly wider (that's the column, which holds many cards side by
-  // side vertically and is much wider than one card).
+  // on the whole card rather than on a sliver of text.
   function cardElementFor(anchor) {
+    // Board layout's real card box carries this exact, un-hashed class
+    // — the most precise anchor available. Matters because the grid
+    // cell wrapping it (what the width-climb fallback below would
+    // otherwise land on) can be taller than the card itself, e.g. when
+    // it shares a grouped row with a taller card in another column —
+    // anchoring there put arrows in the empty space below a short card
+    // instead of on the card.
+    const boardCard = anchor.closest(".board-view-column-card");
+    if (boardCard) return boardCard;
+
     // Table/grid layouts use these roles on the actual row — prefer that
     // exact anchor when present rather than the width heuristic below.
     let el = anchor;
