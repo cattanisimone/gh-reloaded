@@ -28,10 +28,19 @@ body.ghfw-active [class*="Board-module__boardContainer"] {
    at its bare minimum. */
 body.ghfw-active [class*="Board-module__boardView"],
 body.ghfw-active [class*="Board-module__horizontalGroupAreaContainer"],
-body.ghfw-active [class*="Board-module__horizontalGroupContainer"],
-body.ghfw-active [class*="Board-module__horizontalGroupHeader"] {
+body.ghfw-active [class*="Board-module__horizontalGroupContainer"] {
   min-width: 0 !important;
   width: 100% !important;
+}
+
+/* Deliberately NOT forced to width:100% like the others above: the
+   "+" (add column) button sits as this element's own sibling within
+   the board's header row, and a hard 100% here claims the whole row
+   for the header, leaving the button squeezed or knocked out of
+   place. Left to size itself naturally, its inner
+   horizontalGroupContainer (covered above) still expands to fill it. */
+body.ghfw-active [class*="Board-module__horizontalGroupHeader"] {
+  min-width: 0 !important;
 }
 
 body.ghfw-active [class*="column-frame-module__Box__"] {
