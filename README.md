@@ -1,18 +1,8 @@
 # GH Reloaded
 
-A Chrome extension that injects small, focused UI enhancements into github.com — the same "add a widget to a page you don't own" idea as Keepa on Amazon, aimed at making GitHub itself more pleasant to use. It's a collection of independent features, not a single-purpose tool: each one lives in its own folder and can be added, removed, or shipped on its own.
+A Chrome extension that injects small, focused UI enhancements into github.com — the same "add a widget to a page you don't own" idea as Keepa on Amazon, aimed at making GitHub itself more pleasant to use.
 
-## Features
-
-### Dependency graph ([features/dependency-graph](features/dependency-graph))
-
-On a GitHub issue page (or a Projects board's issue-preview side panel) that has sub-issues, injects a left-to-right dependency graph below the sub-issues list.
-
-- Fetches the issue's direct sub-issues, their "blocked by" / "blocking" relationships, Projects v2 Status, and the org-level Team / Business Value / Effort custom fields (when available).
-- Lays the graph out left → right, colored by each card's real board status, with dependencies outside the sub-issue set shown as dimmed, dashed "external" nodes.
-- Highlights the critical path (longest chain by total Effort — unestimated stories are assumed to cost the median of whatever else in the feature is sized, so a couple of missing estimates don't distort it) and lets you toggle how much of that external context to show, and how columns are aligned.
-
-More features will land as their own folders under `features/` (and `background/` for anything they need server-side). See [CONTRIBUTING.md](CONTRIBUTING.md) for the shape a new one takes.
+It's a collection of independent features, not a single-purpose tool: each one lives in its own folder under `features/` and can be added, removed, or shipped on its own. GitHub covers the fundamentals well; this is for the gaps that are easier to fill from the outside than to wait on.
 
 ## Install (unpacked, for now)
 
@@ -26,6 +16,18 @@ This isn't on the Chrome Web Store yet.
    - **Issues: Read-only** (sub-issues, dependencies, org-level custom fields)
    - **Projects: Read-only** (Projects v2 Status) — for an organization-owned project this may need the token's resource owner set to that organization, or an SSO authorization step, depending on the org's PAT policy.
 6. Paste the token into Settings, **Save**, then **Test connection**.
+
+## Features
+
+### Dependency graph — [features/dependency-graph](features/dependency-graph)
+
+On a GitHub issue page (or a Projects board's issue-preview side panel) that has sub-issues, injects a left-to-right dependency graph below the sub-issues list.
+
+- Fetches the issue's direct sub-issues, their "blocked by" / "blocking" relationships, Projects v2 Status, and the org-level Team / Business Value / Effort custom fields (when available).
+- Lays the graph out left → right, colored by each card's real board status, with dependencies outside the sub-issue set shown as dimmed, dashed "external" nodes.
+- Highlights the critical path (longest chain by total Effort — unestimated stories are assumed to cost the median of whatever else in the feature is sized, so a couple of missing estimates don't distort it) and lets you toggle how much of that external context to show, and how columns are aligned.
+
+More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
 ## Project layout
 
