@@ -1,6 +1,6 @@
 # Quick-create button
 
-A small floating button (or stack of buttons) on every GitHub Projects board view, each linking straight to "new issue" for a repo you've configured — handy when the repo you actually file work into isn't the one the board itself lives in (e.g. a triage board that spans several repos, or a board where requests go to a different tracker entirely).
+A button (or row of buttons), styled like GitHub's own, right after a Projects board's title — each linking straight to "new issue" for a repo you've configured, handy when the repo you actually file work into isn't the one the board itself lives in (e.g. a triage board that spans several repos, or a board where requests go to a different tracker entirely). Falls back to a floating button if the title can't be found (a GitHub redesign, or the page just hasn't rendered it yet).
 
 ## Configuring it
 
