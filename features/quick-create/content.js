@@ -11,6 +11,17 @@
 (function () {
   const ROOT_ID = "ghqc-root";
 
+  // Mirrors the same map in options.js — duplicated rather than shared,
+  // since content scripts and the options page are separate scripts
+  // with no module system between them.
+  const ICONS = {
+    plus: "M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z",
+    issue: "M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z",
+    check: "M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 1 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z",
+    search: "M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.499 4.499 0 1 0-8.997 0A4.499 4.499 0 0 0 11.5 7Z",
+    link: "M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Zm6.854-1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L13.03 4.03 9.28 7.78a.751.751 0 0 1-1.062-1.06l3.75-3.75-1.543-1.543A.25.25 0 0 1 10.604 1Z",
+  };
+
   // Reloading/updating the extension while this content script is still
   // running on an already-open tab orphans it: chrome.* calls start
   // throwing "Extension context invalidated" instead of doing anything.
@@ -79,10 +90,12 @@
         const url = escapeHtml(s.url || "");
         const color = escapeHtml(s.color || "#1f883d");
         const label = escapeHtml(s.label || "New");
+        const iconPath = ICONS[s.icon] || ICONS.plus;
         return `
           <a class="ghqc-btn" href="${url}" target="_blank" rel="noopener"
              style="background:${color};" title="${url}">
-            ${label}
+            <svg class="ghqc-btn-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="${iconPath}"></path></svg>
+            <span>${label}</span>
           </a>`;
       })
       .join("");
