@@ -110,9 +110,15 @@ async function safeStatus(owner, repo, number) {
   try {
     const data = await ghGraphQL(STATUS_QUERY, { owner, repo, number });
     const nodes = data?.repository?.issue?.projectItems?.nodes || [];
+    if (!nodes.length) {
+      // Most common cause: the token is missing the "Projects: Read-only"
+      // permission — GraphQL doesn't error, it just returns no items.
+      console.warn(`[ghdg] No project items for ${owner}/${repo}#${number} — check the token's "Projects" permission.`);
+    }
     const withStatus = nodes.find((n) => n.fieldValueByName);
     return withStatus ? { name: withStatus.fieldValueByName.name, color: withStatus.fieldValueByName.color } : null;
-  } catch {
+  } catch (e) {
+    console.warn(`[ghdg] Status fetch failed for ${owner}/${repo}#${number}:`, e.message);
     return null;
   }
 }
@@ -129,7 +135,9 @@ async function safeFields(owner, repo, number) {
     }
     return byName;
   } catch (e) {
-    if (e.status === 404) return {};
+    if (e.status !== 404) {
+      console.warn(`[ghdg] Field values fetch failed for ${owner}/${repo}#${number}:`, e.message);
+    }
     return {}; // org-level custom fields are optional — never fail the graph over them
   }
 }
