@@ -1,13 +1,12 @@
-// features/quick-create/content.js — a small floating button (or stack
-// of buttons) on GitHub Projects board views, each linking straight to
-// "new issue" for a repo you've configured in Settings.
+// features/quick-create/content.js — a button (or stack of buttons) in
+// a GitHub Projects page's own top bar, between its last two button
+// groups (Insights/Workflows, and Project details/"..."), each linking
+// straight to "new issue" for a repo you've configured in Settings.
+// Falls back to a floating button if that bar isn't found.
 //
 // Deliberately knows nothing about any specific repo, org, or project:
 // every shortcut is user-defined (label, target URL, project scope,
-// color) via the Settings page. Floating rather than anchored to a
-// specific piece of GitHub's own markup, on purpose: Projects board
-// markup isn't a stable place to anchor on, and this sidesteps that
-// entirely at the cost of not looking quite as "native."
+// color) via the Settings page.
 
 (function () {
   const ROOT_ID = "ghqc-root";
@@ -58,6 +57,20 @@
     })[c]);
   }
 
+  // The project header's top bar carries two button groups on the
+  // right: [Insights, Workflows] and [Project details, "..."]. Insert
+  // right after the second-to-last one — i.e. between those two groups
+  // — rather than trying to append at the very end, so it doesn't end
+  // up wedged inside the last group or after the "..." menu.
+  function findTopBarInsertionPoint() {
+    const topBar = document.querySelector('[class*="index-module__topBarActions"]');
+    if (!topBar) return null;
+    const groups = Array.from(topBar.children).filter((el) =>
+      (el.className || "").toString().includes("index-module__ButtonGroup")
+    );
+    return groups.length >= 2 ? groups[groups.length - 2] : null;
+  }
+
   function buildRoot(shortcuts) {
     const root = document.createElement("div");
     root.id = ROOT_ID;
@@ -76,15 +89,35 @@
     return root;
   }
 
-  function render(shortcuts) {
+  function waitFor(fn, { timeout = 4000, interval = 200 } = {}) {
+    return new Promise((resolve) => {
+      const start = Date.now();
+      const tick = () => {
+        const v = fn();
+        if (v) return resolve(v);
+        if (Date.now() - start > timeout) return resolve(null);
+        setTimeout(tick, interval);
+      };
+      tick();
+    });
+  }
+
+  async function render(shortcuts) {
     document.getElementById(ROOT_ID)?.remove();
     const currentKey = currentProjectKey();
     const visible = shortcuts.filter((s) => matchesProject(s, currentKey));
     if (!currentKey || !visible.length) return;
 
     const root = buildRoot(visible);
-    root.classList.add("is-floating");
-    document.body.appendChild(root);
+    const anchor = await waitFor(findTopBarInsertionPoint);
+
+    if (document.getElementById(ROOT_ID)) return; // a later render() already handled this
+    if (anchor) {
+      anchor.insertAdjacentElement("afterend", root);
+    } else {
+      root.classList.add("is-floating");
+      document.body.appendChild(root);
+    }
   }
 
   async function load() {

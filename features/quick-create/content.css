@@ -1,8 +1,12 @@
+/* Default: inline in the project header's top bar, between its last
+   two button groups — a flex sibling among icon-sized buttons, not a
+   block of its own. */
 #ghqc-root {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 8px 0 16px;
+  margin: 0 8px;
 }
 
 #ghqc-root.is-floating {

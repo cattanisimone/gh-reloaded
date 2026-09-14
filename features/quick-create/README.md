@@ -1,6 +1,6 @@
 # Quick-create button
 
-A small floating button (or stack of buttons) on every GitHub Projects board view, each linking straight to "new issue" for a repo you've configured, handy when the repo you actually file work into isn't the one the board itself lives in (e.g. a triage board that spans several repos, or a board where requests go to a different tracker entirely).
+A button (or stack of buttons) on every GitHub Projects page, sitting in the project's own top bar between its last two button groups (Insights/Workflows, and Project details/"..."), each linking straight to "new issue" for a repo you've configured — handy when the repo you actually file work into isn't the one the board itself lives in (e.g. a triage board that spans several repos, or a board where requests go to a different tracker entirely). Falls back to a floating button if that top bar can't be found.
 
 ## Configuring it
 
@@ -16,4 +16,4 @@ Nothing is preset — this feature doesn't know or assume anything about any spe
 ## Known limitations
 
 - Project scoping is a single `owner/number` match, not a list — a shortcut meant for several (but not all) boards needs one entry per board today.
-- Floating rather than injected into GitHub's own toolbar, on purpose: Projects board markup isn't a stable place to anchor on, and this sidesteps that entirely at the cost of not looking quite as "native".
+- Anchors on the top bar's `index-module__topBarActions`/`index-module__ButtonGroup` class names, read off a live page — resilient to most markup churn, but breaks (falling back to floating) if GitHub renames them outright.
