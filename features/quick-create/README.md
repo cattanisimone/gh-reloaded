@@ -8,7 +8,7 @@ Settings → **Quick-create shortcuts**. Each shortcut is:
 
 - **Label** — the button text (e.g. "New Request")
 - **URL** — where it opens, in a new tab (e.g. `https://github.com/owner/repo/issues/new/choose`, or a specific issue template's URL)
-- **Project** — optional. Leave blank to show the shortcut on every Projects board; set it to `owner/number` (the org or user, and the project number — both visible in the board's own URL, `.../orgs/<owner>/projects/<number>/...`) to show it only there.
+- **Project** — optional. Leave blank to show the shortcut on every Projects board; set it to show it only on one — either `owner/number` directly, or just paste the board's own URL (`.../orgs/<owner>/projects/<number>/...`), either works.
 - **Color** — pick from a small fixed palette, not a full color spectrum, so shortcuts stay visually consistent with each other.
 
 Nothing is preset — this feature doesn't know or assume anything about any specific repo, org, or project. Add as many shortcuts as you want; any that match the current board (unscoped, or scoped to it specifically) show up stacked.

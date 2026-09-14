@@ -32,8 +32,17 @@
     return m ? `${m[2]}/${m[3]}` : null;
   }
 
+  // Accepts either the "owner/number" shorthand or a full board URL
+  // pasted straight from the address bar (the more natural thing to
+  // copy) — both normalize to the same "owner/number" key.
+  function normalizeProjectScope(raw) {
+    const trimmed = (raw || "").trim();
+    const m = /\/(orgs|users)\/([^/]+)\/projects\/(\d+)/.exec(trimmed);
+    return m ? `${m[2]}/${m[3]}` : trimmed;
+  }
+
   function matchesProject(shortcut, currentKey) {
-    const scope = (shortcut.project || "").trim();
+    const scope = normalizeProjectScope(shortcut.project);
     if (!scope) return true; // no scope set — show on every board
     if (!currentKey) return false;
     return scope.toLowerCase() === currentKey.toLowerCase();
