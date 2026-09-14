@@ -1,0 +1,60 @@
+features/board-dependencies/content.js
+  s_fd2c10d007ff79::t_bbdd034a5c15d8 1-285
+options/options.html
+  s_fd2c10d007ff79::t_c15945184a8eba 60-74
+manifest.json
+  s_fd2c10d007ff79::t_db5437d48d4d45 5
+  s_fd2c10d007ff79::t_2a343d8fcb6f91 48-56
+background.js
+  s_fd2c10d007ff79::t_3b4aba6be22c13 12,14
+features/board-dependencies/README.md
+  s_fd2c10d007ff79::t_89ffd43bc39ff6 1-17
+README.md
+  s_49702424c7a4e7::t_6b3b484607f1a3 60
+  s_fd2c10d007ff79::t_c0bef6e8d4d3b6 62-64
+  s_fd2c10d007ff79::t_8a85bd18354824 76
+  s_fd2c10d007ff79::t_8f5fad2b4bf2b7 61
+features/quick-create/README.md
+  s_49702424c7a4e7::t_ee1d94d67c5351 11-12,14,18
+features/board-dependencies/content.css
+  s_fd2c10d007ff79::t_66ed76f66397f4 1-72
+options/options.js
+  s_fd2c10d007ff79::t_89ac4bddf790df 158-182
+  s_49702424c7a4e7::t_dc6877bc53c15c 59-64,78-89,93-101,114-115,125-131,136
+background/board-dependencies.js
+  s_fd2c10d007ff79::t_cd00a87a057c81 1-13,15-49,52-54,57-68
+  s_fd2c10d007ff79::t_f1092a9d740f40 14
+  s_fd2c10d007ff79::t_d9ae9417b998af 50-51,55-56
+features/quick-create/content.js
+  s_49702424c7a4e7::t_c2fff47091c885 14-25
+  s_49702424c7a4e7::t_3bb567e10d2072 40-43
+options/options.css
+  s_fd2c10d007ff79::t_6afc06bff64bab 81-93
+  s_49702424c7a4e7::t_f8878b4348027d 107-112,116-121,124,130-133,150-169
+  s_49702424c7a4e7::t_2e00c20a9d9b22 195,198-204
+  s_49702424c7a4e7::t_b5f08df5f17576 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3620a72801fb159a0c976e92b20f2ae64159ccc8",
+  "prompts": {},
+  "sessions": {
+    "s_49702424c7a4e7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c1676399-d320-4a4f-864a-706605ce3cfb",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    },
+    "s_fd2c10d007ff79": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e4273577-c876-4b7e-a90a-48b02da7d75a",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
