@@ -69,10 +69,9 @@
   border: none;
   background: none;
   cursor: pointer;
-  color: #656d76;
-}
-#ghbd-toggle[aria-checked="true"] {
-  color: #0969da;
+  /* Dark gray always — this is the icon's own color, not tied to
+     on/off state, so it stays legible at a glance either way. */
+  color: #57606a;
 }
 
 #ghbd-toggle .ghbd-switch-track {
@@ -84,8 +83,11 @@
   background: #d0d7de;
   transition: background 0.15s;
 }
+/* Same gray the "backward" (correct-order) arrows use below — the
+   switch's "on" color intentionally matches that, not an unrelated
+   accent color. */
 #ghbd-toggle[aria-checked="true"] .ghbd-switch-track {
-  background: #0969da;
+  background: #57606a;
 }
 
 #ghbd-toggle .ghbd-switch-knob {
@@ -107,13 +109,10 @@
   #ghbd-toggle {
     color: #8b949e;
   }
-  #ghbd-toggle[aria-checked="true"] {
-    color: #388bfd;
-  }
   #ghbd-toggle .ghbd-switch-track {
     background: #30363d;
   }
   #ghbd-toggle[aria-checked="true"] .ghbd-switch-track {
-    background: #388bfd;
+    background: #8b949e;
   }
 }
