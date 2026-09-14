@@ -16,12 +16,16 @@
   // GitHub Projects v2's view-tabs bar — a stable, always-present part of
   // every project page's chrome, unlike the board's own card markup. CSS
   // module class names carry a build-specific hash suffix that will churn
-  // across deploys, so matched by prefix rather than in full. Mounting
-  // inside the trailing "view options" box specifically (not the outer
-  // tabs bar as a whole) is what puts the switch in the same flex row,
-  // right-aligned and vertically in line with that box's own kebab
-  // button, instead of dropping to its own line below everything.
-  const VIEW_OPTIONS_CONTAINER_SELECTOR = '[class*="view-navigation-module__viewOptionsMenuContainer"]';
+  // across deploys, so matched by prefix rather than in full. The
+  // trailing "view options" box (the kebab-ish dropdown) is positioned
+  // with an inline `left` offset that tracks the currently-*selected*
+  // tab, not the row's own right edge — mounting into it directly drags
+  // our switch along with it. Mounting into the outer bar instead and
+  // pinning our own switch to ITS right edge (that outer bar is what the
+  // inline `left` offset above is relative to, so it's already a
+  // positioning context) keeps the switch at the true end of the row
+  // regardless of which tab is selected.
+  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="view-navigation-module__ViewNavigationContainer"]';
   const SELECTED_TAB_SELECTOR = 'nav[aria-label="Select view"] [role="tab"][aria-selected="true"], nav[aria-label="Select view"] [role="tab"].selected';
 
   function isProjectsPage() {
@@ -193,7 +197,7 @@
   // once, is what keeps it from disappearing after that happens.
   function ensureToggleMounted() {
     if (document.getElementById(TOGGLE_ID)) return document.getElementById(TOGGLE_ID);
-    const container = document.querySelector(VIEW_OPTIONS_CONTAINER_SELECTOR);
+    const container = document.querySelector(VIEW_NAV_CONTAINER_SELECTOR);
     if (!container) return null;
 
     const toggle = document.createElement("button");
