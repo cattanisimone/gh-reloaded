@@ -8,14 +8,29 @@ It's a collection of independent features, not a single-purpose tool: each one l
 
 This isn't on the Chrome Web Store yet.
 
+### 1. Load the extension
+
 1. Clone this repo.
-2. Open `chrome://extensions`, enable **Developer mode**.
-3. **Load unpacked** → select the repo folder.
-4. Click the extension's toolbar icon → it opens **Settings**.
-5. Create a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new), scoped to the repositories you want to use this on, with:
-   - **Issues: Read-only** (sub-issues, dependencies, org-level custom fields)
-   - **Projects: Read-only** (Projects v2 Status) — for an organization-owned project this may need the token's resource owner set to that organization, or an SSO authorization step, depending on the org's PAT policy.
-6. Paste the token into Settings, **Save**, then **Test connection**.
+2. Open `chrome://extensions`, enable **Developer mode** (top-right toggle).
+3. Click **Load unpacked** → select the repo folder.
+4. Open **Settings**: click the extension's toolbar icon, or from `chrome://extensions` → the extension's card → **Details** → **Extension options**.
+
+### 2. Create a GitHub token
+
+Go to [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new) (a **fine-grained** token, not classic) and set:
+
+- **Repository access** → *Only select repositories* → pick the repo(s) you want this on.
+- **Permissions** → **Repository permissions** → set both of these to **Read-only**:
+  - **Issues** — sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort)
+  - **Projects** — Projects v2 Status
+- Everything else stays at *No access*.
+- Click **Generate token** and copy it immediately — GitHub shows it exactly once.
+
+If the repo belongs to an organization with SSO enforced (or with a policy restricting personal access tokens), one more step: go to [github.com/settings/tokens](https://github.com/settings/tokens), find the new token, and click **Configure SSO** / **Authorize** next to the org's name. Without this, requests to that org's data can silently come back empty or `404`, since GitHub doesn't otherwise reveal that the resource exists.
+
+### 3. Connect it
+
+Back in the extension's Settings page: paste the token, **Save**, then **Test connection** — it should report the GitHub username the token authenticates as.
 
 ## Features
 
