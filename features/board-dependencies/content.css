@@ -46,21 +46,33 @@
 }
 
 /* Mounted into the view tabs bar as a whole, then pinned to its right
-   edge — that bar is a positioning context for GitHub's own "view
-   options" box (which tracks the selected tab via an inline `left`
-   offset), so `right: 0` here lands at the true end of the row
-   regardless of which tab is selected or how many tabs there are. */
+   edge. GitHub's own "view options" box inside that same bar tracks
+   the selected tab via an inline `left` offset, which only works
+   because the bar is (or at least behaves like) a positioning
+   context — forcing `position: relative` here explicitly is what
+   guarantees OUR `right`/`top` below resolve against this row
+   specifically, rather than against whichever further-up ancestor
+   happens to be the nearest positioned one. */
+[class*="view-navigation-module__ViewNavigationContainer"] {
+  position: relative !important;
+}
+
 #ghbd-toggle {
   position: absolute;
   top: 50%;
-  right: 8px;
+  right: 16px;
   transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   padding: 0;
   border: none;
   background: none;
   cursor: pointer;
+  color: #656d76;
+}
+#ghbd-toggle[aria-checked="true"] {
+  color: #0969da;
 }
 
 #ghbd-toggle .ghbd-switch-track {
@@ -92,6 +104,12 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  #ghbd-toggle {
+    color: #8b949e;
+  }
+  #ghbd-toggle[aria-checked="true"] {
+    color: #388bfd;
+  }
   #ghbd-toggle .ghbd-switch-track {
     background: #30363d;
   }
