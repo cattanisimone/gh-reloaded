@@ -12,12 +12,10 @@ Chrome extension (MV3). On a GitHub issue page that has sub-issues, it injects a
 
 ## v1 scope — known limitations
 
-This is a first testable version, deliberately kept small:
-
-- **Only direct sub-issues** of the open issue are shown as nodes — no recursion into grand-children.
-- **Only "blocked by" edges between those direct sub-issues** are drawn. A sub-issue blocked by something *outside* that list (a different epic, a random issue) won't show that edge yet.
-- **Anchor detection is text-based** (it looks for a heading whose text starts with "Sub-issues"), not tied to a specific CSS class — more resilient to GitHub redesigns, but if GitHub ever renames the section, the graph won't be injected until the code is adjusted.
-- Requires the repo/org to have the [Issue Dependencies](https://github.blog/changelog/2025-08-21-dependencies-on-issues/) feature available. If the API 404s, the graph still renders with sub-issue nodes but no edges.
+- **Only direct sub-issues** of the open issue become full "internal" nodes — no recursion into grand-children.
+- **External dependencies** (an issue outside the sub-issue list that blocks — or is blocked by — one of them) are shown as dimmed, dashed nodes, further left/right of the internal columns, with only their team shown (not Status/Business Value, which are meaningless outside the feature).
+- **Anchor detection is text-based** (it looks for a heading whose text starts with "Sub-issues"), not tied to a specific CSS class — more resilient to GitHub redesigns, but if GitHub ever renames the section, the graph won't be injected until the code is adjusted. Works the same way on a plain issue page and inside a GitHub Projects board's issue-preview side panel (`.../projects/{n}/views/{v}?pane=issue&issue=owner|repo|number`).
+- Requires the repo/org to have the [Issue Dependencies](https://github.blog/changelog/2025-08-21-dependencies-on-issues/) feature available for edges, Projects v2 for the Status color, and org-level custom fields for Team/Business Value. Any of these can be silently absent — the graph still renders with whatever data it got.
 - No extension icons bundled yet (fine for local "load unpacked" testing; add before publishing).
 
 ## Install (for testing)
