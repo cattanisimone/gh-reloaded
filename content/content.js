@@ -148,17 +148,19 @@
     let style = `left:${x}px; top:${y}px; width:${w}px; height:${h}px;`;
     let dotStyle = "";
 
-    // The status color now fills the whole card (not just a dot) so the
-    // state reads at a glance. "Done" always renders as a solid purple
-    // fill regardless of the option's actual configured color.
+    // Status gets a soft tinted fill (background + border in the field's
+    // color) rather than a fully saturated one — reads clearly without
+    // being loud, especially for a heavy color like plain gray. "Done" is
+    // the deliberate exception: always a solid purple fill, regardless of
+    // the option's actual configured color.
     if (done) {
-      cls.push("is-done", "has-status");
+      cls.push("is-done");
       const solid = DONE_PURPLE[theme] || DONE_PURPLE.light;
       style += `background:${solid}; border-color:${solid};`;
     } else if (statusName) {
-      cls.push("has-status");
       const p = paletteFor(node.status.color, theme);
-      style += `background:${p.fg}; border-color:${p.fg};`;
+      style += `background:${p.bg}; border-color:${p.fg};`;
+      dotStyle = `background:${p.fg};`;
     } else {
       dotStyle = closed ? "background:var(--ghdg-closed);" : "background:var(--ghdg-open);";
     }
@@ -167,7 +169,7 @@
       ? `<span class="ghdg-node-bv" style="color:${paletteFor(bv.color, theme).fg}">${escapeHtml(bv.value)}</span>`
       : "";
     const effortHtml =
-      node.effort != null ? `<span class="ghdg-node-effort" title="Effort: ${node.effort}">E ${escapeHtml(node.effort)}</span>` : "";
+      node.effort != null ? `<span class="ghdg-node-effort" title="Effort: ${node.effort}">${escapeHtml(node.effort)} pts</span>` : "";
 
     const titleAttr = escapeHtml(
       `#${node.number} ${node.title || ""}${statusName ? ` — ${statusName}` : ""}${

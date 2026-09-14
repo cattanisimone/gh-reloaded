@@ -151,10 +151,10 @@
   opacity: 1;
   background: rgba(0, 0, 0, 0.08);
 }
-#ghdg-root .ghdg-node.has-status .ghdg-node-link {
+#ghdg-root .ghdg-node.is-done .ghdg-node-link {
   color: rgba(255, 255, 255, 0.85);
 }
-#ghdg-root .ghdg-node.has-status .ghdg-node-link:hover {
+#ghdg-root .ghdg-node.is-done .ghdg-node-link:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -228,16 +228,13 @@
   color: var(--ghdg-muted);
 }
 
-/* Status-driven fill/border colors are set inline (they're data, not fixed
-   classes) — this handles what must win regardless of that inline color:
-   hide the (now redundant) dot, and force light text for readability on a
-   solid-colored card. The bv/team chips manage their own contrast and are
-   deliberately excluded here. */
-#ghdg-root .ghdg-node.has-status .ghdg-node-dot {
+/* "Done" is the one status rendered as a solid fill (not a soft tint), so
+   it alone needs the dot hidden and light text forced for contrast. */
+#ghdg-root .ghdg-node.is-done .ghdg-node-dot {
   display: none;
 }
-#ghdg-root .ghdg-node.has-status .ghdg-node-num,
-#ghdg-root .ghdg-node.has-status .ghdg-node-title {
+#ghdg-root .ghdg-node.is-done .ghdg-node-num,
+#ghdg-root .ghdg-node.is-done .ghdg-node-title {
   color: rgba(255, 255, 255, 0.92);
 }
 
