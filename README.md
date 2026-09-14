@@ -81,6 +81,39 @@ options/                             Settings page (GitHub token, quick-create s
 icons/                               Toolbar/extensions-page icons
 ```
 
+## Releasing
+
+A push to `main` that bumps `manifest.json`'s `"version"` field is packaged and released automatically by [`.github/workflows/release-chrome-extension.yml`](.github/workflows/release-chrome-extension.yml):
+
+1. Zips `manifest.json`, `background.js`, `background/`, `features/`, `icons/`, `lib/`, and `options/` into `gh-reloaded-<version>.zip`.
+2. Uploads and publishes that zip to the Chrome Web Store, if the store secrets below are configured.
+3. Attaches the zip to a GitHub Release tagged `v<version>`, either way.
+
+A push that doesn't change the version is a no-op for this workflow — the Chrome Web Store refuses to re-accept a version it already has, so re-submitting unchanged would just fail every time.
+
+### One-time store setup
+
+The API can only update an *existing* Chrome Web Store listing — the first submission has to happen by hand:
+
+1. Pay the one-time $5 registration fee and create a [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole) account.
+2. Package the extension (`zip -r extension.zip manifest.json background.js background features icons lib options`), upload it as a new item, fill in the store listing (description, screenshots, privacy practices, single purpose, permission justifications), and submit it for review.
+3. Once it's accepted, note the **Extension ID** (from the dashboard item URL) and your **Publisher ID** (Dashboard → account settings → *Publisher (developer) account*).
+4. In Google Cloud Console, create an OAuth client (APIs & Services → Credentials → *OAuth client ID* → type "Desktop app") and enable the **Chrome Web Store API** on that project.
+5. Generate a refresh token for that client, authorized for the `https://www.googleapis.com/auth/chromewebstore` scope against your Web Store account — e.g. via [`chrome-webstore-upload-cli`](https://github.com/fregante/chrome-webstore-upload-cli)'s docs, or any OAuth 2.0 installed-app flow.
+6. Add these as **Actions secrets** (repo Settings → Secrets and variables → Actions):
+
+   | Secret | Value |
+   |---|---|
+   | `CHROME_EXTENSION_ID` | Extension ID from step 3 |
+   | `CHROME_PUBLISHER_ID` | Publisher ID from step 3 |
+   | `CHROME_CLIENT_ID` | OAuth client ID from step 4 |
+   | `CHROME_CLIENT_SECRET` | OAuth client secret from step 4 |
+   | `CHROME_REFRESH_TOKEN` | Refresh token from step 5 |
+
+Until all five secrets are set, the workflow still cuts a GitHub Release on every version bump; it just skips the store upload step (with a warning in the run log) rather than failing the run.
+
+Google's own review queue still sits on top of this either way — a workflow run "publishing" a release means it was *submitted*, not that it's instantly live on the store.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how a feature module is structured and how to add a new one. Issues and PRs welcome.
