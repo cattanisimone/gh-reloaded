@@ -1,6 +1,19 @@
-# GH Reloaded
+<p align="center">
+  <img src="icons/icon128.png" width="96" height="96" alt="">
+</p>
 
+<h1 align="center">GH Reloaded</h1>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-4285F4.svg">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.2.0-orange.svg">
+  <a href="CONTRIBUTING.md"><img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
+</p>
+
+<p align="center">
 A Chrome extension that injects small, focused UI enhancements into github.com — the same "add a widget to a page you don't own" idea as Keepa on Amazon, aimed at making GitHub itself more pleasant to use.
+</p>
 
 It's a collection of independent features, not a single-purpose tool: each one lives in its own folder under `features/` and can be added, removed, or shipped on its own. GitHub covers the fundamentals well; this is for the gaps that are easier to fill from the outside than to wait on.
 
