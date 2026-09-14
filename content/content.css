@@ -59,7 +59,15 @@
   white-space: nowrap;
 }
 
-#ghdg-root .ghdg-mode-select {
+#ghdg-root .ghdg-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+#ghdg-root .ghdg-mode-select,
+#ghdg-root .ghdg-align-select {
   flex: 0 0 auto;
   font-size: 11px;
   padding: 2px 6px;

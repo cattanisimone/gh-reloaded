@@ -241,7 +241,7 @@
     return `M ${x1} ${y1} C ${x1} ${clearY}, ${x2} ${clearY}, ${x2} ${y2}`;
   }
 
-  function renderGraph(body, graph, theme) {
+  function renderGraph(body, graph, theme, align) {
     const { nodes, edges } = graph;
     body.innerHTML = "";
 
@@ -250,7 +250,7 @@
       return;
     }
 
-    const { positions, width, height } = window.GHDG_LAYOUT.layout(nodes, edges);
+    const { positions, width, height } = window.GHDG_LAYOUT.layout(nodes, edges, align);
     const { NODE_W: nodeW, NODE_H: nodeH, COL_GAP: colGap, ARC_CLEAR_Y: clearY } = window.GHDG_LAYOUT;
     const externalIds = new Set(nodes.filter((n) => n.external).map((n) => n.id));
 
@@ -389,8 +389,12 @@
 
     document.getElementById(ROOT_ID)?.remove(); // clear any leftover from a previous attempt
 
-    const { ghdgDepMode } = await chrome.storage.local.get("ghdgDepMode");
+    const { ghdgDepMode, ghdgAlignMode } = await chrome.storage.local.get([
+      "ghdgDepMode",
+      "ghdgAlignMode",
+    ]);
     const initialMode = ghdgDepMode || "full";
+    const initialAlign = ghdgAlignMode || "right";
 
     // The URL may have changed again while we were waiting on storage too.
     if (parseIssueUrl()?.issueNumber !== info.issueNumber) return;
@@ -403,11 +407,17 @@
     container.innerHTML =
       '<div class="ghdg-header">' +
       '<span class="ghdg-header-title">Dependency graph</span>' +
+      '<span class="ghdg-header-controls">' +
+      '<select class="ghdg-align-select" title="Column alignment">' +
+      '<option value="right">Align: near dependents</option>' +
+      '<option value="left">Align: as early as possible</option>' +
+      "</select>" +
       '<select class="ghdg-mode-select" title="External dependencies">' +
       '<option value="full">Full dependencies</option>' +
       '<option value="open">Open dependencies only</option>' +
       '<option value="off">Hide external dependencies</option>' +
       "</select>" +
+      "</span>" +
       "</div>" +
       '<div class="ghdg-body"><div class="ghdg-status">Loading dependency graph…</div></div>';
     anchor.insertAdjacentElement("afterend", container);
@@ -415,13 +425,24 @@
     const body = container.querySelector(".ghdg-body");
     const headerTitle = container.querySelector(".ghdg-header-title");
     const modeSelect = container.querySelector(".ghdg-mode-select");
+    const alignSelect = container.querySelector(".ghdg-align-select");
     modeSelect.value = initialMode;
+    alignSelect.value = initialAlign;
     state = { key, phase: "done" };
 
     let lastGraph = null;
+    const rerender = () => {
+      if (lastGraph) {
+        renderGraph(body, applyDependencyMode(lastGraph, modeSelect.value), theme, alignSelect.value);
+      }
+    };
     modeSelect.addEventListener("change", () => {
       chrome.storage.local.set({ ghdgDepMode: modeSelect.value });
-      if (lastGraph) renderGraph(body, applyDependencyMode(lastGraph, modeSelect.value), theme);
+      rerender();
+    });
+    alignSelect.addEventListener("change", () => {
+      chrome.storage.local.set({ ghdgAlignMode: alignSelect.value });
+      rerender();
     });
 
     chrome.runtime.sendMessage({ type: "GHDG_FETCH_GRAPH", payload: info }, (resp) => {
@@ -448,7 +469,7 @@
       }
 
       lastGraph = resp.graph;
-      renderGraph(body, applyDependencyMode(lastGraph, modeSelect.value), theme);
+      renderGraph(body, applyDependencyMode(lastGraph, modeSelect.value), theme, alignSelect.value);
 
       if (headerTitle) {
         const { criticalPathEffort: eff, criticalPathLength: len } = resp.graph;

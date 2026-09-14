@@ -23,19 +23,20 @@
   const TOP_EXTRA = 24;
   const ARC_CLEAR_Y = 10;
 
-  // Column assignment: a two-pass "as-early / as-late" scheme rather than
-  // pure longest-path-from-source.
+  // Column assignment. `align` picks between two schemes:
   //
-  // Pass 1 (ASAP) gives every node the minimum rank a predecessor allows —
-  // this is what guarantees correctness (a blocker always renders strictly
-  // left of what it blocks).
+  // 'left' (ASAP) — every node gets the minimum rank a predecessor
+  // allows: as early as possible. This is also the correctness floor for
+  // 'right' below (a blocker always renders strictly left of what it
+  // blocks, regardless of which scheme is picked).
   //
-  // Pass 2 pulls any node that HAS an outgoing edge as far right as
-  // possible — "put a card right before its nearest downstream" — without
-  // violating that floor. A node with no outgoing edge (nothing depends on
-  // it, including fully isolated nodes) simply keeps its ASAP rank, which
-  // for an isolated node is column 0 — i.e. it stays on the left.
-  function computeRanks(nodes, edges) {
+  // 'right' (ALAP-ish, the default) — starts from the same ASAP floor,
+  // then pulls any node that HAS an outgoing edge as far right as
+  // possible — "put a card right before its nearest downstream" —
+  // without ever going earlier than that floor. A node with no outgoing
+  // edge (nothing depends on it, including fully isolated nodes) simply
+  // keeps its ASAP rank, which for an isolated node is column 0.
+  function computeRanks(nodes, edges, align) {
     const outgoing = new Map(nodes.map((n) => [n.id, []]));
     const incoming = new Map(nodes.map((n) => [n.id, []]));
     for (const e of edges) {
@@ -56,6 +57,8 @@
       return r;
     }
     for (const n of nodes) asapOf(n.id);
+
+    if (align === "left") return asap;
 
     const finalRank = new Map();
     const visitingFinal = new Set();
@@ -78,8 +81,8 @@
     return finalRank;
   }
 
-  function layout(nodes, edges) {
-    const rank = computeRanks(nodes, edges);
+  function layout(nodes, edges, align = "right") {
+    const rank = computeRanks(nodes, edges, align);
 
     // Vertical order within a column: nodes with more connections (in +
     // out edges) float to the top, per request.
