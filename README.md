@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-A Chrome extension that injects small, focused UI enhancements into github.com — the same "add a widget to a page you don't own" idea as Keepa on Amazon, aimed at making GitHub itself more pleasant to use.
+A Chrome extension that injects small, focused UI enhancements into github.com, aimed at making GitHub itself more pleasant to use.
 </p>
 
 It's a collection of independent features, not a single-purpose tool: each one lives in its own folder under `features/` and can be added, removed, or shipped on its own. GitHub covers the fundamentals well; this is for the gaps that are easier to fill from the outside than to wait on.
