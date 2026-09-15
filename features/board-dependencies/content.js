@@ -237,8 +237,8 @@
     if (!toggle) return;
     toggle.setAttribute("aria-checked", String(enabled));
     toggle.title = enabled
-      ? "Dependency arrows: on — hide arrows between dependent cards"
-      : "Dependency arrows: off — show arrows between dependent cards";
+      ? "Dependency arrows (experimental): on — hide arrows between dependent cards"
+      : "Dependency arrows (experimental): off — show arrows between dependent cards";
   }
 
   // State for the currently-running render loop, so tearing down (toggle

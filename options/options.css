@@ -137,6 +137,18 @@ button.danger {
   border-top: 1px solid #d0d7de;
 }
 
+.badge-experimental {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9a6700;
+  background: #fff8c5;
+  border: 1px solid #d4a72c;
+  vertical-align: middle;
+}
+
 .status {
   margin-top: 12px;
   font-size: 13px;
@@ -299,6 +311,11 @@ a {
   .sc-icon.is-selected {
     background: #30363d;
     color: #e6edf3;
+  }
+  .badge-experimental {
+    color: #e3b341;
+    background: #3d340a;
+    border-color: #9e6a03;
   }
   button {
     background: #161b22;
