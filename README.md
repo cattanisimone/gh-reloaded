@@ -7,7 +7,7 @@
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-4285F4.svg">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.4.3-orange.svg">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.4.4-orange.svg">
   <a href="CONTRIBUTING.md"><img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
 </p>
 
@@ -139,6 +139,10 @@ Google's own review queue still sits on top of this either way — a workflow ru
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how a feature module is structured and how to add a new one. Issues and PRs welcome.
+
+## Privacy
+
+See [PRIVACY.md](PRIVACY.md) — short version: nothing is collected, sold, or sent anywhere except directly to `api.github.com` with your own token.
 
 ## License
 
