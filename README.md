@@ -140,6 +140,10 @@ Google's own review queue still sits on top of this either way — a workflow ru
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how a feature module is structured and how to add a new one. Issues and PRs welcome.
 
+## Privacy
+
+See [PRIVACY.md](PRIVACY.md) — short version: nothing is collected, sold, or sent anywhere except directly to `api.github.com` with your own token.
+
 ## License
 
 [MIT](LICENSE)
