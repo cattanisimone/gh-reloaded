@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "GH Reloaded",
-  "version": "0.4.5",
-  "description": "Small UI enhancements for GitHub Projects: dependency graphs, quick-create shortcuts, board dependency arrows, full-width boards.",
+  "version": "0.5.0",
+  "description": "Small UI enhancements for GitHub: dependency graphs, quick-create, board dependency arrows, full-width boards, HTML previews.",
   "permissions": ["storage"],
   "host_permissions": ["https://api.github.com/*"],
   "background": {
@@ -63,6 +63,25 @@
       "js": ["features/full-width-board/content.js"],
       "css": ["features/full-width-board/content.css"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://github.com/*/*/pull/*/files*",
+        "https://github.com/*/*/blob/*"
+      ],
+      "js": ["features/html-preview/content.js"],
+      "css": ["features/html-preview/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "features/html-preview/preview.html",
+        "features/html-preview/preview.css",
+        "features/html-preview/preview.js"
+      ],
+      "matches": ["https://github.com/*"]
     }
   ]
 }

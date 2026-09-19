@@ -33,9 +33,10 @@ This isn't on the Chrome Web Store yet.
 Go to [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new) (a **fine-grained** token, not classic) and set:
 
 - **Repository access** → *Only select repositories* → pick the repo(s) you want this on.
-- **Permissions** → **Repository permissions** → set both of these to **Read-only**:
+- **Permissions** → **Repository permissions** → set these to **Read-only**:
   - **Issues** — sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort)
   - **Projects** — Projects v2 Status
+  - **Contents** — reading HTML files for the **HTML preview** feature; only needed for private repos, public ones work without a token
 - Everything else stays at *No access*.
 - Click **Generate token** and copy it immediately — GitHub shows it exactly once.
 
@@ -76,6 +77,15 @@ On a GitHub Projects **Board** (kanban) view, draws an arrow directly between an
 On a GitHub Projects **Board** (kanban) view, stretches the board to the full window width instead of the page's normal centered column — more room for columns before they need to scroll horizontally. On by default; switchable from Settings.
 
 ![Full-width board mockup: before/after comparison of a kanban board squeezed into a centered padded column with a horizontal scrollbar, versus the same board stretched edge-to-edge with wider columns and no scrollbar](screenshots/full-width-board.svg)
+
+### HTML preview — [features/html-preview](features/html-preview)
+
+Renders `.html`/`.htm` files instead of leaving them as plain source.
+
+- On a pull request's **Files changed** tab, adds a globe button next to each HTML file's "..." menu that opens the rendered file in a new tab.
+- On a file's own page, adds a **Preview** tab next to Code/Blame that renders it inline — the same way GitHub already does for Markdown.
+
+Fetches the file's content through the GitHub API at the exact commit shown, and renders it in a sandboxed `<iframe>` (no `allow-same-origin`) so a file's own script can't read your GitHub session or touch the rest of the page. Works without a token for public repos; a token with **Contents: Read-only** is needed for private ones. On by default.
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
