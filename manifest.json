@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GH Reloaded",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Small UI enhancements for GitHub Projects: dependency graphs, quick-create shortcuts, board dependency arrows, full-width boards.",
   "permissions": ["storage"],
   "host_permissions": ["https://api.github.com/*"],
