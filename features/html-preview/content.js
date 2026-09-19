@@ -48,6 +48,10 @@
     return String(s).replace(/"/g, "&quot;");
   }
 
+  function escapeRe(s) {
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
   // Icon-only controls carry their real label as aria-label (screen
   // readers) or a tooltip title — either is a much better anchor than a
   // class name, which is the closest thing to "visible text" an
@@ -114,7 +118,7 @@
   }
 
   function findBlobLink(scope, owner, repo) {
-    const re = new RegExp(`^/${owner}/${repo}/blob/([^/]+)/(.+)$`, "i");
+    const re = new RegExp(`^/${escapeRe(owner)}/${escapeRe(repo)}/blob/([^/]+)/(.+)$`, "i");
     for (const a of scope.querySelectorAll("a[href]")) {
       const href = (a.getAttribute("href") || "").split("?")[0].split("#")[0];
       const m = re.exec(href);
@@ -129,16 +133,16 @@
     );
   }
 
-  const processedKebabs = new WeakSet();
-
   function injectDiffPreviewButtons({ owner, repo }) {
     for (const kebab of findKebabButtons()) {
-      if (processedKebabs.has(kebab)) continue;
-      processedKebabs.add(kebab);
-
       const anchor = kebab.closest("details") || kebab;
       const row = anchor.parentElement;
-      if (!row) continue;
+      // Marked on the row itself rather than a Set kept in module state:
+      // it's what teardown() below can cheaply undo for exactly the rows
+      // that got a button, so turning the feature off and back on again
+      // doesn't leave them permanently skipped.
+      if (!row || row.dataset.ghhpChecked) continue;
+      row.dataset.ghhpChecked = "1";
       // The filename link (or a dedicated "View file" icon) that points
       // at this file's blob at the diff's head commit usually isn't in
       // the exact same row as the kebab, but it is a nearby ancestor —
@@ -168,10 +172,40 @@
 
   // --- Single-file blob page ------------------------------------------
 
+  // A branch name containing "/" (a common convention, e.g. "feature/x")
+  // makes "/owner/repo/blob/<ref>/<path>" genuinely ambiguous to split by
+  // itself — naively treating the first segment as the whole ref breaks
+  // for exactly those branches. GitHub's own file breadcrumb always
+  // includes a link back to the repo root at this same ref, with no path
+  // segment after it (`/owner/repo/tree/<ref>`, no ambiguity there since
+  // there's nothing after it to confuse for part of the ref) — among any
+  // such links that are a prefix of the current path, the longest one is
+  // the real ref. Falls back to "first segment is the ref" (correct for
+  // the common case of a plain branch/tag/sha) when no such link is found.
+  function resolveRefAndPath(owner, repo, rest) {
+    const treeRootRe = new RegExp(`^/${escapeRe(owner)}/${escapeRe(repo)}/tree/([^?#]+)$`, "i");
+    let best = null;
+    for (const a of document.querySelectorAll("a[href]")) {
+      const href = (a.getAttribute("href") || "").split("?")[0].split("#")[0];
+      const m = treeRootRe.exec(href);
+      if (!m) continue;
+      const candidate = m[1];
+      if ((rest === candidate || rest.startsWith(candidate + "/")) && (!best || candidate.length > best.length)) {
+        best = candidate;
+      }
+    }
+    if (best) {
+      return { ref: decodeURIComponent(best), path: decodeURIComponent(rest.slice(best.length + 1)) };
+    }
+    const naive = /^([^/]+)\/(.+)$/.exec(rest);
+    return naive ? { ref: decodeURIComponent(naive[1]), path: decodeURIComponent(naive[2]) } : null;
+  }
+
   function parseBlobUrl() {
-    const m = location.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/);
+    const m = location.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
     if (!m) return null;
-    return { owner: m[1], repo: m[2], ref: decodeURIComponent(m[3]), path: decodeURIComponent(m[4]) };
+    const resolved = resolveRefAndPath(m[1], m[2], m[3]);
+    return resolved ? { owner: m[1], repo: m[2], ...resolved } : null;
   }
 
   // GitHub's own "Code | Preview" toggle for Markdown files is exactly
@@ -262,10 +296,27 @@
     });
   }
 
+  // Undoes injectDiffPreviewButtons/injectBlobPreviewTab's DOM changes —
+  // called when the feature is switched off from Settings while a
+  // matching page is already open, so the injected controls (and their
+  // still-live click handlers) don't linger until the next reload.
+  function teardown() {
+    document.querySelectorAll(".ghhp-preview-btn").forEach((btn) => {
+      delete btn.parentElement?.dataset.ghhpChecked;
+      btn.remove();
+    });
+    document.getElementById("ghhp-blob-tab")?.remove();
+    document.getElementById("ghhp-blob-panel")?.remove();
+    blobKey = null;
+  }
+
   async function sync() {
     if (!extensionAlive()) return;
     const { [STORAGE_KEY]: enabled } = await chrome.storage.local.get(STORAGE_KEY);
-    if (enabled === false) return;
+    if (enabled === false) {
+      teardown();
+      return;
+    }
 
     if (isFilesChangedPage()) {
       const repoInfo = parseRepoFromPath();
