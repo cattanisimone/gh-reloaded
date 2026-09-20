@@ -67,6 +67,7 @@
     {
       "matches": [
         "https://github.com/*/*/pull/*/files*",
+        "https://github.com/*/*/pull/*/changes*",
         "https://github.com/*/*/blob/*"
       ],
       "js": ["features/html-preview/content.js"],
@@ -74,12 +75,20 @@
       "run_at": "document_idle"
     }
   ],
+  "sandbox": {
+    "pages": ["features/html-preview/sandbox.html"]
+  },
+  "content_security_policy": {
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; font-src * data:; connect-src *; frame-src *; child-src *; base-uri *; object-src *;"
+  },
   "web_accessible_resources": [
     {
       "resources": [
         "features/html-preview/preview.html",
         "features/html-preview/preview.css",
-        "features/html-preview/preview.js"
+        "features/html-preview/preview.js",
+        "features/html-preview/sandbox.html",
+        "features/html-preview/sandbox.js"
       ],
       "matches": ["https://github.com/*"]
     }

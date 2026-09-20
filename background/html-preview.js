@@ -42,7 +42,33 @@ async function fetchFileContent(owner, repo, path, ref) {
   throw new Error(`Could not read the content of ${path}`);
 }
 
-export async function handleMessage({ owner, repo, path, ref }) {
+// A GitHub blob URL (/owner/repo/blob/<rest>) is genuinely ambiguous
+// about where the ref ends and the path begins whenever the branch name
+// itself contains a slash (e.g. "feature/x") — the content script can't
+// tell "feature/x/file.html" apart from ref "feature" + path
+// "x/file.html" from the URL alone. Git's own ref namespace can't have
+// both "feature" and "feature/x" as branches at once (one would have to
+// be a file and a directory at the same path), so at most one split
+// below ever resolves to a real file — try the common no-slash case
+// first, then widen the ref by one segment at a time only while the
+// Contents API says that exact split doesn't exist.
+async function resolveAndFetch(owner, repo, segments) {
+  let lastErr;
+  for (let k = 1; k < segments.length; k++) {
+    const ref = segments.slice(0, k).join("/");
+    const path = segments.slice(k).join("/");
+    try {
+      return { html: await fetchFileContent(owner, repo, path, ref), ref, path };
+    } catch (err) {
+      if (err.status !== 404) throw err; // a real error, not just "wrong split" — don't mask it
+      lastErr = err;
+    }
+  }
+  throw lastErr || new Error("Could not resolve a branch/path split for this URL.");
+}
+
+export async function handleMessage({ owner, repo, path, ref, segments }) {
+  if (segments) return resolveAndFetch(owner, repo, segments);
   const html = await fetchFileContent(owner, repo, path, ref);
-  return { html };
+  return { html, ref, path };
 }

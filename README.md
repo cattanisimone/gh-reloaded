@@ -7,7 +7,7 @@
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-4285F4.svg">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.4.4-orange.svg">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.5.0-orange.svg">
   <a href="CONTRIBUTING.md"><img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
 </p>
 
@@ -78,14 +78,18 @@ On a GitHub Projects **Board** (kanban) view, stretches the board to the full wi
 
 ![Full-width board mockup: before/after comparison of a kanban board squeezed into a centered padded column with a horizontal scrollbar, versus the same board stretched edge-to-edge with wider columns and no scrollbar](screenshots/full-width-board.svg)
 
-### HTML preview — [features/html-preview](features/html-preview)
+### HTML preview — [features/html-preview](features/html-preview) — _Experimental_
 
 Renders `.html`/`.htm` files instead of leaving them as plain source.
 
 - On a pull request's **Files changed** tab, adds a globe button next to each HTML file's "..." menu that opens the rendered file in a new tab.
 - On a file's own page, adds a **Preview** tab next to Code/Blame that renders it inline — the same way GitHub already does for Markdown.
 
-Fetches the file's content through the GitHub API at the exact commit shown, and renders it in a sandboxed `<iframe>` (no `allow-same-origin`) so a file's own script can't read your GitHub session or touch the rest of the page. Works without a token for public repos; a token with **Contents: Read-only** is needed for private ones. On by default.
+![HTML preview mockup: a blob page's tab row with an injected "Preview" tab selected next to native Code and Blame tabs, and the rendered file content below — a heading, badges, and a small flow diagram](screenshots/html-preview.svg)
+
+Fetches the file's content through the GitHub API at the exact commit/branch shown (working out the right split itself even when a branch name contains a slash, e.g. `feature/x`), then renders it through two nested, sandboxed layers: an extension page with its own CSP, itself embedding a manifest-declared *sandbox page* whose separate, permissive-by-default CSP is where the previewed file's HTML actually lands. That inner page can run scripts and load resources the way a normal webpage would (inline `<script>`, CDN'd libraries, fonts, images) while still having no access to your GitHub session, cookies, or any extension API — that isolation, not CSP strictness, is what keeps it safe. Works without a token for public repos; a token with **Contents: Read-only** is needed for private ones. On by default.
+
+Marked experimental: it renders arbitrary third-party HTML/JS, and the inline Preview tab anchors on GitHub's own (undocumented, redesign-prone) blob-page markup to inject itself — expect it to need upkeep as GitHub's UI changes.
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 

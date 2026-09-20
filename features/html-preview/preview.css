@@ -24,27 +24,87 @@ body {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #f6f8fa;
   border-bottom: 1px solid #d0d7de;
-  font-size: 13px;
+  font-size: 14px;
+}
+
+.ghhp-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.ghhp-gh-mark {
+  flex: 0 0 auto;
+  fill: currentColor;
+  color: #57606a;
+}
+
+.ghhp-repo-link {
+  flex: 0 0 auto;
+  font-size: 15px;
+  color: #1f2328;
+  font-weight: 600;
+  text-decoration: none;
+}
+.ghhp-repo-link:hover {
+  color: #0969da;
+  text-decoration: underline;
+}
+
+.ghhp-sep {
+  flex: 0 0 auto;
+  color: #656d76;
 }
 
 .ghhp-path {
   font-family: ui-monospace, monospace;
+  font-size: 13px;
+  color: #57606a;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.ghhp-brand {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .ghhp-link {
   flex: 0 0 auto;
+  margin-left: auto;
   color: #0969da;
   text-decoration: none;
 }
 .ghhp-link:hover {
   text-decoration: underline;
+}
+
+.ghhp-brand-sep {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 24px;
+  background: #d0d7de;
+}
+
+.ghhp-ext-icon {
+  flex: 0 0 auto;
+  border-radius: 6px;
+}
+
+/* Embedded inline in a GitHub blob page (see preview.js) — that page
+   already has its own file header and Preview/Code/Blame tabs, so this
+   page's own header bar would just be a duplicate. */
+.ghhp-bare .ghhp-bar {
+  display: none;
 }
 
 .ghhp-status {
@@ -70,7 +130,24 @@ body {
     color: #e6edf3;
   }
   .ghhp-bar {
+    background: #161b22;
     border-color: #30363d;
+  }
+  .ghhp-gh-mark {
+    color: #8b949e;
+  }
+  .ghhp-repo-link {
+    color: #e6edf3;
+  }
+  .ghhp-repo-link:hover {
+    color: #4493f8;
+  }
+  .ghhp-sep,
+  .ghhp-path {
+    color: #8b949e;
+  }
+  .ghhp-brand-sep {
+    background: #30363d;
   }
   .ghhp-link {
     color: #4493f8;
