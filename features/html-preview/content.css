@@ -1,0 +1,90 @@
+/* --- PR "Files changed" page: the globe preview button ------------- */
+
+.ghhp-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  /* The filename section it sits in (next to "Copy file name") has no
+     flex gap of its own — its buttons space themselves with `ml-2`
+     (margin-left: 8px), so ours matches that instead of relying on a
+     parent gap that doesn't exist here. */
+  margin: 0 0 0 8px;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  background: none;
+  border-radius: 6px;
+  color: #59636e;
+  cursor: pointer;
+}
+.ghhp-preview-btn:hover {
+  background: rgba(140, 149, 159, 0.2);
+  color: #1f2328;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ghhp-preview-btn {
+    color: #8b949e;
+  }
+  .ghhp-preview-btn:hover {
+    background: rgba(139, 148, 158, 0.24);
+    color: #e6edf3;
+  }
+}
+
+/* --- Blob page: the "Preview" tab and its panel --------------------- */
+
+/* Our "Preview" list and GitHub's own Code|Blame list are two separate
+   <ul>s, kept apart deliberately (see content.js — React wipes any child
+   it didn't render on its own re-renders), but they have to read as ONE
+   continuous pill, the way GitHub's native Preview|Code|Blame does for
+   Markdown. Everything that draws that pill is already identical, since
+   content.js builds our <ul> by copying the real one's attributes —
+   same classes, so same height, background, padding and radius, and
+   deliberately no `display` override here that could diverge from
+   whatever Primer's own class sets. So all that's left is the seam:
+   square off the two corners that touch, move the track inset out to
+   the combined shape's two outer ends, and let joinTabLists() in
+   content.js take out any horizontal gap the surrounding toolbar adds.
+
+   Both selectors are one step more specific than the single hashed
+   Primer class they override, so they win regardless of where Chrome
+   drops an extension stylesheet in the cascade. The second one is an
+   adjacent-sibling selector rather than a class we add to GitHub's <ul>
+   precisely because it needs no DOM change of theirs: it keeps matching
+   even when React tears the real list down and mounts a fresh one. */
+ul.ghhp-tab-list {
+  margin-right: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  padding-right: 0;
+  border-right-width: 0;
+}
+
+ul.ghhp-tab-list + ul {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 0;
+  border-left-width: 0;
+}
+
+.ghhp-tab {
+  cursor: pointer;
+}
+
+.ghhp-panel {
+  /* No border: this now sits in the page's own full-width content
+     column (see content.js), not a boxed context — a left/right
+     border here would just draw a stray vertical line down the page. */
+  overflow: hidden;
+}
+
+.ghhp-frame {
+  display: block;
+  width: 100%;
+  height: 80vh;
+  border: none;
+  background: #ffffff;
+}

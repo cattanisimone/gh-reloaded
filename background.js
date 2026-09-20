@@ -10,8 +10,9 @@
 import { getToken } from "./lib/github-api.js";
 import * as dependencyGraph from "./background/dependency-graph.js";
 import * as boardDependencies from "./background/board-dependencies.js";
+import * as htmlPreview from "./background/html-preview.js";
 
-const FEATURES = [dependencyGraph, boardDependencies];
+const FEATURES = [dependencyGraph, boardDependencies, htmlPreview];
 
 chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage();

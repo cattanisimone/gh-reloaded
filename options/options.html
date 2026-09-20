@@ -41,6 +41,12 @@
           </button>
           <span>Full-width board — stretches a Board view to the full window width</span>
         </div>
+        <div class="checkbox-row">
+          <button id="feature-ghhp" type="button" role="switch" aria-checked="false" class="switch">
+            <span class="switch-track"><span class="switch-knob"></span></span>
+          </button>
+          <span>HTML preview — a preview icon on PR file diffs, a Preview tab on HTML file pages</span>
+        </div>
       </div>
       <p id="features-status" class="status"></p>
 
@@ -50,12 +56,14 @@
       <p class="hint">
         Used by the <strong>Dependency graph</strong> feature to read sub-issues, their
         "blocked by" relationships, Projects v2 Status, and org-level custom fields via
-        the GitHub API.
+        the GitHub API. Also used by <strong>HTML preview</strong> to read a file's content
+        on private repos — public repos work without a token.
       </p>
       <p class="hint">
         Use a <strong>fine-grained token</strong>, scoped only to the repositories you
-        actually need, with <strong>Issues: Read-only</strong> and
-        <strong>Projects: Read-only</strong> — nothing else.
+        actually need, with <strong>Issues: Read-only</strong>,
+        <strong>Projects: Read-only</strong>, and <strong>Contents: Read-only</strong> —
+        nothing else.
       </p>
 
       <label for="token">GitHub token</label>
@@ -108,6 +116,16 @@
         On a GitHub Projects <strong>Board</strong> (kanban) view, stretches the board to the
         full window width instead of the page's normal centered column — more room for
         columns before they need to scroll horizontally. On by default (see
+        <strong>Features</strong> above).
+      </p>
+
+      <h2>HTML preview</h2>
+      <p class="hint">
+        On a pull request's <strong>Files changed</strong> tab, adds a globe button next to
+        each HTML file's "..." menu that opens the rendered file in a new tab. On a file's own
+        page, adds a <strong>Preview</strong> tab next to Code/Blame that renders it inline —
+        the same way GitHub already does for Markdown. Rendered in a sandboxed frame, so a
+        file's own scripts can't read your GitHub session. On by default (see
         <strong>Features</strong> above).
       </p>
     </main>
