@@ -1,0 +1,118 @@
+screenshots/html-preview.svg
+  s_18d6b1ebd60cc9::t_015a1661530275 3-16,18,20,27-28,30-31,35-36,41-43,45,49-50,53,57-62
+  s_18d6b1ebd60cc9::t_3c83c5d0475ccd 26
+  s_18d6b1ebd60cc9::t_d791ba37f039da 1-2,17,19,21-25,29,32-34,37-40,44,46-48,51-52,54-56
+features/html-preview/content.js
+  s_18d6b1ebd60cc9::t_45977c21860d8e 90-94
+  s_18d6b1ebd60cc9::t_60b1c0edf883cd 413-417,420-421,431,434
+  s_18d6b1ebd60cc9::t_35848ccdad31b2 423
+  s_18d6b1ebd60cc9::t_4653e7e0c728f1 457-459
+  s_18d6b1ebd60cc9::t_92aa1f2f44b848 195-201,203,205-206
+  s_18d6b1ebd60cc9::t_1dc14cff77118c 449
+  s_18d6b1ebd60cc9::t_f1b0ab48acfbf0 300-309
+  s_18d6b1ebd60cc9::t_d1a029742a96a6 281,283-284
+  s_18d6b1ebd60cc9::t_7eb5ee7f2c3d40 151
+  s_18d6b1ebd60cc9::t_00ef506653b91c 41-46,48-56
+  s_18d6b1ebd60cc9::t_18d21919558780 380-384
+  s_18d6b1ebd60cc9::t_921f9fb3a368ea 97-113
+  s_18d6b1ebd60cc9::t_1d5e8115ae868c 214-218,220-221
+  s_18d6b1ebd60cc9::t_311eeb54334f74 409
+  s_18d6b1ebd60cc9::t_145b662489041f 347
+  s_18d6b1ebd60cc9::t_91edd9af7eec51 310-312
+  s_18d6b1ebd60cc9::t_56f7539addc425 11-15
+  s_18d6b1ebd60cc9::t_cfd6f973276f8c 294-295,393-397,401-404,433,435-440
+  s_18d6b1ebd60cc9::t_e1b421e8e74071 118-122,124-128,132
+  s_18d6b1ebd60cc9::t_eca8bd93ec38f3 62
+  s_18d6b1ebd60cc9::t_83256cc3f6873d 71-75,79-84
+  s_18d6b1ebd60cc9::t_002fccb2fb48a4 366-369,372,385
+  s_18d6b1ebd60cc9::t_ef73e08ac92a1b 181
+  s_18d6b1ebd60cc9::t_4f3e38739b26d9 343-345
+  s_18d6b1ebd60cc9::t_eddac8f3259e89 270-277
+  s_18d6b1ebd60cc9::t_c61b5a0ba280a9 296-299
+  s_18d6b1ebd60cc9::t_7a1a58e362f5c0 116-117,123,129-131
+  s_18d6b1ebd60cc9::t_b419f86ba25f82 149-150,169,171
+  s_18d6b1ebd60cc9::t_3ca5c677f363b9 370-371,373-375
+  s_18d6b1ebd60cc9::t_11f1640c5ab8ff 183-189
+  s_18d6b1ebd60cc9::t_e2ee25b4f8df59 316-319
+  s_18d6b1ebd60cc9::t_fdf5afa4cf2292 391-392,399-400,418-419
+  s_18d6b1ebd60cc9::t_07d862abaeb443 333-342,346
+  s_18d6b1ebd60cc9::t_2391a6572cfcf7 159-162,167-168
+  s_18d6b1ebd60cc9::t_0699d94f7bbf00 135-138
+  s_18d6b1ebd60cc9::t_c02652839d46d2 282
+  s_18d6b1ebd60cc9::t_b33f0174548914 320-331
+  s_18d6b1ebd60cc9::t_88e006eaab8781 239-259
+  s_18d6b1ebd60cc9::t_8d22656b821fcc 280
+  s_18d6b1ebd60cc9::t_0cc9b5905c9b7f 349-358,360-361,364,386
+  s_18d6b1ebd60cc9::t_f8e9e74793c4c4 222-236
+  s_18d6b1ebd60cc9::t_5f241f2bbd2a7d 405
+  s_18d6b1ebd60cc9::t_bbd335bc7b4133 237-238
+  s_18d6b1ebd60cc9::t_33db81292f5d99 348
+  s_18d6b1ebd60cc9::t_dd7741d25e17a3 365
+  s_18d6b1ebd60cc9::t_65916dce45dd88 88
+features/html-preview/content.css
+  s_18d6b1ebd60cc9::t_b3110c81877916 71-72
+  s_18d6b1ebd60cc9::t_759c6f905eb6c1 10-14
+  s_18d6b1ebd60cc9::t_29054f0a920b3c 78-80
+  s_18d6b1ebd60cc9::t_7c981852c6ba46 15-16,19
+  s_18d6b1ebd60cc9::t_f114f635d6cf8a 39-70
+features/html-preview/sandbox.js
+  s_18d6b1ebd60cc9::t_694233b4f85681 1-13,23-28
+  s_18d6b1ebd60cc9::t_34b8df2cbe60a8 14-22
+background/html-preview.js
+  s_18d6b1ebd60cc9::t_41aef19fa23fd2 45-60,62-71
+  s_18d6b1ebd60cc9::t_558bcbab222c06 61,73
+features/html-preview/preview.css
+  s_18d6b1ebd60cc9::t_e25757c88093d1 94,100
+  s_18d6b1ebd60cc9::t_d7b287cb850dde 29,34-49,51-62,68,74-78,91-93,95-99
+  s_18d6b1ebd60cc9::t_5f4900dffcd933 83
+  s_18d6b1ebd60cc9::t_f700288149f890 146,148,151
+  s_18d6b1ebd60cc9::t_c974f1b7860c50 50
+  s_18d6b1ebd60cc9::t_d3608853227ed0 133,136-145,147,149-150
+  s_18d6b1ebd60cc9::t_ee25a5f1a581ed 32,79,101,103-109
+  s_18d6b1ebd60cc9::t_7ec9e16460f11e 67
+  s_18d6b1ebd60cc9::t_10859c4b450754 27-28,31
+  s_18d6b1ebd60cc9::t_419c80fe1d734d 33
+  s_18d6b1ebd60cc9::t_ae2a97b264e2d6 80
+  s_18d6b1ebd60cc9::t_657bd4ad458f61 102
+README.md
+  s_18d6b1ebd60cc9::t_494c8d55e51b0b 81,90-92
+  s_18d6b1ebd60cc9::t_e4ebebf8b6b9bb 88-89
+  s_18d6b1ebd60cc9::t_450596486e4c5d 10
+CLAUDE.md
+  s_18d6b1ebd60cc9::t_074a0e17dc9bf4 1-9
+manifest.json
+  s_18d6b1ebd60cc9::t_a975d1638b1184 79-82
+  s_18d6b1ebd60cc9::t_568f9db9369fa9 78,83
+  s_18d6b1ebd60cc9::t_b146ce252f85e9 89-91
+  s_18d6b1ebd60cc9::t_10d8c0b2c80eaf 70
+features/html-preview/preview.js
+  s_18d6b1ebd60cc9::t_3de93ed1b3c943 12-21
+  s_18d6b1ebd60cc9::t_993541b7813696 41,48-53,55-56,71-77
+  s_18d6b1ebd60cc9::t_d5f53674595776 43-46
+  s_18d6b1ebd60cc9::t_aa4b028597774d 78-90
+  s_18d6b1ebd60cc9::t_d03a4af899da79 24
+features/html-preview/preview.html
+  s_18d6b1ebd60cc9::t_9da78981e1a92a 27
+  s_18d6b1ebd60cc9::t_55463415cd7274 10,16,18-19
+  s_18d6b1ebd60cc9::t_61b9bcbee50999 12,14-15,20-23
+  s_18d6b1ebd60cc9::t_ac54179602640e 11,13
+  s_18d6b1ebd60cc9::t_b7f582d74bc3cd 17
+features/html-preview/sandbox.html
+  s_18d6b1ebd60cc9::t_1f74c79df0d986 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6b14390e8dbb6f1b3b1a7d234ffdbeee2cd73025",
+  "prompts": {},
+  "sessions": {
+    "s_18d6b1ebd60cc9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "08b9df11-ce64-43af-894d-7af687c2e860",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
