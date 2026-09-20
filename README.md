@@ -73,9 +73,9 @@ On a GitHub Projects **Board** (kanban) view, draws an arrow directly between an
 
 ### Full-width board — [features/full-width-board](features/full-width-board)
 
-On a GitHub Projects **Board** (kanban) view, stretches the board to the full window width instead of the page's normal centered column — more room for columns before they need to scroll horizontally. On by default; switchable from Settings.
+On a GitHub Projects **Board** (kanban) view, uses the full window width and makes every column flexible: columns grow into spare space, then shrink as needed (down to 140px each) so more of the board stays visible before horizontal scrolling is necessary. Boards with too many columns to fit at that minimum still scroll. On by default; switchable from Settings.
 
-![Full-width board mockup: before/after comparison of a kanban board squeezed into a centered padded column with a horizontal scrollbar, versus the same board stretched edge-to-edge with wider columns and no scrollbar](screenshots/full-width-board.svg)
+![Full-width board mockup: a kanban board using spare window space when available and shrinking columns when space is tight, delaying horizontal scrolling until the 140px-per-column minimum is reached](screenshots/full-width-board.svg)
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
