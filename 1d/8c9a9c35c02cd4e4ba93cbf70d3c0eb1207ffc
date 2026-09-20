@@ -1,0 +1,22 @@
+README.md
+  s_18d6b1ebd60cc9::t_fdb0c0a626ac1b 10
+  s_18d6b1ebd60cc9::t_02a833b84c6fce 77,79
+manifest.json
+  s_18d6b1ebd60cc9::t_de74195e81ab19 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1d8c9a9c35c02cd4e4ba93cbf70d3c0eb1207ffc",
+  "prompts": {},
+  "sessions": {
+    "s_18d6b1ebd60cc9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "08b9df11-ce64-43af-894d-7af687c2e860",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
