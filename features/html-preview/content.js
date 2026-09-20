@@ -144,18 +144,18 @@
     );
   }
 
-  const processedKebabs = new WeakSet();
-
   function injectDiffPreviewButtons() {
     const head = findHeadRepo();
 
     for (const kebab of findKebabButtons()) {
-      if (processedKebabs.has(kebab)) continue;
-      processedKebabs.add(kebab);
-
       const anchor = kebab.closest("details") || kebab;
       const row = anchor.parentElement;
-      if (!row) continue;
+      // Marked on the row itself rather than in a Set kept in module
+      // state: it's what teardown() below can cheaply undo for exactly
+      // the rows that got a button, so turning the feature off and back
+      // on again doesn't leave them permanently skipped.
+      if (!row || row.dataset.ghhpChecked) continue;
+      row.dataset.ghhpChecked = "1";
       // The "Expand all lines" button that carries this file's full path
       // usually isn't in the exact same row as the kebab, but it is a
       // nearby ancestor — climbing to the whole file header/card is
@@ -440,10 +440,27 @@
     showPreview();
   }
 
+  // Undoes injectDiffPreviewButtons/injectBlobPreviewTab's DOM changes —
+  // called when the feature is switched off from Settings while a
+  // matching page is already open, so the injected controls (and their
+  // still-live click handlers) don't linger until the next reload.
+  function teardown() {
+    document.querySelectorAll(".ghhp-preview-btn").forEach((btn) => {
+      delete btn.parentElement?.dataset.ghhpChecked;
+      btn.remove();
+    });
+    document.getElementById("ghhp-blob-tab")?.remove();
+    document.getElementById("ghhp-blob-panel")?.remove();
+    blobKey = null;
+  }
+
   async function sync() {
     if (!extensionAlive()) return;
     const { [STORAGE_KEY]: enabled } = await chrome.storage.local.get(STORAGE_KEY);
-    if (enabled === false) return;
+    if (enabled === false) {
+      teardown();
+      return;
+    }
 
     if (isFilesChangedPage()) {
       injectDiffPreviewButtons();
