@@ -23,23 +23,65 @@
     return !!icon && icon.classList.contains("octicon-project");
   }
 
+  // The full-bleed CSS trick (`calc(50% - 50vw)`) only breaks a board out
+  // to the viewport edges correctly when the board sits centered in a
+  // symmetric, viewport-wide wrapper — true with no slice-by panel open.
+  // Slicing by a field adds a real sibling column (the slice-by panel)
+  // to the board's *left*, so the board's own ancestor is no longer
+  // viewport-wide or symmetric: the fixed viewport-based margin then
+  // drags the board further left than its actual position, past the
+  // edge of an `overflow: hidden` ancestor — the board renders, just
+  // entirely clipped out of view (item counts elsewhere on the page
+  // still show, since those sit outside the clipped box).
+  // Measuring the board's own current left offset — which already
+  // correctly reflects the sidebar and any open slice panel, since
+  // those are what put it there — and sizing to the viewport's right
+  // edge from that point sidesteps the symmetry assumption entirely.
+  const LEFT_VAR = "--ghfw-board-left";
+  const SLICER_PANEL_SELECTOR = '[class*="slicer-items-module__SlicerPanel"]';
+
+  function updateBoardOffset() {
+    const container = document.querySelector('[class*="Board-module__boardContainer"]');
+    if (!container) return;
+    const left = container.getBoundingClientRect().left;
+    document.documentElement.style.setProperty(LEFT_VAR, `${Math.max(left, 0)}px`);
+  }
+
+  // The slice panel's width changes live as the user drags its resizer
+  // sash, which shifts the board's left offset without any navigation
+  // event firing — a ResizeObserver on the panel is what catches that.
+  let observedPanel = null;
+  const panelResizeObserver = new ResizeObserver(updateBoardOffset);
+
+  function watchSlicerPanel() {
+    const panel = document.querySelector(SLICER_PANEL_SELECTOR);
+    if (panel === observedPanel) return;
+    if (observedPanel) panelResizeObserver.unobserve(observedPanel);
+    observedPanel = panel;
+    if (panel) panelResizeObserver.observe(panel);
+  }
+
   // The "+" (add column) button has no class of its own to select —
-  // it's a bare <div><button ...></button></div>, identified only by
-  // its tooltip's text. Its wrapper sits as the header row's own
-  // sibling rather than inside it, so once the row's columns expand to
-  // fill the new width, the button just gets knocked out of its normal
-  // spot with nothing to realign it against — simplest fix is to hide
-  // it rather than fight that layout. Tagged with a class (rather than
-  // hidden directly) so the CSS rule stays scoped to ghfw-active and
-  // the button reappears on its own the moment this feature is off.
+  // identified only by its tooltip's text. It sits as the columns'
+  // own direct sibling inside the board's scrollable region (no
+  // dedicated wrapper div around it), so once the row's columns
+  // expand to fill the new width, the button just gets knocked out of
+  // its normal spot with nothing to realign it against — simplest fix
+  // is to hide it rather than fight that layout. Tagging and hiding
+  // the button itself (not btn.parentElement) matters here: that
+  // parent IS the board's whole scrollable region — tagging it would
+  // hide every column along with the button. Tagged with a class
+  // (rather than hidden directly) so the CSS rule stays scoped to
+  // ghfw-active and the button reappears on its own the moment this
+  // feature is off.
   const ADD_COLUMN_CLASS = "ghfw-add-column";
 
   function tagAddColumnButton() {
     for (const btn of document.querySelectorAll("button[aria-labelledby]")) {
-      if (btn.parentElement?.classList.contains(ADD_COLUMN_CLASS)) continue;
+      if (btn.classList.contains(ADD_COLUMN_CLASS)) continue;
       const label = document.getElementById(btn.getAttribute("aria-labelledby"));
       if (label && /add a new column to the board/i.test(label.textContent || "")) {
-        btn.parentElement?.classList.add(ADD_COLUMN_CLASS);
+        btn.classList.add(ADD_COLUMN_CLASS);
       }
     }
   }
@@ -49,7 +91,14 @@
     const shouldApply = enabled !== false && isProjectsPage() && isBoardLayout();
     const changed = document.body.classList.contains(BODY_CLASS) !== shouldApply;
     document.body.classList.toggle(BODY_CLASS, shouldApply);
-    if (shouldApply) tagAddColumnButton();
+    if (shouldApply) {
+      tagAddColumnButton();
+      watchSlicerPanel();
+      updateBoardOffset();
+    } else if (observedPanel) {
+      panelResizeObserver.unobserve(observedPanel);
+      observedPanel = null;
+    }
     // Anything that measured card/column positions before this class
     // flip (board-dependencies' arrows, for one) is now holding stale
     // coordinates — the class change itself fires no DOM event a
@@ -86,11 +135,18 @@
       debouncedSync();
     } else if (document.body.classList.contains(BODY_CLASS)) {
       // A re-render (adding/removing a column, filtering, etc.) can
-      // recreate the "+" button without any URL change — re-tag it
-      // whenever full width is active, not just right after sync().
+      // recreate the "+" button, or the slice-by panel itself, without
+      // any URL change — re-tag/re-observe whenever full width is
+      // active, not just right after sync().
       tagAddColumnButton();
+      watchSlicerPanel();
+      updateBoardOffset();
     }
   }, 800);
+
+  window.addEventListener("resize", () => {
+    if (document.body.classList.contains(BODY_CLASS)) updateBoardOffset();
+  });
 
   sync();
 })();

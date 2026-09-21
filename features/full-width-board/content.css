@@ -1,14 +1,21 @@
-/* Full-bleed override: pulls the board's own container out of whatever
-   centered, max-width, padded column its ancestors put it in, without
-   needing to know or touch those ancestors' own (unstable, hashed)
-   class names — this trick works regardless of how many levels of
-   centering sit above it. `!important` because this is fighting a live
-   React app's own CSS-module rules, not page author styles we control. */
+/* Full-bleed override: stretches the board's own container to reach the
+   viewport's right edge from wherever it actually sits, without needing
+   to know or touch its ancestors' own (unstable, hashed) class names.
+   Sized from --ghfw-board-left (content.js measures the container's
+   live left offset) rather than assumed via `calc(50% - 50vw)` — that
+   symmetric-centering trick only holds when nothing (e.g. an open
+   slice-by panel, a real sibling to the container's left) pushes the
+   container off-center; when something does, it drags the container
+   further left than its true position, off the edge of an
+   `overflow: hidden` ancestor. Measuring the real offset sidesteps the
+   symmetry assumption entirely. `!important` because this is fighting a
+   live React app's own CSS-module rules, not page author styles we
+   control. */
 body.ghfw-active [class*="Board-module__boardContainer"] {
-  width: 100vw !important;
-  max-width: 100vw !important;
-  margin-left: calc(50% - 50vw) !important;
-  margin-right: calc(50% - 50vw) !important;
+  width: calc(100vw - var(--ghfw-board-left, 0px)) !important;
+  max-width: calc(100vw - var(--ghfw-board-left, 0px)) !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
   padding-left: 8px !important;
   padding-right: 8px !important;
   box-sizing: border-box !important;
@@ -49,11 +56,11 @@ body.ghfw-active [class*="column-frame-module__Box__"] {
   min-width: 140px !important;
 }
 
-/* The "+" (add column) button (tagged .ghfw-add-column by content.js —
-   it has no class of its own to select). Repositioning it to line up
-   with the now-wider header row didn't hold up across layout changes;
-   hiding it is the reliable fix. Scoped under ghfw-active so it comes
-   back the moment this feature is turned off. */
+/* The "+" (add column) button itself (tagged .ghfw-add-column by
+   content.js — it has no class of its own to select). Repositioning
+   it to line up with the now-wider header row didn't hold up across
+   layout changes; hiding it is the reliable fix. Scoped under
+   ghfw-active so it comes back the moment this feature is turned off. */
 body.ghfw-active .ghfw-add-column {
   display: none !important;
 }
