@@ -1,0 +1,24 @@
+README.md
+  s_ff6daa27640d21::t_11d9df662c8031 7
+  s_ff6daa27640d21::t_fe1a41b281f41d 16
+  s_ff6daa27640d21::t_779c8a8035cf36 8-12
+manifest.json
+  s_ff6daa27640d21::t_ec02a1570a016c 4
+  s_ff6daa27640d21::t_fd18f2d8fd4be6 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "38de239445dc93c5acc887dd0daec5854e392481",
+  "prompts": {},
+  "sessions": {
+    "s_ff6daa27640d21": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "23444340-dfe6-484d-8909-a661f5c947b7",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": null
+    }
+  }
+}
