@@ -1,13 +1,15 @@
 import { getTokenRecords, getDefaultTokenId } from "../lib/github-api.js";
 
 // --- GitHub tokens ---
-// A user-defined list of {id, name, token, org} — one optional org per
-// token maps that org's requests to it; the token marked default in
-// `defaultTokenId` covers personal repos and any org without a mapping
-// of its own. Saved secrets are never written back into an input's
-// value (see renderTokens) — only their last 4 characters are shown —
-// so `existingTokenById` is how a row whose secret field was left blank
-// on save keeps its previously-saved token instead of being cleared.
+// A user-defined list of {id, name, token, owner} — one optional owner
+// login (an organization or a personal account — GitHub itself doesn't
+// distinguish the two in a repo's `owner/repo` path, so neither does
+// this mapping) per token maps that owner's requests to it; the token
+// marked default in `defaultTokenId` covers every other owner. Saved
+// secrets are never written back into an input's value (see
+// renderTokens) — only their last 4 characters are shown — so
+// `existingTokenById` is how a row whose secret field was left blank on
+// save keeps its previously-saved token instead of being cleared.
 
 function genId() {
   return `tok_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -32,7 +34,7 @@ function tokenRowHtml(t, isDefault) {
     <div class="token-row" data-id="${escapeAttr(t.id)}">
       <div class="token-row-main">
         <input type="text" class="tok-name" placeholder="Name (e.g. Personal, Acme Corp)" value="${escapeAttr(t.name || "")}" />
-        <input type="text" class="tok-org" placeholder="org login — blank = default" value="${escapeAttr(t.org || "")}" />
+        <input type="text" class="tok-owner" placeholder="owner login — blank = default" value="${escapeAttr(t.owner || "")}" />
         <label class="tok-default-label">
           <input type="radio" name="tok-default" class="tok-default-radio" ${isDefault ? "checked" : ""} />
           Default
@@ -65,7 +67,7 @@ function readTokensFromForm() {
     return {
       id,
       name: row.querySelector(".tok-name").value.trim(),
-      org: row.querySelector(".tok-org").value.trim(),
+      owner: row.querySelector(".tok-owner").value.trim(),
       token: typed || existingTokenById.get(id) || "",
       isDefault: row.querySelector(".tok-default-radio").checked,
     };
@@ -122,7 +124,7 @@ document.getElementById("add-token").addEventListener("click", () => {
 
 document.getElementById("save-tokens").addEventListener("click", async () => {
   const entries = readTokensFromForm();
-  const named = entries.filter((t) => t.name || t.org || t.token);
+  const named = entries.filter((t) => t.name || t.owner || t.token);
 
   const missingToken = named.find((t) => !t.token);
   if (missingToken) {
@@ -130,19 +132,19 @@ document.getElementById("save-tokens").addEventListener("click", async () => {
     return;
   }
 
-  const seenOrgs = new Map();
+  const seenOwners = new Map();
   for (const t of named) {
-    const org = t.org.toLowerCase();
-    if (!org) continue;
-    if (seenOrgs.has(org)) {
-      setTokensStatus(`"${t.org}" is mapped to more than one token — each organization needs exactly one.`, "error");
+    const owner = t.owner.toLowerCase();
+    if (!owner) continue;
+    if (seenOwners.has(owner)) {
+      setTokensStatus(`"${t.owner}" is mapped to more than one token — each owner needs exactly one.`, "error");
       return;
     }
-    seenOrgs.set(org, t.id);
+    seenOwners.set(owner, t.id);
   }
 
   const defaultEntry = named.find((t) => t.isDefault) || named[0];
-  const list = named.map(({ id, name, org, token }) => ({ id, name, org, token }));
+  const list = named.map(({ id, name, owner, token }) => ({ id, name, owner, token }));
 
   await chrome.storage.local.set({
     githubTokens: list,

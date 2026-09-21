@@ -181,7 +181,7 @@ button.danger {
 .token-row .tok-name {
   flex: 0 0 30%;
 }
-.token-row .tok-org {
+.token-row .tok-owner {
   flex: 1 1 auto;
   min-width: 0;
   color: #656d76;
@@ -359,7 +359,7 @@ a {
     background: #388bfd;
   }
   .shortcut-row .sc-project,
-  .token-row .tok-org,
+  .token-row .tok-owner,
   .tok-default-label,
   .tok-hint {
     color: #8b949e;
