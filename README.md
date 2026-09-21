@@ -5,9 +5,15 @@
 <h1 align="center">GH Reloaded</h1>
 
 <p align="center">
+  <a href="https://gh-reloaded.simone3-cattani.chatgpt.site/">Website</a> ·
+  <a href="LICENSE">License</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+<p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-4285F4.svg">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.5.1-orange.svg">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.5.3-orange.svg">
   <a href="CONTRIBUTING.md"><img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
 </p>
 
