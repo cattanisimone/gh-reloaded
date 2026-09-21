@@ -181,7 +181,8 @@ function computeCriticalPath(internalNodes, edges) {
  */
 async function fetchDependencyGraph({ owner, repo, issueNumber }) {
   const subIssues = await ghFetch(
-    `/repos/${owner}/${repo}/issues/${issueNumber}/sub_issues?per_page=100`
+    `/repos/${owner}/${repo}/issues/${issueNumber}/sub_issues?per_page=100`,
+    { owner }
   );
   const numbers = new Set(subIssues.map((i) => i.number));
 

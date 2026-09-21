@@ -1,42 +1,99 @@
-const tokenInput = document.getElementById("token");
-const statusEl = document.getElementById("status");
+import { getTokenRecords, getDefaultTokenId } from "../lib/github-api.js";
 
-function setStatus(text, kind) {
-  statusEl.textContent = text;
-  statusEl.className = "status " + (kind || "");
+// --- GitHub tokens ---
+// A user-defined list of {id, name, token, org} — one optional org per
+// token maps that org's requests to it; the token marked default in
+// `defaultTokenId` covers personal repos and any org without a mapping
+// of its own. Saved secrets are never written back into an input's
+// value (see renderTokens) — only their last 4 characters are shown —
+// so `existingTokenById` is how a row whose secret field was left blank
+// on save keeps its previously-saved token instead of being cleared.
+
+function genId() {
+  return `tok_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-async function load() {
-  const { githubToken } = await chrome.storage.local.get("githubToken");
-  if (githubToken) {
-    tokenInput.value = githubToken;
-    setStatus(`Token saved (ends in …${githubToken.slice(-4)}).`, "ok");
-  }
+const tokensContainer = document.getElementById("tokens");
+const tokensStatus = document.getElementById("tokens-status");
+let existingTokenById = new Map();
+
+function setTokensStatus(text, kind) {
+  tokensStatus.textContent = text;
+  tokensStatus.className = "status " + (kind || "");
 }
 
-document.getElementById("save").addEventListener("click", async () => {
-  const value = tokenInput.value.trim();
-  if (!value) {
-    setStatus("Enter a token first.", "error");
+function tokenHint(token) {
+  return token ? `Saved — ends in …${token.slice(-4)}` : "Not saved yet";
+}
+
+function tokenRowHtml(t, isDefault) {
+  const secretPlaceholder = t.token ? "Leave blank to keep the saved token" : "github_pat_...";
+  return `
+    <div class="token-row" data-id="${escapeAttr(t.id)}">
+      <div class="token-row-main">
+        <input type="text" class="tok-name" placeholder="Name (e.g. Personal, Acme Corp)" value="${escapeAttr(t.name || "")}" />
+        <input type="text" class="tok-org" placeholder="org login — blank = default" value="${escapeAttr(t.org || "")}" />
+        <label class="tok-default-label">
+          <input type="radio" name="tok-default" class="tok-default-radio" ${isDefault ? "checked" : ""} />
+          Default
+        </label>
+        <button type="button" class="tok-remove" title="Remove">×</button>
+      </div>
+      <div class="token-row-sub">
+        <input type="password" class="tok-secret" placeholder="${escapeAttr(secretPlaceholder)}" autocomplete="off" />
+        <button type="button" class="tok-test secondary">Test</button>
+        <span class="tok-hint">${tokenHint(t.token)}</span>
+      </div>
+      <p class="tok-test-status status"></p>
+    </div>`;
+}
+
+function renderTokens(list, defaultId) {
+  existingTokenById = new Map(list.map((t) => [t.id, t.token || ""]));
+  tokensContainer.innerHTML = list.map((t) => tokenRowHtml(t, t.id === defaultId)).join("");
+}
+
+function ensureOneDefaultChecked() {
+  const radios = Array.from(tokensContainer.querySelectorAll(".tok-default-radio"));
+  if (radios.length && !radios.some((r) => r.checked)) radios[0].checked = true;
+}
+
+function readTokensFromForm() {
+  return Array.from(tokensContainer.querySelectorAll(".token-row")).map((row) => {
+    const id = row.dataset.id;
+    const typed = row.querySelector(".tok-secret").value.trim();
+    return {
+      id,
+      name: row.querySelector(".tok-name").value.trim(),
+      org: row.querySelector(".tok-org").value.trim(),
+      token: typed || existingTokenById.get(id) || "",
+      isDefault: row.querySelector(".tok-default-radio").checked,
+    };
+  });
+}
+
+// Event delegation on the container — covers rows added later too, no need
+// to re-attach a listener per row.
+tokensContainer.addEventListener("click", async (e) => {
+  if (e.target.classList.contains("tok-remove")) {
+    e.target.closest(".token-row").remove();
+    ensureOneDefaultChecked();
     return;
   }
-  await chrome.storage.local.set({ githubToken: value });
-  setStatus("Token saved.", "ok");
-});
 
-document.getElementById("clear").addEventListener("click", async () => {
-  await chrome.storage.local.remove("githubToken");
-  tokenInput.value = "";
-  setStatus("Token removed.", "ok");
-});
-
-document.getElementById("test").addEventListener("click", async () => {
-  const token = tokenInput.value.trim();
+  const testBtn = e.target.closest(".tok-test");
+  if (!testBtn) return;
+  const row = testBtn.closest(".token-row");
+  const statusEl = row.querySelector(".tok-test-status");
+  const typed = row.querySelector(".tok-secret").value.trim();
+  const token = typed || existingTokenById.get(row.dataset.id) || "";
   if (!token) {
-    setStatus("Enter a token first.", "error");
+    statusEl.textContent = "Enter a token first.";
+    statusEl.className = "status error";
     return;
   }
-  setStatus("Testing…", "");
+  statusEl.textContent = "Testing…";
+  statusEl.className = "status";
   try {
     const res = await fetch("https://api.github.com/user", {
       headers: {
@@ -45,15 +102,61 @@ document.getElementById("test").addEventListener("click", async () => {
       },
     });
     if (!res.ok) {
-      setStatus(`Token rejected (HTTP ${res.status}).`, "error");
+      statusEl.textContent = `Token rejected (HTTP ${res.status}).`;
+      statusEl.className = "status error";
       return;
     }
     const user = await res.json();
-    setStatus(`OK — authenticated as ${user.login}.`, "ok");
-  } catch (e) {
-    setStatus(`Network error: ${e.message}`, "error");
+    statusEl.textContent = `OK — authenticated as ${user.login}.`;
+    statusEl.className = "status ok";
+  } catch (e2) {
+    statusEl.textContent = `Network error: ${e2.message}`;
+    statusEl.className = "status error";
   }
 });
+
+document.getElementById("add-token").addEventListener("click", () => {
+  const isFirst = !tokensContainer.querySelector(".token-row");
+  tokensContainer.insertAdjacentHTML("beforeend", tokenRowHtml({ id: genId() }, isFirst));
+});
+
+document.getElementById("save-tokens").addEventListener("click", async () => {
+  const entries = readTokensFromForm();
+  const named = entries.filter((t) => t.name || t.org || t.token);
+
+  const missingToken = named.find((t) => !t.token);
+  if (missingToken) {
+    setTokensStatus(`"${missingToken.name || "That token"}" needs a token before it can be saved.`, "error");
+    return;
+  }
+
+  const seenOrgs = new Map();
+  for (const t of named) {
+    const org = t.org.toLowerCase();
+    if (!org) continue;
+    if (seenOrgs.has(org)) {
+      setTokensStatus(`"${t.org}" is mapped to more than one token — each organization needs exactly one.`, "error");
+      return;
+    }
+    seenOrgs.set(org, t.id);
+  }
+
+  const defaultEntry = named.find((t) => t.isDefault) || named[0];
+  const list = named.map(({ id, name, org, token }) => ({ id, name, org, token }));
+
+  await chrome.storage.local.set({
+    githubTokens: list,
+    defaultTokenId: defaultEntry ? defaultEntry.id : null,
+  });
+  renderTokens(list.length ? list : [{ id: genId() }], defaultEntry?.id);
+  setTokensStatus(`Saved ${list.length} token${list.length === 1 ? "" : "s"}.`, "ok");
+});
+
+async function loadTokens() {
+  const list = await getTokenRecords();
+  const defaultId = await getDefaultTokenId();
+  renderTokens(list.length ? list : [{ id: genId() }], defaultId);
+}
 
 // --- Quick-create shortcuts ---
 // A user-defined list of {label, url, project, color, icon} — this
@@ -191,7 +294,7 @@ async function loadShortcuts() {
   renderShortcuts(quickCreateShortcuts && quickCreateShortcuts.length ? quickCreateShortcuts : [{}]);
 }
 
-load();
+loadTokens();
 loadShortcuts();
 
 // --- Features ---

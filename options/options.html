@@ -52,7 +52,7 @@
 
       <hr />
 
-      <h2>GitHub token</h2>
+      <h2>GitHub tokens</h2>
       <p class="hint">
         Used by the <strong>Dependency graph</strong> feature to read sub-issues, their
         "blocked by" relationships, Projects v2 Status, and org-level custom fields via
@@ -60,22 +60,24 @@
         on private repos — public repos work without a token.
       </p>
       <p class="hint">
-        Use a <strong>fine-grained token</strong>, scoped only to the repositories you
+        Add one token per GitHub organization that needs its own credential (a
+        different fine-grained token or SSO authorization), plus one <strong>default</strong>
+        token for personal repositories and any organization without a mapping of its
+        own. A request picks the token mapped to the repository's owner, falling back to
+        the default — never by trying every saved token in turn. Use a
+        <strong>fine-grained token</strong>, scoped only to the repositories you
         actually need, with <strong>Issues: Read-only</strong>,
         <strong>Projects: Read-only</strong>, and <strong>Contents: Read-only</strong> —
-        nothing else.
+        nothing else. Saved tokens are never shown again in full, only by their last 4
+        characters.
       </p>
 
-      <label for="token">GitHub token</label>
-      <input id="token" type="password" placeholder="github_pat_..." autocomplete="off" />
-
+      <div id="tokens"></div>
       <div class="row">
-        <button id="save">Save</button>
-        <button id="test" class="secondary">Test connection</button>
-        <button id="clear" class="danger">Remove token</button>
+        <button id="add-token" type="button" class="secondary">+ Add token</button>
+        <button id="save-tokens" type="button">Save tokens</button>
       </div>
-
-      <p id="status" class="status"></p>
+      <p id="tokens-status" class="status"></p>
 
       <p class="hint">
         <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">
@@ -129,6 +131,6 @@
         <strong>Features</strong> above).
       </p>
     </main>
-    <script src="options.js"></script>
+    <script type="module" src="options.js"></script>
   </body>
 </html>

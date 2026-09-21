@@ -161,6 +161,69 @@ button.danger {
   color: #cf222e;
 }
 
+.token-row {
+  padding: 10px;
+  margin-bottom: 8px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+}
+.token-row-main {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.token-row-sub {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+.token-row .tok-name {
+  flex: 0 0 30%;
+}
+.token-row .tok-org {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #656d76;
+}
+.token-row .tok-secret {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: ui-monospace, monospace;
+}
+.tok-default-label {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #656d76;
+  white-space: nowrap;
+}
+.token-row .tok-remove {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  line-height: 1;
+  color: #cf222e;
+}
+.tok-hint {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: #656d76;
+  white-space: nowrap;
+}
+.token-row .tok-test-status {
+  margin: 6px 0 0;
+}
+.token-row input[type="text"],
+.token-row input[type="password"] {
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
 .shortcut-row {
   padding: 10px;
   margin-bottom: 8px;
@@ -274,12 +337,15 @@ a {
   }
   input[type="password"],
   .shortcut-row input[type="text"],
-  .shortcut-row input[type="url"] {
+  .shortcut-row input[type="url"],
+  .token-row input[type="text"],
+  .token-row input[type="password"] {
     background: #161b22;
     border-color: #30363d;
     color: #e6edf3;
   }
   .shortcut-row,
+  .token-row,
   .features-panel {
     border-color: #30363d;
   }
@@ -292,7 +358,10 @@ a {
   .switch[aria-checked="true"] .switch-track {
     background: #388bfd;
   }
-  .shortcut-row .sc-project {
+  .shortcut-row .sc-project,
+  .token-row .tok-org,
+  .tok-default-label,
+  .tok-hint {
     color: #8b949e;
   }
   .sc-swatch.is-selected {

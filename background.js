@@ -7,7 +7,7 @@
 // — see background/dependency-graph.js for the shape a feature module
 // takes, and CONTRIBUTING.md for the full walkthrough.
 
-import { getToken } from "./lib/github-api.js";
+import { hasAnyToken } from "./lib/github-api.js";
 import * as dependencyGraph from "./background/dependency-graph.js";
 import * as boardDependencies from "./background/board-dependencies.js";
 import * as htmlPreview from "./background/html-preview.js";
@@ -23,7 +23,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!feature) return;
 
   (async () => {
-    const hasToken = !!(await getToken());
+    const hasToken = await hasAnyToken();
     try {
       const data = await feature.handleMessage(msg.payload);
       sendResponse({ ok: true, hasToken, ...data });
