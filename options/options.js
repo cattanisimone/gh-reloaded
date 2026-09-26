@@ -29,25 +29,31 @@ function tokenHint(token) {
 }
 
 function tokenRowHtml(t, isDefault) {
-  const secretPlaceholder = t.token ? "New token…" : "github_pat_...";
+  const secretPlaceholder = t.token ? "Replace the saved token…" : "github_pat_...";
   return `
     <div class="token-row" data-id="${escapeAttr(t.id)}">
-      <button type="button" class="tok-remove" title="Remove">×</button>
+      <button type="button" class="tok-remove" title="Remove this token">×</button>
       <div class="token-row-identity">
-        <input type="text" class="tok-name" placeholder="Name (e.g. Personal, Acme Corp)" value="${escapeAttr(t.name || "")}" />
-        <input type="text" class="tok-owner" placeholder="owner login — blank = default" value="${escapeAttr(t.owner || "")}" />
-      </div>
-      <div class="token-row-secret">
-        <input type="password" class="tok-secret" placeholder="${escapeAttr(secretPlaceholder)}" autocomplete="off" />
-        <button type="button" class="tok-test secondary">Test</button>
-      </div>
-      <div class="token-row-footer">
-        <label class="tok-default-chip">
-          <input type="radio" name="tok-default" class="tok-default-radio" ${isDefault ? "checked" : ""} />
-          <span>Default</span>
+        <label class="field">
+          <span class="field-label">Name</span>
+          <input type="text" class="tok-name" placeholder="Personal, Acme Corp…" value="${escapeAttr(t.name || "")}" />
         </label>
-        <span class="tok-hint">${tokenHint(t.token)}</span>
+        <label class="field">
+          <span class="field-label">Owner login</span>
+          <input type="text" class="tok-owner" placeholder="blank = default token" value="${escapeAttr(t.owner || "")}" />
+        </label>
       </div>
+      <label class="field">
+        <span class="field-label">Token<span class="field-hint">${tokenHint(t.token)}</span></span>
+        <div class="token-row-secret">
+          <input type="password" class="tok-secret" placeholder="${escapeAttr(secretPlaceholder)}" autocomplete="off" />
+          <button type="button" class="tok-test accent">Test</button>
+        </div>
+      </label>
+      <label class="tok-default-chip" title="Use for any owner without a mapping of its own">
+        <input type="radio" name="tok-default" class="tok-default-radio" ${isDefault ? "checked" : ""} />
+        <span>Default token</span>
+      </label>
       <p class="tok-test-status status"></p>
     </div>`;
 }
