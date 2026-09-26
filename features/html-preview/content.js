@@ -150,12 +150,23 @@
     for (const kebab of findKebabButtons()) {
       const anchor = kebab.closest("details") || kebab;
       const row = anchor.parentElement;
-      // Marked on the row itself rather than in a Set kept in module
-      // state: it's what teardown() below can cheaply undo for exactly
-      // the rows that got a button, so turning the feature off and back
-      // on again doesn't leave them permanently skipped.
-      if (!row || row.dataset.ghhpChecked) continue;
-      row.dataset.ghhpChecked = "1";
+      if (!row) continue;
+      // "skip" means this row was already confirmed not to be an HTML
+      // file — permanent, since that can't change. "done" means a
+      // button was already injected for it; still re-checked for the
+      // button's actual presence (rather than trusting the marker
+      // alone) so a GitHub re-render that wipes our button — without
+      // also replacing this row, which would clear the marker with it —
+      // gets it re-injected instead of leaving the row silently bare.
+      // Anything else (unset, or "done" with the button missing) falls
+      // through and gets (re)computed below; the marker itself is only
+      // set once that computation actually succeeds, so a scan that
+      // runs before the file path or head repo is resolvable leaves the
+      // row unmarked and retried on the next scan instead of skipped
+      // forever.
+      if (row.dataset.ghhpChecked === "skip") continue;
+      if (row.dataset.ghhpChecked === "done" && row.querySelector(".ghhp-preview-btn")) continue;
+
       // The "Expand all lines" button that carries this file's full path
       // usually isn't in the exact same row as the kebab, but it is a
       // nearby ancestor — climbing to the whole file header/card is
@@ -165,8 +176,12 @@
         row.closest('[data-tagsearch-path], [id^="diff-"], .file, .file-header') ||
         row;
       const path = findFilePath(scope);
-      if (!path || !isHtmlPath(path)) continue;
-      if (!head) continue; // couldn't read the head branch — nothing to preview
+      if (!path) continue; // not resolvable yet — retry on the next scan
+      if (!isHtmlPath(path)) {
+        row.dataset.ghhpChecked = "skip";
+        continue;
+      }
+      if (!head) continue; // couldn't read the head branch yet — retry on the next scan
 
       const { owner, repo, branch } = head;
       const btn = document.createElement("button");
@@ -187,6 +202,7 @@
       const copyBtn = findCopyNameButton(scope);
       if (copyBtn) copyBtn.insertAdjacentElement("afterend", btn);
       else row.insertBefore(btn, row.firstChild); // fallback: previous spot, before "Viewed"
+      row.dataset.ghhpChecked = "done";
     }
   }
 
