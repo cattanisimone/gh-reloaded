@@ -147,52 +147,36 @@
   }
 
   function findKebabButtons() {
-    return Array.from(document.querySelectorAll("summary, button")).filter(
-      (el) => isVisible(el) && /^more options$/i.test(accessibleName(el))
+    return Array.from(document.querySelectorAll("summary, button")).filter((el) =>
+      /^more options$/i.test(accessibleName(el))
     );
   }
 
   function injectDiffPreviewButtons() {
     const head = findHeadRepo();
+    const injectedPaths = new Set(
+      Array.from(document.querySelectorAll(".ghhp-preview-btn"), (b) => b.dataset.ghhpPath)
+    );
 
     for (const kebab of findKebabButtons()) {
       const anchor = kebab.closest("details") || kebab;
       const row = anchor.parentElement;
       if (!row) continue;
 
-      // The "Expand all lines" button that carries this file's full path,
-      // and the "Copy file name" button our own button anchors next to
-      // (see below), usually aren't in the exact same row as the kebab,
-      // but are a nearby ancestor — climbing to the whole file
-      // header/card finds both without also picking up a sibling file's.
+      // The "Expand all lines" button that carries this file's full path
+      // usually isn't in the exact same row as the kebab, but it is a
+      // nearby ancestor — climbing to the whole file header/card is
+      // enough to find it without also picking up a sibling file's.
       const scope =
         row.closest('[data-tagsearch-path], [id^="diff-"], .file, .file-header')?.parentElement ||
         row.closest('[data-tagsearch-path], [id^="diff-"], .file, .file-header') ||
         row;
 
-      // The processed marker lives on `scope` rather than on `row`
-      // itself: our button gets inserted next to "Copy file name",
-      // which — like the "Expand all lines" button above — isn't
-      // always inside `row` either, only guaranteed to be somewhere
-      // inside this wider `scope`. Marking `row` but then checking for
-      // the button under `row` missed it whenever the two diverged,
-      // and re-injected a fresh button on every single scan.
-      //
       // "skip" means this scope was already confirmed not to be an HTML
-      // file — permanent, since that can't change. "done" means a
-      // button was already injected for it; still re-checked for the
-      // button's actual presence (rather than trusting the marker
-      // alone) so a GitHub re-render that wipes our button — without
-      // also replacing this scope, which would clear the marker with it
-      // — gets it re-injected instead of leaving it silently bare.
-      // Anything else (unset, or "done" with the button missing) falls
-      // through and gets (re)computed below; the marker itself is only
-      // set once that computation actually succeeds, so a scan that
-      // runs before the file path or head repo is resolvable leaves it
-      // unmarked and retried on the next scan instead of skipped
-      // forever.
+      // file — permanent, since that can't change. Left unmarked (and
+      // retried on the next scan) whenever the path isn't resolvable
+      // yet, e.g. during progressive/lazy diff rendering.
       if (scope.dataset.ghhpChecked === "skip") continue;
-      if (scope.dataset.ghhpChecked === "done" && scope.querySelector(".ghhp-preview-btn")) continue;
 
       const path = findFilePath(scope);
       if (!path) continue; // not resolvable yet — retry on the next scan
@@ -200,12 +184,31 @@
         scope.dataset.ghhpChecked = "skip";
         continue;
       }
+
+      // Dedupe by the resolved file path rather than by DOM identity
+      // (`scope`/`row`) or by visibility: GitHub can render more than
+      // one kebab that both resolve to the very same file — e.g. a
+      // hidden legacy/responsive-breakpoint duplicate of the whole file
+      // header, not just of the kebab itself — and a later re-render
+      // can also wipe a previously-injected button without touching
+      // `scope`. Filtering kebabs by on-screen visibility to tell the
+      // duplicates apart sounds right, but a kebab that's only
+      // temporarily unlaid-out (mid progressive-render) is
+      // indistinguishable from a permanently-hidden duplicate by that
+      // same test, and wrongly filtering out the one real kebab is
+      // exactly how the button goes missing again. Checking the live
+      // DOM for a button that already carries this same path, gathered
+      // once above before this loop mutates it, sidesteps guessing
+      // which DOM node is "the" one to mark and stays correct across
+      // both cases.
+      if (injectedPaths.has(path)) continue;
       if (!head) continue; // couldn't read the head branch yet — retry on the next scan
 
       const { owner, repo, branch } = head;
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "ghhp-preview-btn";
+      btn.dataset.ghhpPath = path;
       btn.title = "Preview rendered HTML";
       btn.setAttribute("aria-label", "Preview rendered HTML");
       btn.innerHTML = globeIconHtml();
@@ -221,7 +224,7 @@
       const copyBtn = findCopyNameButton(scope);
       if (copyBtn) copyBtn.insertAdjacentElement("afterend", btn);
       else row.insertBefore(btn, row.firstChild); // fallback: previous spot, before "Viewed"
-      scope.dataset.ghhpChecked = "done";
+      injectedPaths.add(path);
     }
   }
 
@@ -475,10 +478,12 @@
   // matching page is already open, so the injected controls (and their
   // still-live click handlers) don't linger until the next reload.
   function teardown() {
-    document.querySelectorAll(".ghhp-preview-btn").forEach((btn) => {
-      delete btn.closest('[data-ghhp-checked="done"]')?.dataset.ghhpChecked;
-      btn.remove();
-    });
+    // Nothing to undo on `scope.dataset.ghhpChecked` here: it only ever
+    // holds "skip" (this file isn't HTML, which stays true regardless
+    // of whether the feature is on), never a "this has a button" state
+    // — injectDiffPreviewButtons re-derives that by querying the live
+    // DOM for `.ghhp-preview-btn` instead, so removing those is enough.
+    document.querySelectorAll(".ghhp-preview-btn").forEach((btn) => btn.remove());
     document.getElementById("ghhp-blob-tab")?.remove();
     document.getElementById("ghhp-blob-panel")?.remove();
     blobKey = null;
