@@ -57,6 +57,14 @@
     return (el.getAttribute("aria-label") || el.getAttribute("title") || el.textContent || "").trim();
   }
 
+  // GitHub commonly keeps a hidden legacy/responsive-breakpoint copy of
+  // a control alongside the one actually on screen — accessibleName()
+  // alone can't tell them apart, so anything anchored on visible text
+  // needs this to avoid also matching the hidden twin.
+  function isVisible(el) {
+    return !!el.offsetParent;
+  }
+
   function globeIconHtml() {
     return `
       <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
@@ -139,8 +147,8 @@
   }
 
   function findKebabButtons() {
-    return Array.from(document.querySelectorAll("summary, button")).filter((el) =>
-      /^more options$/i.test(accessibleName(el))
+    return Array.from(document.querySelectorAll("summary, button")).filter(
+      (el) => isVisible(el) && /^more options$/i.test(accessibleName(el))
     );
   }
 
@@ -238,11 +246,6 @@
   // visible name of the tabs rather than a class name that could easily
   // be specific to that toggle's own React component.
   function findCodeBlameTabs() {
-    // GitHub keeps a hidden legacy copy of this toggle in the DOM
-    // alongside the visible pill one (a responsive-breakpoint variant,
-    // or a rollback fallback) — accessibleName() alone can't tell them
-    // apart, so filter to elements actually rendered on screen.
-    const isVisible = (el) => !!el.offsetParent;
     const tabs = Array.from(document.querySelectorAll('[role="tab"], a, button'));
     const codes = tabs.filter((el) => isVisible(el) && accessibleName(el).toLowerCase() === "code");
     const blames = tabs.filter((el) => isVisible(el) && accessibleName(el).toLowerCase() === "blame");
