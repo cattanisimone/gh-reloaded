@@ -1,12 +1,12 @@
 # Privacy Policy
 
-**GH Reloaded** doesn't collect, sell, or share any data. Everything it stores stays in your own browser, and the only network calls it makes are directly from your browser to `api.github.com`, using your own GitHub token — never to a server this project runs or controls.
+**GH Reloaded** doesn't collect, sell, or share any data. Everything it stores stays in your own browser, and the only network calls it makes are directly from your browser to `api.github.com`, using your own GitHub token(s) — never to a server this project runs or controls.
 
 ## What's stored, and where
 
 Stored locally via the browser's `chrome.storage.local` (never synced, never sent anywhere on its own):
 
-- **GitHub token** — the personal access token you paste into Settings, used to authenticate requests to `api.github.com`.
+- **GitHub tokens** — the personal access token(s) you paste into Settings: one default token, plus an optional token per repository owner (an organization or personal account) that needs its own credential. Each request uses the token mapped to the repository it's about, falling back to the default. Once saved, a token is never displayed again in full — only its last 4 characters.
 - **Quick-create shortcuts** — the label, URL, icon, color, and project scope of each shortcut you configure.
 - **Feature toggles** — which features are turned on or off.
 - **UI preferences** — small display choices for the dependency graph (column alignment, how much external context to show).
@@ -25,7 +25,7 @@ To render its features, the extension reads issue titles, labels, status, sub-is
 
 ## Removing your data
 
-Uninstalling the extension removes everything it stored. To clear it without uninstalling, remove the GitHub token from Settings, or clear the extension's storage from `chrome://extensions`.
+Uninstalling the extension removes everything it stored. To clear it without uninstalling, remove your GitHub tokens from Settings, or clear the extension's storage from `chrome://extensions`.
 
 ## Contact
 

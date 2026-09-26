@@ -1,134 +1,164 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GH Reloaded — Settings</title>
+    <link rel="icon" type="image/svg+xml" href="../icons/icon.svg" />
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <main>
-      <p class="logo"><img src="../icons/icon128.png" width="64" height="64" alt="" /></p>
-      <h1>GH Reloaded</h1>
-      <p class="hint">Settings are shared across every feature this extension injects into GitHub.</p>
+    <header class="container nav">
+      <span class="brand"><img class="mark" src="../icons/icon.svg" width="34" height="34" alt="" />GH Reloaded</span>
+      <nav class="nav-links" aria-label="Settings sections">
+        <a href="#features">Features</a>
+        <a href="#tokens-section">Tokens</a>
+        <a href="#shortcuts-section">Shortcuts</a>
+        <a class="btn btn-secondary btn-sm" href="https://gh-reloaded.simone3-cattani.chatgpt.site/" target="_blank" rel="noopener">Website <span aria-hidden="true">↗</span></a>
+      </nav>
+    </header>
 
-      <hr />
+    <main class="container">
+      <section class="hero">
+        <div class="eyebrow"><span class="dot"></span>Chrome extension · <span data-version></span></div>
+        <h1>Settings<span>.</span></h1>
+        <p class="lede">
+          Choose which features run on github.com, connect the GitHub tokens they read with,
+          and set up your quick-create shortcuts. Everything is stored in this browser only.
+        </p>
+      </section>
 
-      <h2>Features</h2>
-      <p class="hint">Turn any feature off entirely — it stops running on github.com right away.</p>
-
-      <div class="features-panel">
-        <div class="checkbox-row">
-          <button id="feature-ghdg" type="button" role="switch" aria-checked="false" class="switch">
-            <span class="switch-track"><span class="switch-knob"></span></span>
-          </button>
-          <span>Dependency graph — on an issue page's sub-issues list</span>
+      <section class="section" id="features">
+        <div class="section-intro">
+          <div class="kicker">01 / Features</div>
+          <h2>Choose what runs.</h2>
+          <p>
+            Switch any feature off entirely — it stops running on github.com right away.
+            Experimental ones are still maturing and may change as GitHub's own UI does.
+          </p>
         </div>
-        <div class="checkbox-row">
-          <button id="feature-quick-create" type="button" role="switch" aria-checked="false" class="switch">
-            <span class="switch-track"><span class="switch-knob"></span></span>
-          </button>
-          <span>Quick-create button — on Projects board views</span>
+        <div class="section-body">
+          <div class="card feature-list">
+            <div class="feature-row">
+              <div class="feature-text">
+                <span class="feature-title">Dependency graph</span>
+                <span class="feature-desc">A left-to-right graph below an issue's sub-issues, with blockers and the critical path highlighted.</span>
+              </div>
+              <button id="feature-ghdg" type="button" role="switch" aria-checked="false" aria-label="Dependency graph" class="switch">
+                <span class="switch-track"><span class="switch-knob"></span></span>
+              </button>
+            </div>
+            <div class="feature-row">
+              <div class="feature-text">
+                <span class="feature-title">Quick-create button</span>
+                <span class="feature-desc">Buttons on Projects boards that open a new-issue form — set them up under Shortcuts below.</span>
+              </div>
+              <button id="feature-quick-create" type="button" role="switch" aria-checked="false" aria-label="Quick-create button" class="switch">
+                <span class="switch-track"><span class="switch-knob"></span></span>
+              </button>
+            </div>
+            <div class="feature-row">
+              <div class="feature-text">
+                <span class="feature-title">Board dependency arrows <span class="badge">Experimental</span></span>
+                <span class="feature-desc">Arrows between dependent cards on a Board view, red when a blocker is behind. Also switchable next to the view tabs.</span>
+              </div>
+              <button id="feature-ghbd" type="button" role="switch" aria-checked="false" aria-label="Board dependency arrows" class="switch">
+                <span class="switch-track"><span class="switch-knob"></span></span>
+              </button>
+            </div>
+            <div class="feature-row">
+              <div class="feature-text">
+                <span class="feature-title">Full-width board</span>
+                <span class="feature-desc">Stretches Board views to the full window, shrinking columns down to 140px before scrolling.</span>
+              </div>
+              <button id="feature-ghfw" type="button" role="switch" aria-checked="false" aria-label="Full-width board" class="switch">
+                <span class="switch-track"><span class="switch-knob"></span></span>
+              </button>
+            </div>
+            <div class="feature-row">
+              <div class="feature-text">
+                <span class="feature-title">HTML preview <span class="badge">Experimental</span></span>
+                <span class="feature-desc">Renders .html files from PR diffs and file pages, sandboxed away from your GitHub session.</span>
+              </div>
+              <button id="feature-ghhp" type="button" role="switch" aria-checked="false" aria-label="HTML preview" class="switch">
+                <span class="switch-track"><span class="switch-knob"></span></span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="checkbox-row">
-          <button id="feature-ghbd" type="button" role="switch" aria-checked="false" class="switch">
-            <span class="switch-track"><span class="switch-knob"></span></span>
-          </button>
-          <span>Board dependency arrows — on Projects Board views <span class="badge-experimental">Experimental</span></span>
+      </section>
+
+      <section class="section" id="tokens-section">
+        <div class="section-intro">
+          <div class="kicker">02 / GitHub tokens</div>
+          <h2>Connect GitHub.</h2>
+          <p>
+            The default token covers every repository owner. Add an owner token for an
+            organization or account that needs its own credential — a different
+            fine-grained token, or one authorized for its SSO. A request uses the owner's
+            token, else the default; it never tries saved tokens in turn.
+          </p>
+          <div class="permission-box" aria-label="Permissions GH Reloaded needs">
+            <div class="permission-row"><span>Issues</span><strong>Read-only</strong></div>
+            <div class="permission-row"><span>Projects</span><strong>Read-only</strong></div>
+            <div class="permission-row"><span>Contents <small>private HTML previews only</small></span><strong>Read-only</strong></div>
+          </div>
+          <a class="inline-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create a fine-grained token ↗</a>
+          <div class="privacy">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></svg>
+            <span>Tokens stay in this browser's extension storage and are only sent to api.github.com. Once saved, only their last 4 characters are shown.</span>
+          </div>
         </div>
-        <div class="checkbox-row">
-          <button id="feature-ghfw" type="button" role="switch" aria-checked="false" class="switch">
-            <span class="switch-track"><span class="switch-knob"></span></span>
-          </button>
-          <span>Full-width board — stretches a Board view to the full window width</span>
+        <div class="section-body">
+          <div id="tokens">
+            <div id="token-default"></div>
+            <div class="list-head">Owner tokens</div>
+            <div id="token-list" class="card-list" data-empty="No owner tokens yet — the default token covers every owner."></div>
+          </div>
+          <div class="actions">
+            <button id="add-token" type="button" class="btn btn-secondary">+ Add owner token</button>
+            <span class="spacer"></span>
+            <p id="tokens-status" class="status" role="status"></p>
+            <button id="save-tokens" type="button" class="btn btn-primary">Save tokens</button>
+          </div>
+          <div class="callout">
+            Organization enforces SSO? Open <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">GitHub token settings ↗</a>
+            and authorize the token for it — otherwise GitHub answers with empty results or a 404 for that organization.
+          </div>
         </div>
-        <div class="checkbox-row">
-          <button id="feature-ghhp" type="button" role="switch" aria-checked="false" class="switch">
-            <span class="switch-track"><span class="switch-knob"></span></span>
-          </button>
-          <span>HTML preview — a preview icon on PR file diffs, a Preview tab on HTML file pages</span>
+      </section>
+
+      <section class="section" id="shortcuts-section">
+        <div class="section-intro">
+          <div class="kicker">03 / Quick-create</div>
+          <h2>One click to the right form.</h2>
+          <p>
+            Buttons added to Projects board views, each opening a new-issue form in the
+            repository you choose — handy when work is filed somewhere other than the
+            board's own repo. Scope one to a single board, or leave it on all of them.
+          </p>
         </div>
-      </div>
-      <p id="features-status" class="status"></p>
-
-      <hr />
-
-      <h2>GitHub token</h2>
-      <p class="hint">
-        Used by the <strong>Dependency graph</strong> feature to read sub-issues, their
-        "blocked by" relationships, Projects v2 Status, and org-level custom fields via
-        the GitHub API. Also used by <strong>HTML preview</strong> to read a file's content
-        on private repos — public repos work without a token.
-      </p>
-      <p class="hint">
-        Use a <strong>fine-grained token</strong>, scoped only to the repositories you
-        actually need, with <strong>Issues: Read-only</strong>,
-        <strong>Projects: Read-only</strong>, and <strong>Contents: Read-only</strong> —
-        nothing else.
-      </p>
-
-      <label for="token">GitHub token</label>
-      <input id="token" type="password" placeholder="github_pat_..." autocomplete="off" />
-
-      <div class="row">
-        <button id="save">Save</button>
-        <button id="test" class="secondary">Test connection</button>
-        <button id="clear" class="danger">Remove token</button>
-      </div>
-
-      <p id="status" class="status"></p>
-
-      <p class="hint">
-        <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">
-          Create a fine-grained token →
-        </a>
-      </p>
-
-      <hr />
-
-      <h2>Quick-create shortcuts</h2>
-      <p class="hint">
-        Used by the <strong>Quick-create button</strong> feature: adds a small floating
-        button to every GitHub Projects board view, linking straight to "new issue" for
-        whichever repo you use for that — handy when the repo you file into isn't the
-        one the board itself lives in. Nothing is preset; add your own.
-      </p>
-
-      <div id="shortcuts"></div>
-      <div class="row">
-        <button id="add-shortcut" type="button" class="secondary">+ Add shortcut</button>
-        <button id="save-shortcuts" type="button">Save shortcuts</button>
-      </div>
-      <p id="shortcuts-status" class="status"></p>
-
-      <hr />
-
-      <h2>Board dependency arrows <span class="badge-experimental">Experimental</span></h2>
-      <p class="hint">
-        On a GitHub Projects <strong>Board</strong> (kanban) view, draws an arrow between any
-        two currently-visible cards where one blocks the other — red if the blocker is behind
-        the card it blocks, gray otherwise. Experimental — still rough around the edges, so it's
-        off by default (see <strong>Features</strong> above, or the switch next to the view
-        tabs — only shown while a Board view is selected).
-      </p>
-
-      <h2>Full-width board</h2>
-      <p class="hint">
-        On a GitHub Projects <strong>Board</strong> (kanban) view, stretches the board to the
-        full window width instead of the page's normal centered column — more room for
-        columns before they need to scroll horizontally. On by default (see
-        <strong>Features</strong> above).
-      </p>
-
-      <h2>HTML preview</h2>
-      <p class="hint">
-        On a pull request's <strong>Files changed</strong> tab, adds a globe button next to
-        each HTML file's "..." menu that opens the rendered file in a new tab. On a file's own
-        page, adds a <strong>Preview</strong> tab next to Code/Blame that renders it inline —
-        the same way GitHub already does for Markdown. Rendered in a sandboxed frame, so a
-        file's own scripts can't read your GitHub session. On by default (see
-        <strong>Features</strong> above).
-      </p>
+        <div class="section-body">
+          <div id="shortcuts" class="card-list" data-empty="No shortcuts yet — nothing is preset, add your own."></div>
+          <div class="actions">
+            <button id="add-shortcut" type="button" class="btn btn-secondary">+ Add shortcut</button>
+            <span class="spacer"></span>
+            <p id="shortcuts-status" class="status" role="status"></p>
+            <button id="save-shortcuts" type="button" class="btn btn-primary">Save shortcuts</button>
+          </div>
+        </div>
+      </section>
     </main>
-    <script src="options.js"></script>
+
+    <footer class="container footer">
+      <span>GH Reloaded <span data-version></span> · Open source under the MIT License</span>
+      <div class="footer-links">
+        <a href="https://gh-reloaded.simone3-cattani.chatgpt.site/" target="_blank" rel="noopener">Website</a>
+        <a href="https://github.com/cattanisimone/gh-reloaded" target="_blank" rel="noopener">Repository</a>
+        <a href="https://github.com/cattanisimone/gh-reloaded/issues" target="_blank" rel="noopener">Report an issue</a>
+      </div>
+    </footer>
+
+    <script type="module" src="options.js"></script>
   </body>
 </html>

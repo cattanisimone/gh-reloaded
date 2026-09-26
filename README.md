@@ -13,7 +13,7 @@
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-4285F4.svg">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.5.3-orange.svg">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.6.0-orange.svg">
   <a href="CONTRIBUTING.md"><img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
 </p>
 
@@ -50,7 +50,9 @@ If the repo belongs to an organization with SSO enforced (or with a policy restr
 
 ### 3. Connect it
 
-Back in the extension's Settings page: paste the token, **Save**, then **Test connection** — it should report the GitHub username the token authenticates as.
+Back in the extension's Settings page, under **GitHub tokens**: paste the token into **Default token**, **Save tokens**, then **Test** — it should report the GitHub username the token authenticates as.
+
+Working across several repository owners — organizations or personal accounts — that need their own token (a different fine-grained token, or one authorized for an organization's SSO)? **Add owner token** for each, with that owner's login (a pasted `https://github.com/<owner>` works too). A request always uses the token of the repository's owner, falling back to the default token — never by trying every saved token in turn; with no default set, owners without a token of their own are read anonymously. Saved tokens are never shown again in full, only by their last 4 characters.
 
 ## Features
 
@@ -107,7 +109,7 @@ background.js                       Service worker entry point: opens Settings, 
 lib/github-api.js                   Shared GitHub REST/GraphQL client (auth, caching) used by every feature
 background/<feature>.js             One feature's server-side logic (GitHub calls, computation) + its MESSAGE_TYPE
 features/<feature>/                 One feature's content-script side: DOM injection, rendering, styling
-options/                             Settings page (GitHub token, quick-create shortcuts, feature toggles)
+options/                             Settings page (GitHub tokens, quick-create shortcuts, feature toggles)
 icons/                               Toolbar/extensions-page icons
 ```
 

@@ -39,7 +39,8 @@ function encodePath(path) {
 // corrupting it.
 async function fetchContentsBase64(owner, repo, path, ref) {
   const data = await ghFetch(
-    `/repos/${owner}/${repo}/contents/${encodePath(path)}?ref=${encodeURIComponent(ref)}`
+    `/repos/${owner}/${repo}/contents/${encodePath(path)}?ref=${encodeURIComponent(ref)}`,
+    { owner }
   );
   if (Array.isArray(data)) {
     throw new Error(`${path} is a directory, not a file`);
@@ -51,7 +52,7 @@ async function fetchContentsBase64(owner, repo, path, ref) {
   // returns the blob's own sha — the Git Blobs API serves the same
   // base64 payload with a much higher size ceiling.
   if (data.sha) {
-    const blob = await ghFetch(`/repos/${owner}/${repo}/git/blobs/${data.sha}`);
+    const blob = await ghFetch(`/repos/${owner}/${repo}/git/blobs/${data.sha}`, { owner });
     if (typeof blob.content === "string") return blob.content.replace(/\n/g, "");
   }
   throw new Error(`Could not read the content of ${path}`);
