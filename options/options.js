@@ -29,21 +29,23 @@ function tokenHint(token) {
 }
 
 function tokenRowHtml(t, isDefault) {
-  const secretPlaceholder = t.token ? "Leave blank to keep the saved token" : "github_pat_...";
+  const secretPlaceholder = t.token ? "New token…" : "github_pat_...";
   return `
     <div class="token-row" data-id="${escapeAttr(t.id)}">
-      <div class="token-row-main">
+      <button type="button" class="tok-remove" title="Remove">×</button>
+      <div class="token-row-identity">
         <input type="text" class="tok-name" placeholder="Name (e.g. Personal, Acme Corp)" value="${escapeAttr(t.name || "")}" />
         <input type="text" class="tok-owner" placeholder="owner login — blank = default" value="${escapeAttr(t.owner || "")}" />
-        <label class="tok-default-label">
-          <input type="radio" name="tok-default" class="tok-default-radio" ${isDefault ? "checked" : ""} />
-          Default
-        </label>
-        <button type="button" class="tok-remove" title="Remove">×</button>
       </div>
-      <div class="token-row-sub">
+      <div class="token-row-secret">
         <input type="password" class="tok-secret" placeholder="${escapeAttr(secretPlaceholder)}" autocomplete="off" />
         <button type="button" class="tok-test secondary">Test</button>
+      </div>
+      <div class="token-row-footer">
+        <label class="tok-default-chip">
+          <input type="radio" name="tok-default" class="tok-default-radio" ${isDefault ? "checked" : ""} />
+          <span>Default</span>
+        </label>
         <span class="tok-hint">${tokenHint(t.token)}</span>
       </div>
       <p class="tok-test-status status"></p>
