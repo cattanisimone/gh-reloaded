@@ -151,34 +151,45 @@
       const anchor = kebab.closest("details") || kebab;
       const row = anchor.parentElement;
       if (!row) continue;
-      // "skip" means this row was already confirmed not to be an HTML
-      // file — permanent, since that can't change. "done" means a
-      // button was already injected for it; still re-checked for the
-      // button's actual presence (rather than trusting the marker
-      // alone) so a GitHub re-render that wipes our button — without
-      // also replacing this row, which would clear the marker with it —
-      // gets it re-injected instead of leaving the row silently bare.
-      // Anything else (unset, or "done" with the button missing) falls
-      // through and gets (re)computed below; the marker itself is only
-      // set once that computation actually succeeds, so a scan that
-      // runs before the file path or head repo is resolvable leaves the
-      // row unmarked and retried on the next scan instead of skipped
-      // forever.
-      if (row.dataset.ghhpChecked === "skip") continue;
-      if (row.dataset.ghhpChecked === "done" && row.querySelector(".ghhp-preview-btn")) continue;
 
-      // The "Expand all lines" button that carries this file's full path
-      // usually isn't in the exact same row as the kebab, but it is a
-      // nearby ancestor — climbing to the whole file header/card is
-      // enough to find it without also picking up a sibling file's.
+      // The "Expand all lines" button that carries this file's full path,
+      // and the "Copy file name" button our own button anchors next to
+      // (see below), usually aren't in the exact same row as the kebab,
+      // but are a nearby ancestor — climbing to the whole file
+      // header/card finds both without also picking up a sibling file's.
       const scope =
         row.closest('[data-tagsearch-path], [id^="diff-"], .file, .file-header')?.parentElement ||
         row.closest('[data-tagsearch-path], [id^="diff-"], .file, .file-header') ||
         row;
+
+      // The processed marker lives on `scope` rather than on `row`
+      // itself: our button gets inserted next to "Copy file name",
+      // which — like the "Expand all lines" button above — isn't
+      // always inside `row` either, only guaranteed to be somewhere
+      // inside this wider `scope`. Marking `row` but then checking for
+      // the button under `row` missed it whenever the two diverged,
+      // and re-injected a fresh button on every single scan.
+      //
+      // "skip" means this scope was already confirmed not to be an HTML
+      // file — permanent, since that can't change. "done" means a
+      // button was already injected for it; still re-checked for the
+      // button's actual presence (rather than trusting the marker
+      // alone) so a GitHub re-render that wipes our button — without
+      // also replacing this scope, which would clear the marker with it
+      // — gets it re-injected instead of leaving it silently bare.
+      // Anything else (unset, or "done" with the button missing) falls
+      // through and gets (re)computed below; the marker itself is only
+      // set once that computation actually succeeds, so a scan that
+      // runs before the file path or head repo is resolvable leaves it
+      // unmarked and retried on the next scan instead of skipped
+      // forever.
+      if (scope.dataset.ghhpChecked === "skip") continue;
+      if (scope.dataset.ghhpChecked === "done" && scope.querySelector(".ghhp-preview-btn")) continue;
+
       const path = findFilePath(scope);
       if (!path) continue; // not resolvable yet — retry on the next scan
       if (!isHtmlPath(path)) {
-        row.dataset.ghhpChecked = "skip";
+        scope.dataset.ghhpChecked = "skip";
         continue;
       }
       if (!head) continue; // couldn't read the head branch yet — retry on the next scan
@@ -202,7 +213,7 @@
       const copyBtn = findCopyNameButton(scope);
       if (copyBtn) copyBtn.insertAdjacentElement("afterend", btn);
       else row.insertBefore(btn, row.firstChild); // fallback: previous spot, before "Viewed"
-      row.dataset.ghhpChecked = "done";
+      scope.dataset.ghhpChecked = "done";
     }
   }
 
@@ -462,7 +473,7 @@
   // still-live click handlers) don't linger until the next reload.
   function teardown() {
     document.querySelectorAll(".ghhp-preview-btn").forEach((btn) => {
-      delete btn.parentElement?.dataset.ghhpChecked;
+      delete btn.closest('[data-ghhp-checked="done"]')?.dataset.ghhpChecked;
       btn.remove();
     });
     document.getElementById("ghhp-blob-tab")?.remove();
