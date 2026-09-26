@@ -141,8 +141,15 @@
   }
 
   function findCopyNameButton(scope) {
-    return Array.from(scope.querySelectorAll("button")).find((el) =>
-      /^copy file name to clipboard$/i.test(accessibleName(el))
+    // Same hidden-duplicate trap as the kebab itself (see isVisible's
+    // use in injectDiffPreviewButtons): `scope` can contain two matching
+    // "Copy file name" buttons, one of them permanently offsetParent-
+    // hidden. Anchoring our button on whichever comes first in document
+    // order — confirmed live to be the hidden one — planted it
+    // out of sight even after the kebab-selection fix picked the
+    // visible kebab, since this lookup ran independently of that.
+    return Array.from(scope.querySelectorAll("button")).find(
+      (el) => isVisible(el) && /^copy file name to clipboard$/i.test(accessibleName(el))
     );
   }
 
