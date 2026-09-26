@@ -50,9 +50,9 @@ If the repo belongs to an organization with SSO enforced (or with a policy restr
 
 ### 3. Connect it
 
-Back in the extension's Settings page, under **GitHub tokens**: paste the token, **Save**, then **Test** — it should report the GitHub username the token authenticates as.
+Back in the extension's Settings page, under **GitHub tokens**: paste the token into **Default token**, **Save tokens**, then **Test** — it should report the GitHub username the token authenticates as.
 
-Working across several repository owners — organizations or personal accounts — that each need their own token (a different fine-grained token or SSO authorization)? Add one row per owner and set its **owner** field to that owner's login; mark one token **Default** for every owner without a mapping of its own. A request always uses the token mapped to the repository's owner, falling back to the default — never by trying every saved token in turn. Saved tokens are never shown again in full, only by their last 4 characters.
+Working across several repository owners — organizations or personal accounts — that need their own token (a different fine-grained token, or one authorized for an organization's SSO)? **Add owner token** for each, with that owner's login (a pasted `https://github.com/<owner>` works too). A request always uses the token of the repository's owner, falling back to the default token — never by trying every saved token in turn; with no default set, owners without a token of their own are read anonymously. Saved tokens are never shown again in full, only by their last 4 characters.
 
 ## Features
 
