@@ -185,22 +185,26 @@
         continue;
       }
 
+      // GitHub really does render two matching kebabs for the same file
+      // side by side — confirmed live: one a permanently-hidden legacy/
+      // responsive-breakpoint duplicate of the whole file header, not
+      // just of the kebab itself, offsetParent-hidden regardless of how
+      // long this waits. Skipping (never marking) an invisible one here
+      // lets a visible sibling still get processed later in this exact
+      // scan instead of losing the path to whichever happened to come
+      // first in document order — the hidden one, in practice, which
+      // otherwise plants the button somewhere the user can never see,
+      // permanently, since path-based dedup below would then also
+      // consider it already handled.
+      if (!isVisible(kebab)) continue;
+
       // Dedupe by the resolved file path rather than by DOM identity
-      // (`scope`/`row`) or by visibility: GitHub can render more than
-      // one kebab that both resolve to the very same file — e.g. a
-      // hidden legacy/responsive-breakpoint duplicate of the whole file
-      // header, not just of the kebab itself — and a later re-render
-      // can also wipe a previously-injected button without touching
-      // `scope`. Filtering kebabs by on-screen visibility to tell the
-      // duplicates apart sounds right, but a kebab that's only
-      // temporarily unlaid-out (mid progressive-render) is
-      // indistinguishable from a permanently-hidden duplicate by that
-      // same test, and wrongly filtering out the one real kebab is
-      // exactly how the button goes missing again. Checking the live
-      // DOM for a button that already carries this same path, gathered
-      // once above before this loop mutates it, sidesteps guessing
+      // (`scope`/`row`): a re-render can wipe a previously-injected
+      // button without touching `scope` itself, and checking the live
+      // DOM for a button that already carries this same path — gathered
+      // once above before this loop mutates it — sidesteps guessing
       // which DOM node is "the" one to mark and stays correct across
-      // both cases.
+      // that.
       if (injectedPaths.has(path)) continue;
       if (!head) continue; // couldn't read the head branch yet — retry on the next scan
 
