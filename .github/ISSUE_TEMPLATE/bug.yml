@@ -1,0 +1,56 @@
+name: Bug
+description: Report something that doesn't work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Steps to reproduce and expected behavior are what
+        make a bug fixable.
+  - type: textarea
+    id: bug
+    attributes:
+      label: Bug
+      description: What's wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, including whether the page was reached by a full load or by GitHub's client-side (SPA) navigation, if it matters.
+      placeholder: |
+        1. Enable HTML Preview in GH Reloaded.
+        2. Navigate to an HTML file blob page.
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: feature
+    attributes:
+      label: Affected feature
+      description: Which feature this is about.
+      options:
+        - Dependency graph
+        - Quick-create button
+        - Board dependency arrows
+        - Full-width board
+        - HTML preview
+        - Settings / options page
+        - Other / not sure
+    validations:
+      required: true
+  - type: textarea
+    id: investigation
+    attributes:
+      label: Investigation notes
+      description: Anything you've already found — a likely cause, a relevant function, a workaround.
+    validations:
+      required: false

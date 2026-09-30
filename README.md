@@ -160,7 +160,7 @@ Google's own review queue still sits on top of this either way — a workflow ru
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how a feature module is structured and how to add a new one. Issues and PRs welcome.
+Start with [CONTRIBUTING.md](CONTRIBUTING.md). The full conventions — the shape of a feature, the design rules, how docs stay in sync, the definition of done, and the git/PR workflow — live in [AGENTS.md](AGENTS.md), which both people and coding assistants read. Issues and PRs welcome.
 
 ## Privacy
 
