@@ -1,0 +1,51 @@
+<!--
+  Fixture: a pull request "Files changed" page with one changed .html
+  file. The html-preview feature adds a globe "Preview rendered HTML"
+  button next to each HTML file's "Copy file name" / "More options"
+  controls. Anchors the content script keys on:
+   - two header links to /<owner>/<repo>/tree/<branch> (base, then head) —
+     the head one supplies the ref the preview is fetched at;
+   - per file: a "More options" control, the file's path in a
+     [class*="file-name"] <code>, and a "Copy file name to clipboard"
+     button our button is inserted after.
+  See fixtures/README.md for capture date.
+-->
+<!doctype html>
+<html lang="en" data-color-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Files changed · Pull Request #5 · acme/web</title>
+    <style>
+      body { font-family: sans-serif; margin: 0; padding: 16px; }
+      .pr-header a { margin-right: 12px; }
+      .file { border: 1px solid #d0d7de; border-radius: 6px; margin-top: 16px; }
+      .file-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f6f8fa; }
+      .file-name code { font-family: monospace; }
+      .actions { margin-left: auto; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!-- "<base> wants to merge … from <head>": each side links to its
+           branch's tree root. The second (head) is what the preview uses. -->
+      <div class="pr-header">
+        <a href="/acme/web/tree/main">acme:main</a>
+        <a href="/acme/web/tree/feature-x">contributor:feature-x</a>
+      </div>
+
+      <div id="diff-0" class="file">
+        <div class="file-header">
+          <span class="file-name"><code>docs/index.html</code></span>
+          <button type="button" aria-label="Copy file name to clipboard">Copy</button>
+          <div class="actions">
+            <details>
+              <summary aria-label="More options">⋯</summary>
+              <div class="menu">Menu</div>
+            </details>
+          </div>
+        </div>
+        <div class="diff-body">… diff rows …</div>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+<!--
+  Fixture: a GitHub issue page with a "Sub-issues" section — what the
+  dependency-graph feature anchors on (it injects its graph right after
+  that section's heading). See fixtures/README.md for capture date.
+-->
+<!doctype html>
+<html lang="en" data-color-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Build the thing · Issue #1 · acme/web</title>
+    <style>
+      body { font-family: sans-serif; margin: 0; padding: 24px; }
+      section { max-width: 900px; margin: 0 auto; }
+      .sub-issues { border: 1px solid #d0d7de; border-radius: 6px; padding: 12px; margin-top: 16px; }
+      .sub-issues li { margin: 4px 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section>
+        <h1>Build the thing</h1>
+        <p>Tracking issue for the first milestone.</p>
+
+        <section class="sub-issues">
+          <h3>Sub-issues</h3>
+          <ul>
+            <li><a href="/acme/web/issues/2">Set up the build</a></li>
+            <li><a href="/acme/web/issues/3">Wire up the dashboard</a></li>
+          </ul>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

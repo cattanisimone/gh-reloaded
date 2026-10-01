@@ -1,0 +1,40 @@
+<!--
+  Fixture: a single-file blob page for an .html file. The html-preview
+  feature adds a "Preview" tab next to GitHub's own Code / Blame toggle
+  (mirroring how GitHub itself offers Code | Preview for Markdown), and a
+  panel that renders the file in an iframe. Anchors:
+   - a Code / Blame toggle found by the visible tab names (Blame only
+     exists on the blob view, so it's the reliable side to anchor from);
+   - the full-width [class*="BlobContent-module__blobContentSection"] the
+     panel takes the place of when Preview is active.
+  See fixtures/README.md for capture date.
+-->
+<!doctype html>
+<html lang="en" data-color-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>web/docs/index.html at main · acme/web</title>
+    <style>
+      body { font-family: sans-serif; margin: 0; padding: 16px; }
+      .file-toolbar { display: flex; align-items: center; }
+      .segmented { display: inline-flex; list-style: none; padding: 0; margin: 0; border: 1px solid #d0d7de; border-radius: 6px; overflow: hidden; }
+      .segmented li { display: inline-block; }
+      .segmented [role="tab"] { display: inline-block; padding: 6px 12px; cursor: pointer; }
+      .blobContentSection { margin-top: 16px; border: 1px solid #d0d7de; border-radius: 6px; padding: 12px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="file-toolbar">
+        <ul class="segmented" aria-label="File view">
+          <li data-selected=""><a role="tab" aria-pressed="true" href="/acme/web/blob/main/docs/index.html">Code</a></li>
+          <li><a role="tab" aria-pressed="false" href="/acme/web/blame/main/docs/index.html">Blame</a></li>
+        </ul>
+      </div>
+
+      <section class="BlobContent-module__blobContentSection--s1">
+        <pre><code>&lt;!doctype html&gt;&lt;h1&gt;Hello&lt;/h1&gt;</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

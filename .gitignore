@@ -2,3 +2,7 @@
 *.log
 node_modules/
 *.zip
+
+# Playwright e2e output (see test/)
+test-results/
+playwright-report/
