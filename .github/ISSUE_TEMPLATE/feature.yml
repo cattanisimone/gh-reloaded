@@ -1,0 +1,48 @@
+name: Feature
+description: Propose a new feature or an enhancement to an existing one.
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Fill in what you can — Why, the MVP, and acceptance
+        criteria are the parts that make a proposal actionable.
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: The problem or gap this addresses, and who it helps.
+      placeholder: GitHub covers X well, but there's no way to …
+    validations:
+      required: true
+  - type: textarea
+    id: mvp
+    attributes:
+      label: Proposed MVP
+      description: The smallest version worth shipping. Which github.com pages it touches, what it shows or does, and what stays out of scope.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Concrete, checkable statements that decide when this is done.
+      placeholder: |
+        - The control appears only on Board views, including after SPA navigation.
+        - Entering and exiting works repeatedly without duplicating UI.
+    validations:
+      required: true
+  - type: textarea
+    id: open-questions
+    attributes:
+      label: Open questions / design notes
+      description: Anything to settle during implementation — data sources, ordering, trade-offs.
+    validations:
+      required: false
+  - type: textarea
+    id: later
+    attributes:
+      label: Later ideas (separate scope)
+      description: Extensions worth noting but not part of this first version.
+    validations:
+      required: false
