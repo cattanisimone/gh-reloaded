@@ -20,3 +20,15 @@ Read [AGENTS.md](AGENTS.md) first — it has the branch naming, PR title, and on
 ## Local testing
 
 No build step — load the extension unpacked. See [AGENTS.md](AGENTS.md#local-testing) for the exact steps.
+
+## Running the tests
+
+One command runs everything — unit tests plus the Playwright end-to-end suite — with no GitHub token:
+
+```
+npm install
+npx playwright install --with-deps chromium   # first time only
+npm test
+```
+
+See [AGENTS.md](AGENTS.md#running-the-tests) for what the suites cover and how to run a subset.
