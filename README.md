@@ -23,11 +23,13 @@ A Chrome extension that injects small, focused UI enhancements into github.com, 
 
 It's a collection of independent features, not a single-purpose tool: each one lives in its own folder under `features/` and can be added, removed, or shipped on its own. GitHub covers the fundamentals well; this is for the gaps that are easier to fill from the outside than to wait on.
 
-## Install (unpacked, for now)
+## Install
 
-This isn't on the Chrome Web Store yet.
+### 1. Get the extension
 
-### 1. Load the extension
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/gh-reloaded/nflpdflhgpnhlahgajbgbpbblniggpba), then open **Settings** from its toolbar icon and skip to [step 2](#2-create-a-github-token).
+
+To run an unreleased change instead (or to contribute — see [Contributing](#contributing)):
 
 1. Clone this repo.
 2. Open `chrome://extensions`, enable **Developer mode** (top-right toggle).

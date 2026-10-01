@@ -57,6 +57,14 @@
     return (el.getAttribute("aria-label") || el.getAttribute("title") || el.textContent || "").trim();
   }
 
+  // GitHub commonly keeps a hidden legacy/responsive-breakpoint copy of
+  // a control alongside the one actually on screen — accessibleName()
+  // alone can't tell them apart, so anything anchored on visible text
+  // needs this to avoid also matching the hidden twin.
+  function isVisible(el) {
+    return !!el.offsetParent;
+  }
+
   function globeIconHtml() {
     return `
       <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
@@ -133,8 +141,15 @@
   }
 
   function findCopyNameButton(scope) {
-    return Array.from(scope.querySelectorAll("button")).find((el) =>
-      /^copy file name to clipboard$/i.test(accessibleName(el))
+    // Same hidden-duplicate trap as the kebab itself (see isVisible's
+    // use in injectDiffPreviewButtons): `scope` can contain two matching
+    // "Copy file name" buttons, one of them permanently offsetParent-
+    // hidden. Anchoring our button on whichever comes first in document
+    // order — confirmed live to be the hidden one — planted it
+    // out of sight even after the kebab-selection fix picked the
+    // visible kebab, since this lookup ran independently of that.
+    return Array.from(scope.querySelectorAll("button")).find(
+      (el) => isVisible(el) && /^copy file name to clipboard$/i.test(accessibleName(el))
     );
   }
 
@@ -146,16 +161,15 @@
 
   function injectDiffPreviewButtons() {
     const head = findHeadRepo();
+    const injectedPaths = new Set(
+      Array.from(document.querySelectorAll(".ghhp-preview-btn"), (b) => b.dataset.ghhpPath)
+    );
 
     for (const kebab of findKebabButtons()) {
       const anchor = kebab.closest("details") || kebab;
       const row = anchor.parentElement;
-      // Marked on the row itself rather than in a Set kept in module
-      // state: it's what teardown() below can cheaply undo for exactly
-      // the rows that got a button, so turning the feature off and back
-      // on again doesn't leave them permanently skipped.
-      if (!row || row.dataset.ghhpChecked) continue;
-      row.dataset.ghhpChecked = "1";
+      if (!row) continue;
+
       // The "Expand all lines" button that carries this file's full path
       // usually isn't in the exact same row as the kebab, but it is a
       // nearby ancestor — climbing to the whole file header/card is
@@ -164,14 +178,48 @@
         row.closest('[data-tagsearch-path], [id^="diff-"], .file, .file-header')?.parentElement ||
         row.closest('[data-tagsearch-path], [id^="diff-"], .file, .file-header') ||
         row;
+
+      // "skip" means this scope was already confirmed not to be an HTML
+      // file — permanent, since that can't change. Left unmarked (and
+      // retried on the next scan) whenever the path isn't resolvable
+      // yet, e.g. during progressive/lazy diff rendering.
+      if (scope.dataset.ghhpChecked === "skip") continue;
+
       const path = findFilePath(scope);
-      if (!path || !isHtmlPath(path)) continue;
-      if (!head) continue; // couldn't read the head branch — nothing to preview
+      if (!path) continue; // not resolvable yet — retry on the next scan
+      if (!isHtmlPath(path)) {
+        scope.dataset.ghhpChecked = "skip";
+        continue;
+      }
+
+      // GitHub really does render two matching kebabs for the same file
+      // side by side — confirmed live: one a permanently-hidden legacy/
+      // responsive-breakpoint duplicate of the whole file header, not
+      // just of the kebab itself, offsetParent-hidden regardless of how
+      // long this waits. Skipping (never marking) an invisible one here
+      // lets a visible sibling still get processed later in this exact
+      // scan instead of losing the path to whichever happened to come
+      // first in document order — the hidden one, in practice, which
+      // otherwise plants the button somewhere the user can never see,
+      // permanently, since path-based dedup below would then also
+      // consider it already handled.
+      if (!isVisible(kebab)) continue;
+
+      // Dedupe by the resolved file path rather than by DOM identity
+      // (`scope`/`row`): a re-render can wipe a previously-injected
+      // button without touching `scope` itself, and checking the live
+      // DOM for a button that already carries this same path — gathered
+      // once above before this loop mutates it — sidesteps guessing
+      // which DOM node is "the" one to mark and stays correct across
+      // that.
+      if (injectedPaths.has(path)) continue;
+      if (!head) continue; // couldn't read the head branch yet — retry on the next scan
 
       const { owner, repo, branch } = head;
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "ghhp-preview-btn";
+      btn.dataset.ghhpPath = path;
       btn.title = "Preview rendered HTML";
       btn.setAttribute("aria-label", "Preview rendered HTML");
       btn.innerHTML = globeIconHtml();
@@ -187,6 +235,7 @@
       const copyBtn = findCopyNameButton(scope);
       if (copyBtn) copyBtn.insertAdjacentElement("afterend", btn);
       else row.insertBefore(btn, row.firstChild); // fallback: previous spot, before "Viewed"
+      injectedPaths.add(path);
     }
   }
 
@@ -211,11 +260,6 @@
   // visible name of the tabs rather than a class name that could easily
   // be specific to that toggle's own React component.
   function findCodeBlameTabs() {
-    // GitHub keeps a hidden legacy copy of this toggle in the DOM
-    // alongside the visible pill one (a responsive-breakpoint variant,
-    // or a rollback fallback) — accessibleName() alone can't tell them
-    // apart, so filter to elements actually rendered on screen.
-    const isVisible = (el) => !!el.offsetParent;
     const tabs = Array.from(document.querySelectorAll('[role="tab"], a, button'));
     const codes = tabs.filter((el) => isVisible(el) && accessibleName(el).toLowerCase() === "code");
     const blames = tabs.filter((el) => isVisible(el) && accessibleName(el).toLowerCase() === "blame");
@@ -445,10 +489,12 @@
   // matching page is already open, so the injected controls (and their
   // still-live click handlers) don't linger until the next reload.
   function teardown() {
-    document.querySelectorAll(".ghhp-preview-btn").forEach((btn) => {
-      delete btn.parentElement?.dataset.ghhpChecked;
-      btn.remove();
-    });
+    // Nothing to undo on `scope.dataset.ghhpChecked` here: it only ever
+    // holds "skip" (this file isn't HTML, which stays true regardless
+    // of whether the feature is on), never a "this has a button" state
+    // — injectDiffPreviewButtons re-derives that by querying the live
+    // DOM for `.ghhp-preview-btn` instead, so removing those is enough.
+    document.querySelectorAll(".ghhp-preview-btn").forEach((btn) => btn.remove());
     document.getElementById("ghhp-blob-tab")?.remove();
     document.getElementById("ghhp-blob-panel")?.remove();
     blobKey = null;
