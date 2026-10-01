@@ -19,7 +19,7 @@ function externalKey(owner, repo, num) {
  * Never drops an edge already marked `critical`: that's a real segment of
  * the displayed critical-path chain, not visual noise.
  */
-function transitiveReduce(ids, edgeList) {
+export function transitiveReduce(ids, edgeList) {
   const idSet = new Set(ids);
   const adj = new Map(ids.map((id) => [id, new Set()]));
   for (const e of edgeList) {
@@ -54,7 +54,7 @@ function transitiveReduce(ids, edgeList) {
   return edgeList.filter((e) => !redundant.has(`${e.from}->${e.to}`));
 }
 
-function median(values) {
+export function median(values) {
   if (!values.length) return 0;
   const sorted = values.slice().sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
@@ -79,7 +79,7 @@ function median(values) {
  * elsewhere in this same feature instead. With nothing estimated anywhere,
  * that median is 0 and the path degrades to "most hops", as before.
  */
-function computeCriticalPath(internalNodes, edges) {
+export function computeCriticalPath(internalNodes, edges) {
   const nodeById = new Map(internalNodes.map((n) => [n.id, n]));
   const ids = new Set(internalNodes.map((n) => n.id));
   const isDone = (id) => nodeById.get(id)?.state === "closed";

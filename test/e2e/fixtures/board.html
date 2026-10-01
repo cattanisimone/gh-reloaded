@@ -1,0 +1,64 @@
+<!--
+  Fixture: GitHub Projects v2 "Board" (kanban) view.
+  Serves the three board features: quick-create, board-dependencies,
+  full-width-board. See fixtures/README.md for capture date and how to
+  refresh. Hand-trimmed to the anchors the content scripts key on; the
+  CSS-module class names keep GitHub's build-hash prefixes (matched by
+  prefix in the content scripts) with the hashes dropped.
+-->
+<!doctype html>
+<html lang="en" data-color-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Board · acme</title>
+    <style>
+      body { font-family: sans-serif; margin: 0; }
+      .topBar { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 16px; }
+      .ButtonGroup { display: inline-flex; gap: 4px; }
+      .ButtonGroup button { height: 28px; }
+      nav[aria-label="Select view"] { display: flex; align-items: center; padding: 4px 16px; border-bottom: 1px solid #d0d7de; }
+      [role="tab"] { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; }
+      .ViewNavigationContainer { position: relative; display: flex; align-items: center; flex: 1; }
+      .boardContainer { padding: 16px; }
+      .board-view-column { display: inline-block; vertical-align: top; width: 280px; margin-right: 24px; }
+      .board-view-column-card { display: block; width: 240px; min-height: 72px; margin: 8px 0; padding: 12px; border: 1px solid #d0d7de; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!-- View-tabs bar. The selected tab's octicon-project glyph is how
+           both board features recognize a Board (vs Table/Roadmap). -->
+      <div class="prc-PageLayout-index-module__topBarActions--ab12">
+        <div class="prc-ButtonGroup-index-module__ButtonGroup--c1"><button>Insights</button><button>Workflows</button></div>
+        <div class="prc-ButtonGroup-index-module__ButtonGroup--c2"><button>Project details</button><button>⋯</button></div>
+      </div>
+
+      <nav aria-label="Select view">
+        <div class="view-navigation-module__ViewNavigationContainer--v1">
+          <div role="tab" aria-selected="true" class="selected">
+            <svg class="octicon octicon-project" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect width="3" height="10" x="1" y="3"></rect><rect width="3" height="7" x="6" y="3"></rect><rect width="3" height="13" x="11" y="3"></rect></svg>
+            <span>Board</span>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Board body. Two cards in different columns (so their rects sit
+           apart), each linking to an issue — card discovery is just "any
+           issue/PR link currently in the DOM". -->
+      <div class="Board-module__boardContainer--b1">
+        <div class="board-view-column">
+          <h3>Todo</h3>
+          <div class="board-view-column-card">
+            <a href="/acme/web/issues/2">Set up the build</a>
+          </div>
+        </div>
+        <div class="board-view-column">
+          <h3>In progress</h3>
+          <div class="board-view-column-card">
+            <a href="/acme/web/issues/3">Wire up the dashboard</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
