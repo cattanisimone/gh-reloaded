@@ -30,29 +30,57 @@ export const MESSAGE_TYPE = "GHMI_FETCH_GROUPS";
 const PAGE_SIZE = 50;
 const MAX_PAGES = 10;
 
+// How many of an issue's Project memberships one page returns, and how many
+// such pages to follow per issue. An issue in more than one page of Projects
+// is rare, but when it happens the extra pages are fetched so the issue still
+// lands under every Project it belongs to rather than silently losing some.
+const PROJECT_ITEMS_PAGE = 50;
+const MAX_PROJECT_ITEM_PAGES = 10;
+
+// The nested projectItems selection — reused by the search query and the
+// per-issue follow-up that paginates it. `pageInfo` is requested so an issue
+// in more Projects than one page returns can be detected and completed.
+const PROJECT_ITEMS_SELECTION = `
+  projectItems(first: $projectItemsFirst, after: $projectItemsAfter) {
+    pageInfo { hasNextPage endCursor }
+    nodes {
+      project { id title number url }
+      fieldValueByName(name: "Status") {
+        ... on ProjectV2ItemFieldSingleSelectValue { name color optionId }
+      }
+    }
+  }
+`;
+
 const SEARCH_QUERY = `
-  query($q: String!, $first: Int!, $after: String) {
+  query($q: String!, $first: Int!, $after: String, $projectItemsFirst: Int!, $projectItemsAfter: String) {
     search(query: $q, type: ISSUE, first: $first, after: $after) {
       issueCount
       pageInfo { hasNextPage endCursor }
       nodes {
         __typename
         ... on Issue {
+          id
           number
           title
           url
           state
           updatedAt
           repository { nameWithOwner }
-          projectItems(first: 20) {
-            nodes {
-              project { id title number url }
-              fieldValueByName(name: "Status") {
-                ... on ProjectV2ItemFieldSingleSelectValue { name color optionId }
-              }
-            }
-          }
+          ${PROJECT_ITEMS_SELECTION}
         }
+      }
+    }
+  }
+`;
+
+// Follows the projectItems cursor for a single issue, used only when the
+// search's first page didn't return all of an issue's memberships.
+const ISSUE_PROJECT_ITEMS_QUERY = `
+  query($id: ID!, $projectItemsFirst: Int!, $projectItemsAfter: String) {
+    node(id: $id) {
+      ... on Issue {
+        ${PROJECT_ITEMS_SELECTION}
       }
     }
   }
@@ -210,6 +238,30 @@ function toIssue(node) {
   };
 }
 
+// Follows the projectItems cursor for one issue and returns the memberships
+// beyond its first page. Degrades gracefully: a failed/partial follow-up
+// keeps whatever the first page already gave rather than failing the issue.
+async function fetchRemainingProjectItems(issueId, after) {
+  const extra = [];
+  let cursor = after;
+  let hasNextPage = true;
+  let pages = 0;
+  while (hasNextPage && cursor && pages < MAX_PROJECT_ITEM_PAGES) {
+    const data = await ghGraphQL(
+      ISSUE_PROJECT_ITEMS_QUERY,
+      { id: issueId, projectItemsFirst: PROJECT_ITEMS_PAGE, projectItemsAfter: cursor },
+      { partial: true }
+    );
+    const conn = data?.node?.projectItems;
+    if (!conn) break;
+    extra.push(...(conn.nodes || []));
+    hasNextPage = !!conn.pageInfo?.hasNextPage;
+    cursor = conn.pageInfo?.endCursor || null;
+    pages++;
+  }
+  return extra;
+}
+
 async function fetchAllIssues(query) {
   const issues = [];
   let totalCount = 0;
@@ -218,7 +270,15 @@ async function fetchAllIssues(query) {
   let pages = 0;
 
   do {
-    const data = await ghGraphQL(SEARCH_QUERY, { q: query, first: PAGE_SIZE, after });
+    // `partial: true`: GitHub can return readable issues alongside an error
+    // for one inaccessible Project node — take the readable data and let
+    // toIssue() drop the unreadable membership to "No Project" rather than
+    // failing the whole view. See lib/github-api.js.
+    const data = await ghGraphQL(
+      SEARCH_QUERY,
+      { q: query, first: PAGE_SIZE, after, projectItemsFirst: PROJECT_ITEMS_PAGE, projectItemsAfter: null },
+      { partial: true }
+    );
     const search = data?.search;
     if (!search) break;
     totalCount = search.issueCount ?? totalCount;
@@ -230,6 +290,22 @@ async function fetchAllIssues(query) {
     after = search.pageInfo?.endCursor || null;
     pages++;
   } while (hasNextPage && after && pages < MAX_PAGES);
+
+  // Complete the Project memberships of any issue that had more than one
+  // page of them, so no Project is dropped. Only the rare over-a-page issue
+  // triggers a follow-up; the common case adds no extra request.
+  await Promise.all(
+    issues.map(async (node) => {
+      const conn = node.projectItems;
+      if (!conn?.pageInfo?.hasNextPage || !node.id) return;
+      try {
+        const extra = await fetchRemainingProjectItems(node.id, conn.pageInfo.endCursor);
+        conn.nodes = [...(conn.nodes || []), ...extra];
+      } catch {
+        // Keep the first page rather than failing the issue (or the view).
+      }
+    })
+  );
 
   // Truncated only when we stopped at the page cap with more still to come
   // — not when the cursor simply ran out (that's the genuine end of the set).
@@ -245,7 +321,7 @@ async function fetchStatusOrder(projectIds) {
   await Promise.all(
     projectIds.map(async (id) => {
       try {
-        const data = await ghGraphQL(PROJECT_STATUS_QUERY, { id });
+        const data = await ghGraphQL(PROJECT_STATUS_QUERY, { id }, { partial: true });
         const options = data?.node?.field?.options || [];
         const map = {};
         options.forEach((opt, i) => {
