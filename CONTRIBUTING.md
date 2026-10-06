@@ -17,6 +17,12 @@ Blank issues are also allowed for anything that doesn't fit either form.
 
 Read [AGENTS.md](AGENTS.md) first — it has the branch naming, PR title, and one-issue-per-PR conventions, plus the definition of done. Opening a PR pre-fills the [template](.github/pull_request_template.md); work through its checklist before requesting review.
 
+Three things worth calling out, because they drive the release automation ([Release Please](https://github.com/googleapis/release-please)):
+
+- **PR titles are [Conventional Commits](https://www.conventionalcommits.org/)** (`feat:`, `fix:`, `docs:`, …), enforced by a check. The title is what sets the next version, so make it accurate.
+- **PRs are squash-merged**, with the title as the commit message — so each PR becomes exactly one conventional commit on `main`.
+- **Don't bump the version by hand.** Regular PRs never change `manifest.json`'s `version`; the bot keeps a release PR up to date with the next version and the changelog, and merging that PR is the release. See the README's [Releasing](README.md#releasing) section.
+
 ## Local testing
 
 No build step — load the extension unpacked. See [AGENTS.md](AGENTS.md#local-testing) for the exact steps.
