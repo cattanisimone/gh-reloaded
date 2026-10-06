@@ -1,7 +1,11 @@
 name: Require Version Bump
 
-# A status check for PRs targeting main: fails unless manifest.json's
-# "version" is strictly higher than what's currently on main. On its own
+# A status check for PRs targeting main. Following semantic versioning, a
+# bump is required only when the PR title is a Conventional Commit of type
+# feat or fix, or a breaking change (a "!" before the colon); docs, test, ci,
+# chore and refactor PRs ship nothing new to users and are exempt. When a bump
+# is required it fails unless manifest.json's "version" is strictly higher
+# than what's currently on main. On its own
 # this only reports pass/fail on the PR — to actually BLOCK merging, add
 # "Require Version Bump / check-version" as a required status check in the
 # repo's branch protection settings for main (see README's "Releasing"
@@ -10,7 +14,7 @@ name: Require Version Bump
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
 
 permissions:
   contents: read
@@ -20,17 +24,36 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
+      - name: Decide whether this PR needs a version bump
+        id: need
+        shell: bash
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          user_facing='^(feat|fix)(\([^)]*\))?!?:'
+          breaking='^[a-z]+(\([^)]*\))?!:'
+          if [[ "$TITLE" =~ $user_facing ]] || [[ "$TITLE" =~ $breaking ]]; then
+            echo "required=true" >> "$GITHUB_OUTPUT"
+            echo "Title \"$TITLE\" is a feat, a fix or a breaking change: the version must be bumped."
+          else
+            echo "required=false" >> "$GITHUB_OUTPUT"
+            echo "Title \"$TITLE\" ships nothing new to users: no version bump required."
+          fi
+
       - name: Checkout PR head
+        if: steps.need.outputs.required == 'true'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 1
 
       - name: Fetch base branch
+        if: steps.need.outputs.required == 'true'
         run: |
           git fetch origin "${{ github.event.pull_request.base.ref }}":"refs/remotes/origin/${{ github.event.pull_request.base.ref }}" --depth=1
 
       - name: Compare manifest.json version to base
+        if: steps.need.outputs.required == 'true'
         shell: bash
         run: |
           set -euo pipefail

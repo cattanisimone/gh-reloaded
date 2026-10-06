@@ -83,7 +83,7 @@ A change is ready to hand off when all of these hold:
 - **PR title:** [Conventional Commits](https://www.conventionalcommits.org/), e.g. `docs: consolidate contributor conventions in AGENTS.md`. PRs are squash-merged, so the title becomes the commit on `main`. (A title check and automated versioning arrive with #19.)
 - **Link the issue:** end the PR body with `Fixes cattanisimone/gh-reloaded#<N>` so merging the PR closes the issue.
 - **PR body:** use the [pull request template](.github/pull_request_template.md) — a summary, the linked issue, how the change was verified, and the definition-of-done checklist.
-- **Version:** don't hand-edit `manifest.json`'s `version`. Today `require-version-bump.yml` enforces a bump on non-draft PRs; #19 replaces that with automated release PRs, after which regular PRs never touch the version.
+- **Version:** follow [semantic versioning](https://semver.org/) and bump `manifest.json`'s `version` only for user-visible changes: a `feat` raises the minor version, a `fix` the patch version, a breaking change (`!` in the title) the major version, or the minor one while the version is below 1.0. Take the current version from `origin/main`. PRs of any other type (`docs`, `test`, `ci`, `chore`, `refactor`) leave the version alone: `require-version-bump.yml` only requires a bump for `feat`, `fix` and breaking titles. Every bump published on `main` ships a new Chrome Web Store release. #19 will replace this with automated release PRs.
 
 ## Local testing
 
