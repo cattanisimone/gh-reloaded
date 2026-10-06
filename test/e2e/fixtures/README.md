@@ -11,6 +11,7 @@ These are the saved GitHub pages the end-to-end tests run against. Serving them 
 | `pr-files.html` | A pull request "Files changed" page with one changed `.html` file | html-preview (PR globe button) |
 | `blob.html` | A single-file blob page for an `.html` file | html-preview (blob Preview tab) |
 | `pr-files-lazy.html` | A "Files changed" page whose file path is not yet resolvable | html-preview #16 regression |
+| `my-issues.html` | The "My Issues" dashboard (`github.com/issues`) | my-issues (group by project) |
 
 ## Capture date and how these were produced
 

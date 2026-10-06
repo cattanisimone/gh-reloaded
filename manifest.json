@@ -101,6 +101,12 @@
         "features/html-preview/content.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://github.com/issues", "https://github.com/issues/*"],
+      "js": ["features/my-issues/content.js"],
+      "css": ["features/my-issues/content.css"],
+      "run_at": "document_idle"
     }
   ],
   "sandbox": {
