@@ -1,0 +1,19 @@
+.github/workflows/ci.yml
+  s_75a16954f29976::t_8a40d076320afa 1-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "63925b99e1c424a29d2e999d3f5c09d4fb205031",
+  "prompts": {},
+  "sessions": {
+    "s_75a16954f29976": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_75a16954f29976",
+        "model": "unknown"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
