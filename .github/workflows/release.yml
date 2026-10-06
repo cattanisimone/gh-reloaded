@@ -9,9 +9,22 @@ name: Release
 # the Chrome Web Store, and attaches the zip to that release. Keeping release
 # creation and publishing here (rather than a separate workflow reacting to
 # the tag) avoids two GitHub Releases for the same version.
+#
+# Recovery: release_created is true only on the run that cuts the release,
+# so if packaging, the store upload, or the asset attach fails afterwards a
+# plain re-run would skip publish and strand the version. The
+# workflow_dispatch trigger below re-runs just the publish job against an
+# already-created tag; the store upload republishes the same version and the
+# asset attach clobbers any partial upload, so it is safe to run repeatedly.
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish_tag:
+        description: "Re-package and publish an already-created release tag (e.g. v0.7.0), to recover from a failed publish."
+        required: true
+        type: string
 
 jobs:
   release-please:
@@ -32,19 +45,40 @@ jobs:
 
   publish:
     needs: release-please
-    if: ${{ needs.release-please.outputs.created }}
+    if: ${{ needs.release-please.outputs.created || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      # The release tag and version come from Release Please on the push that
+      # cut the release, or from the manual input when recovering a publish.
+      - name: Resolve the release tag and version
+        id: rel
+        env:
+          DISPATCH_TAG: ${{ github.event.inputs.publish_tag }}
+          RP_TAG: ${{ needs.release-please.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="$DISPATCH_TAG"
+          else
+            tag="$RP_TAG"
+          fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Package the released source, so a recovery run builds the same
+          # tree the tag points at rather than the current tip of main.
+          ref: ${{ steps.rel.outputs.tag }}
 
       - name: Package extension
         run: |
           set -euo pipefail
           mkdir -p dist
-          zip -r "dist/gh-reloaded-${{ needs.release-please.outputs.version }}.zip" \
+          zip -r "dist/gh-reloaded-${{ steps.rel.outputs.version }}.zip" \
             manifest.json background.js background features icons lib options \
             -x "*.DS_Store"
 
@@ -71,7 +105,7 @@ jobs:
         if: steps.creds.outputs.configured == 'true'
         uses: mnao305/chrome-extension-upload@v7.0.0
         with:
-          file-path: dist/gh-reloaded-${{ needs.release-please.outputs.version }}.zip
+          file-path: dist/gh-reloaded-${{ steps.rel.outputs.version }}.zip
           extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
           publisher-id: ${{ secrets.CHROME_PUBLISHER_ID }}
           client-id: ${{ secrets.CHROME_CLIENT_ID }}
@@ -80,6 +114,8 @@ jobs:
           publish: true
 
       - name: Attach the zip to the release
-        run: gh release upload "${{ needs.release-please.outputs.tag }}" dist/*.zip
+        # --clobber so a recovery run replaces a partially-uploaded asset
+        # instead of failing because the name already exists.
+        run: gh release upload "${{ steps.rel.outputs.tag }}" dist/*.zip --clobber
         env:
           GH_TOKEN: ${{ github.token }}
