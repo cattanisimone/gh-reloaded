@@ -1,0 +1,21 @@
+.github/workflows/require-version-bump.yml
+  s_93fa3bd491130a::t_59a5cb809fceb8 3-8,17,27-42,44,51,56
+AGENTS.md
+  s_93fa3bd491130a::t_c956b7e39fee9e 86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5563c5d3b0a555810453a1c32b8910be13d390c5",
+  "prompts": {},
+  "sessions": {
+    "s_93fa3bd491130a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02bff0ff-75a0-4929-aa84-b39efdbaad73",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
