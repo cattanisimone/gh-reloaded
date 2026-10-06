@@ -7,7 +7,7 @@ import "../support/chrome-stub.js"; // must come first: installs globalThis.chro
 import { resetStorage } from "../support/chrome-stub.js";
 import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { resolveTokenRecord, ghFetch, repoFromUrl, safeFields } from "../../lib/github-api.js";
+import { resolveTokenRecord, ghFetch, ghGraphQL, repoFromUrl, safeFields } from "../../lib/github-api.js";
 
 const TOKENS = [
   { id: "tok_default", name: "Default", token: "secret-default", owner: "" },
@@ -102,6 +102,43 @@ test("ghFetch throws an error carrying the HTTP status on a non-OK response", as
     assert.equal(e.status, 404);
     return true;
   });
+});
+
+test("ghGraphQL throws on a GraphQL error by default, even with HTTP 200", async () => {
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ data: { search: { nodes: [] } }, errors: [{ message: "boom" }] }),
+  });
+  await assert.rejects(
+    () => ghGraphQL("query{x}", { v: "default-err" }, { owner: "acme" }),
+    /GitHub GraphQL error: boom/
+  );
+});
+
+test("ghGraphQL with partial:true keeps the data when it arrives alongside errors", async () => {
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({
+      data: { search: { nodes: [{ number: 1 }] } },
+      errors: [{ message: "one inaccessible project" }],
+    }),
+  });
+  const data = await ghGraphQL("query{x}", { v: "partial-ok" }, { owner: "acme", partial: true });
+  assert.deepEqual(data, { search: { nodes: [{ number: 1 }] } });
+});
+
+test("ghGraphQL with partial:true still throws when there is no data at all", async () => {
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ data: null, errors: [{ message: "fatal" }] }),
+  });
+  await assert.rejects(
+    () => ghGraphQL("query{x}", { v: "partial-nodata" }, { owner: "acme", partial: true }),
+    /GitHub GraphQL error: fatal/
+  );
 });
 
 test("repoFromUrl parses owner/repo out of an API repository_url", () => {
