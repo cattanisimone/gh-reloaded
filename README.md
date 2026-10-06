@@ -13,7 +13,7 @@
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="Manifest V3" src="https://img.shields.io/badge/manifest-v3-4285F4.svg">
-  <img alt="Version" src="https://img.shields.io/badge/version-0.6.0-orange.svg">
+  <img alt="Chrome Web Store version" src="https://img.shields.io/chrome-web-store/v/nflpdflhgpnhlahgajbgbpbblniggpba">
   <a href="CONTRIBUTING.md"><img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
 </p>
 
@@ -115,25 +115,25 @@ icons/                               Toolbar/extensions-page icons
 
 ## Releasing
 
-A push to `main` that bumps `manifest.json`'s `"version"` field is packaged and released automatically by [`.github/workflows/release-chrome-extension.yml`](.github/workflows/release-chrome-extension.yml):
+Versioning and releases are automated with [Release Please](https://github.com/googleapis/release-please), driven by [`.github/workflows/release.yml`](.github/workflows/release.yml). Regular pull requests never touch `manifest.json`'s `"version"`; a bot owns the version number, which is a release decision rather than something each change picks.
 
-1. Zips `manifest.json`, `background.js`, `background/`, `features/`, `icons/`, `lib/`, and `options/` into `gh-reloaded-<version>.zip`.
-2. Uploads and publishes that zip to the Chrome Web Store, if the store secrets below are configured.
-3. Attaches the zip to a GitHub Release tagged `v<version>`, either way.
+The flow:
 
-A push that doesn't change the version is a no-op for this workflow — the Chrome Web Store refuses to re-accept a version it already has, so re-submitting unchanged would just fail every time.
+1. PR titles are [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, …), enforced on every PR by [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml). PRs are squash-merged with the title as the commit message, so each PR becomes one conventional commit on `main`.
+2. On each push to `main`, Release Please reads those commits and keeps a single **release PR** open that bumps `manifest.json` (and the `version.txt` it maintains) and updates `CHANGELOG.md`. A `feat` bumps the minor version, a `fix` the patch version; pre-1.0, a `feat` still bumps the minor.
+3. Merging that release PR creates the `vX.Y.Z` tag and the GitHub Release, then the publish job packages the extension, uploads it to the Chrome Web Store (if the store secrets below are configured), and attaches `gh-reloaded-<version>.zip` to the release.
 
-### Requiring a version bump on every PR
+The zip bundles `manifest.json`, `background.js`, `background/`, `features/`, `icons/`, `lib/`, and `options/` — the same explicit path list as before, so neither `version.txt` nor the test harness ships.
 
-[`.github/workflows/require-version-bump.yml`](.github/workflows/require-version-bump.yml) runs on every pull request into `main` and fails if `manifest.json`'s `"version"` isn't strictly higher than what's currently on `main` — so a feature branch needs its version bump before opening (or before merging) a PR.
+### Repository settings (one-time, admin)
 
-By itself this only shows as a pass/fail check on the PR; to actually block the merge button, mark it **required**:
+Release Please needs two repo settings that a workflow file can't set itself:
 
-1. Repo → **Settings → Branches** (or **Rules → Rulesets**) → add/edit a protection rule for `main`.
-2. Enable **Require status checks to pass before merging**.
-3. Add **`Require Version Bump / check-version`** to the required list (it only appears in the picker after the workflow has run at least once on a PR).
+- **Settings → General → Pull Requests**: allow only **squash merging**, with the default commit message set to **Pull request title**.
+- **Settings → Actions → General → Workflow permissions**: enable **Allow GitHub Actions to create and approve pull requests** — without it the bot can't open the release PR.
+- **Settings → Branches → branch protection for `main`**: if a `Require Version Bump / check-version` required status check was added under the old manual-bump flow, remove it. This PR deletes that workflow, so the check can never report again and would otherwise block every PR — including the bot's release PR — forever.
 
-This repo's own settings aren't something this workflow file can change — it needs to be turned on by a repo admin from the GitHub UI (or via the API) the same way any other required check would be.
+The release PR is opened by `github-actions[bot]` with the built-in `GITHUB_TOKEN`. By GitHub's design, PRs and tags created with that token don't trigger other workflows, so CI doesn't run on the release PR; that's fine while no checks are required on `main`. If required checks are added later, switch Release Please to a repository-owned GitHub App token (see the issue's "Later ideas").
 
 ### One-time store setup
 
