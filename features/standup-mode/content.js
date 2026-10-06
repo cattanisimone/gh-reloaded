@@ -310,7 +310,7 @@
       return;
     }
     let nextIndex = currentKey ? cards.findIndex((el) => readCard(el).key === currentKey) : -1;
-    if (nextIndex < 0) nextIndex = Math.min(index, cards.length - 1);
+    if (nextIndex < 0) nextIndex = Math.max(0, Math.min(index, cards.length - 1));
     index = nextIndex;
     highlightCurrent(false);
   }
@@ -350,7 +350,7 @@
         break;
       case "End":
         e.preventDefault();
-        index = cards.length - 1;
+        index = Math.max(0, cards.length - 1);
         highlightCurrent();
         break;
       default:
