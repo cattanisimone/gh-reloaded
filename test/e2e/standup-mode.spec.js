@@ -2,7 +2,7 @@
 // entry button is offered on a Board view, entering spotlights the first
 // card and shows its details, the controls walk the board in order, and
 // Esc exits. The disabled state is "no entry button is offered".
-import { test, expect, routeGithub, seedStorage } from "./support/extension.js";
+import { test, expect, routeGithub, seedStorage, backgroundWorker } from "./support/extension.js";
 
 const BOARD_URL = "https://github.com/orgs/acme/projects/7";
 
@@ -43,6 +43,27 @@ test("presents the board one card at a time and exits on Esc", async ({ context,
 
   // The entry button is still there to re-enter.
   await expect(page.locator("#ghsm-enter")).toHaveCount(1);
+});
+
+test("tears down an active session when the feature is switched off mid-present", async ({ context, page }) => {
+  await routeGithub(context, "board.html");
+  await page.goto(BOARD_URL);
+
+  // Enter standup mode — the active layer, overlay, and spotlight are up.
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("body.ghsm-active")).toHaveCount(1);
+  await expect(page.locator("#ghsm-root")).toHaveCount(1);
+
+  // Flipping the feature off in Settings while presenting must stop the
+  // session, not just hide the entry button: the overlay, body class, and
+  // entry button all go away.
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => chrome.storage.local.set({ ghsmEnabled: false }));
+
+  await expect(page.locator("body.ghsm-active")).toHaveCount(0);
+  await expect(page.locator("#ghsm-root")).toHaveCount(0);
+  await expect(page.locator(".ghsm-current")).toHaveCount(0);
+  await expect(page.locator("#ghsm-enter")).toHaveCount(0);
 });
 
 test("offers no entry button when the feature is disabled", async ({ context, page }) => {

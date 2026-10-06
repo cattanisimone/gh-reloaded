@@ -436,7 +436,11 @@
     const { [STORAGE_KEY]: enabled } = await chrome.storage.local.get(STORAGE_KEY);
     const onBoard = isProjectsPage() && isBoardLayout();
     const featureOn = enabled !== false;
-    if (active && !onBoard) exit(); // switched view/navigated away while presenting
+    // Tear down an active session if we've left a Board view *or* the
+    // feature was switched off in Settings while presenting — otherwise the
+    // overlay, body class, observers, and keyboard handler would keep
+    // running even though the entry button is gone.
+    if (active && (!onBoard || !featureOn)) exit();
     if (featureOn && onBoard) ensureEnterMounted();
     else removeEnterButton();
   }
