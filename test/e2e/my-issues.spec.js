@@ -121,6 +121,37 @@ test("groups issues by project and status in the project's real order, hiding th
   await expect(page.locator(".issue-list")).toBeHidden();
 });
 
+test("derives the query from the dashboard tab when the URL carries no q", async ({ context, page }) => {
+  await seedStorage(context, { ghmiEnabled: true, ghmiView: "grouped", ...TOKENS });
+  await routeApi(context);
+
+  // Capture the `q` the content script actually searches for (the search
+  // query, not the per-project Status-order follow-ups).
+  const searched = [];
+  await context.route("https://api.github.com/graphql", async (route) => {
+    let body = {};
+    try {
+      body = JSON.parse(route.request().postData() || "{}");
+    } catch {}
+    const isOptions = /node\s*\(/.test(body.query || "") || body.variables?.id;
+    if (!isOptions) searched.push(body.variables?.q || "");
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(isOptions ? OPTIONS : SEARCH),
+    });
+  });
+  await routeGithub(context, "my-issues.html");
+
+  // The "Created" tab (/issues/created) carries no `q` — the grouped view
+  // must reproduce it as author:@me, not fall back to the assigned default.
+  await page.goto("https://github.com/issues/created");
+  await expect(page.locator("#ghmi-root .ghmi-seg-btn[data-view='grouped']")).toHaveClass(/is-active/);
+  await expect.poll(() => searched.length).toBeGreaterThan(0);
+  expect(searched.some((q) => q.includes("author:@me"))).toBe(true);
+  expect(searched.some((q) => q.includes("assignee:@me"))).toBe(false);
+});
+
 test("switching back to List restores the native list", async ({ context, page }) => {
   await seedStorage(context, { ghmiEnabled: true, ghmiView: "grouped", ...TOKENS });
   await routeApi(context);

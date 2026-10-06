@@ -30,8 +30,31 @@
     return /^\/issues(\/|$)/.test(location.pathname);
   }
 
+  // The dashboard's result set is driven by TWO things: the `q` search box
+  // and, when there's no `q`, the path-based tab. GitHub's My Issues tabs —
+  // /issues or /issues/assigned (assigned to me), /issues/created (opened by
+  // me), /issues/mentioned (mentioning me) — each carry their own implicit
+  // query with no `q` in the URL. Deriving only from `q` would make every
+  // tab fall back to the assigned default, so the grouped view would show
+  // assigned issues while the native page shows, say, created ones. Map the
+  // route to its query so the two agree. (State is left to the group fetch's
+  // own default — the dashboard shows open issues by default.)
+  const ROUTE_QUERY = {
+    assigned: "assignee:@me is:open",
+    created: "author:@me is:open",
+    mentioned: "mentions:@me is:open",
+  };
+
+  function routeQuery() {
+    const seg = /^\/issues(?:\/([^/?#]+))?/.exec(location.pathname)?.[1];
+    return ROUTE_QUERY[seg] || ROUTE_QUERY.assigned;
+  }
+
+  // An explicit `q` (the search box, a filter, a saved view) wins over the
+  // tab's implicit query, exactly as the native page resolves it.
   function currentQuery() {
-    return new URLSearchParams(location.search).get("q") || "";
+    const q = new URLSearchParams(location.search).get("q");
+    return q && q.trim() ? q : routeQuery();
   }
 
   // Same pastel Status pill colors the dependency-graph feature uses, so a
