@@ -122,12 +122,30 @@
     });
   }
 
+  // The board scrolls its columns horizontally and each column its cards
+  // vertically, so spotlighting an off-screen card with scrollIntoView()
+  // moves those inner scrollers as well as the window. Snapshot the board
+  // container and its columns (the scrollable ancestors a card walk can
+  // touch) on entry so exit can put them back where the presenter left
+  // them, not where the last spotlit card dragged them.
+  function captureBoardScrolls() {
+    const snapshot = [];
+    const container = document.querySelector(BOARD_CONTAINER_SELECTOR);
+    if (!container) return snapshot;
+    snapshot.push({ el: container, left: container.scrollLeft, top: container.scrollTop });
+    for (const col of container.querySelectorAll(COLUMN_SELECTOR)) {
+      snapshot.push({ el: col, left: col.scrollLeft, top: col.scrollTop });
+    }
+    return snapshot;
+  }
+
   // ---- presentation state (in-memory only, never persisted) ----
   let active = false;
   let cards = []; // current ordered list of card elements
   let index = 0; // spotlight position within cards
   let currentKey = null; // issue key of the spotlit card, to re-find it across re-renders
-  let savedScroll = null; // { x, y } to restore on exit
+  let savedScroll = null; // { x, y } window scroll to restore on exit
+  let savedScrolls = []; // [{ el, left, top }] nested board scrollers to restore on exit
   let savedFocus = null; // element focused before entering, to restore on exit
   let raf = null;
 
@@ -388,6 +406,7 @@
     if (!isProjectsPage() || !isBoardLayout()) return;
     active = true;
     savedScroll = { x: window.scrollX, y: window.scrollY };
+    savedScrolls = captureBoardScrolls();
     savedFocus = document.activeElement;
     document.body.classList.add(ACTIVE_CLASS);
     ensureRoot();
@@ -421,12 +440,20 @@
     document.getElementById(ROOT_ID)?.remove();
     cards = [];
     currentKey = null;
-    // Restore the pre-entry scroll and focus as reasonably as possible.
+    // Restore the pre-entry scroll and focus as reasonably as possible:
+    // the nested board scrollers first, then the window, then focus. Skip
+    // any scroller that's been detached by a re-render since entry.
+    for (const s of savedScrolls) {
+      if (!document.contains(s.el)) continue;
+      s.el.scrollLeft = s.left;
+      s.el.scrollTop = s.top;
+    }
     if (savedScroll) window.scrollTo(savedScroll.x, savedScroll.y);
     if (savedFocus && document.contains(savedFocus) && typeof savedFocus.focus === "function") {
       savedFocus.focus();
     }
     savedScroll = null;
+    savedScrolls = [];
     savedFocus = null;
   }
 
