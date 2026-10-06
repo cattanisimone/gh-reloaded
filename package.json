@@ -1,0 +1,15 @@
+{
+  "name": "gh-reloaded-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Dev-only test harness for the GH Reloaded extension. Not part of the published extension — the release workflow zips an explicit path list (manifest.json, background.js, background, features, icons, lib, options) that excludes this file and everything under test/.",
+  "type": "module",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test test/unit/*.test.js",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

@@ -22,13 +22,13 @@ export const MESSAGE_TYPE = "GHHP_FETCH_FILE";
 // Service workers have no atob-free binary-safe base64 decoder for
 // non-Latin1 text, so go through raw bytes explicitly rather than
 // risking mojibake on anything outside ASCII.
-function decodeBase64Utf8(b64) {
+export function decodeBase64Utf8(b64) {
   const binary = atob(b64.replace(/\n/g, ""));
   const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
   return new TextDecoder("utf-8").decode(bytes);
 }
 
-function encodePath(path) {
+export function encodePath(path) {
   return path.split("/").map(encodeURIComponent).join("/");
 }
 
@@ -81,12 +81,12 @@ const MIME_BY_EXT = {
   mp3: "audio/mpeg",
 };
 
-function mimeFor(path) {
+export function mimeFor(path) {
   const ext = path.split(".").pop().toLowerCase();
   return MIME_BY_EXT[ext] || "application/octet-stream";
 }
 
-function isRelativeUrl(url) {
+export function isRelativeUrl(url) {
   if (!url) return false;
   return !/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(url); // any "scheme:" or protocol-relative "//" is not relative
 }
@@ -96,7 +96,7 @@ function isRelativeUrl(url) {
 // segment, and a leading "/" resets to the repo root (there's no true
 // document root to resolve against here, so the repo root is the closest
 // sensible equivalent).
-function resolveRelativePath(dir, ref) {
+export function resolveRelativePath(dir, ref) {
   const clean = ref.split("#")[0].split("?")[0];
   const stack = clean.startsWith("/") ? [] : dir ? dir.replace(/\/$/, "").split("/") : [];
   for (const seg of clean.split("/")) {
@@ -107,7 +107,7 @@ function resolveRelativePath(dir, ref) {
   return stack.join("/");
 }
 
-function dirOf(path) {
+export function dirOf(path) {
   return path.includes("/") ? path.slice(0, path.lastIndexOf("/") + 1) : "";
 }
 

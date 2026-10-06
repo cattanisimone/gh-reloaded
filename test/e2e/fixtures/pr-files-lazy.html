@@ -1,0 +1,38 @@
+<!--
+  Fixture for the #16 regression: a PR "Files changed" page where the
+  file row's "More options" kebab is present from the start, but the
+  file's PATH is not yet resolvable — no [class*="file-name"] <code> and
+  no "Expand all lines" fallback button. This mirrors GitHub rendering a
+  diff row's controls before its path is populated (progressive / lazy
+  diff rendering). The regression test injects the path element after the
+  first scan to simulate it arriving late. See fixtures/README.md.
+-->
+<!doctype html>
+<html lang="en" data-color-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Files changed · Pull Request #5 · acme/web</title>
+  </head>
+  <body>
+    <main>
+      <div class="pr-header">
+        <a href="/acme/web/tree/main">acme:main</a>
+        <a href="/acme/web/tree/feature-x">contributor:feature-x</a>
+      </div>
+
+      <div id="diff-0" class="file">
+        <div class="file-header">
+          <!-- No .file-name <code> yet — path not resolvable on this scan. -->
+          <button type="button" aria-label="Copy file name to clipboard">Copy</button>
+          <div class="actions">
+            <details>
+              <summary aria-label="More options">⋯</summary>
+              <div class="menu">Menu</div>
+            </details>
+          </div>
+        </div>
+        <div class="diff-body">… diff rows …</div>
+      </div>
+    </main>
+  </body>
+</html>

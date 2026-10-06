@@ -70,7 +70,7 @@ Write one paragraph per line: no line break in the middle of a sentence or parag
 A change is ready to hand off when all of these hold:
 
 - [ ] Every acceptance criterion in the issue is met, or the PR explains which one is not and why.
-- [ ] Tests pass, if the repository has them. (An automated unit + e2e harness with a single documented command is being added in #18; run it once it lands.)
+- [ ] Tests pass — `npm test` runs the unit and e2e suites (see [Running the tests](#running-the-tests)).
 - [ ] `README.md`'s "Features" section is updated when a feature's behavior changes.
 - [ ] The feature's `screenshots/` mockup is refreshed when the change is visible.
 - [ ] `PRIVACY.md` is updated when stored data or requested permissions change.
@@ -88,3 +88,24 @@ A change is ready to hand off when all of these hold:
 ## Local testing
 
 No build step. `chrome://extensions` → Developer mode → **Load unpacked** → select the repo folder → reload the extension (and the GitHub page) after each change.
+
+## Running the tests
+
+The test harness lives under `test/` and is dev-only — it is deliberately outside the paths the release workflow zips (`manifest.json`, `background.js`, `background`, `features`, `icons`, `lib`, `options`), so `package.json`, the fixtures, and the tests never ship in the extension. There is no bundler: the extension itself still loads unpacked, exactly as above.
+
+One command runs everything, with no GitHub token:
+
+```
+npm install
+npx playwright install --with-deps chromium   # first time only — the e2e browser
+npm test
+```
+
+`npm test` runs two suites, and the same command runs in CI (`.github/workflows/ci.yml`) on every pull request:
+
+- **Unit tests** (`npm run test:unit`) — Node's built-in test runner over the pure logic: the effort-weighted critical path in `background/dependency-graph.js`, per-owner token resolution and response caching in `lib/github-api.js`, and the path/URL helpers in `background/html-preview.js`. These import the real modules; a small `chrome` stub (`test/support/chrome-stub.js`) stands in for the extension storage API they touch at load. The only runtime source change this harness required was adding `export` to those already-existing pure functions so tests can import them — no behavior change.
+- **End-to-end tests** (`npm run test:e2e`) — Playwright loads the extension unpacked into headless Chromium and drives it against saved fixtures of the GitHub pages each feature targets (`test/e2e/fixtures/`, see its README for how to refresh them). Every github.com page is served from a fixture and every api.github.com call is mocked at the extension's boundary, so the suite is deterministic and offline. Each feature has a main-path test and a disabled-state test.
+
+The e2e suite needs the full Chromium build (Playwright's `channel: "chromium"`) — only it loads extensions headless; the default bundled headless shell can't.
+
+One e2e test is a known failure kept skipped so CI stays green: the regression for [#16](https://github.com/cattanisimone/gh-reloaded/issues/16) (a PR diff row marked checked before its path resolved). It fails on `main` and passes on #17's branch, which fixes it; #17 removes the skip. To run it against the current checkout: `GHR_RUN_KNOWN_FAILURES=1 npx playwright test regression-16`.
