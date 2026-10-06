@@ -131,6 +131,7 @@ Release Please needs two repo settings that a workflow file can't set itself:
 
 - **Settings → General → Pull Requests**: allow only **squash merging**, with the default commit message set to **Pull request title**.
 - **Settings → Actions → General → Workflow permissions**: enable **Allow GitHub Actions to create and approve pull requests** — without it the bot can't open the release PR.
+- **Settings → Branches → branch protection for `main`**: if a `Require Version Bump / check-version` required status check was added under the old manual-bump flow, remove it. This PR deletes that workflow, so the check can never report again and would otherwise block every PR — including the bot's release PR — forever.
 
 The release PR is opened by `github-actions[bot]` with the built-in `GITHUB_TOKEN`. By GitHub's design, PRs and tags created with that token don't trigger other workflows, so CI doesn't run on the release PR; that's fine while no checks are required on `main`. If required checks are added later, switch Release Please to a repository-owned GitHub App token (see the issue's "Later ideas").
 
