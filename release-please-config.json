@@ -1,6 +1,7 @@
 {
   "release-type": "simple",
   "include-component-in-tag": false,
+  "bootstrap-sha": "cd0d751ac66952385d1d858891db6152a4bff05d",
   "packages": {
     ".": {
       "extra-files": [
