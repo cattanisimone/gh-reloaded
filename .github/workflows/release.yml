@@ -1,0 +1,82 @@
+name: Release
+
+# Release automation, in one workflow so a version is created and published
+# together. On every push to main, Release Please reads the conventional
+# commits since the last release and keeps a single release PR open that
+# bumps manifest.json and updates CHANGELOG.md. Merging that release PR is
+# itself a push to main: Release Please then creates the vX.Y.Z tag and the
+# GitHub Release, and the publish job packages the extension, uploads it to
+# the Chrome Web Store, and attaches the zip to that release. Keeping release
+# creation and publishing here (rather than a separate workflow reacting to
+# the tag) avoids two GitHub Releases for the same version.
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      created: ${{ steps.rp.outputs.release_created }}
+      tag: ${{ steps.rp.outputs.tag_name }}
+      version: ${{ steps.rp.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: rp
+
+  publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.created }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Package extension
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          zip -r "dist/gh-reloaded-${{ needs.release-please.outputs.version }}.zip" \
+            manifest.json background.js background features icons lib options \
+            -x "*.DS_Store"
+
+      - name: Check Chrome Web Store credentials
+        id: creds
+        env:
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: |
+          if [ -n "$CHROME_EXTENSION_ID" ] && [ -n "$CHROME_PUBLISHER_ID" ] && [ -n "$CHROME_CLIENT_ID" ] && [ -n "$CHROME_CLIENT_SECRET" ] && [ -n "$CHROME_REFRESH_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Chrome Web Store secrets are not fully configured — created the GitHub Release only, skipped the store upload. See README's 'Releasing' section."
+          fi
+
+      # Requires the extension to already exist on the Chrome Web Store
+      # (first submission has to go through the Developer Dashboard by hand —
+      # Google doesn't let the API create a brand-new listing). See README.
+      - name: Upload & publish to Chrome Web Store
+        if: steps.creds.outputs.configured == 'true'
+        uses: mnao305/chrome-extension-upload@v7.0.0
+        with:
+          file-path: dist/gh-reloaded-${{ needs.release-please.outputs.version }}.zip
+          extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+          publisher-id: ${{ secrets.CHROME_PUBLISHER_ID }}
+          client-id: ${{ secrets.CHROME_CLIENT_ID }}
+          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          publish: true
+
+      - name: Attach the zip to the release
+        run: gh release upload "${{ needs.release-please.outputs.tag }}" dist/*.zip
+        env:
+          GH_TOKEN: ${{ github.token }}

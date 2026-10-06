@@ -1,0 +1,21 @@
+name: PR title
+
+# Enforces a Conventional Commits pull request title. PRs are squash-merged
+# with the title as the commit message, so each PR becomes one conventional
+# commit on main — which is what Release Please reads to decide the next
+# version. pull_request_target is safe here because the job only inspects the
+# PR's title (from the event payload) and never checks out the PR's code.
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
