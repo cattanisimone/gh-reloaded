@@ -352,6 +352,7 @@ const FEATURE_TOGGLES = [
   { key: "ghbdEnabled", id: "feature-ghbd", defaultOn: false },
   { key: "ghfwEnabled", id: "feature-ghfw", defaultOn: true },
   { key: "ghhpEnabled", id: "feature-ghhp", defaultOn: true },
+  { key: "ghmiEnabled", id: "feature-ghmi", defaultOn: true },
 ];
 
 async function loadFeatureToggles() {

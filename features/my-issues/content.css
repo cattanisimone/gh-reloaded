@@ -1,0 +1,258 @@
+/* My Issues by Project — the control bar and grouped panel injected into
+   github.com/issues. Colors are hardcoded GitHub (Primer) light/dark values
+   keyed on the data-theme the content script resolves, so the view matches
+   whichever theme GitHub is actually rendering (explicit setting, not just
+   the OS preference). Status pills are colored inline from the API's own
+   option colors. */
+
+.ghmi-root {
+  --ghmi-fg: #1f2328;
+  --ghmi-muted: #59636e;
+  --ghmi-bg: #ffffff;
+  --ghmi-subtle: #f6f8fa;
+  --ghmi-border: #d1d9e0;
+  --ghmi-accent: #0969da;
+  --ghmi-open: #1a7f37;
+  --ghmi-closed: #8250df;
+  margin: 12px 0;
+  font-size: 13px;
+  color: var(--ghmi-fg);
+}
+
+.ghmi-root[data-theme="dark"] {
+  --ghmi-fg: #f0f6fc;
+  --ghmi-muted: #9198a1;
+  --ghmi-bg: #0d1117;
+  --ghmi-subtle: #151b23;
+  --ghmi-border: #3d444d;
+  --ghmi-accent: #4493f8;
+  --ghmi-open: #3fb950;
+  --ghmi-closed: #ab7df8;
+}
+
+/* While grouped, the content script marks the native results blocks (never
+   the one holding the search box) so they're hidden, leaving the search,
+   filters, and tabs visible and still driving the grouped view. */
+[data-ghmi-hidden] {
+  display: none !important;
+}
+
+.ghmi-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--ghmi-border);
+  border-radius: 6px;
+  background: var(--ghmi-subtle);
+}
+
+.ghmi-bar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--ghmi-muted);
+}
+
+.ghmi-seg {
+  display: inline-flex;
+  border: 1px solid var(--ghmi-border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--ghmi-bg);
+}
+
+.ghmi-seg-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ghmi-fg);
+  padding: 4px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ghmi-seg-btn + .ghmi-seg-btn {
+  border-left: 1px solid var(--ghmi-border);
+}
+
+.ghmi-seg-btn.is-active {
+  background: var(--ghmi-accent);
+  color: #ffffff;
+}
+
+.ghmi-panel {
+  margin-top: 12px;
+}
+
+.ghmi-note {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--ghmi-border);
+  border-radius: 6px;
+  background: var(--ghmi-subtle);
+  color: var(--ghmi-muted);
+}
+
+.ghmi-message {
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--ghmi-muted);
+}
+
+.ghmi-btn {
+  margin-top: 10px;
+  appearance: none;
+  border: 1px solid var(--ghmi-border);
+  border-radius: 6px;
+  background: var(--ghmi-bg);
+  color: var(--ghmi-fg);
+  padding: 5px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ghmi-project {
+  border: 1px solid var(--ghmi-border);
+  border-radius: 6px;
+  background: var(--ghmi-bg);
+  margin-bottom: 10px;
+}
+
+.ghmi-project > summary,
+.ghmi-status > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.ghmi-project > summary {
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.ghmi-project > summary::-webkit-details-marker,
+.ghmi-status > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ghmi-project > summary::before,
+.ghmi-status > summary::before {
+  content: "▸";
+  color: var(--ghmi-muted);
+  font-size: 10px;
+  transition: transform 0.12s;
+}
+
+.ghmi-project[open] > summary::before,
+.ghmi-status[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.ghmi-project-title {
+  color: var(--ghmi-fg);
+  text-decoration: none;
+}
+a.ghmi-project-title:hover {
+  color: var(--ghmi-accent);
+  text-decoration: underline;
+}
+
+.ghmi-count {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--ghmi-subtle);
+  border: 1px solid var(--ghmi-border);
+  color: var(--ghmi-muted);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.ghmi-statuses {
+  padding: 0 12px 6px;
+}
+
+.ghmi-status {
+  border-top: 1px solid var(--ghmi-border);
+}
+.ghmi-status:first-child {
+  border-top: none;
+}
+
+.ghmi-status > summary {
+  padding: 6px 2px;
+}
+
+.ghmi-status-name {
+  padding: 1px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.ghmi-status-name.is-none {
+  color: var(--ghmi-muted);
+  border-color: var(--ghmi-border);
+  font-style: italic;
+}
+
+.ghmi-issues {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 6px;
+}
+
+.ghmi-project > .ghmi-issues {
+  padding: 0 12px 8px;
+}
+
+.ghmi-issue {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.ghmi-issue-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--ghmi-open);
+}
+.ghmi-issue.is-closed .ghmi-issue-dot {
+  background: var(--ghmi-closed);
+}
+
+.ghmi-issue-link {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  text-decoration: none;
+  color: var(--ghmi-fg);
+}
+.ghmi-issue-link:hover .ghmi-issue-title {
+  color: var(--ghmi-accent);
+  text-decoration: underline;
+}
+
+.ghmi-issue-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ghmi-issue-ref {
+  flex: 0 0 auto;
+  color: var(--ghmi-muted);
+  font-size: 12px;
+}
