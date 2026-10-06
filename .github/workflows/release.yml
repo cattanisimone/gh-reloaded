@@ -19,6 +19,9 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      # Release Please creates its `autorelease: *` labels on the first run;
+      # creating repository labels needs the Issues permission.
+      issues: write
     outputs:
       created: ${{ steps.rp.outputs.release_created }}
       tag: ${{ steps.rp.outputs.tag_name }}
