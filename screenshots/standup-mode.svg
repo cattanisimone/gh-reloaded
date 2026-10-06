@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+  <rect x="0" y="0" width="1200" height="520" fill="#0d1117"/>
+
+  <!-- Label -->
+  <text x="20" y="26" fill="#58a6ff" font-size="11" font-weight="700" letter-spacing="0.6">STANDUP MODE — ONE SPOTLIT CARD AT A TIME</text>
+
+  <!-- ===== Board (drawn full-brightness, then dimmed) ===== -->
+  <g>
+    <!-- column headings -->
+    <g font-size="15" font-weight="700" fill="#e6edf3">
+      <text x="40" y="70">Backlog</text>
+      <text x="330" y="70">In Progress</text>
+      <text x="620" y="70">In Review</text>
+      <text x="910" y="70">Done</text>
+    </g>
+    <!-- cards -->
+    <g fill="#161b22" stroke="#30363d">
+      <rect x="36" y="84" width="256" height="46" rx="6"/>
+      <rect x="36" y="140" width="256" height="46" rx="6"/>
+      <rect x="326" y="84" width="256" height="46" rx="6"/>
+      <rect x="326" y="140" width="256" height="46" rx="6"/>
+      <rect x="616" y="84" width="256" height="46" rx="6"/>
+      <rect x="616" y="140" width="256" height="46" rx="6"/>
+      <rect x="906" y="84" width="256" height="46" rx="6"/>
+    </g>
+    <g fill="#8b949e" font-size="12">
+      <text x="50" y="112">Flaky CI on Windows runners</text>
+      <text x="50" y="168">Audit dependency licenses</text>
+      <text x="340" y="112">Rework token storage layer</text>
+      <text x="340" y="168">Board arrows redesign</text>
+      <text x="630" y="112">Standup mode for boards</text>
+      <text x="630" y="168">HTML preview sandboxing</text>
+      <text x="920" y="112">Ship full-width board</text>
+    </g>
+  </g>
+
+  <!-- ===== Dimming overlay (everything but the spotlit card) ===== -->
+  <rect x="0" y="36" width="1200" height="484" fill="#010409" opacity="0.68"/>
+
+  <!-- ===== Spotlit card, redrawn bright on top of the dimming ===== -->
+  <g>
+    <rect x="612" y="80" width="264" height="54" rx="9" fill="#161b22" stroke="#58a6ff" stroke-width="3"/>
+    <text x="630" y="112" fill="#e6edf3" font-size="13" font-weight="600">Standup mode for boards</text>
+  </g>
+
+  <!-- ===== Info panel ===== -->
+  <g>
+    <rect x="150" y="408" width="900" height="92" rx="12" fill="#161b22" stroke="#30363d"/>
+
+    <!-- meta -->
+    <text x="176" y="436" fill="#8b949e" font-size="11" font-weight="700" letter-spacing="0.5">CARD 5 OF 7</text>
+    <text x="176" y="462" fill="#58a6ff" font-size="19" font-weight="700">Standup mode for boards</text>
+
+    <!-- chips -->
+    <rect x="176" y="474" width="92" height="22" rx="11" fill="#30363d"/>
+    <text x="222" y="489" fill="#c9d1d9" font-size="12" font-weight="600" text-anchor="middle">In Review</text>
+    <rect x="276" y="474" width="78" height="22" rx="11" fill="#121d2f"/>
+    <text x="315" y="489" fill="#a5d6ff" font-size="12" font-weight="600" text-anchor="middle">@octo</text>
+
+    <!-- controls -->
+    <g>
+      <rect x="716" y="438" width="78" height="36" rx="8" fill="#21262d" stroke="#30363d"/>
+      <text x="755" y="461" fill="#c9d1d9" font-size="14" font-weight="600" text-anchor="middle">‹ Prev</text>
+
+      <rect x="802" y="438" width="80" height="36" rx="8" fill="#21262d" stroke="#30363d"/>
+      <text x="842" y="461" fill="#c9d1d9" font-size="14" font-weight="600" text-anchor="middle">Next ›</text>
+
+      <rect x="890" y="438" width="72" height="36" rx="8" fill="#21262d" stroke="#f85149"/>
+      <text x="926" y="461" fill="#f85149" font-size="14" font-weight="600" text-anchor="middle">Exit</text>
+    </g>
+  </g>
+
+  <text x="600" y="520" fill="#8b949e" font-size="12" text-anchor="middle">→ / ← · Space · Home / End · Esc — walk the board one card at a time, read-only, local to this tab</text>
+</svg>

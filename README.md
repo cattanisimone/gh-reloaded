@@ -88,6 +88,12 @@ On a GitHub Projects **Board** (kanban) view, uses the full window width and mak
 
 ![Full-width board mockup: a kanban board using spare window space when available and shrinking columns when space is tight, delaying horizontal scrolling until the 140px-per-column minimum is reached](screenshots/full-width-board.svg)
 
+### Standup mode — [features/standup-mode](features/standup-mode)
+
+On a GitHub Projects **Board** (kanban) view, adds a **Standup** button to the view-tabs bar that turns the board into a temporary, screen-sharing-friendly presentation: it reclaims the viewport, enlarges column headings and cards, and spotlights one card at a time in the board's own left-to-right, top-to-bottom order — dimming everything else and showing the current card's title, column, and assignee in a panel. Walk the cards with the keyboard (`→`/`←`, `Space`, `Home`/`End`) or the on-screen Prev/Next controls; exit with the button or `Esc`. It's read-only and local to the tab — entering, navigating, or exiting never mutates issues, Project fields, or card order, needs no extra permission or API call, and doesn't survive a reload. On by default; switchable from Settings.
+
+![Standup mode mockup: a kanban board dimmed except one spotlit card, with a bottom panel showing that card's title, column, and assignee alongside Prev/Next/Exit controls and a "card 2 of 7" counter](screenshots/standup-mode.svg)
+
 ### HTML preview — [features/html-preview](features/html-preview) — _Experimental_
 
 Renders `.html`/`.htm` files instead of leaving them as plain source.

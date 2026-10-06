@@ -1,0 +1,302 @@
+/* features/standup-mode/content.css — the presentation layer added while
+   standup mode is active (body.ghsm-active), plus the always-present
+   entry button in the view-tabs bar. `!important` throughout the active
+   rules because they fight a live React app's own CSS-module styles, not
+   page-author styles we control. */
+
+/* ---- Entry button (board-only, in the view-tabs bar) ---- */
+
+/* The view-nav bar is already forced to position:relative by the
+   board-dependencies feature; declare it here too so the button still
+   anchors correctly on a board where that feature's stylesheet isn't
+   present. Harmless when both set it. */
+[class*="view-navigation-module__ViewNavigationContainer"] {
+  position: relative;
+}
+
+/* Pinned to the left of board-dependencies' switch (which sits at
+   right:16px) so the two never overlap when both are shown on a board. */
+#ghsm-enter {
+  position: absolute;
+  top: 50%;
+  right: 84px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #f6f8fa;
+  color: #24292f;
+  font: 600 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  cursor: pointer;
+}
+#ghsm-enter:hover {
+  background: #eaeef2;
+}
+#ghsm-enter:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: 1px;
+}
+
+@media (prefers-color-scheme: dark) {
+  #ghsm-enter {
+    border-color: #30363d;
+    background: #21262d;
+    color: #c9d1d9;
+  }
+  #ghsm-enter:hover {
+    background: #30363d;
+  }
+  #ghsm-enter:focus-visible {
+    outline-color: #58a6ff;
+  }
+}
+
+/* ---- Active presentation layer ---- */
+
+/* Reclaim the viewport: hide GitHub's global top chrome (the app header
+   and any skip/banner region) so the board gets the vertical room. These
+   are GitHub's own, un-feature-specific chrome; if a redesign renames
+   them the board simply keeps its normal header — a graceful no-op. */
+body.ghsm-active .AppHeader,
+body.ghsm-active header[role="banner"],
+body.ghsm-active .js-header-wrapper,
+body.ghsm-active .gh-header-shadow {
+  display: none !important;
+}
+
+/* Enlarge the board for screen sharing: bigger column headings and card
+   text, a touch more breathing room. Anchored on the same board card /
+   column classes the content script keys on. */
+body.ghsm-active .board-view-column h1,
+body.ghsm-active .board-view-column h2,
+body.ghsm-active .board-view-column h3,
+body.ghsm-active .board-view-column h4,
+body.ghsm-active .board-view-column [role="heading"] {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+}
+
+body.ghsm-active .board-view-column-card {
+  font-size: 1.05rem !important;
+  line-height: 1.45 !important;
+}
+
+/* Stretch the board to the viewport width when Full-width board is NOT
+   already doing it. When that feature is active (body.ghfw-active) its
+   own rules own the width and this stays out of the way, so the two never
+   fight. Measured left offset comes from content.js (--ghsm-board-left),
+   mirroring full-width-board's proven full-bleed approach. */
+body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardContainer"] {
+  width: calc(100vw - var(--ghsm-board-left, 0px)) !important;
+  max-width: calc(100vw - var(--ghsm-board-left, 0px)) !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* The spotlit card, lifted above the dimming so it reads clearly. */
+body.ghsm-active .ghsm-current {
+  position: relative;
+  z-index: 2147483646 !important;
+  border-radius: 8px;
+}
+
+/* ---- Overlay root: spotlight cut-out + info panel ---- */
+#ghsm-root {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483645;
+  pointer-events: none; /* the dim/backdrop never swallows clicks; the panel re-enables them */
+}
+
+/* The spotlight: a transparent box over the current card whose enormous
+   spreading box-shadow darkens everything around it, with a bright ring
+   on the card itself. pointer-events:none so the board underneath stays
+   interactive (read-only, but scrollable/inspectable during a standup). */
+#ghsm-spotlight {
+  position: fixed;
+  display: none;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 3px #0969da,
+    0 0 0 100vmax rgba(1, 4, 9, 0.68);
+  transition: left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  #ghsm-spotlight {
+    box-shadow:
+      0 0 0 3px #58a6ff,
+      0 0 0 100vmax rgba(1, 4, 9, 0.78);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ghsm-spotlight {
+    transition: none;
+  }
+}
+
+/* The info panel: fixed at the bottom-centre, above the dimming, showing
+   the current card's details and the prev/next/exit controls. */
+#ghsm-panel {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: min(900px, calc(100vw - 48px));
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #d0d7de;
+  box-shadow: 0 8px 28px rgba(1, 4, 9, 0.4);
+  color: #24292f;
+  pointer-events: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+#ghsm-panel:focus {
+  outline: none;
+}
+#ghsm-panel:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: 2px;
+}
+
+.ghsm-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.ghsm-counter {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #57606a;
+}
+
+a.ghsm-title {
+  display: block;
+  margin-top: 2px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #0969da;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.ghsm-title:hover {
+  text-decoration: underline;
+}
+a.ghsm-title:not([href]) {
+  color: #24292f;
+  pointer-events: none;
+}
+
+.ghsm-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ghsm-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #eaeef2;
+  color: #24292f;
+}
+.ghsm-chip.ghsm-assignee {
+  background: #ddf4ff;
+  color: #0a3069;
+}
+
+.ghsm-controls {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ghsm-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #d0d7de;
+  background: #f6f8fa;
+  color: #24292f;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ghsm-btn:hover:not(:disabled) {
+  background: #eaeef2;
+}
+.ghsm-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.ghsm-btn:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: 1px;
+}
+.ghsm-btn.ghsm-exit {
+  border-color: #cf222e;
+  color: #cf222e;
+}
+.ghsm-btn.ghsm-exit:hover {
+  background: #ffebe9;
+}
+
+@media (prefers-color-scheme: dark) {
+  #ghsm-panel {
+    background: #161b22;
+    border-color: #30363d;
+    color: #c9d1d9;
+  }
+  .ghsm-counter {
+    color: #8b949e;
+  }
+  a.ghsm-title {
+    color: #58a6ff;
+  }
+  a.ghsm-title:not([href]) {
+    color: #c9d1d9;
+  }
+  .ghsm-chip {
+    background: #30363d;
+    color: #c9d1d9;
+  }
+  .ghsm-chip.ghsm-assignee {
+    background: #121d2f;
+    color: #a5d6ff;
+  }
+  .ghsm-btn {
+    background: #21262d;
+    border-color: #30363d;
+    color: #c9d1d9;
+  }
+  .ghsm-btn:hover:not(:disabled) {
+    background: #30363d;
+  }
+  .ghsm-btn.ghsm-exit {
+    border-color: #f85149;
+    color: #f85149;
+  }
+  .ghsm-btn.ghsm-exit:hover {
+    background: #3a1a1a;
+  }
+}

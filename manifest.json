@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "GH Reloaded",
   "version": "0.8.0",
-  "description": "Small UI enhancements for GitHub: dependency graphs, quick-create, board dependency arrows, full-width boards, HTML previews.",
+  "description": "Small UI enhancements for GitHub: dependency graphs, quick-create, board dependency arrows, full-width boards, standup mode, HTML previews.",
   "homepage_url": "https://gh-reloaded.simone3-cattani.chatgpt.site/",
   "permissions": [
     "storage"
@@ -86,6 +86,15 @@
       "css": [
         "features/full-width-board/content.css"
       ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://github.com/orgs/*/projects/*",
+        "https://github.com/users/*/projects/*"
+      ],
+      "js": ["features/standup-mode/content.js"],
+      "css": ["features/standup-mode/content.css"],
       "run_at": "document_idle"
     },
     {

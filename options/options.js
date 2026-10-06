@@ -351,6 +351,7 @@ const FEATURE_TOGGLES = [
   { key: "quickCreateEnabled", id: "feature-quick-create", defaultOn: true },
   { key: "ghbdEnabled", id: "feature-ghbd", defaultOn: false },
   { key: "ghfwEnabled", id: "feature-ghfw", defaultOn: true },
+  { key: "ghsmEnabled", id: "feature-ghsm", defaultOn: true },
   { key: "ghhpEnabled", id: "feature-ghhp", defaultOn: true },
 ];
 
