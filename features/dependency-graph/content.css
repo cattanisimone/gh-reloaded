@@ -20,7 +20,10 @@
   --ghdg-edge: #8c959f;
   --ghdg-node-bg: #f6f8fa;
   --ghdg-node-hover: #eef1f4;
-  --ghdg-external-bg: rgba(110, 119, 129, 0.05);
+  /* External (out-of-set) cards sit on a plain white surface so they read
+     as clearly separate from the tinted internal sub-issue cards, not just
+     a fainter shade of them. */
+  --ghdg-external-bg: #ffffff;
   --ghdg-chip-bg: rgba(255, 255, 255, 0.85);
   --ghdg-critical: #bc4c00;
   --ghdg-notice-bg: #fff8c5;
@@ -38,7 +41,9 @@
   --ghdg-edge: #6e7681;
   --ghdg-node-bg: #161b22;
   --ghdg-node-hover: #1c232b;
-  --ghdg-external-bg: rgba(139, 148, 158, 0.07);
+  /* The dark-theme equivalent of the white external surface: the plain
+     page background, a step below the elevated internal cards. */
+  --ghdg-external-bg: #0d1117;
   --ghdg-chip-bg: rgba(13, 17, 23, 0.7);
   --ghdg-critical: #db6d28;
   --ghdg-notice-bg: rgba(187, 128, 9, 0.15);

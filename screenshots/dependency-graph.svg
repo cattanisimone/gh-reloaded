@@ -40,7 +40,7 @@
 
   <!-- N1: external, dimmed, dashed -->
   <g>
-    <rect x="40" y="260" width="168" height="64" rx="6" fill="#12161c" stroke="#30363d" stroke-dasharray="4 3"/>
+    <rect x="40" y="260" width="168" height="64" rx="6" fill="#0d1117" stroke="#30363d" stroke-dasharray="4 3"/>
     <circle cx="55" cy="276" r="3.5" fill="#8b949e"/>
     <text x="64" y="280" fill="#8b949e" font-size="10" font-weight="600">#118</text>
     <text x="52" y="298" fill="#8b949e" font-size="11">Auth service</text>
@@ -87,7 +87,7 @@
 
   <!-- N5: external, dimmed, dashed -->
   <g>
-    <rect x="520" y="340" width="168" height="64" rx="6" fill="#12161c" stroke="#30363d" stroke-dasharray="4 3"/>
+    <rect x="520" y="340" width="168" height="64" rx="6" fill="#0d1117" stroke="#30363d" stroke-dasharray="4 3"/>
     <circle cx="535" cy="356" r="3.5" fill="#8b949e"/>
     <text x="544" y="360" fill="#8b949e" font-size="10" font-weight="600">#204</text>
     <text x="532" y="378" fill="#8b949e" font-size="11">Update mobile app</text>
