@@ -8,9 +8,11 @@
   // through the given cards is dropped ("A blocks D" adds nothing when
   // A -> B -> C -> D is shown). Works on the cards actually on screen, so a
   // detour only counts while its cards are visible. An edge marked `critical`
-  // is always kept: it's a segment of the highlighted chain, not noise. The
-  // edge under test is removed before probing, so a cycle never makes a card
-  // reach itself through that very edge.
+  // is always kept: it's a segment of the highlighted chain, not noise. An edge
+  // that sits on a cycle (its target can reach its source back) is always kept
+  // too: there is no well-defined reduction inside a cycle. The edge under test
+  // is removed before probing, so a cycle never makes a card reach itself
+  // through that very edge.
   function hideTransitiveEdges(nodeIds, edges) {
     const idSet = new Set(nodeIds);
     const adj = new Map(nodeIds.map((id) => [id, new Set()]));
@@ -34,6 +36,7 @@
     const redundant = new Set();
     for (const e of edges) {
       if (e.critical || !idSet.has(e.from) || !idSet.has(e.to)) continue;
+      if (e.from === e.to || reachable(e.to, e.from)) continue;
       adj.get(e.from).delete(e.to);
       if (reachable(e.from, e.to)) redundant.add(e);
       else adj.get(e.from).add(e.to); // not actually redundant — put it back

@@ -58,3 +58,21 @@ test("terminates on a cycle and never hides an edge through itself", () => {
   const edges = [edge("A", "B"), edge("B", "A")];
   assert.deepEqual(keys(hideTransitiveEdges(["A", "B"], edges)), ["A->B", "B->A"]);
 });
+
+test("keeps every edge that sits on a cycle, even with an alternate path", () => {
+  // A -> B -> C, A -> C and C -> A: A -> C is implied by A -> B -> C, but it is part of the A <-> C cycle.
+  const edges = [edge("A", "B"), edge("B", "C"), edge("A", "C"), edge("C", "A")];
+  assert.deepEqual(
+    keys(hideTransitiveEdges(["A", "B", "C"], edges)),
+    ["A->B", "A->C", "B->C", "C->A"]
+  );
+});
+
+test("still reduces an acyclic edge elsewhere in a graph that has a cycle", () => {
+  // A <-> B is a cycle; B -> D is implied by B -> C -> D and is not on any cycle.
+  const edges = [edge("A", "B"), edge("B", "A"), edge("B", "C"), edge("C", "D"), edge("B", "D")];
+  assert.deepEqual(
+    keys(hideTransitiveEdges(["A", "B", "C", "D"], edges)),
+    ["A->B", "B->A", "B->C", "C->D"]
+  );
+});
