@@ -1,11 +1,15 @@
 {
   "manifest_version": 3,
   "name": "GH Reloaded",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Small UI enhancements for GitHub: dependency graphs, quick-create, board dependency arrows, full-width boards, HTML previews.",
   "homepage_url": "https://gh-reloaded.simone3-cattani.chatgpt.site/",
-  "permissions": ["storage"],
-  "host_permissions": ["https://api.github.com/*"],
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://api.github.com/*"
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -34,8 +38,13 @@
         "https://github.com/orgs/*/projects/*",
         "https://github.com/users/*/projects/*"
       ],
-      "js": ["features/dependency-graph/layout.js", "features/dependency-graph/content.js"],
-      "css": ["features/dependency-graph/content.css"],
+      "js": [
+        "features/dependency-graph/layout.js",
+        "features/dependency-graph/content.js"
+      ],
+      "css": [
+        "features/dependency-graph/content.css"
+      ],
       "run_at": "document_idle"
     },
     {
@@ -43,8 +52,12 @@
         "https://github.com/orgs/*/projects/*",
         "https://github.com/users/*/projects/*"
       ],
-      "js": ["features/quick-create/content.js"],
-      "css": ["features/quick-create/content.css"],
+      "js": [
+        "features/quick-create/content.js"
+      ],
+      "css": [
+        "features/quick-create/content.css"
+      ],
       "run_at": "document_idle"
     },
     {
@@ -52,8 +65,12 @@
         "https://github.com/orgs/*/projects/*",
         "https://github.com/users/*/projects/*"
       ],
-      "js": ["features/board-dependencies/content.js"],
-      "css": ["features/board-dependencies/content.css"],
+      "js": [
+        "features/board-dependencies/content.js"
+      ],
+      "css": [
+        "features/board-dependencies/content.css"
+      ],
       "run_at": "document_idle"
     },
     {
@@ -61,8 +78,12 @@
         "https://github.com/orgs/*/projects/*",
         "https://github.com/users/*/projects/*"
       ],
-      "js": ["features/full-width-board/content.js"],
-      "css": ["features/full-width-board/content.css"],
+      "js": [
+        "features/full-width-board/content.js"
+      ],
+      "css": [
+        "features/full-width-board/content.css"
+      ],
       "run_at": "document_idle"
     },
     {
@@ -71,13 +92,19 @@
         "https://github.com/*/*/pull/*/changes*",
         "https://github.com/*/*/blob/*"
       ],
-      "js": ["features/html-preview/content.js"],
-      "css": ["features/html-preview/content.css"],
+      "js": [
+        "features/html-preview/content.js"
+      ],
+      "css": [
+        "features/html-preview/content.css"
+      ],
       "run_at": "document_idle"
     }
   ],
   "sandbox": {
-    "pages": ["features/html-preview/sandbox.html"]
+    "pages": [
+      "features/html-preview/sandbox.html"
+    ]
   },
   "content_security_policy": {
     "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data: blob:; font-src * data:; connect-src *; frame-src *; child-src *; base-uri *; object-src *;"
@@ -91,7 +118,9 @@
         "features/html-preview/sandbox.html",
         "features/html-preview/sandbox.js"
       ],
-      "matches": ["https://github.com/*"]
+      "matches": [
+        "https://github.com/*"
+      ]
     }
   ]
 }
