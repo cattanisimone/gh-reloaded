@@ -29,16 +29,20 @@
     TOP_EXTRA: 24,
     ARC_CLEAR_Y: 10,
   };
-  // Full-screen cards are larger and carry more metadata (status name and
-  // team as well as the color fill), and the chains get more horizontal
-  // and vertical room so long or complex graphs are easier to follow.
+  // Full-screen cards are larger than the inline ones and carry more
+  // metadata (status name and team as well as the color fill), but only as
+  // large as the content needs: oversized cards with wide column gaps left
+  // the cards looking empty and pushed even a short chain past the viewport
+  // width. These dimensions keep cards proportioned to their content and
+  // let more columns fit on screen before horizontal scrolling kicks in,
+  // while still giving chains more room than the compact inline view.
   const FULLSCREEN_DIMS = {
-    NODE_W: 240,
-    NODE_H: 160,
-    COL_GAP: 100,
-    ROW_GAP: 30,
-    PADDING: 32,
-    TOP_EXTRA: 30,
+    NODE_W: 210,
+    NODE_H: 116,
+    COL_GAP: 72,
+    ROW_GAP: 22,
+    PADDING: 28,
+    TOP_EXTRA: 28,
     ARC_CLEAR_Y: 12,
   };
 

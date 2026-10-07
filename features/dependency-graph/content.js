@@ -229,9 +229,7 @@
           ${effortHtml}
         </span>
         <span class="ghdg-node-title">${title}</span>
-        ${statusHtml}
-        ${bvHtml}
-        ${teamHtml}
+        <span class="ghdg-node-meta">${statusHtml}${bvHtml}${teamHtml}</span>
       </div>`;
   }
 
@@ -260,8 +258,7 @@
           <span class="ghdg-node-num">${label}</span>
         </span>
         <span class="ghdg-node-title">${title}</span>
-        ${statusHtml}
-        ${teamHtml}
+        <span class="ghdg-node-meta">${statusHtml}${teamHtml}</span>
       </div>`;
   }
 

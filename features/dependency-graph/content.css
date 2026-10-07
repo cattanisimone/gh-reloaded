@@ -202,6 +202,13 @@
   overflow: auto;
   padding: 28px;
   box-sizing: border-box;
+  display: flex;
+  /* Centre a graph that fits so it uses the page's width instead of hugging
+     the top-left corner; "safe" falls back to the left edge (keeping the
+     whole graph scrollable) only when it is genuinely wider than the
+     viewport, so horizontal scrolling appears only when it is required. */
+  justify-content: safe center;
+  align-items: flex-start;
 }
 
 .ghdg-scope .ghdg-graph-stage {
@@ -347,6 +354,24 @@
 
 .ghdg-scope .ghdg-node.is-closed .ghdg-node-title {
   color: var(--ghdg-muted);
+}
+
+/* The status / business-value / team chips share one row rather than
+   stacking, so they read as a tidy metadata strip. On the roomier
+   full-screen cards the strip is pushed to the card's lower edge, which
+   fills the extra height and keeps the cards from looking half-empty. */
+.ghdg-scope .ghdg-node-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.ghdg-scope .ghdg-node-meta:empty {
+  display: none;
+}
+.ghdg-scope .ghdg-node.is-large .ghdg-node-meta {
+  margin-top: auto;
 }
 
 .ghdg-scope .ghdg-node-bv,
