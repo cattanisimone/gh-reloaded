@@ -165,6 +165,42 @@ test("auto-refresh reflects a change within a short interval", async ({ context,
   await expect(root).toContainText("Appeared automatically");
 });
 
+test("a rate-limited auto-refresh backs off instead of polling at the same cadence", async ({
+  context,
+  page,
+}) => {
+  let subCalls = 0;
+  await seedStorage(context, { ghdgAutoRefreshMs: 200 });
+  await routeApi(context, [
+    {
+      match: /\/repos\/acme\/web\/issues\/1\/sub_issues/,
+      // The initial load succeeds; every auto-refresh after it is rate-limited.
+      status: () => (++subCalls === 1 ? 200 : 403),
+      json: () => (subCalls === 1 ? SUB_ISSUES : { message: "API rate limit exceeded" }),
+    },
+    {
+      match: (p) => p === "/repos/acme/web/issues/3/dependencies/blocked_by",
+      json: [SUB_ISSUES[0]],
+    },
+  ]);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  await expect(root.locator(".ghdg-node")).toHaveCount(2); // initial load
+
+  // Each auto-refresh is rejected as rate-limited, so the controller stretches
+  // the cadence (200ms → 800ms → 3200ms …) rather than re-polling every 200ms.
+  // A fixed-cadence timer would fire ~7 times across this window; backoff keeps
+  // it to a couple, so ordinary use can't exhaust the API quota.
+  await page.waitForTimeout(1600);
+  expect(subCalls).toBeLessThanOrEqual(4); // 1 load + a few backed-off retries
+
+  // The last good graph stays on screen and a retry is still offered.
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+  await expect(root.locator(".ghdg-retry-btn").first()).toBeVisible();
+});
+
 test("renders nothing when the feature is disabled", async ({ context, page }) => {
   await seedStorage(context, { ghdgEnabled: false });
   await routeApi(context, API);

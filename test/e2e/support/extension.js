@@ -89,6 +89,10 @@ export async function routeGithub(context, fixtureFile) {
 // safeFields degrade to "no data"), and GraphQL defaults to an issue with
 // no project items (safeStatus → null) — the graceful-degradation shapes,
 // so a handler is only needed for the data a test actually asserts on.
+// `status` and `json` may each be a (url) => value function so a handler
+// can vary its reply per call (e.g. succeed once, then fail); `status` is
+// evaluated before `json`, so a counter kept in `status` is already
+// current when `json` reads it.
 export async function routeApi(context, handlers = []) {
   await context.route("https://api.github.com/**", async (route) => {
     const request = route.request();
@@ -101,9 +105,10 @@ export async function routeApi(context, handlers = []) {
       const matched =
         typeof h.match === "function" ? h.match(pathname, url) : h.match.test(pathname);
       if (!matched) continue;
+      const status = typeof h.status === "function" ? h.status(url) : h.status;
       const body = typeof h.json === "function" ? h.json(url) : h.json;
       return route.fulfill({
-        status: h.status || 200,
+        status: status || 200,
         contentType: "application/json",
         body: JSON.stringify(body ?? {}),
       });

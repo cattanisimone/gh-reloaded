@@ -401,8 +401,23 @@
   // an overlay from the previous issue.
   let teardown = null;
 
-  const AUTO_REFRESH_MS_DEFAULT = 15000;
+  // Each automatic refresh bypasses the shared cache and fans out to
+  // several REST/GraphQL calls per node (sub-issues, both dependency
+  // directions, Status and field values), so a fast cadence on a large
+  // graph can burn through GitHub's hourly rate limit on its own. The
+  // default is deliberately a minute rather than a few seconds: returning
+  // to a tab refreshes immediately (see onVisibility), so steady-state
+  // polling only needs to catch changes made while the tab is already in
+  // front of you, and can afford to be gentle on the API.
+  const AUTO_REFRESH_MS_DEFAULT = 60000;
   const AUTO_REFRESH_MS_MIN = 250; // floor, so a stray tiny override can't hammer the API
+  // When an automatic refresh fails, back off instead of retrying at the
+  // same cadence — hardest on a rate-limit response — and climb back down
+  // to the base cadence once one succeeds, so a throttled or offline tab
+  // stops adding to the problem rather than hammering through it.
+  const AUTO_REFRESH_MS_MAX = 5 * 60 * 1000; // backoff ceiling
+  const AUTO_BACKOFF_FACTOR = 2;
+  const AUTO_BACKOFF_FACTOR_RATE_LIMITED = 4;
 
   // Remove the injected graph (and its full-screen overlay) and dispose of
   // its controller. Safe to call when nothing is injected.
@@ -533,6 +548,7 @@
     let noticeText = null; // text of the retry banner when a refresh failed, else null
     let fsOverlay = null; // the full-screen overlay element, or null when closed
     let autoTimer = null;
+    let autoDelay = autoRefreshMs; // current auto-refresh cadence; grows on failure, resets on success
 
     const isStale = () => state.key !== key || !document.contains(container);
 
@@ -623,35 +639,56 @@
     // step only once the new one is fetched and laid out. A failure leaves
     // the last good graph untouched and shows a retry affordance instead.
     async function refresh() {
-      if (refreshing || !currentGraph) return;
+      if (refreshing || !currentGraph) return null;
       refreshing = true;
       setRefreshing(true);
       const resp = await fetchGraph(true);
       refreshing = false;
-      if (isStale()) return;
+      if (isStale()) return resp;
       setRefreshing(false);
       if (resp && resp.ok) {
         currentGraph = resp.graph;
+        autoDelay = autoRefreshMs; // any success restores the base cadence
         clearNotice();
         renderAll();
       } else {
         showNotice("Couldn’t refresh the dependency graph — showing the last loaded version.");
       }
+      return resp;
     }
 
+    // A self-rescheduling timeout rather than a fixed-period interval, so
+    // the cadence can stretch after a failure (adaptive backoff) and the
+    // next tick never overlaps one that's still running.
     function startAuto() {
-      if (!autoTimer) autoTimer = setInterval(autoTick, autoRefreshMs);
+      if (autoTimer) return;
+      autoDelay = autoRefreshMs;
+      autoTimer = setTimeout(autoTick, autoDelay);
     }
     function stopAuto() {
       if (autoTimer) {
-        clearInterval(autoTimer);
+        clearTimeout(autoTimer);
         autoTimer = null;
       }
     }
-    function autoTick() {
+    async function autoTick() {
+      autoTimer = null;
       if (!extensionAlive()) return stopAuto();
-      if (document.hidden) return; // pause while the tab isn't visible — don't poll in the background
-      refresh();
+      // Pause polling while the tab isn't visible — don't poll in the
+      // background. onVisibility refreshes immediately on the way back.
+      if (!document.hidden) {
+        const resp = await refresh();
+        if (isStale()) return;
+        if (resp && !resp.ok) {
+          // A successful refresh resets autoDelay inside refresh(); a
+          // failure grows it, backing off hardest on a rate-limit reply.
+          const rateLimited = resp.status === 403 || resp.status === 429;
+          const factor = rateLimited ? AUTO_BACKOFF_FACTOR_RATE_LIMITED : AUTO_BACKOFF_FACTOR;
+          autoDelay = Math.min(AUTO_REFRESH_MS_MAX, Math.max(autoDelay, autoRefreshMs) * factor);
+        }
+      }
+      if (isStale()) return;
+      autoTimer = setTimeout(autoTick, autoDelay);
     }
     function onVisibility() {
       // Coming back to a tab that was hidden: pick up anything added while away.

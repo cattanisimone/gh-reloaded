@@ -68,7 +68,7 @@ On a GitHub issue page (or a Projects board's issue-preview side panel) that has
 - Lays the graph out left → right, colored by each card's real board status, with dependencies outside the sub-issue set shown as dimmed, dashed "external" nodes.
 - Highlights the critical path (longest chain by total Effort — unestimated stories are assumed to cost the median of whatever else in the feature is sized, so a couple of missing estimates don't distort it) and lets you toggle how much of that external context to show, and how columns are aligned.
 - A full-screen control opens the same graph viewport-sized, with larger cards (showing Status and Team as well as the color fill) and more room for long chains; close it with its button or Escape, without reloading the page or losing the current view.
-- A refresh control rebuilds the graph in the background — and does so periodically on its own, so adding a sub-issue or a dependency shows up within a short interval. The current graph stays visible until the new one is ready, a failed refresh keeps the last graph with a retry button, and automatic refreshing pauses while the tab is hidden.
+- A refresh control rebuilds the graph in the background — and does so periodically on its own (about once a minute), so adding a sub-issue or a dependency shows up without reloading the page; returning to a tab refreshes it right away. The current graph stays visible until the new one is ready, a failed refresh keeps the last graph with a retry button, and automatic refreshing pauses while the tab is hidden and backs off when a refresh fails (hardest when GitHub signals a rate limit) so steady-state polling stays within GitHub's API quota.
 
 ### Quick-create button — [features/quick-create](features/quick-create)
 
