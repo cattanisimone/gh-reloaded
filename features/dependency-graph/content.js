@@ -170,13 +170,36 @@
       </a>`;
   }
 
-  function internalNodeHtml(node, x, y, theme) {
-    const { NODE_W: w, NODE_H: h } = window.GHDG_LAYOUT;
+  // Header icon buttons. Primer-style glyphs, kept inline (no remotely
+  // hosted assets): a refresh arrow, a diagonal "expand" for full-screen,
+  // and an X for closing it.
+  function refreshIconHtml() {
+    return `<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7 7 0 1 1 1.05 9.11a.75.75 0 1 1 1.49-.172A5.501 5.501 0 1 0 8 2.5Z"></path></svg>`;
+  }
+  function expandIconHtml() {
+    return `<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M3.25 1h3a.75.75 0 0 1 0 1.5H4.56l2.22 2.22a.75.75 0 1 1-1.06 1.06L3.5 3.56v1.69a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 2.75 1Zm10 0a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0V3.56l-2.22 2.22a.75.75 0 1 1-1.06-1.06l2.22-2.22H9.75a.75.75 0 0 1 0-1.5ZM2.75 9.75a.75.75 0 0 1 .75.75v1.69l2.22-2.22a.75.75 0 1 1 1.06 1.06L4.56 13.25h1.69a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1-.75-.75v-3.5a.75.75 0 0 1 .75-.75Zm10.5 0a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-.75.75h-3.5a.75.75 0 0 1 0-1.5h1.69l-2.22-2.22a.75.75 0 1 1 1.06-1.06l2.22 2.22V10.5a.75.75 0 0 1 .75-.75Z"></path></svg>`;
+  }
+  function closeIconHtml() {
+    return `<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"></path></svg>`;
+  }
+
+  // A board Status, spelled out by name (not just encoded in the card's
+  // fill), for the roomier full-screen cards. Colored with the field's own
+  // configured color, same as the fill.
+  function statusChipHtml(node, theme) {
+    if (!node.status || !node.status.name) return "";
+    const fg = paletteFor(node.status.color, theme).fg;
+    return `<span class="ghdg-node-status" style="color:${fg}">${escapeHtml(node.status.name)}</span>`;
+  }
+
+  function internalNodeHtml(node, x, y, theme, dims, large) {
+    const { NODE_W: w, NODE_H: h } = dims;
     const title = escapeHtml(node.title || "");
     const bv = node.businessValue; // { value, color } | null
     const s = statusStyle(node, theme);
 
     const cls = ["ghdg-node", "is-internal", s.closed ? "is-closed" : "is-open", ...s.cls];
+    if (large) cls.push("is-large");
     if (node.critical) cls.push("is-critical");
     const style = `left:${x}px; top:${y}px; width:${w}px; height:${h}px; ${s.style}`;
 
@@ -185,6 +208,11 @@
       : "";
     const effortHtml =
       node.effort != null ? `<span class="ghdg-node-effort" title="Effort: ${node.effort}">${escapeHtml(node.effort)} pts</span>` : "";
+    // Full-screen cards have the room to spell out the Status and the
+    // owning Team as well; the compact inline card leaves them implicit.
+    const statusHtml = large ? statusChipHtml(node, theme) : "";
+    const teamHtml =
+      large && node.team ? `<span class="ghdg-node-team">${escapeHtml(node.team)}</span>` : "";
 
     const titleAttr = escapeHtml(
       `#${node.number} ${node.title || ""}${s.statusName ? ` — ${s.statusName}` : ""}${
@@ -201,19 +229,23 @@
           ${effortHtml}
         </span>
         <span class="ghdg-node-title">${title}</span>
+        ${statusHtml}
         ${bvHtml}
+        ${teamHtml}
       </div>`;
   }
 
-  function externalNodeHtml(node, x, y, theme) {
-    const { NODE_W: w, NODE_H: h } = window.GHDG_LAYOUT;
+  function externalNodeHtml(node, x, y, theme, dims, large) {
+    const { NODE_W: w, NODE_H: h } = dims;
     const title = escapeHtml(node.title || "");
     const label = `${escapeHtml(node.owner)}/${escapeHtml(node.repo)}#${node.number}`;
+    const statusHtml = large ? statusChipHtml(node, theme) : "";
     const teamHtml = node.team
       ? `<span class="ghdg-node-team">${escapeHtml(node.team)}</span>`
       : "";
     const s = statusStyle(node, theme);
     const cls = ["ghdg-node", "is-external", ...s.cls];
+    if (large) cls.push("is-large");
     const style = `left:${x}px; top:${y}px; width:${w}px; height:${h}px; ${s.style}`;
 
     const titleAttr = escapeHtml(
@@ -228,6 +260,7 @@
           <span class="ghdg-node-num">${label}</span>
         </span>
         <span class="ghdg-node-title">${title}</span>
+        ${statusHtml}
         ${teamHtml}
       </div>`;
   }
@@ -246,7 +279,7 @@
     return `M ${x1} ${y1} C ${x1} ${clearY}, ${x2} ${clearY}, ${x2} ${y2}`;
   }
 
-  function renderGraph(body, graph, theme, align) {
+  function renderGraph(body, graph, theme, align, dims, large) {
     const { nodes, edges } = graph;
     body.innerHTML = "";
 
@@ -255,8 +288,8 @@
       return;
     }
 
-    const { positions, width, height } = window.GHDG_LAYOUT.layout(nodes, edges, align);
-    const { NODE_W: nodeW, NODE_H: nodeH, COL_GAP: colGap, ARC_CLEAR_Y: clearY } = window.GHDG_LAYOUT;
+    const { positions, width, height } = window.GHDG_LAYOUT.layout(nodes, edges, align, dims);
+    const { NODE_W: nodeW, NODE_H: nodeH, COL_GAP: colGap, ARC_CLEAR_Y: clearY } = dims;
     const externalIds = new Set(nodes.filter((n) => n.external).map((n) => n.id));
 
     const scroll = document.createElement("div");
@@ -310,7 +343,9 @@
     nodesLayer.innerHTML = nodes
       .map((n) => {
         const p = positions.get(n.id);
-        return n.external ? externalNodeHtml(n, p.x, p.y, theme) : internalNodeHtml(n, p.x, p.y, theme);
+        return n.external
+          ? externalNodeHtml(n, p.x, p.y, theme, dims, large)
+          : internalNodeHtml(n, p.x, p.y, theme, dims, large);
       })
       .join("");
     stage.appendChild(nodesLayer);
@@ -359,11 +394,68 @@
   // synchronously, before the first `await`, closes that race.
   let state = { key: null, phase: "idle" }; // phase: 'idle' | 'pending' | 'done'
 
+  // Tears down the controller for the currently-injected graph: its
+  // auto-refresh timer, its document-level listeners, and any open
+  // full-screen overlay. A fresh init() installs a new one; calling this
+  // first keeps a SPA navigation from leaking timers/listeners or stranding
+  // an overlay from the previous issue.
+  let teardown = null;
+
+  const AUTO_REFRESH_MS_DEFAULT = 15000;
+  const AUTO_REFRESH_MS_MIN = 250; // floor, so a stray tiny override can't hammer the API
+
+  // Remove the injected graph (and its full-screen overlay) and dispose of
+  // its controller. Safe to call when nothing is injected.
+  function removeRoot() {
+    if (teardown) {
+      try {
+        teardown();
+      } catch {
+        /* best-effort cleanup */
+      }
+      teardown = null;
+    }
+    document.getElementById(ROOT_ID)?.remove();
+  }
+
+  function headerTitleText(graph) {
+    if (!graph) return "Dependency graph";
+    const { criticalPathEffort: eff, criticalPathLength: len } = graph;
+    if (len > 1) {
+      return eff > 0
+        ? `Dependency graph · Critical path effort: ${eff} (${len} steps)`
+        : `Dependency graph · Critical path: ${len} steps`;
+    }
+    return "Dependency graph";
+  }
+
+  // The control cluster (align, mode, refresh, and either an enter- or
+  // exit-full-screen button) rendered into both the embedded header and
+  // the full-screen header, so the two presentations share one set of
+  // controls and can't drift apart.
+  function controlsHtml({ fullscreen }) {
+    return (
+      '<select class="ghdg-align-select" title="Column alignment">' +
+      '<option value="right">Align: near dependents</option>' +
+      '<option value="left">Align: as early as possible</option>' +
+      "</select>" +
+      '<select class="ghdg-mode-select" title="External dependencies">' +
+      '<option value="full">Full dependencies</option>' +
+      '<option value="open">Open dependencies only</option>' +
+      '<option value="off">Hide external dependencies</option>' +
+      "</select>" +
+      `<button type="button" class="ghdg-icon-btn ghdg-refresh-btn" title="Refresh graph" aria-label="Refresh graph">${refreshIconHtml()}</button>` +
+      (fullscreen
+        ? `<button type="button" class="ghdg-icon-btn ghdg-close-btn" title="Exit full screen (Esc)" aria-label="Exit full screen">${closeIconHtml()}</button>`
+        : `<button type="button" class="ghdg-icon-btn ghdg-fs-btn" title="Open full screen" aria-label="Open full screen">${expandIconHtml()}</button>`)
+    );
+  }
+
   async function init() {
     if (!extensionAlive()) return;
     const { ghdgEnabled } = await chrome.storage.local.get("ghdgEnabled");
     if (ghdgEnabled === false) {
-      document.getElementById(ROOT_ID)?.remove();
+      removeRoot();
       state = { key: null, phase: "idle" };
       return;
     }
@@ -371,7 +463,7 @@
     const key = info ? `${info.owner}/${info.repo}#${info.issueNumber}` : null;
 
     if (!info) {
-      document.getElementById(ROOT_ID)?.remove();
+      removeRoot();
       state = { key: null, phase: "idle" };
       return;
     }
@@ -384,7 +476,7 @@
       // else: rendered before, but GitHub's SPA wiped our node from the DOM
       // (e.g. a Turbo re-render without a URL change) — fall through and redo.
     } else {
-      existing?.remove(); // navigated to a different issue — drop the stale graph now
+      removeRoot(); // navigated to a different issue — drop the stale graph now
     }
 
     state = { key, phase: "pending" }; // claim this key before any await
@@ -398,100 +490,259 @@
     // The URL may have changed again while we were waiting for the anchor.
     if (parseIssueUrl()?.issueNumber !== info.issueNumber) return;
 
-    document.getElementById(ROOT_ID)?.remove(); // clear any leftover from a previous attempt
+    removeRoot(); // clear any leftover (and its controller) from a previous attempt
 
-    const { ghdgDepMode, ghdgAlignMode } = await chrome.storage.local.get([
+    const { ghdgDepMode, ghdgAlignMode, ghdgAutoRefreshMs } = await chrome.storage.local.get([
       "ghdgDepMode",
       "ghdgAlignMode",
+      "ghdgAutoRefreshMs",
     ]);
-    const initialMode = ghdgDepMode || "full";
-    const initialAlign = ghdgAlignMode || "right";
+    let depMode = ghdgDepMode || "full";
+    let alignMode = ghdgAlignMode || "right";
+    const autoRefreshMs = Math.max(
+      AUTO_REFRESH_MS_MIN,
+      Number(ghdgAutoRefreshMs) || AUTO_REFRESH_MS_DEFAULT
+    );
 
     // The URL may have changed again while we were waiting on storage too.
     if (parseIssueUrl()?.issueNumber !== info.issueNumber) return;
 
     const theme = githubTheme();
+    const { EMBEDDED_DIMS, FULLSCREEN_DIMS } = window.GHDG_LAYOUT;
+
     const container = document.createElement("div");
     container.id = ROOT_ID;
-    container.className = "ghdg-root";
+    container.className = "ghdg-root ghdg-scope";
     container.dataset.theme = theme;
     container.innerHTML =
       '<div class="ghdg-header">' +
       '<span class="ghdg-header-title">Dependency graph</span>' +
-      '<span class="ghdg-header-controls">' +
-      '<select class="ghdg-align-select" title="Column alignment">' +
-      '<option value="right">Align: near dependents</option>' +
-      '<option value="left">Align: as early as possible</option>' +
-      "</select>" +
-      '<select class="ghdg-mode-select" title="External dependencies">' +
-      '<option value="full">Full dependencies</option>' +
-      '<option value="open">Open dependencies only</option>' +
-      '<option value="off">Hide external dependencies</option>' +
-      "</select>" +
-      "</span>" +
+      `<span class="ghdg-header-controls">${controlsHtml({ fullscreen: false })}</span>` +
       "</div>" +
+      '<div class="ghdg-notice" hidden></div>' +
       '<div class="ghdg-body"><div class="ghdg-status">Loading dependency graph…</div></div>';
     anchor.insertAdjacentElement("afterend", container);
 
-    const body = container.querySelector(".ghdg-body");
-    const headerTitle = container.querySelector(".ghdg-header-title");
-    const modeSelect = container.querySelector(".ghdg-mode-select");
-    const alignSelect = container.querySelector(".ghdg-align-select");
-    modeSelect.value = initialMode;
-    alignSelect.value = initialAlign;
+    const embeddedBody = container.querySelector(".ghdg-body");
     state = { key, phase: "done" };
 
-    let lastGraph = null;
-    const rerender = () => {
-      if (lastGraph) {
-        renderGraph(body, applyDependencyMode(lastGraph, modeSelect.value), theme, alignSelect.value);
+    // ---- controller: shared state for the embedded graph and its
+    // optional full-screen twin, plus the refresh lifecycle ----
+    let currentGraph = null; // last successfully fetched+laid-out graph
+    let refreshing = false; // a background refresh is in flight
+    let noticeText = null; // text of the retry banner when a refresh failed, else null
+    let fsOverlay = null; // the full-screen overlay element, or null when closed
+    let autoTimer = null;
+
+    const isStale = () => state.key !== key || !document.contains(container);
+
+    // DOM lookups that should span both the embedded header and the
+    // full-screen overlay when one is open.
+    function scopes() {
+      return fsOverlay ? [container, fsOverlay] : [container];
+    }
+    function allOf(selector) {
+      return scopes().flatMap((root) => [...root.querySelectorAll(selector)]);
+    }
+
+    function syncSelects() {
+      for (const s of allOf(".ghdg-align-select")) s.value = alignMode;
+      for (const s of allOf(".ghdg-mode-select")) s.value = depMode;
+    }
+
+    function renderInto(bodyEl, titleEl, dims, large) {
+      const g = applyDependencyMode(currentGraph, depMode);
+      renderGraph(bodyEl, g, theme, alignMode, dims, large);
+      if (titleEl) titleEl.textContent = headerTitleText(currentGraph);
+      return g;
+    }
+
+    function renderAll() {
+      if (!currentGraph) return;
+      const g = renderInto(
+        embeddedBody,
+        container.querySelector(".ghdg-header-title"),
+        EMBEDDED_DIMS,
+        false
+      );
+      // Full-screen only makes sense once there's actually a graph to blow up.
+      for (const b of allOf(".ghdg-fs-btn")) b.disabled = g.nodes.length === 0;
+      if (fsOverlay) {
+        renderInto(
+          fsOverlay.querySelector(".ghdg-fs-body"),
+          fsOverlay.querySelector(".ghdg-fs-title"),
+          FULLSCREEN_DIMS,
+          true
+        );
       }
+    }
+
+    function setRefreshing(on) {
+      for (const b of allOf(".ghdg-refresh-btn")) {
+        b.disabled = on;
+        b.classList.toggle("is-spinning", on);
+      }
+    }
+
+    function showNotice(text) {
+      noticeText = text;
+      for (const el of allOf(".ghdg-notice")) {
+        el.textContent = text + " ";
+        const retry = document.createElement("button");
+        retry.type = "button";
+        retry.className = "ghdg-btn ghdg-retry-btn";
+        retry.textContent = "Retry";
+        retry.addEventListener("click", () => refresh());
+        el.appendChild(retry);
+        el.hidden = false;
+      }
+    }
+    function clearNotice() {
+      noticeText = null;
+      for (const el of allOf(".ghdg-notice")) {
+        el.hidden = true;
+        el.textContent = "";
+      }
+    }
+
+    function fetchGraph(fresh) {
+      return new Promise((resolve) => {
+        if (!extensionAlive()) return resolve({ ok: false, error: "extension context invalidated" });
+        chrome.runtime.sendMessage({ type: "GHDG_FETCH_GRAPH", payload: { ...info, fresh } }, (resp) => {
+          if (chrome.runtime.lastError) {
+            resolve({ ok: false, error: chrome.runtime.lastError.message });
+          } else {
+            resolve(resp || { ok: false, error: "no response" });
+          }
+        });
+      });
+    }
+
+    // Background refresh (manual button, auto timer, or retry). The current
+    // graph stays visible and interactive throughout; it's replaced in one
+    // step only once the new one is fetched and laid out. A failure leaves
+    // the last good graph untouched and shows a retry affordance instead.
+    async function refresh() {
+      if (refreshing || !currentGraph) return;
+      refreshing = true;
+      setRefreshing(true);
+      const resp = await fetchGraph(true);
+      refreshing = false;
+      if (isStale()) return;
+      setRefreshing(false);
+      if (resp && resp.ok) {
+        currentGraph = resp.graph;
+        clearNotice();
+        renderAll();
+      } else {
+        showNotice("Couldn’t refresh the dependency graph — showing the last loaded version.");
+      }
+    }
+
+    function startAuto() {
+      if (!autoTimer) autoTimer = setInterval(autoTick, autoRefreshMs);
+    }
+    function stopAuto() {
+      if (autoTimer) {
+        clearInterval(autoTimer);
+        autoTimer = null;
+      }
+    }
+    function autoTick() {
+      if (!extensionAlive()) return stopAuto();
+      if (document.hidden) return; // pause while the tab isn't visible — don't poll in the background
+      refresh();
+    }
+    function onVisibility() {
+      // Coming back to a tab that was hidden: pick up anything added while away.
+      if (!document.hidden && !isStale()) refresh();
+    }
+
+    function openFullscreen() {
+      if (fsOverlay || !currentGraph) return;
+      const overlay = document.createElement("div");
+      overlay.id = "ghdg-fs";
+      overlay.className = "ghdg-fs ghdg-scope";
+      overlay.dataset.theme = theme;
+      overlay.innerHTML =
+        '<div class="ghdg-fs-header">' +
+        '<span class="ghdg-header-title ghdg-fs-title">Dependency graph</span>' +
+        `<span class="ghdg-header-controls">${controlsHtml({ fullscreen: true })}</span>` +
+        "</div>" +
+        '<div class="ghdg-notice" hidden></div>' +
+        '<div class="ghdg-fs-body"></div>';
+      document.body.appendChild(overlay);
+      fsOverlay = overlay;
+      wireControls(overlay);
+      if (noticeText) showNotice(noticeText); // mirror an outstanding refresh error
+      renderAll();
+      overlay.querySelector(".ghdg-close-btn")?.focus();
+    }
+    function closeFullscreen() {
+      if (!fsOverlay) return;
+      fsOverlay.remove();
+      fsOverlay = null;
+    }
+
+    function wireControls(root) {
+      const alignSelect = root.querySelector(".ghdg-align-select");
+      const modeSelect = root.querySelector(".ghdg-mode-select");
+      alignSelect.value = alignMode;
+      modeSelect.value = depMode;
+      alignSelect.addEventListener("change", () => {
+        alignMode = alignSelect.value;
+        chrome.storage.local.set({ ghdgAlignMode: alignMode });
+        syncSelects();
+        renderAll();
+      });
+      modeSelect.addEventListener("change", () => {
+        depMode = modeSelect.value;
+        chrome.storage.local.set({ ghdgDepMode: depMode });
+        syncSelects();
+        renderAll();
+      });
+      root.querySelector(".ghdg-refresh-btn").addEventListener("click", () => refresh());
+      root.querySelector(".ghdg-fs-btn")?.addEventListener("click", openFullscreen);
+      root.querySelector(".ghdg-close-btn")?.addEventListener("click", closeFullscreen);
+    }
+
+    function onKeydown(e) {
+      if (e.key === "Escape" && fsOverlay) {
+        e.preventDefault();
+        closeFullscreen();
+      }
+    }
+
+    wireControls(container);
+    document.addEventListener("visibilitychange", onVisibility);
+    document.addEventListener("keydown", onKeydown);
+    teardown = () => {
+      stopAuto();
+      document.removeEventListener("visibilitychange", onVisibility);
+      document.removeEventListener("keydown", onKeydown);
+      closeFullscreen();
     };
-    modeSelect.addEventListener("change", () => {
-      chrome.storage.local.set({ ghdgDepMode: modeSelect.value });
-      rerender();
-    });
-    alignSelect.addEventListener("change", () => {
-      chrome.storage.local.set({ ghdgAlignMode: alignSelect.value });
-      rerender();
-    });
 
-    chrome.runtime.sendMessage({ type: "GHDG_FETCH_GRAPH", payload: info }, (resp) => {
-      if (chrome.runtime.lastError) {
-        if (document.contains(container)) {
-          renderStatus(body, "error", "Extension error: " + chrome.runtime.lastError.message);
-        }
-        return;
+    // Initial load uses the shared cache (it dedupes the SPA-nav burst);
+    // every refresh after this bypasses it so it actually sees new data.
+    const resp = await fetchGraph(false);
+    if (isStale()) return;
+    if (!resp || !resp.ok) {
+      const status = resp?.status;
+      if (status === 401 || status === 403 || !resp?.hasToken) {
+        renderStatus(
+          embeddedBody,
+          "locked",
+          "Set a GitHub token in the extension options to load the dependency graph."
+        );
+      } else {
+        renderStatus(embeddedBody, "error", `Could not load the graph: ${resp?.error || "unknown error"}`);
       }
-      if (!document.contains(container) || state.key !== key) return; // stale response
-
-      if (!resp || !resp.ok) {
-        const status = resp?.status;
-        if (status === 401 || status === 403 || !resp?.hasToken) {
-          renderStatus(
-            body,
-            "locked",
-            "Set a GitHub token in the extension options to load the dependency graph."
-          );
-        } else {
-          renderStatus(body, "error", `Could not load the graph: ${resp?.error || "unknown error"}`);
-        }
-        return;
-      }
-
-      lastGraph = resp.graph;
-      renderGraph(body, applyDependencyMode(lastGraph, modeSelect.value), theme, alignSelect.value);
-
-      if (headerTitle) {
-        const { criticalPathEffort: eff, criticalPathLength: len } = resp.graph;
-        headerTitle.textContent =
-          len > 1
-            ? eff > 0
-              ? `Dependency graph · Critical path effort: ${eff} (${len} steps)`
-              : `Dependency graph · Critical path: ${len} steps`
-            : "Dependency graph";
-      }
-    });
+      return;
+    }
+    currentGraph = resp.graph;
+    renderAll();
+    startAuto();
   }
 
   // --- Re-run on GitHub's SPA navigations. Belt-and-suspenders: Turbo

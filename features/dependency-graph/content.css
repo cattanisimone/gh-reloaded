@@ -1,15 +1,16 @@
-#ghdg-root {
-  margin: 16px 12px 8px;
-  border: 1px solid var(--ghdg-border);
-  border-radius: 8px;
-  background: var(--ghdg-bg);
+/* Theme variables + base typography are shared by the embedded card
+   (#ghdg-root) and the full-screen overlay (#ghdg-fs) through the common
+   .ghdg-scope class, so both presentations pull from one palette. Every
+   graph-content rule below is scoped to .ghdg-scope (whose classes are all
+   ghdg-prefixed and unique) rather than to #ghdg-root, so it applies in
+   both. */
+.ghdg-scope {
   color: var(--ghdg-text);
   font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
   font-size: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-#ghdg-root[data-theme="light"] {
+.ghdg-scope[data-theme="light"] {
   --ghdg-bg: #ffffff;
   --ghdg-border: #d0d7de;
   --ghdg-text: #1f2328;
@@ -22,9 +23,12 @@
   --ghdg-external-bg: rgba(110, 119, 129, 0.05);
   --ghdg-chip-bg: rgba(255, 255, 255, 0.85);
   --ghdg-critical: #bc4c00;
+  --ghdg-notice-bg: #fff8c5;
+  --ghdg-notice-border: #d4a72c;
+  --ghdg-overlay-scrim: rgba(0, 0, 0, 0.1);
 }
 
-#ghdg-root[data-theme="dark"] {
+.ghdg-scope[data-theme="dark"] {
   --ghdg-bg: #0d1117;
   --ghdg-border: #30363d;
   --ghdg-text: #e6edf3;
@@ -37,9 +41,33 @@
   --ghdg-external-bg: rgba(139, 148, 158, 0.07);
   --ghdg-chip-bg: rgba(13, 17, 23, 0.7);
   --ghdg-critical: #db6d28;
+  --ghdg-notice-bg: rgba(187, 128, 9, 0.15);
+  --ghdg-notice-border: #9e6a03;
+  --ghdg-overlay-scrim: rgba(1, 4, 9, 0.4);
 }
 
-#ghdg-root .ghdg-header {
+/* --- Embedded card: the inline graph injected after the Sub-issues
+   section. --- */
+#ghdg-root {
+  margin: 16px 12px 8px;
+  border: 1px solid var(--ghdg-border);
+  border-radius: 8px;
+  background: var(--ghdg-bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Full-screen overlay: the same graph, viewport-sized. --- */
+#ghdg-fs {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000; /* above GitHub's own sticky headers and dialogs */
+  display: flex;
+  flex-direction: column;
+  background: var(--ghdg-bg);
+}
+
+.ghdg-scope .ghdg-header,
+.ghdg-scope .ghdg-fs-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -47,8 +75,12 @@
   padding: 8px 12px;
   border-bottom: 1px solid var(--ghdg-border);
 }
+.ghdg-scope .ghdg-fs-header {
+  padding: 10px 16px;
+  flex: 0 0 auto;
+}
 
-#ghdg-root .ghdg-header-title {
+.ghdg-scope .ghdg-header-title {
   font-weight: 600;
   color: var(--ghdg-muted);
   text-transform: uppercase;
@@ -58,16 +90,19 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.ghdg-scope .ghdg-fs-title {
+  font-size: 12px;
+}
 
-#ghdg-root .ghdg-header-controls {
+.ghdg-scope .ghdg-header-controls {
   display: flex;
   align-items: center;
   gap: 6px;
   flex: 0 0 auto;
 }
 
-#ghdg-root .ghdg-mode-select,
-#ghdg-root .ghdg-align-select {
+.ghdg-scope .ghdg-mode-select,
+.ghdg-scope .ghdg-align-select {
   flex: 0 0 auto;
   font-size: 11px;
   padding: 2px 6px;
@@ -78,13 +113,61 @@
   cursor: pointer;
 }
 
-#ghdg-root .ghdg-status {
+/* Refresh / full-screen / close icon buttons. */
+.ghdg-scope .ghdg-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--ghdg-border);
+  border-radius: 5px;
+  background: var(--ghdg-node-bg);
+  color: var(--ghdg-muted);
+  cursor: pointer;
+}
+.ghdg-scope .ghdg-icon-btn:hover {
+  background: var(--ghdg-node-hover);
+  color: var(--ghdg-text);
+}
+.ghdg-scope .ghdg-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+/* While a refresh is in flight the arrow spins; the graph itself stays put. */
+.ghdg-scope .ghdg-refresh-btn.is-spinning svg {
+  animation: ghdg-spin 0.7s linear infinite;
+}
+@keyframes ghdg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Retry banner shown when a background refresh fails — it sits above the
+   graph, which is left on screen untouched. */
+.ghdg-scope .ghdg-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  color: var(--ghdg-text);
+  background: var(--ghdg-notice-bg);
+  border-bottom: 1px solid var(--ghdg-notice-border);
+}
+#ghdg-fs .ghdg-notice {
+  flex: 0 0 auto;
+}
+
+.ghdg-scope .ghdg-status {
   padding: 16px;
   color: var(--ghdg-muted);
   text-align: center;
 }
 
-#ghdg-root .ghdg-btn {
+.ghdg-scope .ghdg-btn {
   margin-top: 8px;
   padding: 4px 12px;
   border: 1px solid var(--ghdg-border);
@@ -94,52 +177,70 @@
   cursor: pointer;
   font-size: 12px;
 }
-#ghdg-root .ghdg-btn:hover {
+.ghdg-scope .ghdg-btn:hover {
   background: var(--ghdg-node-hover);
 }
+/* The retry button sits inline in the notice bar, not stacked below. */
+.ghdg-scope .ghdg-retry-btn {
+  margin-top: 0;
+  padding: 2px 10px;
+  font-size: 11px;
+}
 
-#ghdg-root .ghdg-graph-scroll {
+.ghdg-scope .ghdg-graph-scroll {
   overflow-x: auto;
   padding: 20px;
 }
+/* Full screen uses the whole viewport and scrolls in both directions. */
+#ghdg-fs .ghdg-fs-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+}
+#ghdg-fs .ghdg-graph-scroll {
+  height: 100%;
+  overflow: auto;
+  padding: 28px;
+  box-sizing: border-box;
+}
 
-#ghdg-root .ghdg-graph-stage {
+.ghdg-scope .ghdg-graph-stage {
   position: relative;
 }
 
-#ghdg-root .ghdg-edges {
+.ghdg-scope .ghdg-edges {
   position: absolute;
   top: 0;
   left: 0;
   overflow: visible;
 }
 
-#ghdg-root .ghdg-edge {
+.ghdg-scope .ghdg-edge {
   fill: none;
   stroke: var(--ghdg-edge);
   stroke-width: 1.5;
 }
-#ghdg-root .ghdg-edge.is-external {
+.ghdg-scope .ghdg-edge.is-external {
   stroke-dasharray: 4 3;
   opacity: 0.75;
 }
-#ghdg-root .ghdg-edge.is-critical {
+.ghdg-scope .ghdg-edge.is-critical {
   stroke: var(--ghdg-critical);
   stroke-width: 2.5;
 }
 
-#ghdg-root .ghdg-arrowhead {
+.ghdg-scope .ghdg-arrowhead {
   fill: var(--ghdg-edge);
 }
-#ghdg-root .ghdg-arrowhead-critical {
+.ghdg-scope .ghdg-arrowhead-critical {
   fill: var(--ghdg-critical);
 }
 
-#ghdg-root .ghdg-nodes {
+.ghdg-scope .ghdg-nodes {
   position: relative;
 }
 
-#ghdg-root .ghdg-node {
+.ghdg-scope .ghdg-node {
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -147,22 +248,30 @@
   gap: 3px;
   padding: 7px 9px;
   box-sizing: border-box;
+  overflow: hidden;
   border: 1px solid var(--ghdg-border);
   border-radius: 6px;
   background: var(--ghdg-node-bg);
   color: var(--ghdg-text);
 }
-#ghdg-root .ghdg-node:hover {
+.ghdg-scope .ghdg-node:hover {
   box-shadow: inset 0 0 0 1px var(--ghdg-muted);
 }
-#ghdg-root .ghdg-node.is-critical {
+.ghdg-scope .ghdg-node.is-critical {
   box-shadow: 0 0 0 2px var(--ghdg-critical), 0 1px 3px rgba(0, 0, 0, 0.15);
 }
-#ghdg-root .ghdg-node.is-critical:hover {
+.ghdg-scope .ghdg-node.is-critical:hover {
   box-shadow: 0 0 0 2px var(--ghdg-critical), inset 0 0 0 1px var(--ghdg-muted);
 }
+/* Larger, roomier cards in full-screen mode: more padding, bigger type,
+   and room for a third title line plus the extra metadata chips. */
+.ghdg-scope .ghdg-node.is-large {
+  justify-content: flex-start;
+  gap: 5px;
+  padding: 10px 12px;
+}
 
-#ghdg-root .ghdg-node-link {
+.ghdg-scope .ghdg-node-link {
   position: absolute;
   top: 4px;
   right: 4px;
@@ -176,12 +285,12 @@
   opacity: 0.55;
   text-decoration: none;
 }
-#ghdg-root .ghdg-node-link:hover {
+.ghdg-scope .ghdg-node-link:hover {
   opacity: 1;
   background: rgba(0, 0, 0, 0.08);
 }
 
-#ghdg-root .ghdg-node-top {
+.ghdg-scope .ghdg-node-top {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -189,7 +298,7 @@
   padding-right: 14px; /* keep clear of the link icon */
 }
 
-#ghdg-root .ghdg-node-dot {
+.ghdg-scope .ghdg-node-dot {
   flex: 0 0 7px;
   width: 7px;
   height: 7px;
@@ -197,7 +306,7 @@
   background: var(--ghdg-muted);
 }
 
-#ghdg-root .ghdg-node-num {
+.ghdg-scope .ghdg-node-num {
   font-size: 10px;
   font-weight: 600;
   color: var(--ghdg-muted);
@@ -205,8 +314,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.ghdg-scope .ghdg-node.is-large .ghdg-node-num {
+  font-size: 11px;
+}
 
-#ghdg-root .ghdg-node-effort {
+.ghdg-scope .ghdg-node-effort {
   margin-left: auto;
   flex: 0 0 auto;
   font-size: 10px;
@@ -218,7 +330,7 @@
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
-#ghdg-root .ghdg-node-title {
+.ghdg-scope .ghdg-node-title {
   font-size: 12px;
   line-height: 1.25;
   display: -webkit-box;
@@ -228,13 +340,18 @@
   white-space: normal;
   padding-right: 14px; /* keep clear of the link icon on short cards */
 }
+.ghdg-scope .ghdg-node.is-large .ghdg-node-title {
+  font-size: 13px;
+  -webkit-line-clamp: 3;
+}
 
-#ghdg-root .ghdg-node.is-closed .ghdg-node-title {
+.ghdg-scope .ghdg-node.is-closed .ghdg-node-title {
   color: var(--ghdg-muted);
 }
 
-#ghdg-root .ghdg-node-bv,
-#ghdg-root .ghdg-node-team {
+.ghdg-scope .ghdg-node-bv,
+.ghdg-scope .ghdg-node-team,
+.ghdg-scope .ghdg-node-status {
   align-self: flex-start;
   font-size: 10px;
   font-weight: 600;
@@ -247,16 +364,16 @@
   text-overflow: ellipsis;
   max-width: 100%;
 }
-#ghdg-root .ghdg-node-team {
+.ghdg-scope .ghdg-node-team {
   color: var(--ghdg-muted);
 }
 
-#ghdg-root .ghdg-node.is-external {
+.ghdg-scope .ghdg-node.is-external {
   border-style: dashed;
   background: var(--ghdg-external-bg);
   color: var(--ghdg-muted);
 }
-#ghdg-root .ghdg-node.is-external .ghdg-node-num,
-#ghdg-root .ghdg-node.is-external .ghdg-node-title {
+.ghdg-scope .ghdg-node.is-external .ghdg-node-num,
+.ghdg-scope .ghdg-node.is-external .ghdg-node-title {
   color: var(--ghdg-muted);
 }

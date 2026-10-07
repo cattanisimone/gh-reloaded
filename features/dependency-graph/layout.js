@@ -11,17 +11,36 @@
 // like "owner/repo#123" (external issues, possibly from another repo).
 
 (function (global) {
-  const NODE_W = 150; // ~2/3 of the original 220, per request
-  const NODE_H = 84; // room for dot+number, a 2-line title, and a business-value/team chip
-  const COL_GAP = 64;
-  const ROW_GAP = 18;
-  const PADDING = 24;
-  // Extra clear space above row 0, reserved for edges that skip 2+ columns
-  // — those arc up and over instead of cutting across whatever card sits
-  // in an intermediate column (see content.js). ARC_CLEAR_Y is where that
-  // arc's apex sits; it must stay comfortably above PADDING + TOP_EXTRA.
-  const TOP_EXTRA = 24;
-  const ARC_CLEAR_Y = 10;
+  // The layout is driven by a `dims` object so the same graph can be laid
+  // out at two sizes: the compact inline card (EMBEDDED_DIMS) and the
+  // roomier full-screen view (FULLSCREEN_DIMS). Everything below reads its
+  // measurements from `dims` rather than from module constants.
+  //
+  // ARC_CLEAR_Y is where the apex of a "hump" edge sits — edges that skip
+  // 2+ columns arc up and over whatever card sits in an intermediate
+  // column instead of cutting across it (see content.js). It must stay
+  // comfortably above PADDING + TOP_EXTRA (the top of row 0).
+  const EMBEDDED_DIMS = {
+    NODE_W: 150, // ~2/3 of the original 220, per request
+    NODE_H: 84, // room for dot+number, a 2-line title, and a business-value/team chip
+    COL_GAP: 64,
+    ROW_GAP: 18,
+    PADDING: 24,
+    TOP_EXTRA: 24,
+    ARC_CLEAR_Y: 10,
+  };
+  // Full-screen cards are larger and carry more metadata (status name and
+  // team as well as the color fill), and the chains get more horizontal
+  // and vertical room so long or complex graphs are easier to follow.
+  const FULLSCREEN_DIMS = {
+    NODE_W: 240,
+    NODE_H: 160,
+    COL_GAP: 100,
+    ROW_GAP: 30,
+    PADDING: 32,
+    TOP_EXTRA: 30,
+    ARC_CLEAR_Y: 12,
+  };
 
   // Column assignment. `align` picks between two schemes:
   //
@@ -81,7 +100,8 @@
     return finalRank;
   }
 
-  function layout(nodes, edges, align = "right") {
+  function layout(nodes, edges, align = "right", dims = EMBEDDED_DIMS) {
+    const { NODE_W, NODE_H, COL_GAP, ROW_GAP, PADDING, TOP_EXTRA } = dims;
     const rank = computeRanks(nodes, edges, align);
 
     // Vertical order within a column: nodes with more connections (in +
@@ -125,5 +145,5 @@
     return { positions, width, height };
   }
 
-  global.GHDG_LAYOUT = { layout, NODE_W, NODE_H, COL_GAP, ARC_CLEAR_Y };
+  global.GHDG_LAYOUT = { layout, EMBEDDED_DIMS, FULLSCREEN_DIMS };
 })(window);
