@@ -179,10 +179,10 @@ export function computeCriticalPath(internalNodes, edges) {
  * on whichever side they're on, without double-counting edges between two
  * internal sub-issues (those are only added once, from the blocked_by side).
  */
-async function fetchDependencyGraph({ owner, repo, issueNumber }) {
+async function fetchDependencyGraph({ owner, repo, issueNumber, fresh }) {
   const subIssues = await ghFetch(
     `/repos/${owner}/${repo}/issues/${issueNumber}/sub_issues?per_page=100`,
-    { owner }
+    { owner, fresh }
   );
   const numbers = new Set(subIssues.map((i) => i.number));
 
@@ -210,8 +210,8 @@ async function fetchDependencyGraph({ owner, repo, issueNumber }) {
   await Promise.all(
     subIssues.map(async (issue) => {
       const [blockers, blocking] = await Promise.all([
-        safeDeps(owner, repo, issue.number, "blocked_by"),
-        safeDeps(owner, repo, issue.number, "blocking"),
+        safeDeps(owner, repo, issue.number, "blocked_by", { fresh }),
+        safeDeps(owner, repo, issue.number, "blocking", { fresh }),
       ]);
 
       for (const blocker of blockers) {
@@ -233,8 +233,8 @@ async function fetchDependencyGraph({ owner, repo, issueNumber }) {
     Promise.all(
       subIssues.map(async (issue) => {
         const [status, fields] = await Promise.all([
-          safeStatus(owner, repo, issue.number),
-          safeFields(owner, repo, issue.number),
+          safeStatus(owner, repo, issue.number, { fresh }),
+          safeFields(owner, repo, issue.number, { fresh }),
         ]);
         return {
           id: issue.number,
@@ -252,8 +252,8 @@ async function fetchDependencyGraph({ owner, repo, issueNumber }) {
     Promise.all(
       Array.from(externalByKey.values()).map(async (n) => {
         const [fields, status] = await Promise.all([
-          safeFields(n.owner, n.repo, n.number),
-          safeStatus(n.owner, n.repo, n.number),
+          safeFields(n.owner, n.repo, n.number, { fresh }),
+          safeStatus(n.owner, n.repo, n.number, { fresh }),
         ]);
         return { ...n, team: fields["Team"]?.value || null, status };
       })
