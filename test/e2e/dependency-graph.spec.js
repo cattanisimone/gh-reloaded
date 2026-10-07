@@ -41,6 +41,242 @@ test("renders the dependency graph after the Sub-issues section", async ({ conte
   await expect(root).toContainText("Set up the build");
 });
 
+test("opens full screen, shows larger cards, and closes with the button and Escape", async ({
+  context,
+  page,
+}) => {
+  await routeApi(context, API);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+
+  // Enter full screen → the same graph, viewport-sized, with larger cards.
+  await root.locator(".ghdg-fs-btn").click();
+  const fs = page.locator("#ghdg-fs");
+  await expect(fs).toBeVisible();
+  await expect(fs.locator(".ghdg-node.is-large")).toHaveCount(2);
+  await expect(fs).toContainText("Set up the build");
+
+  // Close with the explicit control; the embedded graph is untouched.
+  await fs.locator(".ghdg-close-btn").click();
+  await expect(fs).toHaveCount(0);
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+
+  // Reopen, then close with Escape.
+  await root.locator(".ghdg-fs-btn").click();
+  await expect(page.locator("#ghdg-fs")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#ghdg-fs")).toHaveCount(0);
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+});
+
+test("full screen shows the graphed issue's title and metadata in its header", async ({
+  context,
+  page,
+}) => {
+  await routeApi(context, [
+    {
+      match: (p) => p === "/repos/acme/web/issues/1",
+      json: {
+        number: 1,
+        title: "Ship the new dashboard",
+        state: "open",
+        html_url: "https://github.com/acme/web/issues/1",
+      },
+    },
+    {
+      match: (p) => p === "/repos/acme/web/issues/1/issue-field-values",
+      json: [
+        { issue_field_name: "Team", value: "Platform" },
+        { issue_field_name: "Effort", value: 8 },
+      ],
+    },
+    ...API,
+  ]);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+  await root.locator(".ghdg-fs-btn").click();
+
+  const parent = page.locator("#ghdg-fs .ghdg-fs-parent");
+  await expect(parent).toBeVisible();
+  await expect(parent).toContainText("Ship the new dashboard");
+  await expect(parent).toContainText("#1");
+  await expect(parent).toContainText("Platform");
+  await expect(parent).toContainText("8 pts");
+});
+
+test("external dependency cards sit on a plain white surface, not a tinted status fill", async ({
+  context,
+  page,
+}) => {
+  const BLOCKER = {
+    number: 77,
+    title: "Upstream auth rework",
+    state: "open",
+    html_url: "https://github.com/other/lib/issues/77",
+    repository_url: "https://api.github.com/repos/other/lib",
+  };
+  await routeApi(context, [
+    {
+      method: "POST",
+      match: (p) => p === "/graphql",
+      json: {
+        data: {
+          repository: {
+            issue: {
+              projectItems: {
+                nodes: [{ fieldValueByName: { name: "Backlog", color: "GRAY" } }],
+              },
+            },
+          },
+        },
+      },
+    },
+    { match: /\/repos\/acme\/web\/issues\/1\/sub_issues/, json: SUB_ISSUES },
+    { match: (p) => p === "/repos/acme/web/issues/3/dependencies/blocked_by", json: [BLOCKER] },
+  ]);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const external = page.locator("#ghdg-root .ghdg-node.is-external");
+  await expect(external).toHaveCount(1);
+  await expect(external).toHaveCSS("background-color", "rgb(255, 255, 255)");
+});
+
+test("manual refresh picks up a newly added sub-issue without reloading", async ({
+  context,
+  page,
+}) => {
+  const NEW_CHILD = {
+    number: 4,
+    title: "Added after load",
+    state: "open",
+    html_url: "https://github.com/acme/web/issues/4",
+    repository_url: "https://api.github.com/repos/acme/web",
+  };
+  let subCalls = 0;
+  await routeApi(context, [
+    {
+      match: /\/repos\/acme\/web\/issues\/1\/sub_issues/,
+      json: () => (++subCalls === 1 ? SUB_ISSUES : [...SUB_ISSUES, NEW_CHILD]),
+    },
+    {
+      match: (p) => p === "/repos/acme/web/issues/3/dependencies/blocked_by",
+      json: [SUB_ISSUES[0]],
+    },
+  ]);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+
+  await root.locator(".ghdg-refresh-btn").click();
+  await expect(root.locator(".ghdg-node")).toHaveCount(3);
+  await expect(root).toContainText("Added after load");
+});
+
+test("a failed refresh keeps the last graph and offers a retry", async ({ context, page }) => {
+  let subCalls = 0;
+  await routeApi(context, [
+    // The second sub_issues request (the refresh) fails; the first succeeds.
+    {
+      match: (p) => p.endsWith("/issues/1/sub_issues") && ++subCalls >= 2,
+      status: 500,
+      json: { message: "boom" },
+    },
+    { match: /\/repos\/acme\/web\/issues\/1\/sub_issues/, json: SUB_ISSUES },
+    {
+      match: (p) => p === "/repos/acme/web/issues/3/dependencies/blocked_by",
+      json: [SUB_ISSUES[0]],
+    },
+  ]);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+
+  await root.locator(".ghdg-refresh-btn").click();
+
+  // The graph is left on screen; a retry banner appears rather than an error.
+  await expect(root.locator(".ghdg-notice")).toBeVisible();
+  await expect(root.locator(".ghdg-retry-btn")).toBeVisible();
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+});
+
+test("auto-refresh reflects a change within a short interval", async ({ context, page }) => {
+  const NEW_CHILD = {
+    number: 4,
+    title: "Appeared automatically",
+    state: "open",
+    html_url: "https://github.com/acme/web/issues/4",
+    repository_url: "https://api.github.com/repos/acme/web",
+  };
+  let subCalls = 0;
+  await seedStorage(context, { ghdgAutoRefreshMs: 400 });
+  await routeApi(context, [
+    {
+      match: /\/repos\/acme\/web\/issues\/1\/sub_issues/,
+      json: () => (++subCalls === 1 ? SUB_ISSUES : [...SUB_ISSUES, NEW_CHILD]),
+    },
+    {
+      match: (p) => p === "/repos/acme/web/issues/3/dependencies/blocked_by",
+      json: [SUB_ISSUES[0]],
+    },
+  ]);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+
+  // No user action: the periodic refresh picks up the new child on its own.
+  await expect(root.locator(".ghdg-node")).toHaveCount(3);
+  await expect(root).toContainText("Appeared automatically");
+});
+
+test("a rate-limited auto-refresh backs off instead of polling at the same cadence", async ({
+  context,
+  page,
+}) => {
+  let subCalls = 0;
+  await seedStorage(context, { ghdgAutoRefreshMs: 200 });
+  await routeApi(context, [
+    {
+      match: /\/repos\/acme\/web\/issues\/1\/sub_issues/,
+      // The initial load succeeds; every auto-refresh after it is rate-limited.
+      status: () => (++subCalls === 1 ? 200 : 403),
+      json: () => (subCalls === 1 ? SUB_ISSUES : { message: "API rate limit exceeded" }),
+    },
+    {
+      match: (p) => p === "/repos/acme/web/issues/3/dependencies/blocked_by",
+      json: [SUB_ISSUES[0]],
+    },
+  ]);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  await expect(root.locator(".ghdg-node")).toHaveCount(2); // initial load
+
+  // Each auto-refresh is rejected as rate-limited, so the controller stretches
+  // the cadence (200ms → 800ms → 3200ms …) rather than re-polling every 200ms.
+  // A fixed-cadence timer would fire ~7 times across this window; backoff keeps
+  // it to a couple, so ordinary use can't exhaust the API quota.
+  await page.waitForTimeout(1600);
+  expect(subCalls).toBeLessThanOrEqual(4); // 1 load + a few backed-off retries
+
+  // The last good graph stays on screen and a retry is still offered.
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+  await expect(root.locator(".ghdg-retry-btn").first()).toBeVisible();
+});
+
 test("renders nothing when the feature is disabled", async ({ context, page }) => {
   await seedStorage(context, { ghdgEnabled: false });
   await routeApi(context, API);

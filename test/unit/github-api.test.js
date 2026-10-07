@@ -67,6 +67,23 @@ test("ghFetch caches a response and does not re-hit the network within the TTL",
   assert.deepEqual(first, second);
 });
 
+test("ghFetch with { fresh } bypasses a cached entry but refreshes it", async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return { ok: true, status: 200, json: async () => ({ n: calls }) };
+  };
+  const first = await ghFetch("/repos/acme/web/issues/cache-fresh", { owner: "acme" });
+  const refreshed = await ghFetch("/repos/acme/web/issues/cache-fresh", { owner: "acme", fresh: true });
+  assert.equal(calls, 2, "a fresh request should hit the network even with a warm cache");
+  assert.deepEqual(first, { n: 1 });
+  assert.deepEqual(refreshed, { n: 2 });
+  // The fresh response is written back, so a plain read now sees it from cache.
+  const afterRefresh = await ghFetch("/repos/acme/web/issues/cache-fresh", { owner: "acme" });
+  assert.equal(calls, 2, "the fresh response should have repopulated the cache");
+  assert.deepEqual(afterRefresh, { n: 2 });
+});
+
 test("ghFetch keys the cache by token, so two credentials never share an entry", async () => {
   let calls = 0;
   globalThis.fetch = async () => {

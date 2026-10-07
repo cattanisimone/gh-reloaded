@@ -20,10 +20,16 @@
   <line x1="16" y1="112" x2="1184" y2="112" stroke="#30363d"/>
   <text x="32" y="95" fill="#8b949e" font-size="11" font-weight="700" letter-spacing="0.6">DEPENDENCY GRAPH</text>
 
-  <rect x="748" y="82" width="216" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
-  <text x="762" y="98" fill="#e6edf3" font-size="11">Pull toward dependents ▾</text>
-  <rect x="976" y="82" width="176" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
-  <text x="990" y="98" fill="#e6edf3" font-size="11">Show external ▾</text>
+  <rect x="690" y="82" width="216" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
+  <text x="704" y="98" fill="#e6edf3" font-size="11">Pull toward dependents ▾</text>
+  <rect x="912" y="82" width="176" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
+  <text x="926" y="98" fill="#e6edf3" font-size="11">Show external ▾</text>
+  <!-- refresh graph -->
+  <rect x="1094" y="82" width="26" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
+  <g transform="translate(1100,87) scale(0.875)" fill="#8b949e"><path d="M8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7 7 0 1 1 1.05 9.11a.75.75 0 1 1 1.49-.172A5.501 5.501 0 1 0 8 2.5Z"/></g>
+  <!-- open full screen -->
+  <rect x="1126" y="82" width="26" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
+  <g transform="translate(1132,87) scale(0.875)" fill="#8b949e"><path d="M3.25 1h3a.75.75 0 0 1 0 1.5H4.56l2.22 2.22a.75.75 0 1 1-1.06 1.06L3.5 3.56v1.69a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 2.75 1Zm10 0a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0V3.56l-2.22 2.22a.75.75 0 1 1-1.06-1.06l2.22-2.22H9.75a.75.75 0 0 1 0-1.5ZM2.75 9.75a.75.75 0 0 1 .75.75v1.69l2.22-2.22a.75.75 0 1 1 1.06 1.06L4.56 13.25h1.69a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1-.75-.75v-3.5a.75.75 0 0 1 .75-.75Zm10.5 0a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-.75.75h-3.5a.75.75 0 0 1 0-1.5h1.69l-2.22-2.22a.75.75 0 1 1 1.06-1.06l2.22 2.22V10.5a.75.75 0 0 1 .75-.75Z"/></g>
 
   <!-- edges (drawn first, under nodes) -->
   <path d="M208,292 C244,292 244,212 280,212" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.75" marker-end="url(#arrow)"/>
@@ -34,7 +40,7 @@
 
   <!-- N1: external, dimmed, dashed -->
   <g>
-    <rect x="40" y="260" width="168" height="64" rx="6" fill="#12161c" stroke="#30363d" stroke-dasharray="4 3"/>
+    <rect x="40" y="260" width="168" height="64" rx="6" fill="#0d1117" stroke="#30363d" stroke-dasharray="4 3"/>
     <circle cx="55" cy="276" r="3.5" fill="#8b949e"/>
     <text x="64" y="280" fill="#8b949e" font-size="10" font-weight="600">#118</text>
     <text x="52" y="298" fill="#8b949e" font-size="11">Auth service</text>
@@ -81,7 +87,7 @@
 
   <!-- N5: external, dimmed, dashed -->
   <g>
-    <rect x="520" y="340" width="168" height="64" rx="6" fill="#12161c" stroke="#30363d" stroke-dasharray="4 3"/>
+    <rect x="520" y="340" width="168" height="64" rx="6" fill="#0d1117" stroke="#30363d" stroke-dasharray="4 3"/>
     <circle cx="535" cy="356" r="3.5" fill="#8b949e"/>
     <text x="544" y="360" fill="#8b949e" font-size="10" font-weight="600">#204</text>
     <text x="532" y="378" fill="#8b949e" font-size="11">Update mobile app</text>
