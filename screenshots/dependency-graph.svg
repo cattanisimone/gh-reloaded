@@ -20,10 +20,14 @@
   <line x1="16" y1="112" x2="1184" y2="112" stroke="#30363d"/>
   <text x="32" y="95" fill="#8b949e" font-size="11" font-weight="700" letter-spacing="0.6">DEPENDENCY GRAPH</text>
 
-  <rect x="690" y="82" width="216" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
-  <text x="704" y="98" fill="#e6edf3" font-size="11">Pull toward dependents ▾</text>
-  <rect x="912" y="82" width="176" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
-  <text x="926" y="98" fill="#e6edf3" font-size="11">Show external ▾</text>
+  <rect x="480" y="82" width="216" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
+  <text x="494" y="98" fill="#e6edf3" font-size="11">Pull toward dependents ▾</text>
+  <rect x="704" y="82" width="176" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
+  <text x="718" y="98" fill="#e6edf3" font-size="11">Show external ▾</text>
+  <!-- Hide transitive dependencies — a checkbox, on by default -->
+  <rect x="894" y="87" width="14" height="14" rx="3" fill="#1f6feb" stroke="#1f6feb"/>
+  <path d="M897,94 l2.5,2.5 l4.5,-5" fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="914" y="98" fill="#e6edf3" font-size="11">Hide transitive dependencies</text>
   <!-- refresh graph -->
   <rect x="1094" y="82" width="26" height="24" rx="5" fill="#161b22" stroke="#30363d"/>
   <g transform="translate(1100,87) scale(0.875)" fill="#8b949e"><path d="M8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7 7 0 1 1 1.05 9.11a.75.75 0 1 1 1.49-.172A5.501 5.501 0 1 0 8 2.5Z"/></g>

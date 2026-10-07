@@ -158,6 +158,23 @@
   cursor: pointer;
 }
 
+.ghdg-scope .ghdg-transitive-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--ghdg-text);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.ghdg-scope .ghdg-transitive-toggle input {
+  margin: 0;
+  cursor: pointer;
+}
+
 /* Refresh / full-screen / close icon buttons. */
 .ghdg-scope .ghdg-icon-btn {
   display: inline-flex;

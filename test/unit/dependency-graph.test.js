@@ -1,12 +1,11 @@
 // Unit tests for the pure graph logic in background/dependency-graph.js:
-// the effort-weighted critical path, transitive edge reduction, and the
-// median helper the critical path leans on for unestimated sub-issues.
+// the effort-weighted critical path and the median helper it leans on for
+// unestimated sub-issues.
 import "../support/chrome-stub.js"; // first: the module transitively imports lib/github-api.js
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   computeCriticalPath,
-  transitiveReduce,
   median,
 } from "../../background/dependency-graph.js";
 
@@ -86,22 +85,4 @@ test("computeCriticalPath terminates on a cycle instead of looping forever", { s
   ];
   const edges = [edge("A", "B"), edge("B", "A")];
   assert.doesNotThrow(() => computeCriticalPath(nodes, edges));
-});
-
-test("transitiveReduce drops an edge already implied by a longer path", () => {
-  // A -> B -> C makes the direct A -> C redundant.
-  const ids = ["A", "B", "C"];
-  const edges = [edge("A", "B"), edge("B", "C"), edge("A", "C")];
-  const reduced = transitiveReduce(ids, edges);
-  const keys = reduced.map((e) => `${e.from}->${e.to}`);
-  assert.ok(keys.includes("A->B") && keys.includes("B->C"));
-  assert.ok(!keys.includes("A->C"), "the implied direct edge is removed");
-});
-
-test("transitiveReduce never drops an edge marked critical", () => {
-  const ids = ["A", "B", "C"];
-  const edges = [edge("A", "B"), edge("B", "C"), edge("A", "C", { critical: true })];
-  const reduced = transitiveReduce(ids, edges);
-  const keys = reduced.map((e) => `${e.from}->${e.to}`);
-  assert.ok(keys.includes("A->C"), "a critical segment is kept even when transitively implied");
 });

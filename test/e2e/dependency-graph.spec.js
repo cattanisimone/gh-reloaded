@@ -41,6 +41,51 @@ test("renders the dependency graph after the Sub-issues section", async ({ conte
   await expect(root).toContainText("Set up the build");
 });
 
+// #2 → #3 → #4 → #5 chain, plus direct #2 → #4 and #2 → #5 edges the longer
+// chain already implies (the latter at depth three).
+const mk = (number, title) => ({
+  number,
+  title,
+  state: "open",
+  html_url: `https://github.com/acme/web/issues/${number}`,
+  repository_url: "https://api.github.com/repos/acme/web",
+});
+const CHAIN = [mk(2, "A"), mk(3, "B"), mk(4, "C"), mk(5, "D")];
+const CHAIN_API = [
+  { match: /\/repos\/acme\/web\/issues\/1\/sub_issues/, json: CHAIN },
+  { match: (p) => p === "/repos/acme/web/issues/3/dependencies/blocked_by", json: [CHAIN[0]] },
+  { match: (p) => p === "/repos/acme/web/issues/4/dependencies/blocked_by", json: [CHAIN[1], CHAIN[0]] },
+  { match: (p) => p === "/repos/acme/web/issues/5/dependencies/blocked_by", json: [CHAIN[2], CHAIN[0]] },
+];
+
+test("hides transitive edges at any depth by default and restores them when toggled off", async ({
+  context,
+  page,
+}) => {
+  await routeApi(context, CHAIN_API);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  await expect(root.locator(".ghdg-node")).toHaveCount(4); // cards are never removed
+
+  const edges = root.locator("svg.ghdg-edges path.ghdg-edge");
+  const toggle = root.locator(".ghdg-transitive-check");
+
+  // On by default: A→C and A→D are implied by A→B→C→D, leaving the chain.
+  await expect(toggle).toBeChecked();
+  await expect(edges).toHaveCount(3);
+
+  // Off: every explicit edge is back, live — same 4 cards, no reload.
+  await toggle.uncheck();
+  await expect(edges).toHaveCount(5);
+  await expect(root.locator(".ghdg-node")).toHaveCount(4);
+
+  // On again.
+  await toggle.check();
+  await expect(edges).toHaveCount(3);
+});
+
 test("opens full screen, shows larger cards, and closes with the button and Escape", async ({
   context,
   page,

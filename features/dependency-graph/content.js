@@ -370,6 +370,18 @@
     return { ...graph, nodes, edges };
   }
 
+  // Transitive reduction, done at render time on the graph as currently
+  // shown, so it toggles without a refetch and respects the external mode.
+  // Only edges are hidden — cards never are.
+  function applyTransitiveMode(graph, hide) {
+    if (!hide) return graph;
+    const edges = window.GHDG_TRANSITIVE.hideTransitiveEdges(
+      graph.nodes.map((n) => n.id),
+      graph.edges
+    );
+    return { ...graph, edges };
+  }
+
   function renderStatus(body, kind, text) {
     body.innerHTML = "";
     const p = document.createElement("div");
@@ -480,6 +492,10 @@
       '<option value="open">Open dependencies only</option>' +
       '<option value="off">Hide external dependencies</option>' +
       "</select>" +
+      '<label class="ghdg-transitive-toggle" title="Hide dependency edges already implied by a longer path">' +
+      '<input type="checkbox" class="ghdg-transitive-check" />' +
+      "<span>Hide transitive dependencies</span>" +
+      "</label>" +
       `<button type="button" class="ghdg-icon-btn ghdg-refresh-btn" title="Refresh graph" aria-label="Refresh graph">${refreshIconHtml()}</button>` +
       (fullscreen
         ? `<button type="button" class="ghdg-icon-btn ghdg-close-btn" title="Exit full screen (Esc)" aria-label="Exit full screen">${closeIconHtml()}</button>`
@@ -528,13 +544,16 @@
 
     removeRoot(); // clear any leftover (and its controller) from a previous attempt
 
-    const { ghdgDepMode, ghdgAlignMode, ghdgAutoRefreshMs } = await chrome.storage.local.get([
+    const { ghdgDepMode, ghdgAlignMode, ghdgHideTransitive, ghdgAutoRefreshMs } = await chrome.storage.local.get([
       "ghdgDepMode",
       "ghdgAlignMode",
+      "ghdgHideTransitive",
       "ghdgAutoRefreshMs",
     ]);
     let depMode = ghdgDepMode || "full";
     let alignMode = ghdgAlignMode || "right";
+    // Enabled by default: an unset preference means "hide transitive edges".
+    let hideTransitive = ghdgHideTransitive !== false;
     const autoRefreshMs = Math.max(
       AUTO_REFRESH_MS_MIN,
       Number(ghdgAutoRefreshMs) || AUTO_REFRESH_MS_DEFAULT
@@ -585,10 +604,11 @@
     function syncSelects() {
       for (const s of allOf(".ghdg-align-select")) s.value = alignMode;
       for (const s of allOf(".ghdg-mode-select")) s.value = depMode;
+      for (const c of allOf(".ghdg-transitive-check")) c.checked = hideTransitive;
     }
 
     function renderInto(bodyEl, titleEl, dims, large) {
-      const g = applyDependencyMode(currentGraph, depMode);
+      const g = applyTransitiveMode(applyDependencyMode(currentGraph, depMode), hideTransitive);
       renderGraph(bodyEl, g, theme, alignMode, dims, large);
       if (titleEl) titleEl.textContent = headerTitleText(currentGraph);
       return g;
@@ -753,6 +773,8 @@
       const modeSelect = root.querySelector(".ghdg-mode-select");
       alignSelect.value = alignMode;
       modeSelect.value = depMode;
+      const transitiveCheck = root.querySelector(".ghdg-transitive-check");
+      transitiveCheck.checked = hideTransitive;
       alignSelect.addEventListener("change", () => {
         alignMode = alignSelect.value;
         chrome.storage.local.set({ ghdgAlignMode: alignMode });
@@ -762,6 +784,12 @@
       modeSelect.addEventListener("change", () => {
         depMode = modeSelect.value;
         chrome.storage.local.set({ ghdgDepMode: depMode });
+        syncSelects();
+        renderAll();
+      });
+      transitiveCheck.addEventListener("change", () => {
+        hideTransitive = transitiveCheck.checked;
+        chrome.storage.local.set({ ghdgHideTransitive: hideTransitive });
         syncSelects();
         renderAll();
       });
