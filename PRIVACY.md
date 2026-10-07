@@ -9,7 +9,7 @@ Stored locally via the browser's `chrome.storage.local` (never synced, never sen
 - **GitHub tokens** — the personal access token(s) you paste into Settings: one default token, plus an optional token per repository owner (an organization or personal account) that needs its own credential. Each request uses the token mapped to the repository it's about, falling back to the default. Once saved, a token is never displayed again in full — only its last 4 characters.
 - **Quick-create shortcuts** — the label, URL, icon, color, and project scope of each shortcut you configure.
 - **Feature toggles** — which features are turned on or off.
-- **UI preferences** — small display choices for the dependency graph (column alignment, how much external context to show).
+- **UI preferences** — small display choices for the dependency graph (column alignment, how much external context to show, and the automatic-refresh interval).
 
 None of this leaves your browser except the token itself, which is sent — over HTTPS, directly — only to `api.github.com`, only when a feature you've enabled needs to read issue, sub-issue, dependency, or Projects data. GitHub's own [privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement) covers what GitHub does with that request.
 

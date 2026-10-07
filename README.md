@@ -62,11 +62,13 @@ _Screenshots below are mockups illustrating each feature's layout and colors (ma
 
 On a GitHub issue page (or a Projects board's issue-preview side panel) that has sub-issues, injects a left-to-right dependency graph below the sub-issues list.
 
-![Dependency graph mockup: a left-to-right graph of sub-issue cards below a "Sub-issues" heading, with the longest chain highlighted in orange as the critical path and dimmed dashed cards for dependencies outside the sub-issue set](screenshots/dependency-graph.svg)
+![Dependency graph mockup: a left-to-right graph of sub-issue cards below a "Sub-issues" heading, with the longest chain highlighted in orange as the critical path and dimmed dashed cards for dependencies outside the sub-issue set, and a header with alignment/external dropdowns plus refresh and full-screen buttons](screenshots/dependency-graph.svg)
 
 - Fetches the issue's direct sub-issues, their "blocked by" / "blocking" relationships, Projects v2 Status, and the org-level Team / Business Value / Effort custom fields (when available).
 - Lays the graph out left → right, colored by each card's real board status, with dependencies outside the sub-issue set shown as dimmed, dashed "external" nodes.
 - Highlights the critical path (longest chain by total Effort — unestimated stories are assumed to cost the median of whatever else in the feature is sized, so a couple of missing estimates don't distort it) and lets you toggle how much of that external context to show, and how columns are aligned.
+- A full-screen control opens the same graph viewport-sized, with larger cards (showing Status and Team as well as the color fill) and more room for long chains; close it with its button or Escape, without reloading the page or losing the current view.
+- A refresh control rebuilds the graph in the background — and does so periodically on its own, so adding a sub-issue or a dependency shows up within a short interval. The current graph stays visible until the new one is ready, a failed refresh keeps the last graph with a retry button, and automatic refreshing pauses while the tab is hidden.
 
 ### Quick-create button — [features/quick-create](features/quick-create)
 
