@@ -99,6 +99,46 @@
   font-size: 12px;
 }
 
+/* Full-screen heading: the graphed issue (title + metadata) above the
+   critical-path summary. */
+.ghdg-scope .ghdg-fs-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.ghdg-scope .ghdg-fs-parent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.ghdg-scope .ghdg-fs-parent[hidden] {
+  display: none;
+}
+.ghdg-scope .ghdg-fs-parent-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ghdg-text);
+  text-decoration: none;
+}
+.ghdg-scope a.ghdg-fs-parent-title:hover {
+  text-decoration: underline;
+}
+.ghdg-scope .ghdg-fs-parent-meta {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 4px;
+}
+.ghdg-scope .ghdg-fs-parent-meta .ghdg-node-effort {
+  margin-left: 0;
+}
+
 .ghdg-scope .ghdg-header-controls {
   display: flex;
   align-items: center;

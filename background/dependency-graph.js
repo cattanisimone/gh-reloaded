@@ -164,6 +164,30 @@ export function computeCriticalPath(internalNodes, edges) {
   return { pathIds, pathEdges, totalEffort: Math.max(0, endBest.total), length: endBest.hops };
 }
 
+// The issue being graphed, with the same metadata as a card.
+async function fetchParent(owner, repo, issueNumber, { fresh } = {}) {
+  try {
+    const [issue, status, fields] = await Promise.all([
+      ghFetch(`/repos/${owner}/${repo}/issues/${issueNumber}`, { owner, fresh }),
+      safeStatus(owner, repo, issueNumber, { fresh }),
+      safeFields(owner, repo, issueNumber, { fresh }),
+    ]);
+    if (!issue || typeof issue.title !== "string") return null;
+    return {
+      number: issue.number ?? issueNumber,
+      title: issue.title,
+      state: issue.state,
+      url: issue.html_url,
+      status, // { name, color } | null
+      businessValue: fields["Business Value"] || null, // { value, color } | null
+      team: fields["Team"]?.value || null,
+      effort: fields["Effort"]?.value ?? null,
+    };
+  } catch {
+    return null; // the header falls back to a generic title; never fail the graph over it
+  }
+}
+
 /**
  * Builds the dependency graph for the direct sub-issues of one issue.
  *
@@ -180,10 +204,13 @@ export function computeCriticalPath(internalNodes, edges) {
  * internal sub-issues (those are only added once, from the blocked_by side).
  */
 async function fetchDependencyGraph({ owner, repo, issueNumber, fresh }) {
-  const subIssues = await ghFetch(
-    `/repos/${owner}/${repo}/issues/${issueNumber}/sub_issues?per_page=100`,
-    { owner, fresh }
-  );
+  const [subIssues, parent] = await Promise.all([
+    ghFetch(`/repos/${owner}/${repo}/issues/${issueNumber}/sub_issues?per_page=100`, {
+      owner,
+      fresh,
+    }),
+    fetchParent(owner, repo, issueNumber, { fresh }),
+  ]);
   const numbers = new Set(subIssues.map((i) => i.number));
 
   const edges = [];
@@ -272,6 +299,7 @@ async function fetchDependencyGraph({ owner, repo, issueNumber, fresh }) {
   const reducedEdges = transitiveReduce(internalNodes.map((n) => n.id), markedEdges);
 
   return {
+    parent, // the issue whose sub-issues are graphed, for the full-screen header
     nodes,
     edges: reducedEdges,
     criticalPathEffort: critical.totalEffort,

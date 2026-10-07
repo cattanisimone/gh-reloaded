@@ -72,6 +72,82 @@ test("opens full screen, shows larger cards, and closes with the button and Esca
   await expect(root.locator(".ghdg-node")).toHaveCount(2);
 });
 
+test("full screen shows the graphed issue's title and metadata in its header", async ({
+  context,
+  page,
+}) => {
+  await routeApi(context, [
+    {
+      match: (p) => p === "/repos/acme/web/issues/1",
+      json: {
+        number: 1,
+        title: "Ship the new dashboard",
+        state: "open",
+        html_url: "https://github.com/acme/web/issues/1",
+      },
+    },
+    {
+      match: (p) => p === "/repos/acme/web/issues/1/issue-field-values",
+      json: [
+        { issue_field_name: "Team", value: "Platform" },
+        { issue_field_name: "Effort", value: 8 },
+      ],
+    },
+    ...API,
+  ]);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  await expect(root.locator(".ghdg-node")).toHaveCount(2);
+  await root.locator(".ghdg-fs-btn").click();
+
+  const parent = page.locator("#ghdg-fs .ghdg-fs-parent");
+  await expect(parent).toBeVisible();
+  await expect(parent).toContainText("Ship the new dashboard");
+  await expect(parent).toContainText("#1");
+  await expect(parent).toContainText("Platform");
+  await expect(parent).toContainText("8 pts");
+});
+
+test("external dependency cards sit on a plain white surface, not a tinted status fill", async ({
+  context,
+  page,
+}) => {
+  const BLOCKER = {
+    number: 77,
+    title: "Upstream auth rework",
+    state: "open",
+    html_url: "https://github.com/other/lib/issues/77",
+    repository_url: "https://api.github.com/repos/other/lib",
+  };
+  await routeApi(context, [
+    {
+      method: "POST",
+      match: (p) => p === "/graphql",
+      json: {
+        data: {
+          repository: {
+            issue: {
+              projectItems: {
+                nodes: [{ fieldValueByName: { name: "Backlog", color: "GRAY" } }],
+              },
+            },
+          },
+        },
+      },
+    },
+    { match: /\/repos\/acme\/web\/issues\/1\/sub_issues/, json: SUB_ISSUES },
+    { match: (p) => p === "/repos/acme/web/issues/3/dependencies/blocked_by", json: [BLOCKER] },
+  ]);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const external = page.locator("#ghdg-root .ghdg-node.is-external");
+  await expect(external).toHaveCount(1);
+  await expect(external).toHaveCSS("background-color", "rgb(255, 255, 255)");
+});
+
 test("manual refresh picks up a newly added sub-issue without reloading", async ({
   context,
   page,
