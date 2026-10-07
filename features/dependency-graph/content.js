@@ -73,7 +73,9 @@
       dotStyle = closed ? "background:var(--ghdg-closed);" : "background:var(--ghdg-open);";
     }
 
-    return { cls, style, dotStyle, statusName, closed };
+    const borderStyle = statusName ? `border-color:${paletteFor(node.status.color, theme).fg};` : "";
+
+    return { cls, style, borderStyle, dotStyle, statusName, closed };
   }
 
   function debounce(fn, ms) {
@@ -244,7 +246,9 @@
     const s = statusStyle(node, theme);
     const cls = ["ghdg-node", "is-external", ...s.cls];
     if (large) cls.push("is-large");
-    const style = `left:${x}px; top:${y}px; width:${w}px; height:${h}px; ${s.style}`;
+    // Status shows through the border and dot only: the tinted status fill
+    // would grey the card, and external cards must stay on a plain surface.
+    const style = `left:${x}px; top:${y}px; width:${w}px; height:${h}px; ${s.borderStyle}`;
 
     const titleAttr = escapeHtml(
       `${node.owner}/${node.repo}#${node.number} ${node.title || ""}${s.statusName ? ` — ${s.statusName}` : ""}`
@@ -441,6 +445,26 @@
     return "Dependency graph";
   }
 
+  // The graphed issue itself, for the full-screen header: title plus the
+  // same metadata a card carries.
+  function parentHeaderHtml(parent, theme) {
+    if (!parent) return "";
+    const closed = parent.state === "closed";
+    const chips = [
+      statusChipHtml(parent, theme),
+      parent.businessValue
+        ? `<span class="ghdg-node-bv" style="color:${paletteFor(parent.businessValue.color, theme).fg}">${escapeHtml(parent.businessValue.value)}</span>`
+        : "",
+      parent.effort != null ? `<span class="ghdg-node-effort">${escapeHtml(parent.effort)} pts</span>` : "",
+      parent.team ? `<span class="ghdg-node-team">${escapeHtml(parent.team)}</span>` : "",
+    ].join("");
+    const dot = `<span class="ghdg-node-dot" style="background:var(${closed ? "--ghdg-closed" : "--ghdg-open"})"></span>`;
+    const titleHtml = parent.url
+      ? `<a class="ghdg-fs-parent-title" href="${escapeHtml(parent.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(parent.title)}</a>`
+      : `<span class="ghdg-fs-parent-title">${escapeHtml(parent.title)}</span>`;
+    return `${dot}<span class="ghdg-node-num">#${parent.number}</span>${titleHtml}<span class="ghdg-fs-parent-meta">${chips}</span>`;
+  }
+
   // The control cluster (align, mode, refresh, and either an enter- or
   // exit-full-screen button) rendered into both the embedded header and
   // the full-screen header, so the two presentations share one set of
@@ -587,6 +611,9 @@
           FULLSCREEN_DIMS,
           true
         );
+        const parentEl = fsOverlay.querySelector(".ghdg-fs-parent");
+        parentEl.innerHTML = parentHeaderHtml(currentGraph.parent, theme);
+        parentEl.hidden = !currentGraph.parent;
       }
     }
 
@@ -700,7 +727,10 @@
       overlay.dataset.theme = theme;
       overlay.innerHTML =
         '<div class="ghdg-fs-header">' +
+        '<div class="ghdg-fs-heading">' +
+        '<div class="ghdg-fs-parent" hidden></div>' +
         '<span class="ghdg-header-title ghdg-fs-title">Dependency graph</span>' +
+        "</div>" +
         `<span class="ghdg-header-controls">${controlsHtml({ fullscreen: true })}</span>` +
         "</div>" +
         '<div class="ghdg-notice" hidden></div>' +
