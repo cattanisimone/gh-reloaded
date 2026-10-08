@@ -81,20 +81,13 @@
         "https://github.com/users/*/projects/*"
       ],
       "js": [
-        "features/full-width-board/content.js"
+        "features/full-width-board/content.js",
+        "features/standup-mode/content.js"
       ],
       "css": [
-        "features/full-width-board/content.css"
+        "features/full-width-board/content.css",
+        "features/standup-mode/content.css"
       ],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://github.com/orgs/*/projects/*",
-        "https://github.com/users/*/projects/*"
-      ],
-      "js": ["features/standup-mode/content.js"],
-      "css": ["features/standup-mode/content.css"],
       "run_at": "document_idle"
     },
     {

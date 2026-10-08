@@ -15,6 +15,8 @@ import {
   priorityRank,
   normalizeOptions,
   shapeItemData,
+  columnSince,
+  localDateString,
   DEFAULT_REVIEW_KEYWORDS,
 } from "../../background/standup-mode.js";
 
@@ -198,10 +200,10 @@ test("shapeItemData picks this project's item among several boards", () => {
     comments: { nodes: [{ body: "hi" }] },
     projectItems: {
       nodes: [
-        { project: { number: 1, owner: { login: "acme" } }, status: { name: "Other", updatedAt: "2026-01-01T00:00:00Z" } },
+        { project: { number: 1, owner: { login: "acme" } }, fieldValues: { nodes: [{ name: "Other", updatedAt: "2026-01-01T00:00:00Z" }] } },
         {
           project: { number: 7, owner: { login: "Acme" } },
-          status: { name: "In review", updatedAt: "2026-10-01T00:00:00Z" },
+          fieldValues: { nodes: [{ name: "In review", updatedAt: "2026-10-01T00:00:00Z" }] },
           priority: { name: "High" },
           target: { date: "2026-10-20" },
           effort: { number: 5 },
@@ -209,7 +211,7 @@ test("shapeItemData picks this project's item among several boards", () => {
       ],
     },
   };
-  assert.deepEqual(shapeItemData(node, { owner: "acme", number: 7 }), {
+  assert.deepEqual(shapeItemData(node, { owner: "acme", number: 7 }, "In review"), {
     state: "OPEN",
     labels: ["bug"],
     comments: ["hi"],
@@ -220,6 +222,53 @@ test("shapeItemData picks this project's item among several boards", () => {
   });
   assert.equal(shapeItemData(null, { owner: "acme", number: 7 }), null);
   assert.equal(shapeItemData(node, { owner: "acme", number: 99 }).statusSince, null);
+});
+
+test("columnSince reads the age from the field value that matches the card's column", () => {
+  const item = {
+    fieldValues: {
+      nodes: [
+        { name: "Todo", updatedAt: "2026-09-01T00:00:00Z" },
+        { title: "Sprint 4", updatedAt: "2026-10-02T00:00:00Z" },
+        {},
+      ],
+    },
+  };
+  assert.equal(columnSince(item, "Sprint 4"), "2026-10-02T00:00:00Z", "an iteration-field board");
+  assert.equal(columnSince(item, " todo "), "2026-09-01T00:00:00Z");
+  assert.equal(columnSince(item, "Review"), null, "no field holds that column: no age, not another field's");
+  assert.equal(columnSince(item, null), null);
+  assert.equal(columnSince(null, "Todo"), null);
+});
+
+test("localDateString uses the local calendar day, not the UTC one", () => {
+  const late = new Date(2026, 9, 8, 23, 30).getTime();
+  const early = new Date(2026, 9, 8, 0, 30).getTime();
+  assert.equal(localDateString(late), "2026-10-08");
+  assert.equal(localDateString(early), "2026-10-08");
+});
+
+test("critical path: a target date is compared against the local day", () => {
+  const items = [item(1, "In progress", 1), item(2, "In progress", 1)];
+  const edges = [{ from: "a/b#1", to: "a/b#2" }];
+  const at = (h) => new Date(2026, 9, 8, h, 0).getTime();
+  const data = { "a/b#1": open({ effort: 1 }), "a/b#2": open({ effort: 1, targetDate: "2026-10-08" }) };
+  for (const hour of [0, 12, 23]) {
+    const { summary } = computeSignals({ items, data, edges, options, now: at(hour) });
+    assert.deepEqual(summary.critical, [], `due today is not overdue at ${hour}:00 local`);
+  }
+  const next = new Date(2026, 9, 9, 0, 30).getTime();
+  assert.deepEqual(computeSignals({ items, data, edges, options, now: next }).summary.critical, ["a/b#2"]);
+});
+
+test("bottleneck: draft items count toward the shares but cannot flag a column alone", () => {
+  const linked = [0, 1, 2].map(() => ({ column: "In review", columnIndex: 2, open: true, ageDays: 1 }));
+  const drafts = Array.from({ length: 7 }, () => ({ column: "In progress", columnIndex: 1, open: true, ageDays: null, draft: true }));
+  const intake = { column: "Todo", columnIndex: 0, open: true, ageDays: 1 };
+  assert.deepEqual(computeBottlenecks([intake, ...linked], 3, 3).map((r) => r.column), ["In review"]);
+  assert.deepEqual(computeBottlenecks([intake, ...linked, ...drafts], 3, 3), [], "3 of 11 is no longer a majority");
+  const draftsOnly = Array.from({ length: 2 }, () => ({ column: "Done", columnIndex: 3, open: true, ageDays: null, draft: true }));
+  assert.deepEqual(computeBottlenecks([intake, ...linked, ...draftsOnly], 3, 4).map((r) => r.column), ["In review"]);
 });
 
 test("bottleneck: an empty column still counts toward the board's column total", () => {

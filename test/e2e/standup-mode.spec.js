@@ -16,14 +16,14 @@ function issueNode(number) {
   const base = { state: "OPEN", labels: { nodes: [] }, comments: { nodes: [] } };
   const item = (status, extra = {}) => ({
     projectItems: {
-      nodes: [{ project: { number: 7, owner: { login: "acme" } }, status: { name: status, updatedAt: daysAgo(1) }, ...extra }],
+      nodes: [{ project: { number: 7, owner: { login: "acme" } }, fieldValues: { nodes: [{ name: status, updatedAt: daysAgo(1) }] }, ...extra }],
     },
   });
   switch (number) {
     case 3: // high priority, in progress
       return { ...base, ...item("In progress", { priority: { name: "High" } }) };
     case 4: // stale: six days in review
-      return { ...base, ...item("In review", { status: { name: "In review", updatedAt: daysAgo(6) } }) };
+      return { ...base, ...item("In review", { fieldValues: { nodes: [{ name: "In review", updatedAt: daysAgo(6) }] } }) };
     case 5: // fresh in review
       return { ...base, ...item("In review") };
     case 6: // labelled blocked, no blocker, no comment explaining it
@@ -65,7 +65,7 @@ test("keeps the whole board visible and flags what needs attention", async ({ co
   // stays on screen, with a slim bar on top.
   await expect(page.locator("body.ghsm-active")).toHaveCount(1);
   await expect(page.locator("#ghsm-bar")).toHaveCount(1);
-  await expect(page.locator(".board-view-column-card:visible")).toHaveCount(5);
+  await expect(page.locator(".board-view-column-card:visible")).toHaveCount(6);
 
   // The summary names what was found.
   const summary = page.locator("#ghsm-summary");
@@ -82,6 +82,9 @@ test("keeps the whole board visible and flags what needs attention", async ({ co
   await expect(card(page, 4).locator(".ghsm-chip-age")).toHaveText("6d");
   await expect(card(page, 5)).not.toHaveClass(/ghsm-flag-/);
   await expect(card(page, 6)).toHaveClass(/ghsm-flag-orphan/);
+  // A draft item has no issue to look up, but still gets the DOM-visible signals.
+  const draft = page.locator(".board-view-column-card:not(:has(a))");
+  await expect(draft.locator(".ghsm-chip-blocked")).toHaveText("Blocked");
   await expect(card(page, 3).locator(".ghsm-chip-priority")).toHaveText("High");
   await expect(card(page, 3)).toHaveAttribute("data-ghsm-priority", "2");
 
@@ -105,7 +108,7 @@ test("still presents the board without a token, with the DOM-visible signals onl
 
   await page.locator("#ghsm-enter").click();
   await expect(page.locator("#ghsm-summary .ghsm-note")).toContainText("Add a GitHub token");
-  await expect(page.locator(".board-view-column-card:visible")).toHaveCount(5);
+  await expect(page.locator(".board-view-column-card:visible")).toHaveCount(6);
   // The visible "P1" label on card #2 still becomes a priority chip...
   await expect(card(page, 2).locator(".ghsm-chip-priority")).toHaveText("P1");
   // ...but no API-backed badge appears.

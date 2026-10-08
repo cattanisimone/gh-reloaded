@@ -100,20 +100,26 @@
   }
 
   // Cards in the board's visible order, each with the issue it links to
-  // and the heading text of its column. A card with no issue link (a
-  // draft item) is skipped: there is nothing to look up for it.
+  // and the heading text of its column. A card with no issue link is a
+  // draft item: it is kept (flagged `draft`, with a local key) so the DOM
+  // signals and the column counts cover it, but there is nothing to look
+  // up for it on GitHub.
   function collectCards() {
     const container = document.querySelector(BOARD_CONTAINER_SELECTOR) || document.querySelector("main") || document.body;
     const found = [];
     Array.from(container.querySelectorAll(COLUMN_SELECTOR)).forEach((column, columnIndex) => {
       const name = columnName(column);
+      let draftCount = 0;
       for (const el of column.querySelectorAll(CARD_SELECTOR)) {
         let info = null;
         for (const a of el.querySelectorAll("a[href]")) {
           info = parseIssueHref(a.getAttribute("href"));
           if (info) break;
         }
-        if (!info) continue;
+        if (!info) {
+          found.push({ el, column, columnIndex, columnName: name, draft: true, key: `draft:${columnIndex}:${draftCount++}` });
+          continue;
+        }
         found.push({ el, column, columnIndex, columnName: name, ...info, key: keyOf(info.owner, info.repo, info.number) });
       }
     });
@@ -420,7 +426,10 @@
     const payload = {
       project,
       columnCount: countColumns(),
-      items: cards.map((c) => ({ owner: c.owner, repo: c.repo, number: c.number, column: c.columnName, columnIndex: c.columnIndex })),
+      items: cards
+        .filter((c) => !c.draft)
+        .map((c) => ({ owner: c.owner, repo: c.repo, number: c.number, column: c.columnName, columnIndex: c.columnIndex })),
+      drafts: cards.filter((c) => c.draft).map((c) => ({ column: c.columnName, columnIndex: c.columnIndex })),
       options: { staleDays: stored[STALE_DAYS_KEY], reviewKeywords: stored[KEYWORDS_KEY] },
     };
     chrome.runtime.sendMessage({ type: MESSAGE_TYPE, payload }, (resp) => {

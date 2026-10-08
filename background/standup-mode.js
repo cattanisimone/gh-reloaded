@@ -57,6 +57,14 @@ export function isReviewLike(statusName, keywords) {
   return keywords.some((k) => new RegExp(`(^|[^a-z0-9])${escapeRegExp(k)}`, "i").test(statusName));
 }
 
+// Date-only Project fields are calendar days, so "today" is the user's own
+// calendar day, not the UTC one.
+export function localDateString(now) {
+  const d = new Date(now);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export function ageInDays(since, now) {
   const t = typeof since === "number" ? since : Date.parse(since);
   if (!Number.isFinite(t)) return null;
@@ -81,9 +89,11 @@ export function priorityRank(name) {
  * oldest card is far older than the rest of the board. The leftmost
  * column is the intake (backlog) and is never flagged, and only open
  * cards count, so a Done column full of closed issues can't be one.
- * `cards`: [{ column, columnIndex, open, ageDays }]. `columnCount` is the
- * number of columns on the board, empty ones included; without it only
- * the columns that hold a card are counted.
+ * `cards`: [{ column, columnIndex, open, ageDays, draft }]. Draft items
+ * have no state to read, so they count as open work in the shares but a
+ * column can only be flagged when it holds at least one card whose state
+ * is verified. `columnCount` is the number of columns on the board, empty
+ * ones included; without it only the columns that hold a card are counted.
  */
 export function computeBottlenecks(cards, staleDays, columnCount) {
   const open = cards.filter((c) => c.open && c.column);
@@ -97,6 +107,7 @@ export function computeBottlenecks(cards, staleDays, columnCount) {
   const result = [];
   for (const [column, { index, cards: inColumn }] of byColumn) {
     if (index === 0) continue;
+    if (inColumn.every((c) => c.draft)) continue;
     const count = inColumn.length;
     const share = count / open.length;
     if (columns >= 3 && count >= BOTTLENECK_MIN_CARDS && share >= BOTTLENECK_SHARE) {
@@ -129,11 +140,13 @@ export function computeBottlenecks(cards, staleDays, columnCount) {
  *                that were checked (those marked blocked).
  *  options:      normalizeOptions() output.
  *  columnCount:  how many columns the board has, empty ones included.
+ *  drafts:       [{ column, columnIndex }] — draft items on the board, which
+ *                have no issue to look up but still take up a column.
  *  now:          ms since epoch.
  */
-export function computeSignals({ items, data, edges = [], openBlockers = {}, options, columnCount, now }) {
+export function computeSignals({ items, data, edges = [], openBlockers = {}, options, columnCount, drafts = [], now }) {
   const { staleDays, reviewKeywords } = options;
-  const today = new Date(now).toISOString().slice(0, 10);
+  const today = localDateString(now);
   const cards = {};
   const summary = { stale: [], orphan: [], critical: [], bottleneck: [] };
 
@@ -206,7 +219,10 @@ export function computeSignals({ items, data, edges = [], openBlockers = {}, opt
   }
 
   const columns = computeBottlenecks(
-    info.map((i) => ({ column: i.column, columnIndex: i.columnIndex, open: i.open, ageDays: i.ageDays })),
+    [
+      ...info.map((i) => ({ column: i.column, columnIndex: i.columnIndex, open: i.open, ageDays: i.ageDays })),
+      ...drafts.map((d) => ({ column: d.column, columnIndex: d.columnIndex, open: true, ageDays: null, draft: true })),
+    ],
     staleDays,
     columnCount
   );
@@ -224,7 +240,12 @@ const ITEM_FIELDS = `
   projectItems(first: 20) {
     nodes {
       project { number owner { ... on Organization { login } ... on User { login } } }
-      status: fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name updatedAt } }
+      fieldValues(first: 30) {
+        nodes {
+          ... on ProjectV2ItemFieldSingleSelectValue { name updatedAt }
+          ... on ProjectV2ItemFieldIterationValue { title updatedAt }
+        }
+      }
       priority: fieldValueByName(name: "Priority") { ... on ProjectV2ItemFieldSingleSelectValue { name } }
       target: fieldValueByName(name: "Target date") { ... on ProjectV2ItemFieldDateValue { date } }
       effort: fieldValueByName(name: "Effort") { ... on ProjectV2ItemFieldNumberValue { number } }
@@ -257,14 +278,28 @@ export function pickProjectItem(node, project) {
   );
 }
 
-export function shapeItemData(node, project) {
+// The board's columns can be any single-select or iteration field, not
+// only Status, so the time in the current column is read from whichever
+// field value carries the card's visible column name. No match (a
+// "No status" column, or a field we can't read) means no age, rather than
+// the age of an unrelated field.
+export function columnSince(item, column) {
+  const wanted = (column || "").trim().toLowerCase();
+  if (!wanted) return null;
+  const match = (item?.fieldValues?.nodes || []).find(
+    (v) => ((v?.name ?? v?.title) || "").trim().toLowerCase() === wanted
+  );
+  return match?.updatedAt || null;
+}
+
+export function shapeItemData(node, project, column) {
   if (!node) return null;
   const item = pickProjectItem(node, project);
   return {
     state: node.state,
     labels: (node.labels?.nodes || []).map((l) => l.name),
     comments: (node.comments?.nodes || []).map((c) => c.body || ""),
-    statusSince: item?.status?.updatedAt || null,
+    statusSince: columnSince(item, column),
     priority: item?.priority?.name || null,
     targetDate: item?.target?.date || null,
     effort: item?.effort?.number ?? null,
@@ -292,7 +327,7 @@ async function fetchItemData(items, project) {
         try {
           const res = await ghGraphQL(buildQuery(chunk.length), variables, { owner });
           chunk.forEach((item, n) => {
-            const shaped = shapeItemData(res?.[`i${n}`]?.issueOrPullRequest, project);
+            const shaped = shapeItemData(res?.[`i${n}`]?.issueOrPullRequest, project, item.column);
             if (shaped) data[keyOf(item.owner, item.repo, item.number)] = shaped;
           });
         } catch (e) {
@@ -354,6 +389,10 @@ export async function handleMessage(payload) {
       openBlockers,
       options,
       columnCount: Number.isFinite(Number(payload?.columnCount)) ? Number(payload.columnCount) : undefined,
+      drafts: (Array.isArray(payload?.drafts) ? payload.drafts : []).map((d) => ({
+        column: d?.column || null,
+        columnIndex: d?.columnIndex,
+      })),
       now: Date.now(),
     }),
   };
