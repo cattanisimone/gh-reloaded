@@ -294,8 +294,11 @@
       return;
     }
     const entries = summaryEntries();
+    if (signals?.incomplete) {
+      box.append(el("span", "ghsm-note", "Some cards could not be read, so bottleneck and critical-path signals are off."));
+    }
     if (!entries.length) {
-      box.append(el("span", "ghsm-note ghsm-ok", "Nothing needs attention."));
+      if (!signals?.incomplete) box.append(el("span", "ghsm-note ghsm-ok", "Nothing needs attention."));
       return;
     }
     for (const e of entries) {
@@ -464,6 +467,19 @@
 
   const debouncedRefreshBoard = debounce(refreshBoard, 250);
 
+  // A card edited in place (label, priority, target date, a new comment)
+  // keeps its key and column, so the signature above never changes. Re-read
+  // the signals on a timer, just past the API cache lifetime, while the tab
+  // is visible.
+  const SIGNALS_REFRESH_MS = 75_000;
+  let refreshTimer = null;
+  function scheduleSignalsRefresh() {
+    clearInterval(refreshTimer);
+    refreshTimer = setInterval(() => {
+      if (active && !document.hidden) requestSignals();
+    }, SIGNALS_REFRESH_MS);
+  }
+
   // ---- keyboard: Esc leaves ----
   function onKeydown(e) {
     if (!active || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -526,6 +542,7 @@
     renderSummary();
     applySignals();
     requestSignals();
+    scheduleSignalsRefresh();
     document.getElementById("ghsm-exit")?.focus();
   }
 
@@ -537,6 +554,7 @@
     window.removeEventListener("resize", onResize);
     observer.disconnect();
     clearTimeout(focusTimer);
+    clearInterval(refreshTimer);
     clearMarks();
     document.body.classList.remove(ACTIVE_CLASS);
     document.documentElement.style.removeProperty(LEFT_VAR);

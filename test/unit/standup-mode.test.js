@@ -314,3 +314,49 @@ test("orphan block: an unavailable dependency lookup is not read as zero blocker
     globalThis.fetch = realFetch;
   }
 });
+
+test("incomplete: board-wide signals are skipped, per-card flags are kept", () => {
+  const items = [item(1, "Todo", 0), ...[2, 3, 4].map((n) => item(n, "In review", 2)), item(5, "In review", 2)];
+  const data = {
+    "a/b#1": open({ statusSince: daysAgo(1) }),
+    "a/b#2": open({ statusSince: daysAgo(5) }),
+    "a/b#3": open({ statusSince: daysAgo(5) }),
+    "a/b#4": open({ statusSince: daysAgo(5) }),
+    // a/b#5 could not be read
+  };
+  const whole = computeSignals({ items, data, options, columnCount: 3, now: NOW });
+  assert.deepEqual(whole.summary.bottleneck, ["In review"], "baseline: the partial data would raise a bottleneck");
+  const partial = computeSignals({ items, data, options, columnCount: 3, incomplete: true, now: NOW });
+  assert.deepEqual(partial.summary.bottleneck, []);
+  assert.deepEqual(partial.columns, []);
+  assert.equal(partial.incomplete, true);
+  assert.deepEqual(partial.summary.stale, ["a/b#2", "a/b#3", "a/b#4"], "per-card flags still come from what was read");
+});
+
+test("a failed fetch for one owner marks the signals incomplete", async () => {
+  const realFetch = globalThis.fetch;
+  resetStorage({ githubTokens: [{ id: "t", name: "t", token: "x", owner: "" }], defaultTokenId: "t" });
+  globalThis.fetch = async (url, init) => {
+    if (String(url).endsWith("/graphql")) {
+      const { variables } = JSON.parse(init.body);
+      if (variables.o0 === "other") return { ok: false, status: 403, json: async () => ({}) };
+      const issue = { state: "OPEN", labels: { nodes: [] }, comments: { nodes: [] }, projectItems: { nodes: [] } };
+      return { ok: true, status: 200, json: async () => ({ data: { i0: { issueOrPullRequest: issue } } }) };
+    }
+    return { ok: true, status: 200, json: async () => [] };
+  };
+  try {
+    const res = await handleMessage({
+      project: { owner: "acme", number: 1 },
+      columnCount: 3,
+      items: [
+        { owner: "acme", repo: "web", number: 1, column: "Todo", columnIndex: 0 },
+        { owner: "other", repo: "api", number: 2, column: "Todo", columnIndex: 0 },
+      ],
+    });
+    assert.equal(res.signals.incomplete, true);
+    assert.ok(res.signals.cards["acme/web#1"], "the readable card is still reported");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

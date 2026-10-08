@@ -142,9 +142,14 @@ export function computeBottlenecks(cards, staleDays, columnCount) {
  *  columnCount:  how many columns the board has, empty ones included.
  *  drafts:       [{ column, columnIndex }] — draft items on the board, which
  *                have no issue to look up but still take up a column.
+ *  incomplete:   some cards' data could not be read (an owner's token lacks
+ *                access, say). Per-card flags still use what was read, but
+ *                the board-wide signals (critical path, bottlenecks) are
+ *                skipped: a missing card would read as "not open" and skew
+ *                them.
  *  now:          ms since epoch.
  */
-export function computeSignals({ items, data, edges = [], openBlockers = {}, options, columnCount, drafts = [], now }) {
+export function computeSignals({ items, data, edges = [], openBlockers = {}, options, columnCount, drafts = [], incomplete = false, now }) {
   const { staleDays, reviewKeywords } = options;
   const today = localDateString(now);
   const cards = {};
@@ -163,7 +168,7 @@ export function computeSignals({ items, data, edges = [], openBlockers = {}, opt
     state: i.open ? "open" : "closed",
     effort: i.d.effort ?? null,
   }));
-  const criticalIds = computeCriticalPath(nodes, edges).pathIds;
+  const criticalIds = incomplete ? new Set() : computeCriticalPath(nodes, edges).pathIds;
 
   for (const i of info) {
     const flags = [];
@@ -218,17 +223,19 @@ export function computeSignals({ items, data, edges = [], openBlockers = {}, opt
     }
   }
 
-  const columns = computeBottlenecks(
-    [
-      ...info.map((i) => ({ column: i.column, columnIndex: i.columnIndex, open: i.open, ageDays: i.ageDays })),
-      ...drafts.map((d) => ({ column: d.column, columnIndex: d.columnIndex, open: true, ageDays: null, draft: true })),
-    ],
-    staleDays,
-    columnCount
-  );
+  const columns = incomplete
+    ? []
+    : computeBottlenecks(
+        [
+          ...info.map((i) => ({ column: i.column, columnIndex: i.columnIndex, open: i.open, ageDays: i.ageDays })),
+          ...drafts.map((d) => ({ column: d.column, columnIndex: d.columnIndex, open: true, ageDays: null, draft: true })),
+        ],
+        staleDays,
+        columnCount
+      );
   summary.bottleneck = columns.map((c) => c.column);
 
-  return { cards, columns, summary };
+  return { cards, columns, summary, incomplete };
 }
 
 // ---- GitHub side ----
@@ -389,6 +396,7 @@ export async function handleMessage(payload) {
       openBlockers,
       options,
       columnCount: Number.isFinite(Number(payload?.columnCount)) ? Number(payload.columnCount) : undefined,
+      incomplete: items.some((i) => !data[i.key]),
       drafts: (Array.isArray(payload?.drafts) ? payload.drafts : []).map((d) => ({
         column: d?.column || null,
         columnIndex: d?.columnIndex,
