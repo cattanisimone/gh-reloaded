@@ -57,7 +57,9 @@
 
   function projectFromLocation() {
     const m = /^\/(?:orgs|users)\/([^/]+)\/projects\/(\d+)/.exec(location.pathname);
-    return m ? { owner: m[1], number: Number(m[2]) } : null;
+    if (!m) return null;
+    const view = /\/views\/(\d+)/.exec(location.pathname);
+    return { owner: m[1], number: Number(m[2]), view: view ? Number(view[1]) : null };
   }
 
   // The selected view tab's own icon says whether this is a Board

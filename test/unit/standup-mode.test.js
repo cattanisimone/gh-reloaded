@@ -19,6 +19,7 @@ import {
   localDateString,
   DEFAULT_REVIEW_KEYWORDS,
 } from "../../background/standup-mode.js";
+import { collectBoardEdges } from "../../background/board-dependencies.js";
 
 const NOW = Date.parse("2026-10-08T12:00:00Z");
 const daysAgo = (n) => new Date(NOW - n * 86_400_000).toISOString();
@@ -356,6 +357,58 @@ test("a failed fetch for one owner marks the signals incomplete", async () => {
     });
     assert.equal(res.signals.incomplete, true);
     assert.ok(res.signals.cards["acme/web#1"], "the readable card is still reported");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("columnSince tells apart two fields that hold the same option name", () => {
+  const item = {
+    fieldValues: {
+      nodes: [
+        { name: "In review", updatedAt: "2026-09-01T00:00:00Z", field: { name: "Stage" } },
+        { name: "In review", updatedAt: "2026-10-05T00:00:00Z", field: { name: "Status" } },
+      ],
+    },
+  };
+  assert.equal(columnSince(item, "In review", "Status"), "2026-10-05T00:00:00Z");
+  assert.equal(columnSince(item, "In review", " stage "), "2026-09-01T00:00:00Z");
+  assert.equal(columnSince(item, "In review", "Other"), null, "the configured field does not hold that option");
+  assert.equal(columnSince(item, "In review"), null, "ambiguous and no configured field: unknown, not a guess");
+  const single = { fieldValues: { nodes: [item.fieldValues.nodes[1]] } };
+  assert.equal(columnSince(single, "In review"), "2026-10-05T00:00:00Z", "an unambiguous match needs no configured field");
+});
+
+test("a board that cannot read every card's dependencies shows no critical path", () => {
+  const items = [item(1, "Doing", 1), item(2, "Doing", 1)];
+  const data = {
+    "a/b#1": open({ statusSince: daysAgo(6) }),
+    "a/b#2": open({ statusSince: daysAgo(1), targetDate: "2026-10-01" }),
+  };
+  const edges = [{ from: "a/b#1", to: "a/b#2" }];
+  const whole = computeSignals({ items, data, edges, options, columnCount: 3, now: NOW });
+  assert.deepEqual(whole.summary.critical, ["a/b#2"], "baseline: the edge makes #2 critical and overdue");
+  const partial = computeSignals({ items, data, edges, options, columnCount: 3, edgesIncomplete: true, now: NOW });
+  assert.deepEqual(partial.summary.critical, []);
+});
+
+test("collectBoardEdges reports a 404 or failed lookup as incomplete when tolerant", async () => {
+  const realFetch = globalThis.fetch;
+  resetStorage({ githubTokens: [{ id: "t", name: "t", token: "x", owner: "" }], defaultTokenId: "t" });
+  // ghFetch caches successful responses by path, so each scenario uses its own cards.
+  const cards = (base) => [
+    { owner: "acme", repo: "web", number: base },
+    { owner: "acme", repo: "web", number: base + 1 },
+  ];
+  const respond = (status) => async () => ({ ok: status === 200, status, json: async () => [], text: async () => "" });
+  try {
+    globalThis.fetch = respond(200);
+    assert.equal((await collectBoardEdges(cards(1), { tolerant: true })).incomplete, false);
+    globalThis.fetch = respond(404);
+    assert.equal((await collectBoardEdges(cards(10), { tolerant: true })).incomplete, true);
+    assert.equal((await collectBoardEdges(cards(10))).incomplete, false, "the arrows feature still reads 404 as no dependencies");
+    globalThis.fetch = respond(500);
+    assert.equal((await collectBoardEdges(cards(20), { tolerant: true })).incomplete, true);
   } finally {
     globalThis.fetch = realFetch;
   }

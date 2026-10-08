@@ -11,7 +11,7 @@
 // board can have hundreds of cards, and any of them may depend on
 // anything, so rendering "external" nodes here doesn't scale the same way.
 
-import { safeDeps, repoFromUrl, mapWithLimit } from "../lib/github-api.js";
+import { ghFetch, safeDeps, repoFromUrl, mapWithLimit } from "../lib/github-api.js";
 
 export const MESSAGE_TYPE = "GHBD_FETCH_BOARD_DEPS";
 
@@ -27,9 +27,13 @@ function keyOf(owner, repo, number) {
  * with `from`/`to` as "owner/repo#number" keys matching `items`. `from`
  * blocks `to`. At most LOOKUP_CONCURRENCY cards are looked up at a time.
  * With `tolerant`, a card whose lookup fails is skipped instead of failing
- * the whole call.
+ * the whole call, and `incomplete` reports whether any card's dependencies
+ * could not be verified (a failed lookup, or a 404 — dependencies
+ * unavailable, or a repo the token cannot see — which is not a verified
+ * "no dependencies"). Without `tolerant`, a 404 reads as no dependencies.
  */
-export async function fetchBoardEdges(items, { tolerant = false } = {}) {
+export async function collectBoardEdges(items, { tolerant = false } = {}) {
+  let incomplete = false;
   const known = new Set(items.map((i) => keyOf(i.owner, i.repo, i.number)));
   const edgeKeys = new Set();
   const edges = [];
@@ -46,14 +50,21 @@ export async function fetchBoardEdges(items, { tolerant = false } = {}) {
     const selfKey = keyOf(item.owner, item.repo, item.number);
     let blockers, blocking;
     try {
-      [blockers, blocking] = await Promise.all([
-        safeDeps(item.owner, item.repo, item.number, "blocked_by"),
-        safeDeps(item.owner, item.repo, item.number, "blocking"),
-      ]);
+      [blockers, blocking] = await Promise.all(
+        ["blocked_by", "blocking"].map((direction) =>
+          tolerant
+            ? strictDeps(item, direction)
+            : safeDeps(item.owner, item.repo, item.number, direction)
+        )
+      );
     } catch (e) {
-      if (tolerant) return;
-      throw e;
+      if (!tolerant) throw e;
+      incomplete = true;
+      return;
     }
+    if (blockers === null || blocking === null) incomplete = true;
+    blockers = blockers || [];
+    blocking = blocking || [];
 
     for (const blocker of blockers) {
       const r = repoFromUrl(blocker.repository_url, item.owner, item.repo);
@@ -67,7 +78,23 @@ export async function fetchBoardEdges(items, { tolerant = false } = {}) {
     }
   });
 
-  return edges;
+  return { edges, incomplete };
+}
+
+export async function fetchBoardEdges(items, options) {
+  return (await collectBoardEdges(items, options)).edges;
+}
+
+async function strictDeps(item, direction) {
+  try {
+    return await ghFetch(
+      `/repos/${item.owner}/${item.repo}/issues/${item.number}/dependencies/${direction}?per_page=100`,
+      { owner: item.owner }
+    );
+  } catch (e) {
+    if (e.status === 404) return null;
+    throw e;
+  }
 }
 
 export async function handleMessage(payload) {

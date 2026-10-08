@@ -13,7 +13,7 @@
 
 import { ghGraphQL, ghFetch, hasAnyToken, mapWithLimit } from "../lib/github-api.js";
 import { computeCriticalPath, median } from "./dependency-graph.js";
-import { fetchBoardEdges } from "./board-dependencies.js";
+import { collectBoardEdges } from "./board-dependencies.js";
 
 export const MESSAGE_TYPE = "GHSM_FETCH_SIGNALS";
 
@@ -147,9 +147,12 @@ export function computeBottlenecks(cards, staleDays, columnCount) {
  *                the board-wide signals (critical path, bottlenecks) are
  *                skipped: a missing card would read as "not open" and skew
  *                them.
+ *  edgesIncomplete: some cards' dependencies could not be verified. The
+ *                critical path is skipped, as a partial edge set could
+ *                select the wrong chain; other signals are unaffected.
  *  now:          ms since epoch.
  */
-export function computeSignals({ items, data, edges = [], openBlockers = {}, options, columnCount, drafts = [], incomplete = false, now }) {
+export function computeSignals({ items, data, edges = [], openBlockers = {}, options, columnCount, drafts = [], incomplete = false, edgesIncomplete = false, now }) {
   const { staleDays, reviewKeywords } = options;
   const today = localDateString(now);
   const cards = {};
@@ -168,7 +171,7 @@ export function computeSignals({ items, data, edges = [], openBlockers = {}, opt
     state: i.open ? "open" : "closed",
     effort: i.d.effort ?? null,
   }));
-  const criticalIds = incomplete ? new Set() : computeCriticalPath(nodes, edges).pathIds;
+  const criticalIds = incomplete || edgesIncomplete ? new Set() : computeCriticalPath(nodes, edges).pathIds;
 
   for (const i of info) {
     const flags = [];
@@ -249,8 +252,8 @@ const ITEM_FIELDS = `
       project { number owner { ... on Organization { login } ... on User { login } } }
       fieldValues(first: 30) {
         nodes {
-          ... on ProjectV2ItemFieldSingleSelectValue { name updatedAt }
-          ... on ProjectV2ItemFieldIterationValue { title updatedAt }
+          ... on ProjectV2ItemFieldSingleSelectValue { name updatedAt field { ... on ProjectV2FieldCommon { name } } }
+          ... on ProjectV2ItemFieldIterationValue { title updatedAt field { ... on ProjectV2FieldCommon { name } } }
         }
       }
       priority: fieldValueByName(name: "Priority") { ... on ProjectV2ItemFieldSingleSelectValue { name } }
@@ -287,33 +290,40 @@ export function pickProjectItem(node, project) {
 
 // The board's columns can be any single-select or iteration field, not
 // only Status, so the time in the current column is read from whichever
-// field value carries the card's visible column name. No match (a
-// "No status" column, or a field we can't read) means no age, rather than
-// the age of an unrelated field.
-export function columnSince(item, column) {
+// field value carries the card's visible column name. Two fields can hold
+// the same option name, so when the board's column field is known (its
+// name, `columnField`) only that field's value counts; when it is not and
+// the name matches more than one field, the age is unknown rather than a
+// guess. No match (a "No status" column, or a field we can't read) means
+// no age, rather than the age of an unrelated field.
+export function columnSince(item, column, columnField = null) {
   const wanted = (column || "").trim().toLowerCase();
   if (!wanted) return null;
-  const match = (item?.fieldValues?.nodes || []).find(
-    (v) => ((v?.name ?? v?.title) || "").trim().toLowerCase() === wanted
-  );
-  return match?.updatedAt || null;
+  const fieldName = (columnField || "").trim().toLowerCase();
+  const matches = (item?.fieldValues?.nodes || []).filter((v) => {
+    if (((v?.name ?? v?.title) || "").trim().toLowerCase() !== wanted) return false;
+    return !fieldName || (v?.field?.name || "").trim().toLowerCase() === fieldName;
+  });
+  if (!matches.length) return null;
+  if (!fieldName && new Set(matches.map((v) => (v.field?.name || "").toLowerCase())).size > 1) return null;
+  return matches[0].updatedAt || null;
 }
 
-export function shapeItemData(node, project, column) {
+export function shapeItemData(node, project, column, columnField = null) {
   if (!node) return null;
   const item = pickProjectItem(node, project);
   return {
     state: node.state,
     labels: (node.labels?.nodes || []).map((l) => l.name),
     comments: (node.comments?.nodes || []).map((c) => c.body || ""),
-    statusSince: columnSince(item, column),
+    statusSince: columnSince(item, column, columnField),
     priority: item?.priority?.name || null,
     targetDate: item?.target?.date || null,
     effort: item?.effort?.number ?? null,
   };
 }
 
-async function fetchItemData(items, project) {
+async function fetchItemData(items, project, columnField) {
   const data = {};
   const byOwner = new Map();
   for (const item of items) {
@@ -334,7 +344,7 @@ async function fetchItemData(items, project) {
         try {
           const res = await ghGraphQL(buildQuery(chunk.length), variables, { owner });
           chunk.forEach((item, n) => {
-            const shaped = shapeItemData(res?.[`i${n}`]?.issueOrPullRequest, project, item.column);
+            const shaped = shapeItemData(res?.[`i${n}`]?.issueOrPullRequest, project, item.column, columnField);
             if (shaped) data[keyOf(item.owner, item.repo, item.number)] = shaped;
           });
         } catch (e) {
@@ -345,6 +355,35 @@ async function fetchItemData(items, project) {
   }
   await Promise.all(jobs.map((job) => job()));
   return data;
+}
+
+const COLUMN_FIELD_QUERY = `
+  query($owner: String!, $number: Int!, $view: Int!) {
+    repositoryOwner(login: $owner) {
+      ... on ProjectV2Owner {
+        projectV2(number: $number) {
+          view(number: $view) {
+            verticalGroupByFields(first: 1) { nodes { ... on ProjectV2FieldCommon { name } } }
+          }
+        }
+      }
+    }
+  }`;
+
+// The name of the field the board view's columns are grouped by, or null
+// when the view is unknown or unreadable (ages then stay unambiguous-only).
+async function fetchColumnField(project) {
+  if (!Number.isInteger(project.view)) return null;
+  try {
+    const res = await ghGraphQL(
+      COLUMN_FIELD_QUERY,
+      { owner: project.owner, number: project.number, view: project.view },
+      { owner: project.owner }
+    );
+    return res?.repositoryOwner?.projectV2?.view?.verticalGroupByFields?.nodes?.[0]?.name || null;
+  } catch {
+    return null;
+  }
 }
 
 // Unlike safeDeps, a 404 is not turned into "no blockers": it can mean
@@ -364,7 +403,11 @@ async function countOpenBlockers(item) {
 }
 
 export async function handleMessage(payload) {
-  const project = { owner: String(payload?.project?.owner || ""), number: Number(payload?.project?.number) };
+  const project = {
+    owner: String(payload?.project?.owner || ""),
+    number: Number(payload?.project?.number),
+    view: payload?.project?.view == null ? null : Number(payload.project.view),
+  };
   const items = (Array.isArray(payload?.items) ? payload.items : []).map((i) => ({
     ...i,
     key: keyOf(i.owner, i.repo, i.number),
@@ -372,15 +415,16 @@ export async function handleMessage(payload) {
   if (!items.length || !(await hasAnyToken())) return { signals: null };
 
   const options = normalizeOptions(payload?.options);
-  const data = await fetchItemData(items, project);
+  const columnField = await fetchColumnField(project);
+  const data = await fetchItemData(items, project, columnField);
   if (!Object.keys(data).length) return { signals: null };
 
   const labelled = items.filter((i) => {
     const d = data[i.key];
     return d && ((d.labels || []).some((l) => /blocked/i.test(l)) || /blocked/i.test(i.column || ""));
   });
-  const [edges, counts] = await Promise.all([
-    fetchBoardEdges(items, { tolerant: true }).catch(() => []),
+  const [{ edges, incomplete: edgesIncomplete }, counts] = await Promise.all([
+    collectBoardEdges(items, { tolerant: true }).catch(() => ({ edges: [], incomplete: true })),
     mapWithLimit(labelled, BLOCKER_CONCURRENCY, (i) => countOpenBlockers(i).catch(() => null)),
   ]);
   const openBlockers = {};
@@ -397,6 +441,7 @@ export async function handleMessage(payload) {
       options,
       columnCount: Number.isFinite(Number(payload?.columnCount)) ? Number(payload.columnCount) : undefined,
       incomplete: items.some((i) => !data[i.key]),
+      edgesIncomplete,
       drafts: (Array.isArray(payload?.drafts) ? payload.drafts : []).map((d) => ({
         column: d?.column || null,
         columnIndex: d?.columnIndex,
