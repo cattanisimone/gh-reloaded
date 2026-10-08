@@ -223,7 +223,7 @@
     );
 
     return `
-      <div class="${cls.join(" ")}" title="${titleAttr}" style="${style}">
+      <div class="${cls.join(" ")}" data-id="${escapeHtml(node.id)}" role="button" tabindex="0" aria-pressed="false" title="${titleAttr}" style="${style}">
         ${linkIconHtml(node.url, `Open #${node.number}`)}
         <span class="ghdg-node-top">
           <span class="ghdg-node-dot" style="${s.dotStyle}"></span>
@@ -255,7 +255,7 @@
     );
 
     return `
-      <div class="${cls.join(" ")}" title="${titleAttr}" style="${style}">
+      <div class="${cls.join(" ")}" data-id="${escapeHtml(node.id)}" role="button" tabindex="0" aria-pressed="false" title="${titleAttr}" style="${style}">
         ${linkIconHtml(node.url, `Open ${node.owner}/${node.repo}#${node.number}`)}
         <span class="ghdg-node-top">
           <span class="ghdg-node-dot" style="${s.dotStyle}"></span>
@@ -280,7 +280,35 @@
     return `M ${x1} ${y1} C ${x1} ${clearY}, ${x2} ${clearY}, ${x2} ${y2}`;
   }
 
-  function renderGraph(body, graph, theme, align, dims, large) {
+  // Fades everything outside the selected card's lineage (itself, all of its
+  // upstream and all of its downstream) and rings the selected card. Reads
+  // the graph back from the DOM it was rendered into (cards and edges carry
+  // their ids), so a selection change updates classes in place, without a
+  // re-render that would reset the scroll position. A null selection clears it.
+  function applyHighlight(root, selectedId) {
+    const stage = root.querySelector(".ghdg-graph-stage");
+    if (!stage) return;
+    const edgeEls = [...stage.querySelectorAll("path.ghdg-edge")];
+    const keep =
+      selectedId == null
+        ? null
+        : window.GHDG_LINEAGE.lineage(
+            selectedId,
+            edgeEls.map((p) => ({ from: p.dataset.from, to: p.dataset.to }))
+          );
+    stage.classList.toggle("has-selection", !!keep);
+    for (const el of stage.querySelectorAll(".ghdg-node")) {
+      el.classList.toggle("is-dimmed", !!keep && !keep.has(el.dataset.id));
+      const isSelected = !!keep && el.dataset.id === selectedId;
+      el.classList.toggle("is-selected", isSelected);
+      el.setAttribute("aria-pressed", String(isSelected));
+    }
+    for (const p of edgeEls) {
+      p.classList.toggle("is-dimmed", !!keep && !(keep.has(p.dataset.from) && keep.has(p.dataset.to)));
+    }
+  }
+
+  function renderGraph(body, graph, theme, align, dims, large, selectedId) {
     const { nodes, edges } = graph;
     body.innerHTML = "";
 
@@ -334,6 +362,8 @@
         "class",
         "ghdg-edge" + (isExternal ? " is-external" : "") + (e.critical ? " is-critical" : "")
       );
+      path.dataset.from = String(e.from);
+      path.dataset.to = String(e.to);
       path.setAttribute("marker-end", e.critical ? "url(#ghdg-arrow-critical)" : "url(#ghdg-arrow)");
       svg.appendChild(path);
     }
@@ -353,6 +383,7 @@
 
     scroll.appendChild(stage);
     body.appendChild(scroll);
+    applyHighlight(body, selectedId);
   }
 
   // "full": everything. "open": drop external nodes that aren't actually
@@ -368,6 +399,18 @@
     const ids = new Set(nodes.map((n) => n.id));
     const edges = graph.edges.filter((e) => ids.has(e.from) && ids.has(e.to));
     return { ...graph, nodes, edges };
+  }
+
+  // Transitive reduction, done at render time on the graph as currently
+  // shown, so it toggles without a refetch and respects the external mode.
+  // Only edges are hidden — cards never are.
+  function applyTransitiveMode(graph, hide) {
+    if (!hide) return graph;
+    const edges = window.GHDG_TRANSITIVE.hideTransitiveEdges(
+      graph.nodes.map((n) => n.id),
+      graph.edges
+    );
+    return { ...graph, edges };
   }
 
   function renderStatus(body, kind, text) {
@@ -480,6 +523,10 @@
       '<option value="open">Open dependencies only</option>' +
       '<option value="off">Hide external dependencies</option>' +
       "</select>" +
+      '<label class="ghdg-transitive-toggle" title="Hide dependency edges already implied by a longer path">' +
+      '<input type="checkbox" class="ghdg-transitive-check" />' +
+      "<span>Hide transitive dependencies</span>" +
+      "</label>" +
       `<button type="button" class="ghdg-icon-btn ghdg-refresh-btn" title="Refresh graph" aria-label="Refresh graph">${refreshIconHtml()}</button>` +
       (fullscreen
         ? `<button type="button" class="ghdg-icon-btn ghdg-close-btn" title="Exit full screen (Esc)" aria-label="Exit full screen">${closeIconHtml()}</button>`
@@ -528,13 +575,16 @@
 
     removeRoot(); // clear any leftover (and its controller) from a previous attempt
 
-    const { ghdgDepMode, ghdgAlignMode, ghdgAutoRefreshMs } = await chrome.storage.local.get([
+    const { ghdgDepMode, ghdgAlignMode, ghdgHideTransitive, ghdgAutoRefreshMs } = await chrome.storage.local.get([
       "ghdgDepMode",
       "ghdgAlignMode",
+      "ghdgHideTransitive",
       "ghdgAutoRefreshMs",
     ]);
     let depMode = ghdgDepMode || "full";
     let alignMode = ghdgAlignMode || "right";
+    // Enabled by default: an unset preference means "hide transitive edges".
+    let hideTransitive = ghdgHideTransitive !== false;
     const autoRefreshMs = Math.max(
       AUTO_REFRESH_MS_MIN,
       Number(ghdgAutoRefreshMs) || AUTO_REFRESH_MS_DEFAULT
@@ -569,6 +619,7 @@
     let noticeText = null; // text of the retry banner when a refresh failed, else null
     let fsOverlay = null; // the full-screen overlay element, or null when closed
     let autoTimer = null;
+    let selectedId = null; // id (string) of the clicked card whose lineage is highlighted, or null
     let autoDelay = autoRefreshMs; // current auto-refresh cadence; grows on failure, resets on success
 
     const isStale = () => state.key !== key || !document.contains(container);
@@ -585,11 +636,14 @@
     function syncSelects() {
       for (const s of allOf(".ghdg-align-select")) s.value = alignMode;
       for (const s of allOf(".ghdg-mode-select")) s.value = depMode;
+      for (const c of allOf(".ghdg-transitive-check")) c.checked = hideTransitive;
     }
 
     function renderInto(bodyEl, titleEl, dims, large) {
-      const g = applyDependencyMode(currentGraph, depMode);
-      renderGraph(bodyEl, g, theme, alignMode, dims, large);
+      const g = applyTransitiveMode(applyDependencyMode(currentGraph, depMode), hideTransitive);
+      // A selection only survives while its card is still on screen.
+      if (selectedId != null && !g.nodes.some((n) => String(n.id) === selectedId)) selectedId = null;
+      renderGraph(bodyEl, g, theme, alignMode, dims, large, selectedId);
       if (titleEl) titleEl.textContent = headerTitleText(currentGraph);
       return g;
     }
@@ -615,6 +669,31 @@
         parentEl.innerHTML = parentHeaderHtml(currentGraph.parent, theme);
         parentEl.hidden = !currentGraph.parent;
       }
+    }
+
+    function setSelection(id) {
+      selectedId = id;
+      for (const root of scopes()) applyHighlight(root, selectedId);
+    }
+
+    // Clicking a card selects it (clicking it again clears); clicking the
+    // empty graph area clears. The card's link icon keeps its own behavior.
+    function onGraphClick(e) {
+      if (!e.target.closest || !e.target.closest(".ghdg-graph-scroll")) return;
+      if (e.target.closest(".ghdg-node-link")) return;
+      const card = e.target.closest(".ghdg-node");
+      if (!card) return setSelection(null);
+      setSelection(card.dataset.id === selectedId ? null : card.dataset.id);
+    }
+
+    // Enter or Space on a focused card toggles it, like a click. Keys pressed
+    // on the card's link icon keep their own behavior.
+    function onGraphKeydown(e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const card = e.target.closest && e.target.closest(".ghdg-node");
+      if (!card || e.target !== card) return;
+      e.preventDefault();
+      setSelection(card.dataset.id === selectedId ? null : card.dataset.id);
     }
 
     function setRefreshing(on) {
@@ -738,6 +817,8 @@
       document.body.appendChild(overlay);
       fsOverlay = overlay;
       wireControls(overlay);
+      overlay.addEventListener("click", onGraphClick);
+      overlay.addEventListener("keydown", onGraphKeydown);
       if (noticeText) showNotice(noticeText); // mirror an outstanding refresh error
       renderAll();
       overlay.querySelector(".ghdg-close-btn")?.focus();
@@ -753,6 +834,8 @@
       const modeSelect = root.querySelector(".ghdg-mode-select");
       alignSelect.value = alignMode;
       modeSelect.value = depMode;
+      const transitiveCheck = root.querySelector(".ghdg-transitive-check");
+      transitiveCheck.checked = hideTransitive;
       alignSelect.addEventListener("change", () => {
         alignMode = alignSelect.value;
         chrome.storage.local.set({ ghdgAlignMode: alignMode });
@@ -765,19 +848,32 @@
         syncSelects();
         renderAll();
       });
+      transitiveCheck.addEventListener("change", () => {
+        hideTransitive = transitiveCheck.checked;
+        chrome.storage.local.set({ ghdgHideTransitive: hideTransitive });
+        syncSelects();
+        renderAll();
+      });
       root.querySelector(".ghdg-refresh-btn").addEventListener("click", () => refresh());
       root.querySelector(".ghdg-fs-btn")?.addEventListener("click", openFullscreen);
       root.querySelector(".ghdg-close-btn")?.addEventListener("click", closeFullscreen);
     }
 
+    // Escape peels one layer: first the selection, then the full-screen view.
     function onKeydown(e) {
-      if (e.key === "Escape" && fsOverlay) {
+      if (e.key !== "Escape") return;
+      if (selectedId != null) {
+        if (fsOverlay) e.preventDefault();
+        setSelection(null);
+      } else if (fsOverlay) {
         e.preventDefault();
         closeFullscreen();
       }
     }
 
     wireControls(container);
+    container.addEventListener("click", onGraphClick);
+    container.addEventListener("keydown", onGraphKeydown);
     document.addEventListener("visibilitychange", onVisibility);
     document.addEventListener("keydown", onKeydown);
     teardown = () => {

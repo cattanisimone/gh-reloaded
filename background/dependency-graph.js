@@ -11,49 +11,6 @@ function externalKey(owner, repo, num) {
   return `${owner}/${repo}#${num}`;
 }
 
-/**
- * Removes any edge (u,v) already implied by a longer path u -> ... -> v
- * among the given node ids ("A blocks C" adds nothing new if A -> B -> C
- * already forces the same order). Scoped to internal sub-issues only —
- * declutters the common case without reasoning about external nodes too.
- * Never drops an edge already marked `critical`: that's a real segment of
- * the displayed critical-path chain, not visual noise.
- */
-export function transitiveReduce(ids, edgeList) {
-  const idSet = new Set(ids);
-  const adj = new Map(ids.map((id) => [id, new Set()]));
-  for (const e of edgeList) {
-    if (idSet.has(e.from) && idSet.has(e.to)) adj.get(e.from).add(e.to);
-  }
-
-  function reachable(start, target) {
-    const seen = new Set();
-    const stack = Array.from(adj.get(start) || []);
-    while (stack.length) {
-      const n = stack.pop();
-      if (n === target) return true;
-      if (seen.has(n)) continue;
-      seen.add(n);
-      for (const nxt of adj.get(n) || []) stack.push(nxt);
-    }
-    return false;
-  }
-
-  const redundant = new Set();
-  for (const e of edgeList) {
-    if (e.critical) continue;
-    if (!idSet.has(e.from) || !idSet.has(e.to)) continue;
-    adj.get(e.from).delete(e.to);
-    if (reachable(e.from, e.to)) {
-      redundant.add(`${e.from}->${e.to}`);
-    } else {
-      adj.get(e.from).add(e.to); // not actually redundant — put it back
-    }
-  }
-
-  return edgeList.filter((e) => !redundant.has(`${e.from}->${e.to}`));
-}
-
 export function median(values) {
   if (!values.length) return 0;
   const sorted = values.slice().sort((a, b) => a - b);
@@ -296,12 +253,11 @@ async function fetchDependencyGraph({ owner, repo, issueNumber, fresh }) {
     ...e,
     critical: critical.pathEdges.has(`${e.from}->${e.to}`),
   }));
-  const reducedEdges = transitiveReduce(internalNodes.map((n) => n.id), markedEdges);
 
   return {
     parent, // the issue whose sub-issues are graphed, for the full-screen header
     nodes,
-    edges: reducedEdges,
+    edges: markedEdges,
     criticalPathEffort: critical.totalEffort,
     criticalPathLength: critical.length,
   };
