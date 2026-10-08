@@ -25,7 +25,7 @@ function keyOf(owner, repo, number) {
  * with `from`/`to` as "owner/repo#number" keys matching `items`. `from`
  * blocks `to`.
  */
-async function fetchBoardEdges(items) {
+export async function fetchBoardEdges(items) {
   const known = new Set(items.map((i) => keyOf(i.owner, i.repo, i.number)));
   const edgeKeys = new Set();
   const edges = [];
