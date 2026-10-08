@@ -1,6 +1,6 @@
-/* features/standup-mode/content.css — the presentation layer added while
-   standup mode is active (body.ghsm-active), plus the always-present
-   entry button in the view-tabs bar. `!important` throughout the active
+/* features/standup-mode/content.css — the compact board and attention
+   signals added while standup mode is active (body.ghsm-active), plus the
+   always-present entry button in the view-tabs bar. `!important` throughout the active
    rules because they fight a live React app's own CSS-module styles, not
    page-author styles we control. */
 
@@ -57,246 +57,312 @@
 
 /* ---- Active presentation layer ---- */
 
-/* Reclaim the viewport: hide GitHub's global top chrome (the app header
-   and any skip/banner region) so the board gets the vertical room. These
-   are GitHub's own, un-feature-specific chrome; if a redesign renames
-   them the board simply keeps its normal header — a graceful no-op. */
+/* Reclaim the viewport: hide GitHub's global top chrome, the project's own
+   header actions, and the view-tabs bar (the slim #ghsm-bar below carries
+   the project and view name instead). These are GitHub's own chrome; if a
+   redesign renames them the board simply keeps its normal header — a
+   graceful no-op. The view-tabs bar is hidden last in the list because it
+   also holds the Standup entry button, which is not needed while
+   presenting. */
 body.ghsm-active .AppHeader,
 body.ghsm-active header[role="banner"],
 body.ghsm-active .js-header-wrapper,
-body.ghsm-active .gh-header-shadow {
+body.ghsm-active .gh-header-shadow,
+body.ghsm-active [class*="topBarActions"],
+body.ghsm-active [class*="PageLayout-module__"][class*="Header"],
+body.ghsm-active nav[aria-label="Select view"] {
   display: none !important;
 }
 
-/* Enlarge the board for screen sharing: bigger column headings and card
-   text, a touch more breathing room. Anchored on the same board card /
-   column classes the content script keys on. */
-body.ghsm-active .board-view-column h1,
-body.ghsm-active .board-view-column h2,
-body.ghsm-active .board-view-column h3,
-body.ghsm-active .board-view-column h4,
-body.ghsm-active .board-view-column [role="heading"] {
-  font-size: 1.25rem !important;
-  font-weight: 700 !important;
+body.ghsm-active {
+  padding-top: 44px !important;
 }
 
-body.ghsm-active .board-view-column-card {
-  font-size: 1.05rem !important;
-  line-height: 1.45 !important;
-}
-
-/* Stretch the board to the viewport width when Full-width board is NOT
-   already doing it. When that feature is active (body.ghfw-active) its
-   own rules own the width and this stays out of the way, so the two never
-   fight. Measured left offset comes from content.js (--ghsm-board-left),
-   mirroring full-width-board's proven full-bleed approach. */
+/* Fit the columns to the window instead of scrolling sideways, the same
+   way Full-width board does — but only when that feature is NOT already
+   active, so the two never fight. Measured left offset comes from
+   content.js (--ghsm-board-left). */
 body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardContainer"] {
   width: calc(100vw - var(--ghsm-board-left, 0px)) !important;
   max-width: calc(100vw - var(--ghsm-board-left, 0px)) !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
   box-sizing: border-box !important;
 }
+body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardView"],
+body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupAreaContainer"],
+body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupContainer"] {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupHeader"] {
+  min-width: 0 !important;
+}
+body.ghsm-active:not(.ghfw-active) [class*="column-frame-module__Box__"] {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+  min-width: 140px !important;
+}
 
-/* The spotlit card, lifted above the dimming so it reads clearly. */
-body.ghsm-active .ghsm-current {
-  position: relative;
-  z-index: 2147483646 !important;
+/* ---- Presentation bar ---- */
+#ghsm-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483640;
+  box-sizing: border-box;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  border-bottom: 1px solid #d0d7de;
+  background: #f6f8fa;
+  color: #24292f;
+  font: 13px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+#ghsm-bar .ghsm-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: none;
+  max-width: 30%;
+  white-space: nowrap;
+}
+#ghsm-bar .ghsm-project {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 15px;
+}
+#ghsm-bar .ghsm-view {
+  color: #57606a;
+}
+#ghsm-bar .ghsm-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+}
+#ghsm-bar .ghsm-note {
+  color: #57606a;
+  white-space: nowrap;
+}
+#ghsm-bar .ghsm-ok {
+  color: #1a7f37;
+}
+#ghsm-bar .ghsm-sum {
+  flex: none;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  font: 600 12px/1 inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#ghsm-bar .ghsm-sum-stale {
+  background: #fff8c5;
+  border-color: #d4a72c;
+  color: #7d4e00;
+}
+#ghsm-bar .ghsm-sum-orphan {
+  background: #ffebe9;
+  border-color: #ff8182;
+  color: #a40e26;
+}
+#ghsm-bar .ghsm-sum-critical {
+  background: #fff1e5;
+  border-color: #fb8f44;
+  color: #953800;
+}
+#ghsm-bar .ghsm-sum-bottleneck {
+  background: #fbefff;
+  border-color: #c297ff;
+  color: #6639ba;
+}
+#ghsm-bar .ghsm-exit {
+  flex: none;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #fff;
+  color: #24292f;
+  font: 600 12px/1 inherit;
+  cursor: pointer;
+}
+#ghsm-bar button:hover {
+  filter: brightness(0.96);
+}
+#ghsm-bar button:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: 1px;
+}
+
+/* ---- Card signals ---- */
+.ghsm-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.ghsm-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  border: 1px solid #d0d7de;
+  background: #f6f8fa;
+  color: #57606a;
+  font: 600 11px/18px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  white-space: nowrap;
+}
+.ghsm-chip-stale {
+  background: #fff8c5;
+  border-color: #d4a72c;
+  color: #7d4e00;
+}
+.ghsm-chip-orphan,
+.ghsm-chip-blocked {
+  background: #ffebe9;
+  border-color: #ff8182;
+  color: #a40e26;
+}
+.ghsm-chip-critical {
+  background: #fff1e5;
+  border-color: #fb8f44;
+  color: #953800;
+}
+.ghsm-chip-prio-2 {
+  background: #fff1e5;
+  border-color: #fb8f44;
+  color: #953800;
+}
+.ghsm-chip-prio-3 {
+  background: #ffebe9;
+  border-color: #ff8182;
+  color: #a40e26;
+}
+
+/* Tints and rings: a left accent per signal, strongest signal wins by
+   source order (priority < stale < critical < orphan). */
+body.ghsm-active .board-view-column-card[data-ghsm-priority="2"] {
+  box-shadow: inset 3px 0 0 #fb8f44;
+}
+body.ghsm-active .board-view-column-card[data-ghsm-priority="3"] {
+  box-shadow: inset 3px 0 0 #cf222e;
+}
+body.ghsm-active .board-view-column-card.ghsm-flag-stale {
+  background-color: #fff8c5 !important;
+  box-shadow: inset 3px 0 0 #d4a72c;
+}
+body.ghsm-active .board-view-column-card.ghsm-flag-critical {
+  background-color: #fff1e5 !important;
+  box-shadow: inset 3px 0 0 #fb8f44;
+}
+body.ghsm-active .board-view-column-card.ghsm-flag-orphan,
+body.ghsm-active .board-view-column-card.ghsm-flag-blocked {
+  background-color: #ffebe9 !important;
+  box-shadow: inset 3px 0 0 #cf222e;
+}
+
+/* Bottleneck column: outlined, with a small label from the reason text
+   content.js puts on the column. */
+body.ghsm-active .board-view-column[data-ghsm-bottleneck] {
+  outline: 2px dashed #8250df;
+  outline-offset: 2px;
   border-radius: 8px;
 }
-
-/* ---- Overlay root: spotlight cut-out + info panel ---- */
-#ghsm-root {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483645;
-  pointer-events: none; /* the dim/backdrop never swallows clicks; the panel re-enables them */
+body.ghsm-active .board-view-column[data-ghsm-bottleneck]::before {
+  content: "Bottleneck · " attr(data-ghsm-reason);
+  display: block;
+  margin-bottom: 4px;
+  color: #6639ba;
+  font: 600 11px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
-/* The spotlight: a transparent box over the current card whose enormous
-   spreading box-shadow darkens everything around it, with a bright ring
-   on the card itself. pointer-events:none so the board underneath stays
-   interactive (read-only, but scrollable/inspectable during a standup). */
-#ghsm-spotlight {
-  position: fixed;
-  display: none;
-  border-radius: 10px;
-  box-shadow:
-    0 0 0 3px #0969da,
-    0 0 0 100vmax rgba(1, 4, 9, 0.68);
-  transition: left 0.18s ease, top 0.18s ease, width 0.18s ease, height 0.18s ease;
-  pointer-events: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  #ghsm-spotlight {
-    box-shadow:
-      0 0 0 3px #58a6ff,
-      0 0 0 100vmax rgba(1, 4, 9, 0.78);
-  }
+/* The target of a summary click, pulsed so the eye finds it. */
+body.ghsm-active .ghsm-focus {
+  outline: 3px solid #0969da;
+  outline-offset: 2px;
+  transition: outline-color 0.2s;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #ghsm-spotlight {
+  body.ghsm-active .ghsm-focus {
     transition: none;
   }
 }
 
-/* The info panel: fixed at the bottom-centre, above the dimming, showing
-   the current card's details and the prev/next/exit controls. */
-#ghsm-panel {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
-  width: min(900px, calc(100vw - 48px));
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 14px 20px;
-  border-radius: 12px;
-  background: #ffffff;
-  border: 1px solid #d0d7de;
-  box-shadow: 0 8px 28px rgba(1, 4, 9, 0.4);
-  color: #24292f;
-  pointer-events: auto;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-}
-#ghsm-panel:focus {
-  outline: none;
-}
-#ghsm-panel:focus-visible {
-  outline: 2px solid #0969da;
-  outline-offset: 2px;
-}
-
-.ghsm-meta {
-  flex: 1;
-  min-width: 0;
-}
-
-.ghsm-counter {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: #57606a;
-}
-
-a.ghsm-title {
-  display: block;
-  margin-top: 2px;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: #0969da;
-  text-decoration: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-a.ghsm-title:hover {
-  text-decoration: underline;
-}
-a.ghsm-title:not([href]) {
-  color: #24292f;
-  pointer-events: none;
-}
-
-.ghsm-sub {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.ghsm-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  background: #eaeef2;
-  color: #24292f;
-}
-.ghsm-chip.ghsm-assignee {
-  background: #ddf4ff;
-  color: #0a3069;
-}
-
-.ghsm-controls {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.ghsm-btn {
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 8px;
-  border: 1px solid #d0d7de;
-  background: #f6f8fa;
-  color: #24292f;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.ghsm-btn:hover:not(:disabled) {
-  background: #eaeef2;
-}
-.ghsm-btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-.ghsm-btn:focus-visible {
-  outline: 2px solid #0969da;
-  outline-offset: 1px;
-}
-.ghsm-btn.ghsm-exit {
-  border-color: #cf222e;
-  color: #cf222e;
-}
-.ghsm-btn.ghsm-exit:hover {
-  background: #ffebe9;
-}
-
 @media (prefers-color-scheme: dark) {
-  #ghsm-panel {
-    background: #161b22;
+  #ghsm-bar {
     border-color: #30363d;
+    background: #161b22;
     color: #c9d1d9;
   }
-  .ghsm-counter {
+  #ghsm-bar .ghsm-view,
+  #ghsm-bar .ghsm-note {
     color: #8b949e;
   }
-  a.ghsm-title {
-    color: #58a6ff;
+  #ghsm-bar .ghsm-ok {
+    color: #3fb950;
   }
-  a.ghsm-title:not([href]) {
+  #ghsm-bar .ghsm-exit {
+    border-color: #30363d;
+    background: #21262d;
     color: #c9d1d9;
+  }
+  #ghsm-bar button:focus-visible,
+  body.ghsm-active .ghsm-focus {
+    outline-color: #58a6ff;
   }
   .ghsm-chip {
-    background: #30363d;
-    color: #c9d1d9;
-  }
-  .ghsm-chip.ghsm-assignee {
-    background: #121d2f;
-    color: #a5d6ff;
-  }
-  .ghsm-btn {
-    background: #21262d;
     border-color: #30363d;
-    color: #c9d1d9;
+    background: #21262d;
+    color: #8b949e;
   }
-  .ghsm-btn:hover:not(:disabled) {
-    background: #30363d;
+  .ghsm-chip-stale,
+  #ghsm-bar .ghsm-sum-stale {
+    background: #3d2e00;
+    border-color: #9e6a03;
+    color: #e3b341;
   }
-  .ghsm-btn.ghsm-exit {
-    border-color: #f85149;
-    color: #f85149;
+  .ghsm-chip-orphan,
+  .ghsm-chip-blocked,
+  .ghsm-chip-prio-3,
+  #ghsm-bar .ghsm-sum-orphan {
+    background: #3c1618;
+    border-color: #da3633;
+    color: #ff7b72;
   }
-  .ghsm-btn.ghsm-exit:hover {
-    background: #3a1a1a;
+  .ghsm-chip-critical,
+  .ghsm-chip-prio-2,
+  #ghsm-bar .ghsm-sum-critical {
+    background: #3b2300;
+    border-color: #bd561d;
+    color: #ffa657;
+  }
+  #ghsm-bar .ghsm-sum-bottleneck,
+  body.ghsm-active .board-view-column[data-ghsm-bottleneck]::before {
+    background: transparent;
+    border-color: #8957e5;
+    color: #d2a8ff;
+  }
+  body.ghsm-active .board-view-column-card.ghsm-flag-stale {
+    background-color: #3d2e00 !important;
+  }
+  body.ghsm-active .board-view-column-card.ghsm-flag-critical {
+    background-color: #3b2300 !important;
+  }
+  body.ghsm-active .board-view-column-card.ghsm-flag-orphan,
+  body.ghsm-active .board-view-column-card.ghsm-flag-blocked {
+    background-color: #3c1618 !important;
+  }
+  body.ghsm-active .board-view-column[data-ghsm-bottleneck] {
+    outline-color: #8957e5;
   }
 }

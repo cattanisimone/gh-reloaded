@@ -454,6 +454,30 @@ a:focus-visible {
 .feature-row + .feature-row {
   border-top: 1px solid var(--divider);
 }
+.feature-fields {
+  display: grid;
+  gap: 8px;
+  width: min(280px, 45%);
+}
+.feature-fields label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.feature-fields input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--input);
+  font-size: 0.9rem;
+}
+.feature-fields input[type="number"]:focus {
+  outline: none;
+  border-color: var(--orange);
+}
 .feature-text {
   flex: 1;
   display: grid;

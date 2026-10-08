@@ -381,3 +381,34 @@ chrome.storage.onChanged.addListener((changes) => {
 });
 
 loadFeatureToggles();
+
+// Standup mode thresholds. An empty or invalid value clears the setting so
+// the feature falls back to its defaults (3 days; review, qa, test, deploy,
+// release) rather than storing something it would have to second-guess.
+const staleDaysInput = document.getElementById("ghsm-stale-days");
+const reviewKeywordsInput = document.getElementById("ghsm-review-keywords");
+
+async function loadStandupSettings() {
+  const { ghsmStaleDays, ghsmReviewKeywords } = await chrome.storage.local.get(["ghsmStaleDays", "ghsmReviewKeywords"]);
+  staleDaysInput.value = ghsmStaleDays ?? "";
+  reviewKeywordsInput.value = ghsmReviewKeywords ?? "";
+}
+
+staleDaysInput.addEventListener("change", async () => {
+  const days = Math.floor(Number(staleDaysInput.value));
+  if (Number.isFinite(days) && days >= 1) {
+    staleDaysInput.value = String(days);
+    await chrome.storage.local.set({ ghsmStaleDays: days });
+  } else {
+    staleDaysInput.value = "";
+    await chrome.storage.local.remove("ghsmStaleDays");
+  }
+});
+
+reviewKeywordsInput.addEventListener("change", async () => {
+  const value = reviewKeywordsInput.value.trim();
+  if (value) await chrome.storage.local.set({ ghsmReviewKeywords: value });
+  else await chrome.storage.local.remove("ghsmReviewKeywords");
+});
+
+loadStandupSettings();
