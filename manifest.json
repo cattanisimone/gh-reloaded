@@ -90,9 +90,7 @@
     },
     {
       "matches": [
-        "https://github.com/*/*/pull/*/files*",
-        "https://github.com/*/*/pull/*/changes*",
-        "https://github.com/*/*/blob/*"
+        "https://github.com/*"
       ],
       "js": [
         "features/html-preview/content.js"

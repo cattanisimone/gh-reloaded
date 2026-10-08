@@ -107,5 +107,3 @@ npm test
 - **End-to-end tests** (`npm run test:e2e`) — Playwright loads the extension unpacked into headless Chromium and drives it against saved fixtures of the GitHub pages each feature targets (`test/e2e/fixtures/`, see its README for how to refresh them). Every github.com page is served from a fixture and every api.github.com call is mocked at the extension's boundary, so the suite is deterministic and offline. Each feature has a main-path test and a disabled-state test.
 
 The e2e suite needs the full Chromium build (Playwright's `channel: "chromium"`) — only it loads extensions headless; the default bundled headless shell can't.
-
-One e2e test is a known failure kept skipped so CI stays green: the regression for [#16](https://github.com/cattanisimone/gh-reloaded/issues/16) (a PR diff row marked checked before its path resolved). It fails on `main` and passes on #17's branch, which fixes it; #17 removes the skip. To run it against the current checkout: `GHR_RUN_KNOWN_FAILURES=1 npx playwright test regression-16`.

@@ -6,24 +6,13 @@
 //
 // This drives the real bug: the kebab is present but the path isn't, the
 // first scan runs, then the path is injected and a later scan must still
-// add the button. It FAILS on current main (the bug is present) and
-// PASSES on the branch of #17 (the fix). It is kept as a known failure
-// (skipped) so CI stays green until #17 lands; #17's PR removes the skip.
-//
-// To run it locally against a given checkout of the extension:
-//   GHR_RUN_KNOWN_FAILURES=1 npx playwright test regression-16
-// Expect it to fail on main and pass on #17's branch.
+// add the button.
 import { test, expect, routeGithub, routeApi } from "./support/extension.js";
 
 test("#16: a diff row whose path resolves late still gets a Preview button", async ({
   context,
   page,
 }) => {
-  test.skip(
-    !process.env.GHR_RUN_KNOWN_FAILURES,
-    "known failure until #17 lands — see the PR for #18"
-  );
-
   await routeApi(context, []);
   await routeGithub(context, "pr-files-lazy.html");
   await page.goto("https://github.com/acme/web/pull/5/files");
@@ -46,7 +35,7 @@ test("#16: a diff row whose path resolves late still gets a Preview button", asy
     header.insertBefore(span, header.firstChild);
   });
 
-  // A later scan must now add the button. On main it never does (the row
-  // was already marked), so this assertion fails there, as intended.
+  // A later scan must now add the button; before the fix the row had
+  // already been marked as checked and was skipped forever.
   await expect(page.locator(".ghhp-preview-btn")).toHaveCount(1, { timeout: 6000 });
 });
