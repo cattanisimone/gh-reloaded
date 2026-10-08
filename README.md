@@ -88,6 +88,20 @@ On a GitHub Projects **Board** (kanban) view, uses the full window width and mak
 
 ![Full-width board mockup: a kanban board using spare window space when available and shrinking columns when space is tight, delaying horizontal scrolling until the 140px-per-column minimum is reached](screenshots/full-width-board.svg)
 
+### Standup mode — [features/standup-mode](features/standup-mode)
+
+On a GitHub Projects **Board** (kanban) view, adds a **Standup** button to the view-tabs bar that turns the board into a compact presentation of the whole board. It reclaims the space GitHub's chrome uses (a slim bar replaces the header and view tabs, and the columns fit the window width) and points at what needs attention, with a one-line summary at the top (for example "2 stale in review · 1 orphan block") whose entries jump to the cards:
+
+- **Stale in review** — a card sitting in a review/QA/deploy-like column for longer than a threshold (default 3 days; the column is matched by its visible name, default keywords `review`, `qa`, `test`, `deploy`, `release`).
+- **Orphan block** — a card marked blocked (a `blocked` label or a column named Blocked) that has no open blocker left and no comment explaining it.
+- **Critical path at risk** — a card on the board's effort-weighted critical path that is past its target date or is held by an open blocker that has been sitting longer than the threshold.
+- **Bottleneck** — a column holding a disproportionate share of the open cards, or whose oldest card is far older than the rest, is outlined.
+- **Priority and age** — each card shows its Priority as a chip (high and critical priorities tint the card) and how long it has been in its current column (read from whichever Project field the board uses for its columns, not only Status).
+
+The stale threshold and the review-like keywords are set in Settings. The signals read Projects v2 data through the GitHub API, so they need a token with **Issues** and **Projects** read access; without one (or without Projects access) the board still gets the space reclaim, a priority chip and a "Blocked" label read from the card, and the API-backed badges are simply absent. Draft items have no issue to look up, so they only get those card-read signals and count toward the column shares. The signals are re-read about every 75 seconds while the tab is visible, so edits made in place show up; if some cards cannot be read (for example a token without access to one owner, or a project whose fields that token cannot see), or some dependencies cannot be verified, the bar says so and the bottleneck and critical-path signals (or just the critical path, for dependencies) are turned off rather than computed from partial data. When a project and an issue belong to different owners, each is read with its own owner's token. On a board that uses Group by, columns are positioned by their heading across all horizontal sections. Exit with the **Exit** button or `Esc`. It's read-only and local to the tab — it never mutates issues, Project fields, or card order, and doesn't survive a reload. On by default; switchable from Settings.
+
+![Standup mode mockup: a kanban board under a slim bar with summary chips for stale reviews, orphan blocks, critical path at risk and bottlenecks, with flagged cards tinted and carrying badges and an outlined bottleneck column](screenshots/standup-mode.svg)
+
 ### HTML preview — [features/html-preview](features/html-preview) — _Experimental_
 
 Renders `.html`/`.htm` files instead of leaving them as plain source.

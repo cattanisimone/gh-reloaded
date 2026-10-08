@@ -69,16 +69,9 @@ test("a single edge-less node is not a critical path", () => {
   assert.equal(length, 0);
 });
 
-// Known failure, kept skipped so it documents the gap without hanging CI
-// (same convention as the #16 regression in test/e2e/). Writing this test
-// surfaced a latent bug: computeCriticalPath guards its effort
-// computation against cycles (the `visiting` / ancestor memo), but the
-// final path reconstruction just follows `prev` pointers — and on a
-// mutual-blocking cycle those form a loop (A.prev=B, B.prev=A), so the
-// walk never reaches null and spins forever. GitHub does allow mutual
-// "blocked by" relationships, so this is reachable. Un-skip once the
-// reconstruction is cycle-guarded (see the PR's Follow-ups).
-test("computeCriticalPath terminates on a cycle instead of looping forever", { skip: "known bug: path reconstruction loops on a dependency cycle — see PR follow-ups" }, () => {
+// GitHub allows mutual "blocked by" relationships, so a cycle is reachable;
+// the path reconstruction must stop instead of following prev pointers forever.
+test("computeCriticalPath terminates on a cycle instead of looping forever", () => {
   const nodes = [
     { id: "A", state: "open", effort: 1 },
     { id: "B", state: "open", effort: 1 },

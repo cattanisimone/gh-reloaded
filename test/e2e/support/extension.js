@@ -92,7 +92,8 @@ export async function routeGithub(context, fixtureFile) {
 // `status` and `json` may each be a (url) => value function so a handler
 // can vary its reply per call (e.g. succeed once, then fail); `status` is
 // evaluated before `json`, so a counter kept in `status` is already
-// current when `json` reads it.
+// current when `json` reads it. `json` also receives the Playwright request
+// as its second argument, for handlers that depend on a POST body (GraphQL).
 export async function routeApi(context, handlers = []) {
   await context.route("https://api.github.com/**", async (route) => {
     const request = route.request();
@@ -106,7 +107,7 @@ export async function routeApi(context, handlers = []) {
         typeof h.match === "function" ? h.match(pathname, url) : h.match.test(pathname);
       if (!matched) continue;
       const status = typeof h.status === "function" ? h.status(url) : h.status;
-      const body = typeof h.json === "function" ? h.json(url) : h.json;
+      const body = typeof h.json === "function" ? h.json(url, request) : h.json;
       return route.fulfill({
         status: status || 200,
         contentType: "application/json",

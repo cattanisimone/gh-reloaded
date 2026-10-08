@@ -113,7 +113,7 @@ export function computeCriticalPath(internalNodes, edges) {
   for (let cur = endId; cur != null; ) {
     pathIds.add(cur);
     const prev = best.get(cur).prev;
-    if (prev == null) break;
+    if (prev == null || pathIds.has(prev)) break; // a dependency cycle makes prev pointers loop
     pathEdges.add(`${prev}->${cur}`); // may be a bridged (non-literal) edge when it skips a Done node
     cur = prev;
   }
