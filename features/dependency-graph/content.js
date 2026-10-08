@@ -223,7 +223,7 @@
     );
 
     return `
-      <div class="${cls.join(" ")}" data-id="${escapeHtml(node.id)}" title="${titleAttr}" style="${style}">
+      <div class="${cls.join(" ")}" data-id="${escapeHtml(node.id)}" role="button" tabindex="0" aria-pressed="false" title="${titleAttr}" style="${style}">
         ${linkIconHtml(node.url, `Open #${node.number}`)}
         <span class="ghdg-node-top">
           <span class="ghdg-node-dot" style="${s.dotStyle}"></span>
@@ -255,7 +255,7 @@
     );
 
     return `
-      <div class="${cls.join(" ")}" data-id="${escapeHtml(node.id)}" title="${titleAttr}" style="${style}">
+      <div class="${cls.join(" ")}" data-id="${escapeHtml(node.id)}" role="button" tabindex="0" aria-pressed="false" title="${titleAttr}" style="${style}">
         ${linkIconHtml(node.url, `Open ${node.owner}/${node.repo}#${node.number}`)}
         <span class="ghdg-node-top">
           <span class="ghdg-node-dot" style="${s.dotStyle}"></span>
@@ -299,7 +299,9 @@
     stage.classList.toggle("has-selection", !!keep);
     for (const el of stage.querySelectorAll(".ghdg-node")) {
       el.classList.toggle("is-dimmed", !!keep && !keep.has(el.dataset.id));
-      el.classList.toggle("is-selected", !!keep && el.dataset.id === selectedId);
+      const isSelected = !!keep && el.dataset.id === selectedId;
+      el.classList.toggle("is-selected", isSelected);
+      el.setAttribute("aria-pressed", String(isSelected));
     }
     for (const p of edgeEls) {
       p.classList.toggle("is-dimmed", !!keep && !(keep.has(p.dataset.from) && keep.has(p.dataset.to)));
@@ -684,6 +686,16 @@
       setSelection(card.dataset.id === selectedId ? null : card.dataset.id);
     }
 
+    // Enter or Space on a focused card toggles it, like a click. Keys pressed
+    // on the card's link icon keep their own behavior.
+    function onGraphKeydown(e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const card = e.target.closest && e.target.closest(".ghdg-node");
+      if (!card || e.target !== card) return;
+      e.preventDefault();
+      setSelection(card.dataset.id === selectedId ? null : card.dataset.id);
+    }
+
     function setRefreshing(on) {
       for (const b of allOf(".ghdg-refresh-btn")) {
         b.disabled = on;
@@ -806,6 +818,7 @@
       fsOverlay = overlay;
       wireControls(overlay);
       overlay.addEventListener("click", onGraphClick);
+      overlay.addEventListener("keydown", onGraphKeydown);
       if (noticeText) showNotice(noticeText); // mirror an outstanding refresh error
       renderAll();
       overlay.querySelector(".ghdg-close-btn")?.focus();
@@ -860,6 +873,7 @@
 
     wireControls(container);
     container.addEventListener("click", onGraphClick);
+    container.addEventListener("keydown", onGraphKeydown);
     document.addEventListener("visibilitychange", onVisibility);
     document.addEventListener("keydown", onKeydown);
     teardown = () => {

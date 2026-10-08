@@ -142,6 +142,27 @@ test("clicking a card fades everything outside its upstream and downstream, and 
   await expect(root.locator(".is-dimmed")).toHaveCount(0);
 });
 
+test("a card can be selected and cleared from the keyboard", async ({ context, page }) => {
+  await routeApi(context, FOCUS_API);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  const card = root.locator('.ghdg-node[data-id="6"]');
+  await expect(card).toHaveAttribute("role", "button");
+  await expect(card).toHaveAttribute("aria-pressed", "false");
+
+  await card.focus();
+  await page.keyboard.press("Enter");
+  await expect(card).toHaveClass(/is-selected/);
+  await expect(card).toHaveAttribute("aria-pressed", "true");
+  await expect(root.locator(".ghdg-node.is-dimmed")).toHaveCount(4);
+
+  await page.keyboard.press("Space");
+  await expect(root.locator(".is-dimmed")).toHaveCount(0);
+  await expect(card).toHaveAttribute("aria-pressed", "false");
+});
+
 test("in full screen, Escape clears the selection first and closes the view on the next press", async ({
   context,
   page,

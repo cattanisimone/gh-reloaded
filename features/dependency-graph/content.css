@@ -346,6 +346,10 @@
   outline: 2px solid var(--ghdg-text);
   outline-offset: 1px;
 }
+.ghdg-scope .ghdg-node:focus-visible {
+  outline: 2px solid var(--ghdg-text);
+  outline-offset: 1px;
+}
 .ghdg-scope .ghdg-node.is-dimmed {
   opacity: 0.25;
 }
