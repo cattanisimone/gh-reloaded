@@ -72,6 +72,9 @@ test("keeps the whole board visible and flags what needs attention", async ({ co
   await expect(summary.locator(".ghsm-sum-stale")).toHaveText("1 stale in review");
   await expect(summary.locator(".ghsm-sum-orphan")).toHaveText("1 orphan block");
   await expect(summary.locator(".ghsm-sum-critical")).toHaveCount(0);
+  // The six-day-old review card makes "In review" a bottleneck column.
+  await expect(summary.locator(".ghsm-sum-bottleneck")).toHaveText("1 bottleneck");
+  await expect(page.locator(".board-view-column[data-ghsm-bottleneck] h3")).toHaveText("In review");
 
   // Cards carry their own badges: stale review, orphan block, priority.
   await expect(card(page, 4)).toHaveClass(/ghsm-flag-stale/);
@@ -91,7 +94,7 @@ test("keeps the whole board visible and flags what needs attention", async ({ co
   await expect(page.locator("body.ghsm-active")).toHaveCount(0);
   await expect(page.locator("#ghsm-bar")).toHaveCount(0);
   await expect(page.locator(".ghsm-badges")).toHaveCount(0);
-  await expect(page.locator("[class*='ghsm-flag-'], .ghsm-focus, [data-ghsm-sig]")).toHaveCount(0);
+  await expect(page.locator("[class*='ghsm-flag-'], .ghsm-focus, [data-ghsm-sig], [data-ghsm-bottleneck]")).toHaveCount(0);
   await expect(page.locator("#ghsm-enter")).toHaveCount(1);
 });
 

@@ -414,7 +414,7 @@
     if (!active || seq !== requestSeq) return;
     const payload = {
       project,
-      items: cards.map((c) => ({ owner: c.owner, repo: c.repo, number: c.number, column: c.columnName })),
+      items: cards.map((c) => ({ owner: c.owner, repo: c.repo, number: c.number, column: c.columnName, columnIndex: c.columnIndex })),
       options: { staleDays: stored[STALE_DAYS_KEY], reviewKeywords: stored[KEYWORDS_KEY] },
     };
     chrome.runtime.sendMessage({ type: MESSAGE_TYPE, payload }, (resp) => {
