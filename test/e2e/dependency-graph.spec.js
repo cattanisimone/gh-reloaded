@@ -171,6 +171,8 @@ test("in full screen, Escape clears the selection first and closes the view on t
   await routeGithub(context, "issue.html");
   await page.goto("https://github.com/acme/web/issues/1");
 
+  // Full screen only opens once the graph has loaded; clicking earlier is a no-op.
+  await expect(page.locator("#ghdg-root .ghdg-node")).toHaveCount(5);
   await page.locator("#ghdg-root .ghdg-fs-btn").click();
   const fs = page.locator("#ghdg-fs");
   await expect(fs.locator(".ghdg-node")).toHaveCount(5);
