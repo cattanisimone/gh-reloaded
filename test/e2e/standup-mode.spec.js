@@ -118,6 +118,34 @@ test("still presents the board without a token, with the DOM-visible signals onl
   await expect(page.locator("#ghsm-bar")).toHaveCount(0);
 });
 
+test("counts the columns of a grouped board once, not once per horizontal section", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup-grouped.html");
+  await page.goto(BOARD_URL);
+
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator(".ghsm-badges").first()).toBeAttached();
+  await expect(page.locator("#ghsm-summary")).toContainText("Nothing needs attention");
+  // The second section's Todo holds most of the open cards, but it is the
+  // intake column: its position is 0 within its section, so it is never a bottleneck.
+  await expect(page.locator(".board-view-column[data-ghsm-bottleneck]")).toHaveCount(0);
+});
+
+test("says so when the dependency check could not run, instead of an all-clear", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, [
+    ...API,
+    { method: "GET", match: (p) => p.includes("/dependencies/"), status: 404, json: { message: "Not Found" } },
+  ]);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-summary")).toContainText("Some dependencies could not be read");
+  await expect(page.locator("#ghsm-summary .ghsm-ok")).toHaveCount(0);
+});
+
 test("tears down an active session when the feature is switched off mid-present", async ({ context, page }) => {
   await routeGithub(context, "board.html");
   await page.goto(BOARD_URL);

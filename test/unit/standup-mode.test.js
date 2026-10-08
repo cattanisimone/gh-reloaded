@@ -413,3 +413,66 @@ test("collectBoardEdges reports a 404 or failed lookup as incomplete when tolera
     globalThis.fetch = realFetch;
   }
 });
+
+test("computeSignals reports when the dependency check was skipped", () => {
+  const items = [item(1, "Doing", 1)];
+  const data = { "a/b#1": open() };
+  assert.equal(computeSignals({ items, data, options, columnCount: 3, now: NOW }).edgesIncomplete, false);
+  assert.equal(computeSignals({ items, data, options, columnCount: 3, edgesIncomplete: true, now: NOW }).edgesIncomplete, true);
+});
+
+test("project fields are read with the project owner's token, not the issue owner's", async () => {
+  const realFetch = globalThis.fetch;
+  resetStorage({
+    githubTokens: [
+      { id: "acme", name: "acme", token: "tok-acme", owner: "acme" },
+      { id: "other", name: "other", token: "tok-other", owner: "other" },
+    ],
+    defaultTokenId: "acme",
+  });
+  const projectItems = {
+    nodes: [
+      {
+        project: { number: 7, owner: { login: "acme" } },
+        fieldValues: { nodes: [{ name: "In review", updatedAt: daysAgo(6) }] },
+        priority: { name: "High" },
+      },
+    ],
+  };
+  const calls = [];
+  const run = async (projectReadable, number) => {
+    globalThis.fetch = async (url, init) => {
+      if (!String(url).endsWith("/graphql")) return { ok: true, status: 200, json: async () => [] };
+      const { query } = JSON.parse(init.body);
+      const token = init.headers.Authorization;
+      const wantsProject = query.includes("projectItems");
+      calls.push({ token, wantsProject, wantsState: /\bstate\b/.test(query) });
+      if (wantsProject && token === "Bearer tok-other") return { ok: true, status: 200, json: async () => ({ data: { i0: { issueOrPullRequest: null } } }) };
+      if (wantsProject && !projectReadable) return { ok: false, status: 403, json: async () => ({}) };
+      const node = wantsProject ? { projectItems } : { state: "OPEN", labels: { nodes: [] }, comments: { nodes: [] } };
+      return { ok: true, status: 200, json: async () => ({ data: { i0: { issueOrPullRequest: node } } }) };
+    };
+    return (
+      await handleMessage({
+        project: { owner: "acme", number: 7 },
+        columnCount: 3,
+        items: [{ owner: "other", repo: "api", number, column: "In review", columnIndex: 1 }],
+      })
+    ).signals;
+  };
+  try {
+    // GraphQL responses are cached by query, so each run uses its own issue number.
+    const ok = await run(true, 1);
+    assert.equal(ok.incomplete, false);
+    assert.equal(ok.cards["other/api#1"].priority.name, "High", "priority comes from the project-owner read");
+    assert.ok(calls.some((c) => c.wantsState && !c.wantsProject && c.token === "Bearer tok-other"), "issue data uses the issue owner's token");
+    assert.ok(calls.some((c) => c.wantsProject && c.token === "Bearer tok-acme"), "project fields use the project owner's token");
+
+    calls.length = 0;
+    const failed = await run(false, 2);
+    assert.equal(failed.incomplete, true, "an unreadable project item marks the board partly read");
+    assert.ok(failed.cards["other/api#2"], "the issue's own data is still reported");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

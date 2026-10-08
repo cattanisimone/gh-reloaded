@@ -11,7 +11,7 @@
 // signals" rather than failing when the token or Projects access is
 // missing.
 
-import { ghGraphQL, ghFetch, hasAnyToken, mapWithLimit } from "../lib/github-api.js";
+import { ghGraphQL, ghFetch, hasAnyToken, mapWithLimit, resolveTokenRecord } from "../lib/github-api.js";
 import { computeCriticalPath, median } from "./dependency-graph.js";
 import { collectBoardEdges } from "./board-dependencies.js";
 
@@ -238,15 +238,17 @@ export function computeSignals({ items, data, edges = [], openBlockers = {}, opt
       );
   summary.bottleneck = columns.map((c) => c.column);
 
-  return { cards, columns, summary, incomplete };
+  return { cards, columns, summary, incomplete, edgesIncomplete };
 }
 
 // ---- GitHub side ----
 
-const ITEM_FIELDS = `
+const REPO_FIELDS = `
   state
   labels(first: 20) { nodes { name } }
-  comments(last: 5) { nodes { body } }
+  comments(last: 5) { nodes { body } }`;
+
+const PROJECT_FIELDS = `
   projectItems(first: 20) {
     nodes {
       project { number owner { ... on Organization { login } ... on User { login } } }
@@ -262,7 +264,7 @@ const ITEM_FIELDS = `
     }
   }`;
 
-function buildQuery(count) {
+function buildQuery(count, itemFields) {
   const vars = [];
   const fields = [];
   for (let n = 0; n < count; n++) {
@@ -272,8 +274,8 @@ function buildQuery(count) {
     );
   }
   return `query(${vars.join(", ")}) { ${fields.join("\n")} }
-    fragment IssueF on Issue { ${ITEM_FIELDS} }
-    fragment PrF on PullRequest { ${ITEM_FIELDS} }`;
+    fragment IssueF on Issue { ${itemFields} }
+    fragment PrF on PullRequest { ${itemFields} }`;
 }
 
 // Picks this project's own item out of an issue's project items — an
@@ -323,6 +325,13 @@ export function shapeItemData(node, project, column, columnField = null) {
   };
 }
 
+// A fine-grained token only reaches resources owned by its own resource
+// owner, so when an issue's owner and the project's owner resolve to
+// different credentials the issue's own data is read with the first and
+// the project item's fields with the second. A project read that fails or
+// returns nothing leaves the card flagged `projectUnread`, so the board
+// is treated as partly read instead of silently losing priority, age,
+// target date and effort.
 async function fetchItemData(items, project, columnField) {
   const data = {};
   const byOwner = new Map();
@@ -330,8 +339,10 @@ async function fetchItemData(items, project, columnField) {
     if (!byOwner.has(item.owner)) byOwner.set(item.owner, []);
     byOwner.get(item.owner).push(item);
   }
+  const projectTokenId = (await resolveTokenRecord(project.owner))?.id ?? null;
   const jobs = [];
   for (const [owner, list] of byOwner) {
+    const split = ((await resolveTokenRecord(owner))?.id ?? null) !== projectTokenId;
     for (let at = 0; at < list.length; at += CHUNK_SIZE) {
       const chunk = list.slice(at, at + CHUNK_SIZE);
       jobs.push(async () => {
@@ -342,10 +353,27 @@ async function fetchItemData(items, project, columnField) {
           variables[`n${n}`] = item.number;
         });
         try {
-          const res = await ghGraphQL(buildQuery(chunk.length), variables, { owner });
+          const res = await ghGraphQL(buildQuery(chunk.length, split ? REPO_FIELDS : REPO_FIELDS + PROJECT_FIELDS), variables, { owner });
+          let projectRes = null;
+          if (split) {
+            try {
+              projectRes = await ghGraphQL(buildQuery(chunk.length, PROJECT_FIELDS), variables, { owner: project.owner });
+            } catch (e) {
+              console.warn(`[gh-reloaded] Standup signals: could not read project fields for ${owner} items:`, e.message);
+            }
+          }
           chunk.forEach((item, n) => {
-            const shaped = shapeItemData(res?.[`i${n}`]?.issueOrPullRequest, project, item.column, columnField);
-            if (shaped) data[keyOf(item.owner, item.repo, item.number)] = shaped;
+            let node = res?.[`i${n}`]?.issueOrPullRequest;
+            if (!node) return;
+            let projectUnread = false;
+            if (split) {
+              const projectNode = projectRes?.[`i${n}`]?.issueOrPullRequest;
+              projectUnread = !projectNode;
+              node = { ...node, projectItems: projectNode?.projectItems };
+            }
+            const shaped = shapeItemData(node, project, item.column, columnField);
+            if (projectUnread) shaped.projectUnread = true;
+            data[keyOf(item.owner, item.repo, item.number)] = shaped;
           });
         } catch (e) {
           console.warn(`[gh-reloaded] Standup signals: could not read ${owner} items:`, e.message);
@@ -440,7 +468,7 @@ export async function handleMessage(payload) {
       openBlockers,
       options,
       columnCount: Number.isFinite(Number(payload?.columnCount)) ? Number(payload.columnCount) : undefined,
-      incomplete: items.some((i) => !data[i.key]),
+      incomplete: items.some((i) => !data[i.key] || data[i.key].projectUnread),
       edgesIncomplete,
       drafts: (Array.isArray(payload?.drafts) ? payload.drafts : []).map((d) => ({
         column: d?.column || null,

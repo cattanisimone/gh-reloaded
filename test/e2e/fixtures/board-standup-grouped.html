@@ -1,0 +1,80 @@
+<!--
+  Fixture: GitHub Projects v2 "Board" (kanban) view, used by standup-mode.
+  Same anchors as board-standup.html, but the board uses Group by: two horizontal sections repeat the same three columns. See fixtures/README.md for capture date and how to
+  refresh. Hand-trimmed to the anchors the content scripts key on; the
+  CSS-module class names keep GitHub's build-hash prefixes (matched by
+  prefix in the content scripts) with the hashes dropped.
+-->
+<!doctype html>
+<html lang="en" data-color-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Board · acme</title>
+    <style>
+      body { font-family: sans-serif; margin: 0; }
+      .topBar { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 16px; }
+      .ButtonGroup { display: inline-flex; gap: 4px; }
+      .ButtonGroup button { height: 28px; }
+      nav[aria-label="Select view"] { display: flex; align-items: center; padding: 4px 16px; border-bottom: 1px solid #d0d7de; }
+      [role="tab"] { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; }
+      .ViewNavigationContainer { position: relative; display: flex; align-items: center; flex: 1; }
+      .boardContainer { padding: 16px; }
+      .board-view-column { display: inline-block; vertical-align: top; width: 280px; margin-right: 24px; }
+      .board-view-column-card { display: block; width: 240px; min-height: 72px; margin: 8px 0; padding: 12px; border: 1px solid #d0d7de; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!-- View-tabs bar. The selected tab's octicon-project glyph is how
+           both board features recognize a Board (vs Table/Roadmap). -->
+      <div class="prc-PageLayout-index-module__topBarActions--ab12">
+        <div class="prc-ButtonGroup-index-module__ButtonGroup--c1"><button>Insights</button><button>Workflows</button></div>
+        <div class="prc-ButtonGroup-index-module__ButtonGroup--c2"><button>Project details</button><button>⋯</button></div>
+      </div>
+
+      <nav aria-label="Select view">
+        <div class="view-navigation-module__ViewNavigationContainer--v1">
+          <div role="tab" aria-selected="true" class="selected">
+            <svg class="octicon octicon-project" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect width="3" height="10" x="1" y="3"></rect><rect width="3" height="7" x="6" y="3"></rect><rect width="3" height="13" x="11" y="3"></rect></svg>
+            <span>Board</span>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Board body. Three columns of issue cards (card discovery is just
+           "any issue/PR link inside a .board-view-column-card"). Card #2
+           carries a visible "P1" label, the DOM-only priority signal
+           standup-mode reads when there is no token. -->
+      <div class="Board-module__boardContainer--b1">
+        <div class="section">
+        <div class="board-view-column">
+          <h3>Todo</h3>
+        </div>
+        <div class="board-view-column">
+          <h3>In progress</h3>
+          <div class="board-view-column-card"><a href="/acme/web/issues/11">Issue 11</a></div>
+        </div>
+        <div class="board-view-column">
+          <h3>In review</h3>
+          <div class="board-view-column-card"><a href="/acme/web/issues/12">Issue 12</a></div>
+        </div>
+        </div>
+        <div class="section">
+        <div class="board-view-column">
+          <h3>Todo</h3>
+          <div class="board-view-column-card"><a href="/acme/web/issues/21">Issue 21</a></div>
+          <div class="board-view-column-card"><a href="/acme/web/issues/22">Issue 22</a></div>
+          <div class="board-view-column-card"><a href="/acme/web/issues/23">Issue 23</a></div>
+        </div>
+        <div class="board-view-column">
+          <h3>In progress</h3>
+          <div class="board-view-column-card"><a href="/acme/web/issues/24">Issue 24</a></div>
+        </div>
+        <div class="board-view-column">
+          <h3>In review</h3>
+        </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

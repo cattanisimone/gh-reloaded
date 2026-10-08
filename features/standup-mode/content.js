@@ -96,9 +96,26 @@
     return (heading?.textContent || column.getAttribute("aria-label") || "").trim() || null;
   }
 
+  // With Group by, the board repeats the same columns in each horizontal
+  // section, so a column's position is the order of its visible heading
+  // across the whole board, not its flat DOM index, and the column total
+  // is the number of distinct headings.
+  function columnLayout(container) {
+    const order = new Map();
+    const indexes = Array.from(container.querySelectorAll(COLUMN_SELECTOR)).map((column, flat) => {
+      const name = columnName(column) ?? `\0${flat}`;
+      if (!order.has(name)) order.set(name, order.size);
+      return order.get(name);
+    });
+    return { indexes, count: order.size };
+  }
+
+  function boardContainer() {
+    return document.querySelector(BOARD_CONTAINER_SELECTOR) || document.querySelector("main") || document.body;
+  }
+
   function countColumns() {
-    const container = document.querySelector(BOARD_CONTAINER_SELECTOR) || document.querySelector("main") || document.body;
-    return container.querySelectorAll(COLUMN_SELECTOR).length;
+    return columnLayout(boardContainer()).count;
   }
 
   // Cards in the board's visible order, each with the issue it links to
@@ -107,9 +124,11 @@
   // signals and the column counts cover it, but there is nothing to look
   // up for it on GitHub.
   function collectCards() {
-    const container = document.querySelector(BOARD_CONTAINER_SELECTOR) || document.querySelector("main") || document.body;
+    const container = boardContainer();
+    const { indexes } = columnLayout(container);
     const found = [];
-    Array.from(container.querySelectorAll(COLUMN_SELECTOR)).forEach((column, columnIndex) => {
+    Array.from(container.querySelectorAll(COLUMN_SELECTOR)).forEach((column, flat) => {
+      const columnIndex = indexes[flat];
       const name = columnName(column);
       let draftCount = 0;
       for (const el of column.querySelectorAll(CARD_SELECTOR)) {
@@ -119,7 +138,7 @@
           if (info) break;
         }
         if (!info) {
-          found.push({ el, column, columnIndex, columnName: name, draft: true, key: `draft:${columnIndex}:${draftCount++}` });
+          found.push({ el, column, columnIndex, columnName: name, draft: true, key: `draft:${flat}:${draftCount++}` });
           continue;
         }
         found.push({ el, column, columnIndex, columnName: name, ...info, key: keyOf(info.owner, info.repo, info.number) });
@@ -296,11 +315,14 @@
       return;
     }
     const entries = summaryEntries();
+    const partial = !!(signals?.incomplete || signals?.edgesIncomplete);
     if (signals?.incomplete) {
       box.append(el("span", "ghsm-note", "Some cards could not be read, so bottleneck and critical-path signals are off."));
+    } else if (signals?.edgesIncomplete) {
+      box.append(el("span", "ghsm-note", "Some dependencies could not be read, so the critical-path signal is off."));
     }
     if (!entries.length) {
-      if (!signals?.incomplete) box.append(el("span", "ghsm-note ghsm-ok", "Nothing needs attention."));
+      if (!partial) box.append(el("span", "ghsm-note ghsm-ok", "Nothing needs attention."));
       return;
     }
     for (const e of entries) {
