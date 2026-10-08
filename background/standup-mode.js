@@ -11,7 +11,7 @@
 // signals" rather than failing when the token or Projects access is
 // missing.
 
-import { ghGraphQL, safeDeps, hasAnyToken } from "../lib/github-api.js";
+import { ghGraphQL, ghFetch, hasAnyToken, mapWithLimit } from "../lib/github-api.js";
 import { computeCriticalPath, median } from "./dependency-graph.js";
 import { fetchBoardEdges } from "./board-dependencies.js";
 
@@ -22,6 +22,7 @@ export const DEFAULT_REVIEW_KEYWORDS = ["review", "qa", "test", "deploy", "relea
 
 const DAY_MS = 86_400_000;
 const CHUNK_SIZE = 15; // issues per GraphQL request
+const BLOCKER_CONCURRENCY = 6; // blocked cards checked at once
 const BOTTLENECK_MIN_CARDS = 3;
 const BOTTLENECK_SHARE = 0.4;
 const BOTTLENECK_AGE_FACTOR = 3; // oldest card vs the median age of open cards
@@ -80,23 +81,25 @@ export function priorityRank(name) {
  * oldest card is far older than the rest of the board. The leftmost
  * column is the intake (backlog) and is never flagged, and only open
  * cards count, so a Done column full of closed issues can't be one.
- * `cards`: [{ column, columnIndex, open, ageDays }]
+ * `cards`: [{ column, columnIndex, open, ageDays }]. `columnCount` is the
+ * number of columns on the board, empty ones included; without it only
+ * the columns that hold a card are counted.
  */
-export function computeBottlenecks(cards, staleDays) {
+export function computeBottlenecks(cards, staleDays, columnCount) {
   const open = cards.filter((c) => c.open && c.column);
   const byColumn = new Map();
   for (const c of open) {
     if (!byColumn.has(c.column)) byColumn.set(c.column, { index: c.columnIndex, cards: [] });
     byColumn.get(c.column).cards.push(c);
   }
-  const columnCount = new Set(cards.map((c) => c.columnIndex)).size;
+  const columns = Number.isFinite(columnCount) ? columnCount : new Set(cards.map((c) => c.columnIndex)).size;
   const boardMedianAge = median(open.filter((c) => c.ageDays != null).map((c) => c.ageDays));
   const result = [];
   for (const [column, { index, cards: inColumn }] of byColumn) {
     if (index === 0) continue;
     const count = inColumn.length;
     const share = count / open.length;
-    if (columnCount >= 3 && count >= BOTTLENECK_MIN_CARDS && share >= BOTTLENECK_SHARE) {
+    if (columns >= 3 && count >= BOTTLENECK_MIN_CARDS && share >= BOTTLENECK_SHARE) {
       result.push({ column, reason: `${count} of ${open.length} open cards (${Math.round(share * 100)}%)` });
       continue;
     }
@@ -125,9 +128,10 @@ export function computeBottlenecks(cards, staleDays) {
  *  openBlockers: key -> number of open blocking issues, only for the cards
  *                that were checked (those marked blocked).
  *  options:      normalizeOptions() output.
+ *  columnCount:  how many columns the board has, empty ones included.
  *  now:          ms since epoch.
  */
-export function computeSignals({ items, data, edges = [], openBlockers = {}, options, now }) {
+export function computeSignals({ items, data, edges = [], openBlockers = {}, options, columnCount, now }) {
   const { staleDays, reviewKeywords } = options;
   const today = new Date(now).toISOString().slice(0, 10);
   const cards = {};
@@ -203,7 +207,8 @@ export function computeSignals({ items, data, edges = [], openBlockers = {}, opt
 
   const columns = computeBottlenecks(
     info.map((i) => ({ column: i.column, columnIndex: i.columnIndex, open: i.open, ageDays: i.ageDays })),
-    staleDays
+    staleDays,
+    columnCount
   );
   summary.bottleneck = columns.map((c) => c.column);
 
@@ -300,9 +305,20 @@ async function fetchItemData(items, project) {
   return data;
 }
 
+// Unlike safeDeps, a 404 is not turned into "no blockers": it can mean
+// dependencies are unavailable, or a token that cannot see a private repo,
+// and an unknown count must not read as a verified zero.
 async function countOpenBlockers(item) {
-  const blockers = await safeDeps(item.owner, item.repo, item.number, "blocked_by");
-  return blockers.filter((b) => b.state === "open").length;
+  try {
+    const blockers = await ghFetch(
+      `/repos/${item.owner}/${item.repo}/issues/${item.number}/dependencies/blocked_by?per_page=100`,
+      { owner: item.owner }
+    );
+    return blockers.filter((b) => b.state === "open").length;
+  } catch (e) {
+    if (e.status === 404) return null;
+    throw e;
+  }
 }
 
 export async function handleMessage(payload) {
@@ -322,8 +338,8 @@ export async function handleMessage(payload) {
     return d && ((d.labels || []).some((l) => /blocked/i.test(l)) || /blocked/i.test(i.column || ""));
   });
   const [edges, counts] = await Promise.all([
-    fetchBoardEdges(items).catch(() => []),
-    Promise.all(labelled.map((i) => countOpenBlockers(i).catch(() => null))),
+    fetchBoardEdges(items, { tolerant: true }).catch(() => []),
+    mapWithLimit(labelled, BLOCKER_CONCURRENCY, (i) => countOpenBlockers(i).catch(() => null)),
   ]);
   const openBlockers = {};
   labelled.forEach((i, n) => {
@@ -331,6 +347,14 @@ export async function handleMessage(payload) {
   });
 
   return {
-    signals: computeSignals({ items, data, edges, openBlockers, options, now: Date.now() }),
+    signals: computeSignals({
+      items,
+      data,
+      edges,
+      openBlockers,
+      options,
+      columnCount: Number.isFinite(Number(payload?.columnCount)) ? Number(payload.columnCount) : undefined,
+      now: Date.now(),
+    }),
   };
 }

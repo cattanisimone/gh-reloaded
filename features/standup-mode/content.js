@@ -94,6 +94,11 @@
     return (heading?.textContent || column.getAttribute("aria-label") || "").trim() || null;
   }
 
+  function countColumns() {
+    const container = document.querySelector(BOARD_CONTAINER_SELECTOR) || document.querySelector("main") || document.body;
+    return container.querySelectorAll(COLUMN_SELECTOR).length;
+  }
+
   // Cards in the board's visible order, each with the issue it links to
   // and the heading text of its column. A card with no issue link (a
   // draft item) is skipped: there is nothing to look up for it.
@@ -414,6 +419,7 @@
     if (!active || seq !== requestSeq) return;
     const payload = {
       project,
+      columnCount: countColumns(),
       items: cards.map((c) => ({ owner: c.owner, repo: c.repo, number: c.number, column: c.columnName, columnIndex: c.columnIndex })),
       options: { staleDays: stored[STALE_DAYS_KEY], reviewKeywords: stored[KEYWORDS_KEY] },
     };

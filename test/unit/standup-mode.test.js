@@ -3,11 +3,13 @@
 // bottlenecks, and priority ranking. The GitHub-facing half is not
 // exercised here — only the pure functions over plain data.
 import "../support/chrome-stub.js"; // first: the module transitively imports lib/github-api.js
+import { resetStorage } from "../support/chrome-stub.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   computeSignals,
   computeBottlenecks,
+  handleMessage,
   isReviewLike,
   ageInDays,
   priorityRank,
@@ -218,4 +220,48 @@ test("shapeItemData picks this project's item among several boards", () => {
   });
   assert.equal(shapeItemData(null, { owner: "acme", number: 7 }), null);
   assert.equal(shapeItemData(node, { owner: "acme", number: 99 }).statusSince, null);
+});
+
+test("bottleneck: an empty column still counts toward the board's column total", () => {
+  const cards = [
+    { column: "Todo", columnIndex: 0, open: true, ageDays: 1 },
+    ...[0, 1, 2].map(() => ({ column: "In review", columnIndex: 2, open: true, ageDays: 1 })),
+  ];
+  assert.deepEqual(computeBottlenecks(cards, 3), [], "derived from populated cards: only two columns, no share rule");
+  assert.deepEqual(computeBottlenecks(cards, 3, 3).map((r) => r.column), ["In review"]);
+});
+
+test("orphan block: an unavailable dependency lookup is not read as zero blockers", async () => {
+  const realFetch = globalThis.fetch;
+  resetStorage({ githubTokens: [{ id: "t", name: "t", token: "x", owner: "" }], defaultTokenId: "t" });
+  const issue = (n) => ({
+    state: "OPEN",
+    labels: { nodes: [{ name: "blocked" }] },
+    comments: { nodes: [] },
+    projectItems: { nodes: [] },
+  });
+  const run = async (deps) => {
+    globalThis.fetch = async (url) => {
+      if (String(url).endsWith("/graphql")) {
+        return { ok: true, status: 200, json: async () => ({ data: { i0: { issueOrPullRequest: issue() }, i1: { issueOrPullRequest: issue() } } }) };
+      }
+      const m = String(url).match(/issues\/(\d+)\/dependencies\/(\w+)/);
+      if (m[2] === "blocked_by" && deps[m[1]] === 404) return { ok: false, status: 404, json: async () => ({}) };
+      return { ok: true, status: 200, json: async () => [] };
+    };
+    const payload = {
+      project: { owner: "acme", number: 1 },
+      columnCount: 3,
+      items: [
+        { owner: "acme", repo: "web", number: 1, column: "Blocked", columnIndex: 1 },
+        { owner: "acme", repo: "web", number: 2, column: "Blocked", columnIndex: 1 },
+      ],
+    };
+    return (await handleMessage(payload)).signals.summary.orphan;
+  };
+  try {
+    assert.deepEqual(await run({ 1: 404 }), ["acme/web#2"], "the 404 card is unknown, the verified-zero one is orphan");
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });

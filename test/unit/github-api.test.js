@@ -7,7 +7,7 @@ import "../support/chrome-stub.js"; // must come first: installs globalThis.chro
 import { resetStorage } from "../support/chrome-stub.js";
 import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { resolveTokenRecord, ghFetch, repoFromUrl, safeFields } from "../../lib/github-api.js";
+import { resolveTokenRecord, ghFetch, repoFromUrl, safeFields, mapWithLimit } from "../../lib/github-api.js";
 
 const TOKENS = [
   { id: "tok_default", name: "Default", token: "secret-default", owner: "" },
@@ -137,4 +137,22 @@ test("safeFields reshapes org custom field values into a by-name map", async () 
 test("safeFields degrades to an empty map when the endpoint 404s (field not enabled)", async () => {
   globalThis.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
   assert.deepEqual(await safeFields("acme", "web", 102), {});
+});
+
+test("mapWithLimit never runs more than `limit` calls at once and keeps the result order", async () => {
+  let running = 0;
+  let peak = 0;
+  const out = await mapWithLimit([1, 2, 3, 4, 5, 6, 7], 3, async (n) => {
+    running++;
+    peak = Math.max(peak, running);
+    await new Promise((r) => setTimeout(r, 5));
+    running--;
+    return n * 2;
+  });
+  assert.deepEqual(out, [2, 4, 6, 8, 10, 12, 14]);
+  assert.equal(peak, 3);
+});
+
+test("mapWithLimit copes with an empty list", async () => {
+  assert.deepEqual(await mapWithLimit([], 4, async (n) => n), []);
 });
