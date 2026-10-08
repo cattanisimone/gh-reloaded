@@ -101,6 +101,16 @@ Fetches the file's content through the GitHub API at the exact commit/branch sho
 
 Marked experimental: it renders arbitrary third-party HTML/JS, and the inline Preview tab anchors on GitHub's own (undocumented, redesign-prone) blob-page markup to inject itself — expect it to need upkeep as GitHub's UI changes.
 
+### My Issues by project — [features/my-issues](features/my-issues)
+
+On GitHub's own **My Issues** dashboard (`github.com/issues`), adds a "Group by project" control next to the native flat list. Switched on, it reorganizes the same issues as **Project → Status → issues** — collapsible groups with counts — so work spread across several Projects is readable at a glance; switched off, GitHub's own list is restored untouched. On by default (the control appears, the native list stays selected until you pick the grouped view).
+
+![My Issues by project mockup: the My Issues dashboard with a "List / Group by project" control, below it collapsible project groups each holding their real status columns (In progress, Todo) with issue rows, and an explicit "No Project" group](screenshots/my-issues.svg)
+
+- Runs the dashboard's **current search** through the API and groups the **complete, paginated** result set — not just the rows the dashboard happens to have rendered. It follows both the search box (and any filter or saved view) and the dashboard's own **Assigned / Created / Mentioned** tab, so the groups always match whatever the native page is showing. Changing any of them updates the groups to match.
+- Uses each Project's **real Status options and their board order** — no invented global columns. An issue in several Projects shows under each with the status it has **in that Project**; one assigned to none falls into an explicit **No Project** group, and one in a Project with no status into **No Status**.
+- Read-only: it only links out to issues, and never changes an issue or a Project item. Needs a token with **Projects: Read-only** (plus repository read for private repos) to see project memberships; without it, issues still list under "No Project". Loading, empty, missing-token, and API-error states are shown explicitly, and a result set larger than the fetch cap is labelled "showing the first N of M" rather than presented as complete.
+
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
 ## Project layout

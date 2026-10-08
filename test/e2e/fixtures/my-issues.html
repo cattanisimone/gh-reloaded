@@ -1,0 +1,44 @@
+<!--
+  Fixture: GitHub's "My Issues" dashboard (github.com/issues).
+  Serves the my-issues feature. See fixtures/README.md for capture date and
+  how to refresh. Hand-trimmed to the structure the content script anchors
+  on: a header/search block, then a results block that is a direct child of
+  <main> and holds links to individual issues (how findMount locates the
+  list), then a pagination block. The feature mounts its control right
+  before the results block and hides it (and the pagination) while grouped.
+-->
+<!doctype html>
+<html lang="en" data-color-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Issues</title>
+    <style>
+      body { font-family: sans-serif; margin: 0; }
+      main { padding: 16px; }
+      .issues-header { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+      .issues-header input { flex: 1; height: 28px; }
+      .issue-list { border: 1px solid #d0d7de; border-radius: 6px; }
+      .issue-row { padding: 10px 12px; border-bottom: 1px solid #d0d7de; }
+      .pagination { margin-top: 12px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!-- Header + search + tabs. Stays visible in both views; editing the
+           search updates the URL query, which the content script re-fetches
+           against. -->
+      <div class="issues-header">
+        <nav aria-label="issue tabs"><a href="/issues">Assigned</a> <a href="/issues/created">Created</a></nav>
+        <input type="text" aria-label="Search all issues" value="assignee:@me is:open" />
+      </div>
+
+      <!-- Results block: a direct child of <main> holding issue links. -->
+      <div class="issue-list">
+        <div class="issue-row"><a href="/acme/web/issues/2">Set up the build</a></div>
+        <div class="issue-row"><a href="/acme/api/issues/9">Fix the rate limiter</a></div>
+      </div>
+
+      <div class="pagination"><a href="/issues?page=2">Next</a></div>
+    </main>
+  </body>
+</html>
