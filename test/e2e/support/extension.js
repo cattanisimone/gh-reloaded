@@ -71,9 +71,11 @@ export async function seedStorage(context, data) {
 // navigation. Sub-resource requests to github.com are aborted rather
 // than hitting the network — fixtures are self-contained, and the
 // extension's own pages load from chrome-extension:// URLs, not from
-// here.
-export async function routeGithub(context, fixtureFile) {
-  const html = fs.readFileSync(path.join(FIXTURES_DIR, fixtureFile), "utf8");
+// here. `transform` (html => html) lets a test serve a variant of the
+// fixture, e.g. with an anchor left out to be added back later.
+export async function routeGithub(context, fixtureFile, { transform } = {}) {
+  let html = fs.readFileSync(path.join(FIXTURES_DIR, fixtureFile), "utf8");
+  if (transform) html = transform(html);
   await context.route("https://github.com/**", (route) => {
     if (route.request().resourceType() === "document") {
       return route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: html });

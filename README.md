@@ -94,6 +94,7 @@ Renders `.html`/`.htm` files instead of leaving them as plain source.
 
 - On a pull request's **Files changed** tab, adds a globe button next to each HTML file's "..." menu that opens the rendered file in a new tab.
 - On a file's own page, adds a **Preview** tab next to Code/Blame that renders it inline — the same way GitHub already does for Markdown.
+- The controls show up without reloading the page: after a full load, after GitHub's in-page navigation from any other page, and while a diff is still rendering progressively. If GitHub re-renders the page and drops them, they are put back.
 
 ![HTML preview mockup: a blob page's tab row with an injected "Preview" tab selected next to native Code and Blame tabs, and the rendered file content below — a heading, badges, and a small flow diagram](screenshots/html-preview.svg)
 
