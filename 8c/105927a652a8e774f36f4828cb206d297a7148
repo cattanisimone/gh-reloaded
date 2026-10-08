@@ -1,0 +1,21 @@
+.github/workflows/release.yml
+  s_93fa3bd491130a::t_6cf9a5f65e726d 50-52
+README.md
+  s_93fa3bd491130a::t_cddf9ef17455a2 147,149,159-160
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8c105927a652a8e774f36f4828cb206d297a7148",
+  "prompts": {},
+  "sessions": {
+    "s_93fa3bd491130a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "02bff0ff-75a0-4929-aa84-b39efdbaad73",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
