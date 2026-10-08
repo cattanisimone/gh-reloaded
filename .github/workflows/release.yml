@@ -47,6 +47,9 @@ jobs:
     needs: release-please
     if: ${{ needs.release-please.outputs.created || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
+    # The Chrome Web Store secrets live in this environment, which only the
+    # main branch can use: a workflow run from any other branch cannot read them.
+    environment: chrome-web-store
     permissions:
       contents: write
     steps:

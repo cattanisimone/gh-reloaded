@@ -144,9 +144,9 @@ The API can only update an *existing* Chrome Web Store listing — the first sub
 1. Pay the one-time $5 registration fee and create a [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole) account.
 2. Package the extension (`zip -r extension.zip manifest.json background.js background features icons lib options`), upload it as a new item, fill in the store listing (description, screenshots, privacy practices, single purpose, permission justifications), and submit it for review.
 3. Once it's accepted, note the **Extension ID** (from the dashboard item URL) and your **Publisher ID** (Dashboard → account settings → *Publisher (developer) account*).
-4. In Google Cloud Console, create an OAuth client (APIs & Services → Credentials → *OAuth client ID* → type "Desktop app") and enable the **Chrome Web Store API** on that project.
+4. In Google Cloud Console, create an OAuth client (APIs & Services → Credentials → *OAuth client ID*; the refresh-token helper redirects to a random local port, so a "Web application" client needs that `http://127.0.0.1:<port>` redirect URI added first, while a "Desktop app" client accepts it as is) and enable the **Chrome Web Store API** on that project.
 5. Generate a refresh token for that client, authorized for the `https://www.googleapis.com/auth/chromewebstore` scope against your Web Store account — e.g. via [`chrome-webstore-upload-cli`](https://github.com/fregante/chrome-webstore-upload-cli)'s docs, or any OAuth 2.0 installed-app flow.
-6. Add these as **Actions secrets** (repo Settings → Secrets and variables → Actions):
+6. Create an environment named `chrome-web-store` (repo Settings → Environments), restrict its deployment branches to `main`, and add these as **environment secrets** — not repository secrets, so that a workflow run from any other branch cannot read them:
 
    | Secret | Value |
    |---|---|
@@ -155,6 +155,8 @@ The API can only update an *existing* Chrome Web Store listing — the first sub
    | `CHROME_CLIENT_ID` | OAuth client ID from step 4 |
    | `CHROME_CLIENT_SECRET` | OAuth client secret from step 4 |
    | `CHROME_REFRESH_TOKEN` | Refresh token from step 5 |
+
+The refresh token expires after 7 days while the Google OAuth app is in "Testing" status: publish the app (Google Auth Platform → Audience → *Publish app*) so it does not. To recover a failed publish, run the **Release** workflow manually with the tag to publish (e.g. `v0.7.0`).
 
 Until all five secrets are set, the workflow still cuts a GitHub Release on every version bump; it just skips the store upload step (with a warning in the run log) rather than failing the run.
 
