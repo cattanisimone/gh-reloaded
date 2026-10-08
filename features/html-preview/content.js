@@ -304,6 +304,18 @@
   }
 
   let blobKey = null;
+  let blobTabs = null;
+
+  // Removes everything injectBlobPreviewTab added — the whole tab list
+  // (not just the button inside it, or an empty <ul> is left behind) and
+  // the panel — and gives the code section back if Preview had hidden it.
+  function removeBlobControls() {
+    document.querySelector("ul.ghhp-tab-list")?.remove();
+    document.getElementById("ghhp-blob-tab")?.remove();
+    document.getElementById("ghhp-blob-panel")?.remove();
+    document.querySelector('[class*="BlobContent-module__blobContentSection"]')?.removeAttribute("hidden");
+    blobTabs = null;
+  }
 
   function injectBlobPreviewTab() {
     const info = parseBlobUrl();
@@ -317,22 +329,39 @@
       // this, a tab/panel that survives that re-render intact keeps its
       // listeners bound to a now-stale `tabs`/`codeArea` closure from the
       // blob route, which is a worse state than just not being there.
-      document.getElementById("ghhp-blob-tab")?.remove();
-      document.getElementById("ghhp-blob-panel")?.remove();
+      removeBlobControls();
       return;
     }
 
-    if (blobKey === key && document.getElementById("ghhp-blob-tab")) {
-      joinTabLists(document.getElementById("ghhp-blob-tab").closest("ul.ghhp-tab-list"));
-      return; // already rendered
+    // "Already rendered" means every piece is still live in the DOM: our
+    // tab, our panel, and the Code/Blame buttons our click handlers are
+    // bound to. If GitHub re-rendered any of them (replacing its own tab
+    // list leaves our handlers on detached buttons), fall through and
+    // rebuild instead of trusting the key alone.
+    const ourTab = document.getElementById("ghhp-blob-tab");
+    if (
+      blobKey === key &&
+      ourTab &&
+      document.getElementById("ghhp-blob-panel") &&
+      blobTabs?.code.isConnected &&
+      blobTabs?.blame.isConnected
+    ) {
+      joinTabLists(ourTab.closest("ul.ghhp-tab-list"));
+      return;
+    }
+
+    removeBlobControls();
+
+    // Code/Blame may not be rendered yet (direct load before hydration,
+    // or SPA navigation ahead of the toolbar). Leave blobKey unset so the
+    // next scan retries rather than treating this URL as handled.
+    const tabs = findCodeBlameTabs();
+    if (!tabs) {
+      blobKey = null;
+      return;
     }
     blobKey = key;
-
-    document.getElementById("ghhp-blob-tab")?.remove();
-    document.getElementById("ghhp-blob-panel")?.remove();
-
-    const tabs = findCodeBlameTabs();
-    if (!tabs) return; // this redesign doesn't have the Code/Blame tabs this anchors on — no-op
+    blobTabs = tabs;
 
     // Clone Blame's own tab so ours picks up GitHub's exact styling for
     // free, then strip it down to a plain toggle button. Crucially,
@@ -495,13 +524,25 @@
     // — injectDiffPreviewButtons re-derives that by querying the live
     // DOM for `.ghhp-preview-btn` instead, so removing those is enough.
     document.querySelectorAll(".ghhp-preview-btn").forEach((btn) => btn.remove());
-    document.getElementById("ghhp-blob-tab")?.remove();
-    document.getElementById("ghhp-blob-panel")?.remove();
+    removeBlobControls();
     blobKey = null;
+  }
+
+  // The manifest injects this script on every github.com page: Chrome
+  // decides that once per full page load, so a script limited to the
+  // pull-request and blob URLs would never run after a client-side
+  // navigation from any other page. Cheap early exit for everything else.
+  function isRelevantPage() {
+    return (
+      isFilesChangedPage() ||
+      !!parseBlobUrl() ||
+      !!document.querySelector(".ghhp-preview-btn, ul.ghhp-tab-list, #ghhp-blob-panel")
+    );
   }
 
   async function sync() {
     if (!extensionAlive()) return;
+    if (!isRelevantPage()) return;
     const { [STORAGE_KEY]: enabled } = await chrome.storage.local.get(STORAGE_KEY);
     if (enabled === false) {
       teardown();
