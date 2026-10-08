@@ -90,9 +90,17 @@ On a GitHub Projects **Board** (kanban) view, uses the full window width and mak
 
 ### Standup mode — [features/standup-mode](features/standup-mode)
 
-On a GitHub Projects **Board** (kanban) view, adds a **Standup** button to the view-tabs bar that turns the board into a temporary, screen-sharing-friendly presentation: it reclaims the viewport, enlarges column headings and cards, and spotlights one card at a time in the board's own left-to-right, top-to-bottom order — dimming everything else and showing the current card's title, column, and assignee in a panel. Walk the cards with the keyboard (`→`/`←`, `Space`, `Home`/`End`) or the on-screen Prev/Next controls; exit with the button or `Esc`. It's read-only and local to the tab — entering, navigating, or exiting never mutates issues, Project fields, or card order, needs no extra permission or API call, and doesn't survive a reload. On by default; switchable from Settings.
+On a GitHub Projects **Board** (kanban) view, adds a **Standup** button to the view-tabs bar that turns the board into a compact presentation of the whole board. It reclaims the space GitHub's chrome uses (a slim bar replaces the header and view tabs, and the columns fit the window width) and points at what needs attention, with a one-line summary at the top (for example "2 stale in review · 1 orphan block") whose entries jump to the cards:
 
-![Standup mode mockup: a kanban board dimmed except one spotlit card, with a bottom panel showing that card's title, column, and assignee alongside Prev/Next/Exit controls and a "card 2 of 7" counter](screenshots/standup-mode.svg)
+- **Stale in review** — a card sitting in a review/QA/deploy-like column for longer than a threshold (default 3 days; the column is matched by its visible name, default keywords `review`, `qa`, `test`, `deploy`, `release`).
+- **Orphan block** — a card marked blocked (a `blocked` label or a column named Blocked) that has no open blocker left and no comment explaining it.
+- **Critical path at risk** — a card on the board's effort-weighted critical path that is past its target date or is held by an open blocker that has been sitting longer than the threshold.
+- **Bottleneck** — a column holding a disproportionate share of the open cards, or whose oldest card is far older than the rest, is outlined.
+- **Priority and age** — each card shows its Priority as a chip (high and critical priorities tint the card) and how long it has been in its current status.
+
+The stale threshold and the review-like keywords are set in Settings. The signals read Projects v2 data through the GitHub API, so they need a token with **Issues** and **Projects** read access; without one (or without Projects access) the board still gets the space reclaim, a priority chip and a "Blocked" label read from the card, and the API-backed badges are simply absent. Exit with the **Exit** button or `Esc`. It's read-only and local to the tab — it never mutates issues, Project fields, or card order, and doesn't survive a reload. On by default; switchable from Settings.
+
+![Standup mode mockup: a kanban board under a slim bar with summary chips for stale reviews, orphan blocks, critical path at risk and bottlenecks, with flagged cards tinted and carrying badges and an outlined bottleneck column](screenshots/standup-mode.svg)
 
 ### HTML preview — [features/html-preview](features/html-preview) — _Experimental_
 

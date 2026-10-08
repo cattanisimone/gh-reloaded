@@ -7,7 +7,8 @@ These are the saved GitHub pages the end-to-end tests run against. Serving them 
 | File | Page it stands in for | Features exercised |
 | --- | --- | --- |
 | `issue.html` | An issue with a "Sub-issues" section | dependency-graph |
-| `board.html` | A Projects v2 **Board** (kanban) view | quick-create, board-dependencies, full-width-board, standup-mode |
+| `board.html` | A Projects v2 **Board** (kanban) view | quick-create, board-dependencies, full-width-board, standup-mode (disabled state, entry button) |
+| `board-standup.html` | A Projects v2 **Board** view with five cards across Todo / In progress / In review | standup-mode (signals) |
 | `pr-files.html` | A pull request "Files changed" page with one changed `.html` file | html-preview (PR globe button) |
 | `blob.html` | A single-file blob page for an `.html` file | html-preview (blob Preview tab) |
 | `pr-files-lazy.html` | A "Files changed" page whose file path is not yet resolvable | html-preview #16 regression |

@@ -1,68 +1,133 @@
 // E2E: the standup-mode feature on a Projects board. On by default: the
-// entry button is offered on a Board view, entering spotlights the first
-// card and shows its details, the controls walk the board in order, and
-// Esc exits. The disabled state is "no entry button is offered".
-import { test, expect, routeGithub, seedStorage, backgroundWorker } from "./support/extension.js";
+// entry button is offered on a Board view, entering keeps the whole board
+// visible and flags what needs attention (stale in review, orphan block,
+// priority) from the GitHub data, a summary entry jumps to a flagged card,
+// and Esc exits cleanly. Without a token the board still presents, with
+// only the DOM-visible signals. The disabled state is "no entry button".
+import { test, expect, routeGithub, routeApi, seedStorage, backgroundWorker } from "./support/extension.js";
 
 const BOARD_URL = "https://github.com/orgs/acme/projects/7";
+const TOKEN = { githubTokens: [{ id: "t1", name: "Test", token: "ghp_test", owner: "" }], defaultTokenId: "t1" };
 
-test("presents the board one card at a time and exits on Esc", async ({ context, page }) => {
-  await routeGithub(context, "board.html");
+const daysAgo = (n) => new Date(Date.now() - n * 86_400_000).toISOString();
+
+// What the batched GraphQL query returns per issue number, for project #7.
+function issueNode(number) {
+  const base = { state: "OPEN", labels: { nodes: [] }, comments: { nodes: [] } };
+  const item = (status, extra = {}) => ({
+    projectItems: {
+      nodes: [{ project: { number: 7, owner: { login: "acme" } }, status: { name: status, updatedAt: daysAgo(1) }, ...extra }],
+    },
+  });
+  switch (number) {
+    case 3: // high priority, in progress
+      return { ...base, ...item("In progress", { priority: { name: "High" } }) };
+    case 4: // stale: six days in review
+      return { ...base, ...item("In review", { status: { name: "In review", updatedAt: daysAgo(6) } }) };
+    case 5: // fresh in review
+      return { ...base, ...item("In review") };
+    case 6: // labelled blocked, no blocker, no comment explaining it
+      return { ...base, labels: { nodes: [{ name: "blocked" }] }, ...item("In progress") };
+    default:
+      return { ...base, ...item("Todo") };
+  }
+}
+
+const API = [
+  {
+    method: "POST",
+    match: (p) => p === "/graphql",
+    json: (_url, request) => {
+      const { variables } = JSON.parse(request.postData());
+      const data = {};
+      for (const [k, number] of Object.entries(variables)) {
+        const m = /^n(\d+)$/.exec(k);
+        if (m) data[`i${m[1]}`] = { issueOrPullRequest: issueNode(number) };
+      }
+      return { data };
+    },
+  },
+];
+
+const card = (page, number) => page.locator(`.board-view-column-card:has(a[href$="/issues/${number}"])`);
+
+test("keeps the whole board visible and flags what needs attention", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup.html");
   await page.goto(BOARD_URL);
 
-  // The entry button is offered on a Board view by default.
   const enter = page.locator("#ghsm-enter");
   await expect(enter).toHaveCount(1);
   await enter.click();
 
-  // Entering adds the active layer and the overlay, spotlighting card 1.
+  // The board is not replaced by an overlay or a walk-through: every card
+  // stays on screen, with a slim bar on top.
   await expect(page.locator("body.ghsm-active")).toHaveCount(1);
-  await expect(page.locator("#ghsm-root")).toHaveCount(1);
-  await expect(page.locator("#ghsm-counter")).toHaveText("Card 1 of 2");
-  await expect(page.locator("#ghsm-title")).toHaveText("Set up the build");
-  await expect(page.locator("#ghsm-title")).toHaveAttribute("href", /\/acme\/web\/issues\/2$/);
-  await expect(page.locator("#ghsm-column")).toHaveText("Todo");
-  // The spotlit card is marked so the CSS can lift it.
-  await expect(page.locator(".ghsm-current")).toHaveCount(1);
+  await expect(page.locator("#ghsm-bar")).toHaveCount(1);
+  await expect(page.locator(".board-view-column-card:visible")).toHaveCount(5);
 
-  // On-screen Next walks to the second card, in board order.
-  await page.locator("#ghsm-next").click();
-  await expect(page.locator("#ghsm-counter")).toHaveText("Card 2 of 2");
-  await expect(page.locator("#ghsm-title")).toHaveText("Wire up the dashboard");
-  await expect(page.locator("#ghsm-column")).toHaveText("In progress");
+  // The summary names what was found.
+  const summary = page.locator("#ghsm-summary");
+  await expect(summary.locator(".ghsm-sum-stale")).toHaveText("1 stale in review");
+  await expect(summary.locator(".ghsm-sum-orphan")).toHaveText("1 orphan block");
+  await expect(summary.locator(".ghsm-sum-critical")).toHaveCount(0);
 
-  // The keyboard walks back the other way.
-  await page.keyboard.press("ArrowLeft");
-  await expect(page.locator("#ghsm-counter")).toHaveText("Card 1 of 2");
+  // Cards carry their own badges: stale review, orphan block, priority.
+  await expect(card(page, 4)).toHaveClass(/ghsm-flag-stale/);
+  await expect(card(page, 4).locator(".ghsm-chip-stale")).toHaveText("Stale");
+  await expect(card(page, 4).locator(".ghsm-chip-age")).toHaveText("6d");
+  await expect(card(page, 5)).not.toHaveClass(/ghsm-flag-/);
+  await expect(card(page, 6)).toHaveClass(/ghsm-flag-orphan/);
+  await expect(card(page, 3).locator(".ghsm-chip-priority")).toHaveText("High");
+  await expect(card(page, 3)).toHaveAttribute("data-ghsm-priority", "2");
 
-  // Esc exits cleanly — no active class, no overlay, no stale highlight.
+  // Clicking a summary entry points at the card.
+  await summary.locator(".ghsm-sum-stale").click();
+  await expect(card(page, 4)).toHaveClass(/ghsm-focus/);
+
+  // Esc exits cleanly — nothing the mode added is left behind.
   await page.keyboard.press("Escape");
   await expect(page.locator("body.ghsm-active")).toHaveCount(0);
-  await expect(page.locator("#ghsm-root")).toHaveCount(0);
-  await expect(page.locator(".ghsm-current")).toHaveCount(0);
-
-  // The entry button is still there to re-enter.
+  await expect(page.locator("#ghsm-bar")).toHaveCount(0);
+  await expect(page.locator(".ghsm-badges")).toHaveCount(0);
+  await expect(page.locator("[class*='ghsm-flag-'], .ghsm-focus, [data-ghsm-sig]")).toHaveCount(0);
   await expect(page.locator("#ghsm-enter")).toHaveCount(1);
+});
+
+test("still presents the board without a token, with the DOM-visible signals only", async ({ context, page }) => {
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-summary .ghsm-note")).toContainText("Add a GitHub token");
+  await expect(page.locator(".board-view-column-card:visible")).toHaveCount(5);
+  // The visible "P1" label on card #2 still becomes a priority chip...
+  await expect(card(page, 2).locator(".ghsm-chip-priority")).toHaveText("P1");
+  // ...but no API-backed badge appears.
+  await expect(page.locator(".ghsm-chip-stale, .ghsm-chip-orphan, .ghsm-chip-critical")).toHaveCount(0);
+
+  await page.locator("#ghsm-exit").click();
+  await expect(page.locator("#ghsm-bar")).toHaveCount(0);
 });
 
 test("tears down an active session when the feature is switched off mid-present", async ({ context, page }) => {
   await routeGithub(context, "board.html");
   await page.goto(BOARD_URL);
 
-  // Enter standup mode — the active layer, overlay, and spotlight are up.
   await page.locator("#ghsm-enter").click();
   await expect(page.locator("body.ghsm-active")).toHaveCount(1);
-  await expect(page.locator("#ghsm-root")).toHaveCount(1);
+  await expect(page.locator("#ghsm-bar")).toHaveCount(1);
 
   // Flipping the feature off in Settings while presenting must stop the
-  // session, not just hide the entry button: the overlay, body class, and
-  // entry button all go away.
+  // session, not just hide the entry button.
   const worker = await backgroundWorker(context);
   await worker.evaluate(() => chrome.storage.local.set({ ghsmEnabled: false }));
 
   await expect(page.locator("body.ghsm-active")).toHaveCount(0);
-  await expect(page.locator("#ghsm-root")).toHaveCount(0);
-  await expect(page.locator(".ghsm-current")).toHaveCount(0);
+  await expect(page.locator("#ghsm-bar")).toHaveCount(0);
+  await expect(page.locator(".ghsm-badges")).toHaveCount(0);
   await expect(page.locator("#ghsm-enter")).toHaveCount(0);
 });
 
