@@ -336,6 +336,25 @@
 .ghdg-scope .ghdg-node.is-critical:hover {
   box-shadow: 0 0 0 2px var(--ghdg-critical), inset 0 0 0 1px var(--ghdg-muted);
 }
+/* Click a card to select it: everything outside its upstream/downstream is
+   faded, the selected card is ringed. */
+.ghdg-scope .ghdg-node {
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+.ghdg-scope .ghdg-node.is-selected {
+  outline: 2px solid var(--ghdg-text);
+  outline-offset: 1px;
+}
+.ghdg-scope .ghdg-node.is-dimmed {
+  opacity: 0.25;
+}
+.ghdg-scope .ghdg-edge {
+  transition: opacity 0.12s;
+}
+.ghdg-scope .ghdg-edge.is-dimmed {
+  opacity: 0.2;
+}
 /* Larger, roomier cards in full-screen mode: more padding, bigger type,
    and room for a third title line plus the extra metadata chips. */
 .ghdg-scope .ghdg-node.is-large {

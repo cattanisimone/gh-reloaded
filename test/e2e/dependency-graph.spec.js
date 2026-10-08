@@ -86,6 +86,83 @@ test("hides transitive edges at any depth by default and restores them when togg
   await expect(edges).toHaveCount(3);
 });
 
+// #2 → #3 → #4, #5 → #4 and an unrelated #6: selecting #3 reaches #2 upstream
+// and #4 downstream, but not the sibling #5 or the unrelated #6.
+const FOCUS = [mk(2, "A"), mk(3, "B"), mk(4, "C"), mk(5, "D"), mk(6, "E")];
+const FOCUS_API = [
+  { match: /\/repos\/acme\/web\/issues\/1\/sub_issues/, json: FOCUS },
+  { match: (p) => p === "/repos/acme/web/issues/3/dependencies/blocked_by", json: [FOCUS[0]] },
+  { match: (p) => p === "/repos/acme/web/issues/4/dependencies/blocked_by", json: [FOCUS[1], FOCUS[3]] },
+];
+
+test("clicking a card fades everything outside its upstream and downstream, and clears again", async ({
+  context,
+  page,
+}) => {
+  await routeApi(context, FOCUS_API);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  const root = page.locator("#ghdg-root");
+  const nodes = root.locator(".ghdg-node");
+  const edges = root.locator("svg.ghdg-edges path.ghdg-edge");
+  await expect(nodes).toHaveCount(5);
+  await expect(edges).toHaveCount(3);
+  await expect(root.locator(".is-dimmed")).toHaveCount(0);
+
+  const card = (n) => root.locator(`.ghdg-node[data-id="${n}"]`);
+
+  // Select #3: #2 (upstream), #3 itself and #4 (downstream) stay; #5 and #6 fade.
+  await card(3).click();
+  await expect(card(3)).toHaveClass(/is-selected/);
+  await expect(root.locator(".ghdg-node.is-dimmed")).toHaveCount(2);
+  await expect(card(5)).toHaveClass(/is-dimmed/);
+  await expect(card(6)).toHaveClass(/is-dimmed/);
+  await expect(card(2)).not.toHaveClass(/is-dimmed/);
+  await expect(card(4)).not.toHaveClass(/is-dimmed/);
+  // Only the #5 → #4 edge leaves the lineage.
+  await expect(root.locator("path.ghdg-edge.is-dimmed")).toHaveCount(1);
+  await expect(root.locator('path.ghdg-edge.is-dimmed[data-from="5"]')).toHaveCount(1);
+
+  // Click the same card again: cleared.
+  await card(3).click();
+  await expect(root.locator(".is-dimmed")).toHaveCount(0);
+  await expect(root.locator(".is-selected")).toHaveCount(0);
+
+  // Select, then clear by clicking the empty graph area.
+  await card(2).click();
+  await expect(root.locator(".ghdg-node.is-dimmed")).toHaveCount(2); // #5 and #6 are unrelated to #2
+  await root.locator(".ghdg-graph-scroll").click({ position: { x: 2, y: 2 } });
+  await expect(root.locator(".is-dimmed")).toHaveCount(0);
+
+  // Select, then clear with Escape.
+  await card(6).click();
+  await expect(root.locator(".ghdg-node.is-dimmed")).toHaveCount(4);
+  await page.keyboard.press("Escape");
+  await expect(root.locator(".is-dimmed")).toHaveCount(0);
+});
+
+test("in full screen, Escape clears the selection first and closes the view on the next press", async ({
+  context,
+  page,
+}) => {
+  await routeApi(context, FOCUS_API);
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+
+  await page.locator("#ghdg-root .ghdg-fs-btn").click();
+  const fs = page.locator("#ghdg-fs");
+  await expect(fs.locator(".ghdg-node")).toHaveCount(5);
+  await fs.locator('.ghdg-node[data-id="6"]').click();
+  await expect(fs.locator(".ghdg-node.is-dimmed")).toHaveCount(4);
+
+  await page.keyboard.press("Escape");
+  await expect(fs).toBeVisible();
+  await expect(fs.locator(".is-dimmed")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(fs).toHaveCount(0);
+});
+
 test("opens full screen, shows larger cards, and closes with the button and Escape", async ({
   context,
   page,

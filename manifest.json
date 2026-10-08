@@ -41,6 +41,7 @@
       "js": [
         "features/dependency-graph/layout.js",
         "features/dependency-graph/transitive.js",
+        "features/dependency-graph/lineage.js",
         "features/dependency-graph/content.js"
       ],
       "css": [

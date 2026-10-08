@@ -223,7 +223,7 @@
     );
 
     return `
-      <div class="${cls.join(" ")}" title="${titleAttr}" style="${style}">
+      <div class="${cls.join(" ")}" data-id="${escapeHtml(node.id)}" title="${titleAttr}" style="${style}">
         ${linkIconHtml(node.url, `Open #${node.number}`)}
         <span class="ghdg-node-top">
           <span class="ghdg-node-dot" style="${s.dotStyle}"></span>
@@ -255,7 +255,7 @@
     );
 
     return `
-      <div class="${cls.join(" ")}" title="${titleAttr}" style="${style}">
+      <div class="${cls.join(" ")}" data-id="${escapeHtml(node.id)}" title="${titleAttr}" style="${style}">
         ${linkIconHtml(node.url, `Open ${node.owner}/${node.repo}#${node.number}`)}
         <span class="ghdg-node-top">
           <span class="ghdg-node-dot" style="${s.dotStyle}"></span>
@@ -280,7 +280,33 @@
     return `M ${x1} ${y1} C ${x1} ${clearY}, ${x2} ${clearY}, ${x2} ${y2}`;
   }
 
-  function renderGraph(body, graph, theme, align, dims, large) {
+  // Fades everything outside the selected card's lineage (itself, all of its
+  // upstream and all of its downstream) and rings the selected card. Reads
+  // the graph back from the DOM it was rendered into (cards and edges carry
+  // their ids), so a selection change updates classes in place, without a
+  // re-render that would reset the scroll position. A null selection clears it.
+  function applyHighlight(root, selectedId) {
+    const stage = root.querySelector(".ghdg-graph-stage");
+    if (!stage) return;
+    const edgeEls = [...stage.querySelectorAll("path.ghdg-edge")];
+    const keep =
+      selectedId == null
+        ? null
+        : window.GHDG_LINEAGE.lineage(
+            selectedId,
+            edgeEls.map((p) => ({ from: p.dataset.from, to: p.dataset.to }))
+          );
+    stage.classList.toggle("has-selection", !!keep);
+    for (const el of stage.querySelectorAll(".ghdg-node")) {
+      el.classList.toggle("is-dimmed", !!keep && !keep.has(el.dataset.id));
+      el.classList.toggle("is-selected", !!keep && el.dataset.id === selectedId);
+    }
+    for (const p of edgeEls) {
+      p.classList.toggle("is-dimmed", !!keep && !(keep.has(p.dataset.from) && keep.has(p.dataset.to)));
+    }
+  }
+
+  function renderGraph(body, graph, theme, align, dims, large, selectedId) {
     const { nodes, edges } = graph;
     body.innerHTML = "";
 
@@ -334,6 +360,8 @@
         "class",
         "ghdg-edge" + (isExternal ? " is-external" : "") + (e.critical ? " is-critical" : "")
       );
+      path.dataset.from = String(e.from);
+      path.dataset.to = String(e.to);
       path.setAttribute("marker-end", e.critical ? "url(#ghdg-arrow-critical)" : "url(#ghdg-arrow)");
       svg.appendChild(path);
     }
@@ -353,6 +381,7 @@
 
     scroll.appendChild(stage);
     body.appendChild(scroll);
+    applyHighlight(body, selectedId);
   }
 
   // "full": everything. "open": drop external nodes that aren't actually
@@ -588,6 +617,7 @@
     let noticeText = null; // text of the retry banner when a refresh failed, else null
     let fsOverlay = null; // the full-screen overlay element, or null when closed
     let autoTimer = null;
+    let selectedId = null; // id (string) of the clicked card whose lineage is highlighted, or null
     let autoDelay = autoRefreshMs; // current auto-refresh cadence; grows on failure, resets on success
 
     const isStale = () => state.key !== key || !document.contains(container);
@@ -609,7 +639,9 @@
 
     function renderInto(bodyEl, titleEl, dims, large) {
       const g = applyTransitiveMode(applyDependencyMode(currentGraph, depMode), hideTransitive);
-      renderGraph(bodyEl, g, theme, alignMode, dims, large);
+      // A selection only survives while its card is still on screen.
+      if (selectedId != null && !g.nodes.some((n) => String(n.id) === selectedId)) selectedId = null;
+      renderGraph(bodyEl, g, theme, alignMode, dims, large, selectedId);
       if (titleEl) titleEl.textContent = headerTitleText(currentGraph);
       return g;
     }
@@ -635,6 +667,21 @@
         parentEl.innerHTML = parentHeaderHtml(currentGraph.parent, theme);
         parentEl.hidden = !currentGraph.parent;
       }
+    }
+
+    function setSelection(id) {
+      selectedId = id;
+      for (const root of scopes()) applyHighlight(root, selectedId);
+    }
+
+    // Clicking a card selects it (clicking it again clears); clicking the
+    // empty graph area clears. The card's link icon keeps its own behavior.
+    function onGraphClick(e) {
+      if (!e.target.closest || !e.target.closest(".ghdg-graph-scroll")) return;
+      if (e.target.closest(".ghdg-node-link")) return;
+      const card = e.target.closest(".ghdg-node");
+      if (!card) return setSelection(null);
+      setSelection(card.dataset.id === selectedId ? null : card.dataset.id);
     }
 
     function setRefreshing(on) {
@@ -758,6 +805,7 @@
       document.body.appendChild(overlay);
       fsOverlay = overlay;
       wireControls(overlay);
+      overlay.addEventListener("click", onGraphClick);
       if (noticeText) showNotice(noticeText); // mirror an outstanding refresh error
       renderAll();
       overlay.querySelector(".ghdg-close-btn")?.focus();
@@ -798,14 +846,20 @@
       root.querySelector(".ghdg-close-btn")?.addEventListener("click", closeFullscreen);
     }
 
+    // Escape peels one layer: first the selection, then the full-screen view.
     function onKeydown(e) {
-      if (e.key === "Escape" && fsOverlay) {
+      if (e.key !== "Escape") return;
+      if (selectedId != null) {
+        if (fsOverlay) e.preventDefault();
+        setSelection(null);
+      } else if (fsOverlay) {
         e.preventDefault();
         closeFullscreen();
       }
     }
 
     wireControls(container);
+    container.addEventListener("click", onGraphClick);
     document.addEventListener("visibilitychange", onVisibility);
     document.addEventListener("keydown", onKeydown);
     teardown = () => {
