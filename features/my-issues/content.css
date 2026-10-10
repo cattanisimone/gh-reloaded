@@ -1,5 +1,5 @@
-/* My Issues by Project — the control bar and grouped panel injected into
-   github.com/issues. Colors are hardcoded GitHub (Primer) light/dark values
+/* My Issues by Project — the toolbar, the Project tile grid and the sidebar
+   rail on github.com/issues. Colors are hardcoded GitHub (Primer) light/dark values
    keyed on the data-theme the content script resolves, so the view matches
    whichever theme GitHub is actually rendering (explicit setting, not just
    the OS preference). Status pills are colored inline from the API's own
@@ -14,6 +14,7 @@
   --ghmi-accent: #0969da;
   --ghmi-open: #1a7f37;
   --ghmi-closed: #8250df;
+  --ghmi-focus: #0969da;
   margin: 12px 0;
   font-size: 13px;
   color: var(--ghmi-fg);
@@ -28,6 +29,7 @@
   --ghmi-accent: #4493f8;
   --ghmi-open: #3fb950;
   --ghmi-closed: #ab7df8;
+  --ghmi-focus: #4493f8;
 }
 
 /* While grouped, the content script marks the native results blocks (never
@@ -37,21 +39,50 @@
   display: none !important;
 }
 
-.ghmi-bar {
+.ghmi-toolbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 6px 10px;
-  border: 1px solid var(--ghmi-border);
-  border-radius: 6px;
-  background: var(--ghmi-subtle);
+  flex-wrap: wrap;
 }
 
-.ghmi-bar-label {
+.ghmi-summary {
+  color: var(--ghmi-muted);
+  font-weight: 600;
+}
+
+.ghmi-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.ghmi-bulk {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-weight: 600;
+  color: var(--ghmi-muted);
+}
+.ghmi-bulk[hidden] {
+  display: none;
+}
+
+.ghmi-link-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ghmi-accent);
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.ghmi-link-btn:hover {
+  text-decoration: underline;
+}
+
+.ghmi-glyph {
   color: var(--ghmi-muted);
 }
 
@@ -82,17 +113,17 @@
   color: #ffffff;
 }
 
-.ghmi-panel {
-  margin-top: 12px;
+.ghmi-seg-btn:focus-visible,
+.ghmi-link-btn:focus-visible,
+.ghmi-more:focus-visible,
+.ghmi-btn:focus-visible,
+.ghmi-sidebar-toggle:focus-visible {
+  outline: 2px solid var(--ghmi-focus);
+  outline-offset: 1px;
 }
 
-.ghmi-note {
-  margin-bottom: 10px;
-  padding: 8px 10px;
-  border: 1px solid var(--ghmi-border);
-  border-radius: 6px;
-  background: var(--ghmi-subtle);
-  color: var(--ghmi-muted);
+.ghmi-panel {
+  margin-top: 12px;
 }
 
 .ghmi-message {
@@ -113,57 +144,72 @@
   cursor: pointer;
 }
 
-.ghmi-project {
+/* The grid of Project tiles: one column when narrow, two or three as the
+   page widens. */
+.ghmi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* Below 520px of panel width the minimum would overflow: let one tile fill. */
+@media (max-width: 600px) {
+  .ghmi-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ghmi-tile {
+  container-type: inline-size;
+  min-width: 0;
   border: 1px solid var(--ghmi-border);
   border-radius: 6px;
   background: var(--ghmi-bg);
-  margin-bottom: 10px;
 }
 
-.ghmi-project > summary,
-.ghmi-status > summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.ghmi-tile > summary {
+  display: block;
+  padding: 10px 12px;
   cursor: pointer;
   list-style: none;
   user-select: none;
 }
-
-.ghmi-project > summary {
-  padding: 8px 12px;
-  font-weight: 600;
-}
-
-.ghmi-project > summary::-webkit-details-marker,
-.ghmi-status > summary::-webkit-details-marker {
+.ghmi-tile > summary::-webkit-details-marker {
   display: none;
 }
 
-.ghmi-project > summary::before,
-.ghmi-status > summary::before {
+.ghmi-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ghmi-tile-head::before {
   content: "▸";
   color: var(--ghmi-muted);
   font-size: 10px;
-  transition: transform 0.12s;
 }
-
-.ghmi-project[open] > summary::before,
-.ghmi-status[open] > summary::before {
+.ghmi-tile[open] .ghmi-tile-head::before {
   transform: rotate(90deg);
 }
 
-.ghmi-project-title {
+.ghmi-tile-title {
   color: var(--ghmi-fg);
   text-decoration: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-a.ghmi-project-title:hover {
+a.ghmi-tile-title:hover {
   color: var(--ghmi-accent);
   text-decoration: underline;
 }
 
 .ghmi-count {
-  margin-left: auto;
   min-width: 20px;
   padding: 0 7px;
   border-radius: 999px;
@@ -175,19 +221,59 @@ a.ghmi-project-title:hover {
   text-align: center;
 }
 
-.ghmi-statuses {
+.ghmi-open-project {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: var(--ghmi-accent);
+  font-size: 12px;
+  font-weight: 400;
+  text-decoration: none;
+}
+.ghmi-open-project:hover {
+  text-decoration: underline;
+}
+
+.ghmi-dist {
+  display: flex;
+  height: 8px;
+  margin-top: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--ghmi-subtle);
+}
+.ghmi-dist-seg {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+}
+.ghmi-dist-seg + .ghmi-dist-seg {
+  border-left: 1px solid var(--ghmi-bg);
+}
+
+.ghmi-legend {
+  margin-top: 6px;
+  color: var(--ghmi-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.ghmi-tile-body {
   padding: 0 12px 6px;
 }
 
+/* A Status: pill and count in a left gutter, rows to the right. */
 .ghmi-status {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 0;
   border-top: 1px solid var(--ghmi-border);
 }
-.ghmi-status:first-child {
-  border-top: none;
-}
 
-.ghmi-status > summary {
-  padding: 6px 2px;
+.ghmi-gutter {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .ghmi-status-name {
@@ -196,6 +282,9 @@ a.ghmi-project-title:hover {
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ghmi-status-name.is-none {
   color: var(--ghmi-muted);
@@ -203,56 +292,158 @@ a.ghmi-project-title:hover {
   font-style: italic;
 }
 
-.ghmi-issues {
+.ghmi-status-count {
+  color: var(--ghmi-muted);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+/* Below ~460px of tile width the gutter stacks above its rows. */
+@container (max-width: 460px) {
+  .ghmi-status {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+}
+
+.ghmi-rows {
   list-style: none;
   margin: 0;
-  padding: 0 0 6px;
+  padding: 0;
 }
 
-.ghmi-project > .ghmi-issues {
-  padding: 0 12px 8px;
-}
-
-.ghmi-issue {
+.ghmi-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
-  padding: 3px 0;
-}
-
-.ghmi-issue-dot {
-  flex: 0 0 auto;
-  width: 8px;
-  height: 8px;
-  margin-top: 4px;
-  border-radius: 50%;
-  background: var(--ghmi-open);
-}
-.ghmi-issue.is-closed .ghmi-issue-dot {
-  background: var(--ghmi-closed);
-}
-
-.ghmi-issue-link {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+  padding: 4px 0;
   min-width: 0;
-  text-decoration: none;
-  color: var(--ghmi-fg);
 }
-.ghmi-issue-link:hover .ghmi-issue-title {
+.ghmi-row + .ghmi-row {
+  border-top: 1px solid var(--ghmi-border);
+}
+
+.ghmi-row-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+.ghmi-row-icon-svg.is-open {
+  color: var(--ghmi-open);
+}
+.ghmi-row-icon-svg.is-closed {
+  color: var(--ghmi-closed);
+}
+
+.ghmi-row-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ghmi-fg);
+  text-decoration: none;
+}
+.ghmi-row-title:hover {
   color: var(--ghmi-accent);
   text-decoration: underline;
 }
 
-.ghmi-issue-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ghmi-issue-ref {
+.ghmi-row-ref,
+.ghmi-row-time {
   flex: 0 0 auto;
   color: var(--ghmi-muted);
   font-size: 12px;
+}
+.ghmi-row-ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.ghmi-row-time {
+  min-width: 2.5em;
+  text-align: right;
+}
+
+.ghmi-more {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ghmi-accent);
+  padding: 4px 0;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ghmi-more:hover {
+  text-decoration: underline;
+}
+
+/* ---- Collapsible sidebar ------------------------------------------------
+   Everything is keyed on data-ghmi-* attributes the content script adds
+   after finding the sidebar by the visible text of its navigation items;
+   no GitHub class names. No transitions, so prefers-reduced-motion holds by
+   construction. */
+
+.ghmi-sidebar-toggle {
+  display: block;
+  appearance: none;
+  margin: 4px 0;
+  padding: 2px 8px;
+  border: 1px solid #d1d9e0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+[data-ghmi-sidebar="collapsed"] {
+  width: 48px !important;
+  min-width: 0 !important;
+  max-width: 48px !important;
+  overflow: hidden;
+}
+
+[data-ghmi-sidebar="collapsed"] .ghmi-sidebar-toggle {
+  margin: 4px auto;
+}
+
+[data-ghmi-sidebar="collapsed"] [data-ghmi-rail-hide] {
+  display: none !important;
+}
+
+/* Icons only: the text is clipped, not removed, so the link keeps its
+   accessible name. */
+[data-ghmi-sidebar="collapsed"] [data-ghmi-label] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+[data-ghmi-sidebar="collapsed"] [data-ghmi-nav] {
+  display: flex !important;
+  justify-content: center;
+  gap: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* The pane gives the freed width to the content. Grid: the track list is the
+   live one measured by the script, first track replaced by the rail. */
+[data-ghmi-pane="grid"][data-ghmi-rail] {
+  grid-template-columns: var(--ghmi-cols) !important;
+}
+[data-ghmi-pane="flex"] > [data-ghmi-sidebar="collapsed"] {
+  flex: 0 0 48px !important;
+}
+[data-ghmi-pane="flex"]:has(> [data-ghmi-sidebar="collapsed"]) > [data-ghmi-content],
+[data-ghmi-pane="grid"][data-ghmi-rail] > [data-ghmi-content] {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none !important;
 }

@@ -1,8 +1,9 @@
 // features/my-issues/content.js — on GitHub's own "My Issues" dashboard
 // (github.com/issues), adds a "Group by project" control next to the native
-// flat list. Switched on, it replaces the list with the same issues
-// organized as Project → Status → issues, each a collapsible group with a
-// count; switched off, GitHub's own list is restored untouched.
+// flat list. Switched on, it replaces the list with the same issues as a
+// grid of Project tiles, each listing its issues by that Project's real
+// Status; switched off, GitHub's own list is restored untouched. It also
+// makes the dashboard's left sidebar collapsible to an icon rail.
 //
 // It never reads the grouped data off the page (the dashboard only renders
 // a virtualized slice of the real result set) — it asks the background to
@@ -16,6 +17,7 @@
   const ROOT_ID = "ghmi-root";
   const STORAGE_ENABLED = "ghmiEnabled";
   const STORAGE_VIEW = "ghmiView"; // "list" | "grouped"
+  const STORAGE_SIDEBAR = "ghmiSidebar"; // "collapsed" (default) | "expanded"
   const MESSAGE_TYPE_GROUPS = "GHMI_FETCH_GROUPS"; // matches background/my-issues.js
 
   function extensionAlive() {
@@ -25,6 +27,11 @@
       return false;
     }
   }
+
+  const L = globalThis.GHMI_LAYOUT; // features/my-issues/layout.js, loaded first
+
+  // Issues shown per Status before "Show N more". A constant, not a setting.
+  const STATUS_CAP = 5;
 
   function isMyIssuesPage() {
     return /^\/issues(\/|$)/.test(location.pathname);
@@ -158,25 +165,36 @@
     return { parent: el.parentElement || main, before: el };
   }
 
-  function controlHtml() {
+  const ICON_OPEN =
+    '<path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"></path>';
+  const ICON_CLOSED =
+    '<path d="M11.28 6.78a.75.75 0 0 0-1.06-1.06L7.25 8.69 5.78 7.22a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l3.5-3.5Z"></path><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0Zm-1.5 0a6.5 6.5 0 1 0-13 0 6.5 6.5 0 0 0 13 0Z"></path>';
+
+  function toolbarHtml() {
     return `
-      <div class="ghmi-bar" role="group" aria-label="My Issues view">
-        <span class="ghmi-bar-label">
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
+      <div class="ghmi-toolbar" role="group" aria-label="My Issues view">
+        <span class="ghmi-summary" aria-live="polite"></span>
+        <span class="ghmi-actions">
+          <span class="ghmi-bulk" hidden>
+            <button type="button" class="ghmi-link-btn" data-bulk="expand">Expand all</button>
+            <span aria-hidden="true">·</span>
+            <button type="button" class="ghmi-link-btn" data-bulk="collapse">Collapse all</button>
+          </span>
+          <svg class="ghmi-glyph" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" role="img" aria-label="GH Reloaded">
+            <title>GH Reloaded</title>
             <path d="M1.75 1h3.5A1.75 1.75 0 0 1 7 2.75v3.5A1.75 1.75 0 0 1 5.25 8h-3.5A1.75 1.75 0 0 1 0 6.25v-3.5C0 1.784.784 1 1.75 1Zm9 0h3.5A1.75 1.75 0 0 1 16 2.75v3.5A1.75 1.75 0 0 1 14.25 8h-3.5A1.75 1.75 0 0 1 9 6.25v-3.5C9 1.784 9.784 1 10.75 1ZM1.75 9h3.5A1.75 1.75 0 0 1 7 10.75v3.5A1.75 1.75 0 0 1 5.25 16h-3.5A1.75 1.75 0 0 1 0 14.25v-3.5C0 9.784.784 9 1.75 9Zm9 0h3.5A1.75 1.75 0 0 1 16 10.75v3.5A1.75 1.75 0 0 1 14.25 16h-3.5A1.75 1.75 0 0 1 9 14.25v-3.5C9 9.784 9.784 9 10.75 9Z"></path>
           </svg>
-          GH Reloaded
-        </span>
-        <span class="ghmi-seg" role="tablist">
-          <button type="button" class="ghmi-seg-btn" data-view="list" role="tab">List</button>
-          <button type="button" class="ghmi-seg-btn" data-view="grouped" role="tab">Group by project</button>
+          <span class="ghmi-seg" role="tablist">
+            <button type="button" class="ghmi-seg-btn" data-view="list" role="tab">List</button>
+            <button type="button" class="ghmi-seg-btn" data-view="grouped" role="tab">Group by project</button>
+          </span>
         </span>
       </div>
       <div class="ghmi-panel" hidden></div>`;
   }
 
   // Mounts (or re-mounts, if GitHub's SPA re-rendered the list and dropped
-  // our node) the control + grouped panel immediately before the native
+  // our node) the toolbar + grouped panel immediately before the native
   // results block. The parent is tagged so CSS can hide the results that
   // follow our root while grouped, leaving everything above (search,
   // filters, tabs) visible and working.
@@ -189,12 +207,22 @@
     root.id = ROOT_ID;
     root.className = "ghmi-root";
     root.dataset.theme = githubTheme();
-    root.innerHTML = controlHtml();
+    root.innerHTML = toolbarHtml();
     parent.insertBefore(root, before);
 
     root.querySelectorAll(".ghmi-seg-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         chrome.storage.local.set({ [STORAGE_VIEW]: btn.dataset.view });
+      });
+    });
+    root.querySelectorAll("[data-bulk]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const open = btn.dataset.bulk === "expand";
+        root.querySelectorAll(".ghmi-tile").forEach((d) => {
+          d.open = open;
+          if (open) collapsedTiles.delete(d.dataset.key);
+          else collapsedTiles.add(d.dataset.key);
+        });
       });
     });
     return root;
@@ -212,6 +240,8 @@
       btn.setAttribute("aria-selected", String(active));
     });
     root.querySelector(".ghmi-panel").hidden = !grouped;
+    root.dataset.view = view;
+    updateToolbar(root);
 
     const main = document.querySelector("main") || document.body;
     const searchEl = findSearchBox(main);
@@ -222,59 +252,142 @@
     }
   }
 
-  function issueRowHtml(issue) {
-    const repo = escapeHtml(issue.nameWithOwner || "");
-    const closed = issue.state === "CLOSED";
+  // The summary and Expand/Collapse all belong to the grouped view with
+  // results on screen; in List view, or while a message is showing, the
+  // toolbar is just the switch.
+  function updateToolbar(root) {
+    const panel = root.querySelector(".ghmi-panel");
+    const showing = root.dataset.view === "grouped" && panel.dataset.state === "done" && !!panel.querySelector(".ghmi-tile");
+    root.querySelector(".ghmi-bulk").hidden = !showing;
+    if (!showing) root.querySelector(".ghmi-summary").textContent = "";
+  }
+
+  function plural(n, word) {
+    return `${n} ${word}${n === 1 ? "" : "s"}`;
+  }
+
+  // Tile and Status state kept in memory only: it survives our node being
+  // re-mounted, never a page reload.
+  const collapsedTiles = new Set();
+  const expandedStatuses = new Set();
+
+  function issueIconSvg(closed) {
+    return `<svg class="ghmi-row-icon-svg ${closed ? "is-closed" : "is-open"}" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">${closed ? ICON_CLOSED : ICON_OPEN}</svg>`;
+  }
+
+  function absoluteDate(iso) {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? "" : d.toLocaleString();
+  }
+
+  function rowHtml(issue, labels) {
+    const full = issue.nameWithOwner || "";
+    const label = labels.get(full) ?? full;
+    const ago = L.relativeTime(issue.updatedAt);
+    const title = escapeHtml(issue.title || "");
+    const time = ago
+      ? `<time class="ghmi-row-time" datetime="${escapeHtml(issue.updatedAt)}" title="${escapeHtml(absoluteDate(issue.updatedAt))}">${ago}</time>`
+      : "";
     return `
-      <li class="ghmi-issue ${closed ? "is-closed" : "is-open"}">
-        <span class="ghmi-issue-dot" aria-hidden="true"></span>
-        <a class="ghmi-issue-link" href="${escapeHtml(issue.url)}" target="_blank" rel="noopener">
-          <span class="ghmi-issue-title">${escapeHtml(issue.title || "")}</span>
-          <span class="ghmi-issue-ref">${repo}#${issue.number}</span>
-        </a>
+      <li class="ghmi-row">
+        <span class="ghmi-row-icon">${issueIconSvg(issue.state === "CLOSED")}</span>
+        <a class="ghmi-row-title" href="${escapeHtml(issue.url)}" target="_blank" rel="noopener" title="${title}">${title}</a>
+        <span class="ghmi-row-ref" title="${escapeHtml(full)}#${issue.number}">${escapeHtml(label)}#${issue.number}</span>
+        ${time}
       </li>`;
   }
 
-  function statusGroupHtml(status, theme) {
+  // One capped list of rows, with its "Show N more" button.
+  function rowsHtml(issues, labels, key) {
+    const { visible, hidden } = L.capStatus(issues, STATUS_CAP, expandedStatuses.has(key));
+    const more = hidden
+      ? `<button type="button" class="ghmi-more" data-key="${escapeHtml(key)}" aria-expanded="false">Show ${hidden} more</button>`
+      : "";
+    return `<ul class="ghmi-rows">${visible.map((i) => rowHtml(i, labels)).join("")}</ul>${more}`;
+  }
+
+  function statusGroupHtml(status, projectKey, labels, theme) {
     const name = status.name || "No Status";
     const p = paletteFor(status.color, theme);
     const pill = status.name
       ? `style="color:${p.fg}; background:${p.bg}; border-color:${p.fg}"`
       : `class="is-none"`;
     return `
-      <details class="ghmi-status" open>
-        <summary>
+      <section class="ghmi-status">
+        <div class="ghmi-gutter">
           <span class="ghmi-status-name" ${pill}>${escapeHtml(name)}</span>
-          <span class="ghmi-count">${status.issues.length}</span>
+          <span class="ghmi-status-count">${status.issues.length}</span>
+        </div>
+        <div class="ghmi-status-rows">${rowsHtml(status.issues, labels, `${projectKey}|${status.optionId || status.name || "none"}`)}</div>
+      </section>`;
+  }
+
+  function legendText(segs) {
+    return segs.map((s) => `${s.count} ${s.name || "No Status"}`).join(" · ");
+  }
+
+  function distHtml(segs, theme) {
+    const text = legendText(segs);
+    const bars = segs
+      .map((s) => {
+        const color = s.name ? paletteFor(s.color, theme).fg : paletteFor("GRAY", theme).fg;
+        return `<span class="ghmi-dist-seg" style="width:${s.width}%; background:${color}"></span>`;
+      })
+      .join("");
+    return `
+      <div class="ghmi-dist" role="img" aria-label="${escapeHtml(text)}">${bars}</div>
+      <div class="ghmi-legend">${escapeHtml(text)}</div>`;
+  }
+
+  function tileHtml({ key, titleHtml, count, url, segs, bodyHtml, theme }) {
+    const open = collapsedTiles.has(key) ? "" : " open";
+    const openLink = url
+      ? `<a class="ghmi-open-project" href="${escapeHtml(url)}" target="_blank" rel="noopener">Open project ↗</a>`
+      : "";
+    return `
+      <details class="ghmi-tile" data-key="${escapeHtml(key)}"${open}>
+        <summary>
+          <span class="ghmi-tile-head">
+            ${titleHtml}
+            <span class="ghmi-count">${count}</span>
+            ${openLink}
+          </span>
+          ${distHtml(segs, theme)}
         </summary>
-        <ul class="ghmi-issues">${status.issues.map(issueRowHtml).join("")}</ul>
+        <div class="ghmi-tile-body">${bodyHtml}</div>
       </details>`;
   }
 
-  function projectGroupHtml(project, theme) {
+  function projectTileHtml(project, labels, theme) {
     const title = escapeHtml(project.title || "Untitled project");
-    const header = project.url
-      ? `<a class="ghmi-project-title" href="${escapeHtml(project.url)}" target="_blank" rel="noopener">${title}</a>`
-      : `<span class="ghmi-project-title">${title}</span>`;
-    return `
-      <details class="ghmi-project" open>
-        <summary>
-          ${header}
-          <span class="ghmi-count">${project.count}</span>
-        </summary>
-        <div class="ghmi-statuses">${project.statuses.map((s) => statusGroupHtml(s, theme)).join("")}</div>
-      </details>`;
+    const titleHtml = project.url
+      ? `<a class="ghmi-tile-title" href="${escapeHtml(project.url)}" target="_blank" rel="noopener">${title}</a>`
+      : `<span class="ghmi-tile-title">${title}</span>`;
+    const key = `p:${project.id || project.title}`;
+    const segs = L.barSegments(
+      project.statuses.map((s) => ({ name: s.name, color: s.color, count: s.issues.length }))
+    );
+    return tileHtml({
+      key,
+      titleHtml,
+      count: project.count,
+      url: project.url,
+      segs,
+      theme,
+      bodyHtml: project.statuses.map((s) => statusGroupHtml(s, key, labels, theme)).join(""),
+    });
   }
 
-  function noProjectGroupHtml(issues) {
-    return `
-      <details class="ghmi-project is-no-project" open>
-        <summary>
-          <span class="ghmi-project-title">No Project</span>
-          <span class="ghmi-count">${issues.length}</span>
-        </summary>
-        <ul class="ghmi-issues">${issues.map(issueRowHtml).join("")}</ul>
-      </details>`;
+  function noProjectTileHtml(issues, labels, theme) {
+    const key = "none";
+    return tileHtml({
+      key,
+      titleHtml: `<span class="ghmi-tile-title">No Project</span>`,
+      count: issues.length,
+      segs: [{ name: "No Project", count: issues.length, color: "GRAY", width: 100 }],
+      theme,
+      bodyHtml: rowsHtml(issues, labels, key),
+    });
   }
 
   function renderMessage(panel, text, kind) {
@@ -286,7 +399,7 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "ghmi-btn";
-      btn.textContent = "Set GitHub token";
+      btn.textContent = "Open settings";
       btn.addEventListener("click", () => chrome.runtime.openOptionsPage());
       box.appendChild(document.createElement("br"));
       box.appendChild(btn);
@@ -294,21 +407,62 @@
     panel.appendChild(box);
   }
 
-  function renderGroups(panel, data, theme) {
+  function renderGroups(root, data, theme) {
+    const panel = root.querySelector(".ghmi-panel");
     const { projects = [], noProject = [], totalCount = 0, fetchedCount = 0, truncated } = data;
     if (!projects.length && !noProject.length) {
-      renderMessage(panel, "No issues match the current filters.");
+      renderMessage(panel, "No issues match this search.");
       return;
     }
 
-    let html = "";
-    if (truncated) {
-      html += `<div class="ghmi-note">Showing the first ${fetchedCount} of ${totalCount} issues — refine the filters above to narrow the set.</div>`;
-    }
-    html += projects.map((p) => projectGroupHtml(p, theme)).join("");
-    if (noProject.length) html += noProjectGroupHtml(noProject);
-    panel.innerHTML = html;
+    const all = projects.flatMap((p) => p.statuses.flatMap((s) => s.issues)).concat(noProject);
+    const labels = L.repoLabels(all);
+    panel.innerHTML =
+      `<div class="ghmi-grid">` +
+      projects.map((p) => projectTileHtml(p, labels, theme)).join("") +
+      (noProject.length ? noProjectTileHtml(noProject, labels, theme) : "") +
+      `</div>`;
+    panel.dataset.state = "done";
+
+    const distinct = L.distinctCount(projects, noProject);
+    root.querySelector(".ghmi-summary").textContent = truncated
+      ? `Showing the first ${fetchedCount} of ${totalCount} issues. Narrow the search to see all.`
+      : projects.length
+        ? `${plural(distinct, "issue")} in ${plural(projects.length, "project")}`
+        : plural(distinct, "issue");
   }
+
+  // In-memory UI state, wired once on the panel (a re-render replaces its
+  // contents, not the panel itself).
+  function wirePanel(panel) {
+    if (panel.dataset.wired) return;
+    panel.dataset.wired = "1";
+    panel.addEventListener("toggle", (e) => {
+      const d = e.target;
+      if (!d.classList?.contains("ghmi-tile")) return;
+      if (d.open) collapsedTiles.delete(d.dataset.key);
+      else collapsedTiles.add(d.dataset.key);
+    }, true);
+    panel.addEventListener("click", (e) => {
+      const more = e.target.closest?.(".ghmi-more");
+      if (more) {
+        expandedStatuses.add(more.dataset.key);
+        // Re-render in place from the cached data; the expanded set and the
+        // collapsed tiles are replayed by the render.
+        const root = document.getElementById(ROOT_ID);
+        if (root && lastResult) renderGroups(root, lastResult.data, root.dataset.theme || githubTheme());
+        return;
+      }
+      // Links inside a <summary> must navigate, not toggle the tile.
+      if (e.target.closest?.("summary a")) e.stopPropagation();
+    });
+  }
+
+  // The last successful response, so a re-mounted panel (GitHub re-rendered
+  // the page) for the SAME query repaints without another round of API
+  // calls. It expires, so coming back to the dashboard later refetches.
+  const RESULT_TTL_MS = 60_000;
+  let lastResult = null; // { query, data, at }
 
   // Keyed by the query we last rendered for, so a repeated sync() (SPA
   // re-render, interval tick) doesn't re-fetch for a query already on
@@ -318,42 +472,223 @@
 
   function fetchAndRender(root) {
     const panel = root.querySelector(".ghmi-panel");
+    wirePanel(panel);
     const query = currentQuery();
     // Already showing (or already fetching) this exact query on this panel —
-    // don't stack a second request. A re-mounted panel has no state yet, so
-    // this never wrongly skips a genuinely fresh panel.
+    // don't stack a second request.
     if (rendered.query === query && (panel.dataset.state === "done" || panel.dataset.state === "loading")) {
       return;
     }
+    const theme = root.dataset.theme || githubTheme();
+
+    if (lastResult && lastResult.query === query && Date.now() - lastResult.at < RESULT_TTL_MS) {
+      rendered = { query };
+      renderGroups(root, lastResult.data, theme);
+      panel.dataset.state = "done";
+      updateToolbar(root);
+      return;
+    }
+
     rendered = { query };
     panel.dataset.state = "loading";
     renderMessage(panel, "Loading issues…");
-    const theme = root.dataset.theme || githubTheme();
+    updateToolbar(root);
 
     chrome.runtime.sendMessage({ type: MESSAGE_TYPE_GROUPS, payload: { query } }, (resp) => {
       if (!document.contains(panel) || rendered.query !== query) return; // stale
+      const fail = (text, kind) => {
+        renderMessage(panel, text, kind);
+        panel.dataset.state = "error";
+        rendered = { query: null }; // allow a retry on the next sync
+        updateToolbar(root);
+      };
       if (chrome.runtime.lastError) {
-        renderMessage(panel, "Extension error: " + chrome.runtime.lastError.message);
+        fail(`Couldn't load issues: ${chrome.runtime.lastError.message}. Switch to List for the native view.`);
         return;
       }
       if (!resp || !resp.ok) {
         const status = resp?.status;
         if (status === 401 || status === 403 || !resp?.hasToken) {
-          renderMessage(
-            panel,
-            "Set a GitHub token in the extension options to group your issues by project.",
-            "locked"
-          );
+          fail("Add a GitHub token to group issues by project.", "locked");
         } else {
-          renderMessage(panel, `Could not load issues: ${resp?.error || "unknown error"}`);
+          fail(`Couldn't load issues: ${resp?.error || "unknown error"}. Switch to List for the native view.`);
         }
-        panel.dataset.state = "error";
-        rendered = { query: null }; // allow a retry on the next sync
         return;
       }
-      renderGroups(panel, resp, theme);
+      lastResult = { query, data: resp, at: Date.now() };
       panel.dataset.state = "done";
+      renderGroups(root, resp, theme);
+      // An empty set renders a message, not tiles.
+      updateToolbar(root);
     });
+  }
+
+  // ---------------------------------------------------------------- sidebar
+  //
+  // The dashboard's left sidebar (Assigned to me / Created by me / Mentioning
+  // me / Recently updated / Views) collapses to an icon rail. Nothing here
+  // relies on GitHub's class names: the nav items are found by their visible
+  // text, the sidebar is their lowest common ancestor climbed while it holds
+  // neither the search box nor the result rows, and the pane is its parent.
+  // If any step fails there is no toggle and the page is left untouched.
+
+  const NAV_LABELS = ["Assigned to me", "Created by me", "Mentioning me", "Recently updated"];
+  const RAIL_WIDTH = "48px";
+  const TOGGLE_CLASS = "ghmi-sidebar-toggle";
+  let sidebarFound = false;
+
+  const textOf = (el) => (el.textContent || "").replace(/\s+/g, " ").trim();
+
+  function findNavLinks() {
+    const anchors = [...document.querySelectorAll("a[href]")].filter((a) => !a.closest(`#${ROOT_ID}`));
+    const links = [];
+    for (const label of NAV_LABELS) {
+      const a = anchors.find((el) => textOf(el) === label);
+      if (!a) return null;
+      links.push(a);
+    }
+    return links;
+  }
+
+  function holdsResults(node) {
+    if (node.querySelector(SEARCH_SELECTOR)) return true;
+    for (const a of node.querySelectorAll("a[href]")) {
+      if (a.closest(`#${ROOT_ID}`)) continue;
+      try {
+        if (ISSUE_HREF_RE.test(new URL(a.href, location.origin).pathname)) return true;
+      } catch {}
+    }
+    return false;
+  }
+
+  function findSidebar() {
+    const links = findNavLinks();
+    if (!links) return null;
+    let el = links[0];
+    while (el && !links.every((l) => el.contains(l))) el = el.parentElement;
+    if (!el) return null;
+    // The lowest common ancestor of the four items, climbed while its parent
+    // still holds neither the search box nor any result row.
+    while (el.parentElement && el.parentElement !== document.body && !holdsResults(el.parentElement)) {
+      el = el.parentElement;
+    }
+    if (holdsResults(el) || !el.parentElement) return null;
+    const pane = el.parentElement;
+    const display = getComputedStyle(pane).display;
+    const kind = /grid/.test(display) ? "grid" : /flex/.test(display) ? "flex" : null;
+    if (!kind) return null;
+    // The sidebar must be the leading item of the pane to become a rail.
+    if (pane.firstElementChild !== el) return null;
+    return { sidebar: el, pane, kind, links };
+  }
+
+  // Wraps each link's visible text so CSS can clip it (visually hidden, not
+  // display:none) while the link keeps its accessible name.
+  function markNavLabels(link) {
+    for (const child of [...link.childNodes]) {
+      if (child.nodeType === Node.TEXT_NODE && child.textContent.trim()) {
+        const span = document.createElement("span");
+        span.setAttribute("data-ghmi-label", "");
+        span.setAttribute("data-ghmi-wrap", "");
+        child.replaceWith(span);
+        span.appendChild(child);
+      } else if (child.nodeType === Node.ELEMENT_NODE && child.localName !== "svg" && !child.querySelector("svg") && textOf(child)) {
+        child.setAttribute("data-ghmi-label", "");
+      }
+    }
+  }
+
+  function markRailHidden(sidebar, links, toggle) {
+    const keep = new Set([sidebar]);
+    for (const l of links) for (let n = l; n && n !== sidebar; n = n.parentElement) keep.add(n);
+    const walk = (el) => {
+      for (const c of el.children) {
+        if (c === toggle) continue;
+        if (!keep.has(c)) c.setAttribute("data-ghmi-rail-hide", "");
+        else if (!links.includes(c)) walk(c);
+      }
+    };
+    walk(sidebar);
+  }
+
+  function ensureToggle(sidebar) {
+    let btn = sidebar.querySelector(`:scope > .${TOGGLE_CLASS}`);
+    if (btn) return btn;
+    btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = TOGGLE_CLASS;
+    btn.addEventListener("click", () => {
+      const next = btn.getAttribute("aria-expanded") === "true" ? "collapsed" : "expanded";
+      chrome.storage.local.set({ [STORAGE_SIDEBAR]: next });
+    });
+    sidebar.insertBefore(btn, sidebar.firstChild);
+    return btn;
+  }
+
+  // A grid pane keeps GitHub's other tracks: the first track becomes the
+  // rail, the second takes the freed space, any further track is carried
+  // over from the live computed value (measured with our template removed).
+  function measureRailColumns(pane) {
+    pane.removeAttribute("data-ghmi-rail");
+    pane.style.removeProperty("--ghmi-cols");
+    const tracks = getComputedStyle(pane).gridTemplateColumns.split(/\s+(?![^(]*\))/).filter(Boolean);
+    if (tracks.length < 2 || tracks[0] === "none") return false;
+    pane.style.setProperty("--ghmi-cols", [RAIL_WIDTH, "minmax(0, 1fr)", ...tracks.slice(2)].join(" "));
+    return true;
+  }
+
+  function applySidebar(state) {
+    const found = findSidebar();
+    sidebarFound = !!found;
+    if (!found) {
+      teardownSidebar();
+      return;
+    }
+    const { sidebar, pane, kind, links } = found;
+    const collapsed = state !== "expanded";
+
+    sidebar.setAttribute("data-ghmi-sidebar", collapsed ? "collapsed" : "expanded");
+    pane.setAttribute("data-ghmi-pane", kind);
+    for (const c of pane.children) if (c !== sidebar) c.setAttribute("data-ghmi-content", "");
+
+    const toggle = ensureToggle(sidebar);
+    toggle.setAttribute("aria-expanded", String(!collapsed));
+    toggle.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+    toggle.textContent = collapsed ? "»" : "«";
+
+    for (const link of links) {
+      link.setAttribute("data-ghmi-nav", "");
+      if (!link.querySelector("[data-ghmi-label]")) markNavLabels(link);
+      if (collapsed) {
+        if (!link.hasAttribute("title")) {
+          link.setAttribute("title", textOf(link));
+          link.setAttribute("data-ghmi-titled", "");
+        }
+      } else if (link.hasAttribute("data-ghmi-titled")) {
+        link.removeAttribute("title");
+        link.removeAttribute("data-ghmi-titled");
+      }
+    }
+    markRailHidden(sidebar, links, toggle);
+
+    if (kind === "grid") {
+      pane.removeAttribute("data-ghmi-rail");
+      if (collapsed && measureRailColumns(pane)) pane.setAttribute("data-ghmi-rail", "");
+      else pane.style.removeProperty("--ghmi-cols");
+    }
+  }
+
+  function teardownSidebar() {
+    document.querySelectorAll(`.${TOGGLE_CLASS}`).forEach((el) => el.remove());
+    document.querySelectorAll("[data-ghmi-wrap]").forEach((span) => span.replaceWith(...span.childNodes));
+    document.querySelectorAll("[data-ghmi-titled]").forEach((el) => {
+      el.removeAttribute("title");
+      el.removeAttribute("data-ghmi-titled");
+    });
+    document.querySelectorAll("[data-ghmi-pane]").forEach((el) => el.style.removeProperty("--ghmi-cols"));
+    for (const attr of ["sidebar", "pane", "rail", "content", "rail-hide", "nav", "label"]) {
+      document.querySelectorAll(`[data-ghmi-${attr}]`).forEach((el) => el.removeAttribute(`data-ghmi-${attr}`));
+    }
   }
 
   async function sync() {
@@ -361,7 +696,7 @@
       teardown();
       return;
     }
-    const stored = await chrome.storage.local.get([STORAGE_ENABLED, STORAGE_VIEW]);
+    const stored = await chrome.storage.local.get([STORAGE_ENABLED, STORAGE_VIEW, STORAGE_SIDEBAR]);
     if (stored[STORAGE_ENABLED] === false) {
       teardown();
       return;
@@ -370,6 +705,7 @@
     const view = stored[STORAGE_VIEW] === "grouped" ? "grouped" : "list";
     applyView(root, view);
     if (view === "grouped") fetchAndRender(root);
+    applySidebar(stored[STORAGE_SIDEBAR]);
   }
 
   function teardown() {
@@ -381,7 +717,10 @@
         .forEach((el) => el.removeAttribute("data-ghmi-hidden"));
     }
     root?.remove();
+    teardownSidebar();
+    sidebarFound = false;
     rendered = { query: null };
+    lastResult = null;
   }
 
   const debouncedSync = debounce(sync, 150);
@@ -389,15 +728,19 @@
   document.addEventListener("turbo:load", debouncedSync);
   document.addEventListener("turbo:render", debouncedSync);
   document.addEventListener("pjax:end", debouncedSync);
+  window.addEventListener("resize", debounce(() => {
+    // A responsive grid pane may change its track list at a breakpoint.
+    if (document.querySelector('[data-ghmi-pane="grid"][data-ghmi-rail]')) debouncedSync();
+  }, 200));
 
   chrome.storage.onChanged.addListener((changes) => {
     if (!extensionAlive()) return;
-    if (changes[STORAGE_ENABLED] || changes[STORAGE_VIEW]) debouncedSync();
+    if (changes[STORAGE_ENABLED] || changes[STORAGE_VIEW] || changes[STORAGE_SIDEBAR]) debouncedSync();
   });
 
   // Belt-and-suspenders SPA detection, as the other features do: Turbo
-  // events plus a URL-polling fallback. The poll also re-asserts our node
-  // when GitHub re-renders the list region (same URL) and drops it.
+  // events plus a URL-polling fallback. The poll also re-asserts our nodes
+  // when GitHub re-renders the page (same URL) and drops them.
   let lastUrl = location.href;
   const pollId = setInterval(() => {
     if (!extensionAlive()) {
@@ -408,6 +751,8 @@
       lastUrl = location.href;
       debouncedSync();
     } else if (isMyIssuesPage() && !document.getElementById(ROOT_ID)) {
+      debouncedSync();
+    } else if (sidebarFound && !document.querySelector(`.${TOGGLE_CLASS}`)) {
       debouncedSync();
     }
   }, 800);

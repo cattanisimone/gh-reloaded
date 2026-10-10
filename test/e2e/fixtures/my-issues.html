@@ -2,10 +2,15 @@
   Fixture: GitHub's "My Issues" dashboard (github.com/issues).
   Serves the my-issues feature. See fixtures/README.md for capture date and
   how to refresh. Hand-trimmed to the structure the content script anchors
-  on: a header/search block, then a results block that is a direct child of
-  <main> and holds links to individual issues (how findMount locates the
-  list), then a pagination block. The feature mounts its control right
-  before the results block and hides it (and the pagination) while grouped.
+  on, with INVENTED names only:
+    - a pane (CSS grid) holding a left sidebar and the content column. The
+      sidebar is found by the visible text of its four navigation items
+      (Assigned to me / Created by me / Mentioning me / Recently updated)
+      and also holds a "Views" section;
+    - in the content column, a header with the search box, then a results
+      block holding links to individual issues (how findMount locates the
+      list), then a pagination block. The feature mounts its toolbar right
+      before the results block and hides it (and the pagination) while grouped.
 -->
 <!doctype html>
 <html lang="en" data-color-mode="light">
@@ -15,6 +20,11 @@
     <style>
       body { font-family: sans-serif; margin: 0; }
       main { padding: 16px; }
+      /*PANE*/
+      .dash-pane { display: grid; grid-template-columns: 256px minmax(0, 1fr); gap: 16px; }
+      /*END-PANE*/
+      .dash-sidebar { border-right: 1px solid #d0d7de; padding-right: 8px; }
+      .nav-item { display: flex; gap: 8px; align-items: center; padding: 6px 8px; color: inherit; text-decoration: none; }
       .issues-header { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
       .issues-header input { flex: 1; height: 28px; }
       .issue-list { border: 1px solid #d0d7de; border-radius: 6px; }
@@ -24,21 +34,37 @@
   </head>
   <body>
     <main>
-      <!-- Header + search + tabs. Stays visible in both views; editing the
-           search updates the URL query, which the content script re-fetches
-           against. -->
-      <div class="issues-header">
-        <nav aria-label="issue tabs"><a href="/issues">Assigned</a> <a href="/issues/created">Created</a></nav>
-        <input type="text" aria-label="Search all issues" value="assignee:@me is:open" />
-      </div>
+      <div class="dash-pane">
+        <aside class="dash-sidebar">
+          <div class="nav-group">
+          <a class="nav-item" href="/issues/assigned"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg><span>Assigned to me</span></a>
+          <a class="nav-item" href="/issues/created"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg><span>Created by me</span></a>
+          <a class="nav-item" href="/issues/mentioned"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg><span>Mentioning me</span></a>
+          <a class="nav-item" href="/issues/recent"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg><span>Recently updated</span></a>
+          </div>
+          <section class="views">
+            <h2>Views</h2>
+            <ul><li><a href="/issues?q=label%3Abug">Bakery bugs</a></li></ul>
+          </section>
+        </aside>
 
-      <!-- Results block: a direct child of <main> holding issue links. -->
-      <div class="issue-list">
-        <div class="issue-row"><a href="/acme/web/issues/2">Set up the build</a></div>
-        <div class="issue-row"><a href="/acme/api/issues/9">Fix the rate limiter</a></div>
-      </div>
+        <div class="dash-content">
+          <!-- Header + search. Stays visible in both views; editing the
+               search updates the URL query, which the content script
+               re-fetches against. -->
+          <div class="issues-header">
+            <input type="text" aria-label="Search all issues" value="assignee:@me is:open" />
+          </div>
 
-      <div class="pagination"><a href="/issues?page=2">Next</a></div>
+          <!-- Results block: holds issue links. -->
+          <div class="issue-list">
+            <div class="issue-row"><a href="/acme/orders-api/issues/591">Add pickup time slots to checkout</a></div>
+            <div class="issue-row"><a href="/acme/site/issues/199">Typo on the about page</a></div>
+          </div>
+
+          <div class="pagination"><a href="/issues?page=2">Next</a></div>
+        </div>
+      </div>
     </main>
   </body>
 </html>
