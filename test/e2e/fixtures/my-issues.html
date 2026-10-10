@@ -1,0 +1,79 @@
+<!--
+  Fixture: GitHub's "My Issues" dashboard (github.com/issues).
+  Serves the my-issues feature. See fixtures/README.md for capture date and
+  how to refresh. Hand-trimmed to the structure the content script anchors
+  on, with INVENTED names only:
+    - a pane (CSS grid) holding a left sidebar and the content column. The
+      sidebar is found by the visible text of its four navigation items
+      (Assigned to me / Created by me / Mentioning me / Recently updated)
+      and also holds a "Views" section;
+    - in the content column, a header with the search box, then a results
+      block holding links to individual issues (how findMount locates the
+      list), then a pagination block. The feature mounts its toolbar right
+      before the results block and hides it (and the pagination) while grouped.
+-->
+<!doctype html>
+<html lang="en" data-color-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Issues</title>
+    <style>
+      body { font-family: sans-serif; margin: 0; }
+      main { padding: 16px; }
+      /*PANE*/
+      .dash-pane { display: grid; grid-template-columns: 256px minmax(0, 1fr); gap: 16px; }
+      /*END-PANE*/
+      .dash-sidebar { border-right: 1px solid #d0d7de; padding: 0 8px 0 0; overflow: hidden; }
+      /* Mimics the real navigation: a list whose items keep their own
+         padding, each a link with its own padding, a fixed-size icon
+         wrapper with a margin, and a text label. */
+      .nav-list { list-style: none; margin: 0; padding: 0 8px; }
+      .nav-li { position: relative; padding: 0 4px; }
+      .nav-li[aria-current="page"]::before { content: ""; position: absolute; left: -4px; top: 8px; width: 3px; height: 16px; border-radius: 2px; background: #0969da; }
+      .nav-item { display: flex; align-items: center; min-width: 200px; padding: 6px 12px; color: inherit; text-decoration: none; }
+      .nav-icon { display: inline-flex; flex: 0 0 20px; width: 20px; margin-right: 8px; }
+      .issues-title { margin: 0; font-size: 20px; line-height: 32px; }
+      .issues-header { display: flex; gap: 8px; align-items: center; min-height: 32px; margin-bottom: 12px; }
+      .issues-header input { flex: 1; height: 28px; }
+      .issue-list { border: 1px solid #d0d7de; border-radius: 6px; }
+      .issue-row { padding: 10px 12px; border-bottom: 1px solid #d0d7de; }
+      .pagination { margin-top: 12px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="dash-pane">
+        <aside class="dash-sidebar">
+          <nav aria-label="Dashboard"><ul class="nav-list">
+            <li class="nav-li" aria-current="page"><a class="nav-item" href="/issues/assigned"><span class="nav-icon"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg></span><span>Assigned to me</span></a></li>
+            <li class="nav-li"><a class="nav-item" href="/issues/created"><span class="nav-icon"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg></span><span>Created by me</span></a></li>
+            <li class="nav-li"><a class="nav-item" href="/issues/mentioned"><span class="nav-icon"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg></span><span>Mentioning me</span></a></li>
+            <li class="nav-li"><a class="nav-item" href="/issues/recent"><span class="nav-icon"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg></span><span>Recently updated</span></a></li>
+          </ul></nav>
+          <section class="views">
+            <h2>Views</h2>
+            <ul><li><a href="/issues?q=label%3Abug">Bakery bugs</a></li></ul>
+          </section>
+        </aside>
+
+        <div class="dash-content">
+          <!-- Header + search. Stays visible in both views; editing the
+               search updates the URL query, which the content script
+               re-fetches against. -->
+          <div class="issues-header">
+            <h1 class="issues-title">Issues</h1>
+            <input type="text" aria-label="Search all issues" value="assignee:@me is:open" />
+          </div>
+
+          <!-- Results block: holds issue links. -->
+          <div class="issue-list">
+            <div class="issue-row"><a href="/acme/orders-api/issues/591">Add pickup time slots to checkout</a></div>
+            <div class="issue-row"><a href="/acme/site/issues/199">Typo on the about page</a></div>
+          </div>
+
+          <div class="pagination"><a href="/issues?page=2">Next</a></div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
