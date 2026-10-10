@@ -11,7 +11,7 @@
 // signals" rather than failing when the token or Projects access is
 // missing.
 
-import { ghGraphQL, ghFetch, hasAnyToken, mapWithLimit, resolveTokenRecord } from "../lib/github-api.js";
+import { ghGraphQL, ghFetch, hasAnyToken, mapWithLimit, resolveTokenRecord, GQL_ERRORS } from "../lib/github-api.js";
 import { computeCriticalPath, median } from "./dependency-graph.js";
 import { collectBoardEdges } from "./board-dependencies.js";
 
@@ -331,9 +331,12 @@ export function shapeItemData(node, project, column, columnField = null) {
 // the project item's fields with the second. A project read that fails or
 // returns nothing leaves the card flagged `projectUnread`, so the board
 // is treated as partly read instead of silently losing priority, age,
-// target date and effort.
+// target date and effort. The lookups tolerate a partial GraphQL answer (one
+// bad alias must not discard its whole chunk), and whatever went wrong is
+// collected in `problems` so the caller can say why.
 async function fetchItemData(items, project, columnField) {
   const data = {};
+  const problems = [];
   const byOwner = new Map();
   for (const item of items) {
     if (!byOwner.has(item.owner)) byOwner.set(item.owner, []);
@@ -353,12 +356,18 @@ async function fetchItemData(items, project, columnField) {
           variables[`n${n}`] = item.number;
         });
         try {
-          const res = await ghGraphQL(buildQuery(chunk.length, split ? REPO_FIELDS : REPO_FIELDS + PROJECT_FIELDS), variables, { owner });
+          const res = await ghGraphQL(buildQuery(chunk.length, split ? REPO_FIELDS : REPO_FIELDS + PROJECT_FIELDS), variables, {
+            owner,
+            allowPartial: true,
+          });
+          noteGraphqlErrors(res, problems, owner);
           let projectRes = null;
           if (split) {
             try {
-              projectRes = await ghGraphQL(buildQuery(chunk.length, PROJECT_FIELDS), variables, { owner: project.owner });
+              projectRes = await ghGraphQL(buildQuery(chunk.length, PROJECT_FIELDS), variables, { owner: project.owner, allowPartial: true });
+              noteGraphqlErrors(projectRes, problems, owner);
             } catch (e) {
+              problems.push(classifyFailure(e));
               console.warn(`[gh-reloaded] Standup signals: could not read project fields for ${owner} items:`, e.message);
             }
           }
@@ -376,14 +385,41 @@ async function fetchItemData(items, project, columnField) {
             data[keyOf(item.owner, item.repo, item.number)] = shaped;
           });
         } catch (e) {
+          problems.push(classifyFailure(e));
           console.warn(`[gh-reloaded] Standup signals: could not read ${owner} items:`, e.message);
         }
       });
     }
   }
   await Promise.all(jobs.map((job) => job()));
-  return data;
+  return { data, problems };
 }
+
+function noteGraphqlErrors(res, problems, owner) {
+  const errors = res?.[GQL_ERRORS];
+  if (!errors?.length) return;
+  problems.push(classifyFailure({ graphqlErrors: errors, message: errors[0].message }));
+  console.warn(`[gh-reloaded] Standup signals: some ${owner} items could not be read:`, errors[0].message);
+}
+
+// Why a read failed, as plain data the content script can show: `reason` is
+// "no-access" only when the token (or its permissions) is the likely cause,
+// and "graphql-error" for everything else, with the first message and the
+// HTTP status (when there was one) as the detail.
+const ACCESS_MESSAGE_RE = /resource not accessible|insufficient[_ ]scopes?|forbidden|bad credentials|requires authentication/i;
+
+export function classifyFailure(err) {
+  const first = err?.graphqlErrors?.[0];
+  const message = String(first?.message || err?.message || "Unknown error");
+  const status = Number.isInteger(err?.status) ? err.status : null;
+  const access =
+    status === 401 ||
+    status === 403 ||
+    ACCESS_MESSAGE_RE.test(message) ||
+    (err?.graphqlErrors || []).some((e) => /^(FORBIDDEN|INSUFFICIENT_SCOPES)$/.test(e?.type || ""));
+  return { reason: access ? "no-access" : "graphql-error", detail: { message, status } };
+}
+
 
 const COLUMN_FIELD_QUERY = `
   query($owner: String!, $number: Int!, $view: Int!) {
@@ -406,10 +442,11 @@ async function fetchColumnField(project) {
     const res = await ghGraphQL(
       COLUMN_FIELD_QUERY,
       { owner: project.owner, number: project.number, view: project.view },
-      { owner: project.owner }
+      { owner: project.owner, allowPartial: true }
     );
     return res?.repositoryOwner?.projectV2?.view?.verticalGroupByFields?.nodes?.[0]?.name || null;
-  } catch {
+  } catch (e) {
+    console.warn("[gh-reloaded] Standup signals: could not read the board's column field, ages may be missing:", e.message);
     return null;
   }
 }
@@ -440,12 +477,16 @@ export async function handleMessage(payload) {
     ...i,
     key: keyOf(i.owner, i.repo, i.number),
   }));
-  if (!items.length || !(await hasAnyToken())) return { signals: null };
+  if (!items.length) return { signals: null, reason: "no-items" };
+  if (!(await hasAnyToken())) return { signals: null, reason: "no-token" };
 
   const options = normalizeOptions(payload?.options);
   const columnField = await fetchColumnField(project);
-  const data = await fetchItemData(items, project, columnField);
-  if (!Object.keys(data).length) return { signals: null };
+  const { data, problems } = await fetchItemData(items, project, columnField);
+  if (!Object.keys(data).length) {
+    if (problems.length) return { signals: null, reason: problems[0].reason, detail: problems[0].detail };
+    return { signals: null, reason: "no-data", detail: { message: "GitHub returned nothing readable for the cards on this board", status: null } };
+  }
 
   const labelled = items.filter((i) => {
     const d = data[i.key];
@@ -476,5 +517,6 @@ export async function handleMessage(payload) {
       })),
       now: Date.now(),
     }),
+    ...(problems.length ? { warning: problems[0].detail } : {}),
   };
 }

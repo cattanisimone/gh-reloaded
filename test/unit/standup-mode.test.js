@@ -17,6 +17,7 @@ import {
   shapeItemData,
   columnSince,
   localDateString,
+  classifyFailure,
   DEFAULT_REVIEW_KEYWORDS,
 } from "../../background/standup-mode.js";
 import { collectBoardEdges } from "../../background/board-dependencies.js";
@@ -475,4 +476,92 @@ test("project fields are read with the project owner's token, not the issue owne
   } finally {
     globalThis.fetch = realFetch;
   }
+});
+
+// ---- why the signals could not be loaded ----
+
+const gqlNode = (state = "OPEN") => ({ state, labels: { nodes: [] }, comments: { nodes: [] }, projectItems: { nodes: [] } });
+
+// Runs handleMessage against a fake GraphQL endpoint. Each test uses its own
+// issue numbers because GraphQL responses are cached by query.
+async function runBoard(numbers, respond, extra = {}) {
+  const realFetch = globalThis.fetch;
+  resetStorage({ githubTokens: [{ id: "t", name: "t", token: "x", owner: "" }], defaultTokenId: "t" });
+  globalThis.fetch = async (url, init) => {
+    if (String(url).endsWith("/graphql")) return respond(JSON.parse(init.body));
+    return { ok: true, status: 200, json: async () => [] };
+  };
+  try {
+    return await handleMessage({
+      project: { owner: "acme", number: 1 },
+      columnCount: 3,
+      items: numbers.map((number) => ({ owner: "acme", repo: "web", number, column: "Todo", columnIndex: 0 })),
+      ...extra,
+    });
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+}
+
+const ok = (body) => ({ ok: true, status: 200, json: async () => body });
+
+test("classifyFailure only blames the token for 401/403 and access-style errors", () => {
+  assert.equal(classifyFailure({ status: 401, message: "x" }).reason, "no-access");
+  assert.equal(classifyFailure({ status: 403, message: "x" }).reason, "no-access");
+  assert.equal(classifyFailure({ message: "GitHub GraphQL error: Resource not accessible by personal access token" }).reason, "no-access");
+  assert.equal(classifyFailure({ graphqlErrors: [{ type: "INSUFFICIENT_SCOPES", message: "scopes" }] }).reason, "no-access");
+  const other = classifyFailure({ status: 502, message: "GitHub GraphQL API 502" });
+  assert.equal(other.reason, "graphql-error");
+  assert.deepEqual(other.detail, { message: "GitHub GraphQL API 502", status: 502 });
+});
+
+test("handleMessage reports why there are no signals: no items, no token", async () => {
+  assert.deepEqual(await runBoard([], () => ok({})), { signals: null, reason: "no-items" });
+  resetStorage({});
+  const res = await handleMessage({ project: { owner: "acme", number: 1 }, items: [{ owner: "acme", repo: "web", number: 900, column: "Todo", columnIndex: 0 }] });
+  assert.deepEqual(res, { signals: null, reason: "no-token" });
+});
+
+test("a GraphQL error on one alias still gives signals for the rest of the board", async () => {
+  const res = await runBoard([101, 102, 103], (body) =>
+    ok({
+      data: { i0: { issueOrPullRequest: gqlNode() }, i1: null, i2: { issueOrPullRequest: gqlNode() } },
+      errors: [{ type: "NOT_FOUND", path: ["i1", "issueOrPullRequest"], message: "Could not resolve to a Repository with the name 'acme/gone'." }],
+    })
+  );
+  assert.ok(res.signals, "signals are computed from what was read");
+  assert.ok(res.signals.cards["acme/web#101"]);
+  assert.ok(res.signals.cards["acme/web#103"]);
+  assert.equal(res.signals.cards["acme/web#102"], undefined);
+  assert.equal(res.signals.incomplete, true, "the board is marked as partly read");
+  assert.match(res.warning.message, /Could not resolve/);
+});
+
+test("a 403 is reported as missing access, with the status", async () => {
+  const res = await runBoard([201], () => ({ ok: false, status: 403, json: async () => ({}) }));
+  assert.equal(res.signals, null);
+  assert.equal(res.reason, "no-access");
+  assert.equal(res.detail.status, 403);
+});
+
+test("a 200 with only an access error is reported as missing access", async () => {
+  const res = await runBoard([301], () => ok({ data: null, errors: [{ message: "Resource not accessible by personal access token" }] }));
+  assert.equal(res.reason, "no-access");
+  assert.match(res.detail.message, /Resource not accessible/);
+});
+
+test("any other failure is a neutral error that carries the first message and the status", async () => {
+  const res = await runBoard([401], () => ({ ok: false, status: 502, json: async () => ({}) }));
+  assert.equal(res.signals, null);
+  assert.equal(res.reason, "graphql-error");
+  assert.equal(res.detail.status, 502);
+  const rate = await runBoard([402], () => ok({ data: null, errors: [{ type: "RATE_LIMITED", message: "API rate limit exceeded" }] }));
+  assert.equal(rate.reason, "graphql-error");
+  assert.match(rate.detail.message, /rate limit/);
+});
+
+test("a 200 that returns nothing readable is reported as no data, not as an access problem", async () => {
+  const res = await runBoard([501, 502], () => ok({ data: { i0: null, i1: null } }));
+  assert.equal(res.signals, null);
+  assert.equal(res.reason, "no-data");
 });

@@ -7,7 +7,7 @@ import "../support/chrome-stub.js"; // must come first: installs globalThis.chro
 import { resetStorage } from "../support/chrome-stub.js";
 import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { resolveTokenRecord, ghFetch, repoFromUrl, safeFields, mapWithLimit } from "../../lib/github-api.js";
+import { resolveTokenRecord, ghFetch, ghGraphQL, GQL_ERRORS, repoFromUrl, safeFields, mapWithLimit } from "../../lib/github-api.js";
 
 const TOKENS = [
   { id: "tok_default", name: "Default", token: "secret-default", owner: "" },
@@ -155,4 +155,43 @@ test("mapWithLimit never runs more than `limit` calls at once and keeps the resu
 
 test("mapWithLimit copes with an empty list", async () => {
   assert.deepEqual(await mapWithLimit([], 4, async (n) => n), []);
+});
+
+const gqlResponse = (body) => async () => ({ ok: true, status: 200, json: async () => body });
+
+test("ghGraphQL throws on any GraphQL error by default, even when data is present", async () => {
+  globalThis.fetch = gqlResponse({ data: { a: 1 }, errors: [{ message: "Could not resolve", type: "NOT_FOUND" }] });
+  await assert.rejects(() => ghGraphQL("query { a }", { n: 1 }, { owner: "acme" }), /Could not resolve/);
+});
+
+test("ghGraphQL with allowPartial returns the data and exposes the errors", async () => {
+  globalThis.fetch = gqlResponse({ data: { a: 1, b: null }, errors: [{ message: "Could not resolve b", path: ["b"] }] });
+  const data = await ghGraphQL("query { partial }", { n: 2 }, { owner: "acme", allowPartial: true });
+  assert.equal(data.a, 1);
+  assert.equal(data.b, null);
+  assert.equal(data[GQL_ERRORS][0].message, "Could not resolve b");
+  assert.deepEqual(Object.keys(data), ["a", "b"], "the errors do not show up as data");
+});
+
+test("ghGraphQL with allowPartial still throws when there is no data at all", async () => {
+  globalThis.fetch = gqlResponse({ data: null, errors: [{ message: "Resource not accessible by personal access token" }] });
+  await assert.rejects(
+    () => ghGraphQL("query { nodata }", { n: 3 }, { owner: "acme", allowPartial: true }),
+    (e) => {
+      assert.match(e.message, /Resource not accessible/);
+      assert.equal(e.graphqlErrors.length, 1);
+      return true;
+    }
+  );
+});
+
+test("a partial GraphQL result is not cached for callers that did not opt in", async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return { ok: true, status: 200, json: async () => ({ data: { a: 1 }, errors: [{ message: "boom" }] }) };
+  };
+  await ghGraphQL("query { nocache }", { n: 4 }, { owner: "acme", allowPartial: true });
+  await assert.rejects(() => ghGraphQL("query { nocache }", { n: 4 }, { owner: "acme" }), /boom/);
+  assert.equal(calls, 2);
 });
