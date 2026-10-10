@@ -3,9 +3,10 @@
 // how a flat list of issues becomes Project → Status → issues with the
 // ordering and multi-project rules the feature promises.
 import "../support/chrome-stub.js"; // must come first: installs globalThis.chrome
-import { test } from "node:test";
+import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeQuery, buildGroups } from "../../background/my-issues.js";
+import { resetStorage } from "../support/chrome-stub.js";
+import { normalizeQuery, buildGroups, toIssue, handleMessage, resetIssueTypeSupport } from "../../background/my-issues.js";
 
 test("normalizeQuery falls back to assigned-issues when empty", () => {
   assert.equal(normalizeQuery(""), "assignee:@me is:issue is:open");
@@ -112,4 +113,53 @@ test("buildGroups counts a project across all its status groups", () => {
   ];
   const { projects } = buildGroups(issues);
   assert.equal(projects[0].count, 2);
+});
+
+test("toIssue carries the issue type, or null when there is none", () => {
+  const base = { number: 1, title: "t", url: "u", state: "OPEN", repository: { nameWithOwner: "acme/web" } };
+  assert.deepEqual(toIssue({ ...base, issueType: { name: "Bug", color: "RED" } }).issueType, { name: "Bug", color: "RED" });
+  assert.equal(toIssue({ ...base, issueType: null }).issueType, null);
+  assert.equal(toIssue(base).issueType, null);
+});
+
+let realFetch;
+beforeEach(() => {
+  resetStorage({ githubTokens: [{ id: "t", name: "d", token: "x", owner: "" }], defaultTokenId: "t" });
+  resetIssueTypeSupport();
+  realFetch = globalThis.fetch;
+});
+afterEach(() => {
+  globalThis.fetch = realFetch;
+});
+
+const issueNode = { __typename: "Issue", id: "I1", number: 1, title: "t", url: "u", state: "OPEN", repository: { nameWithOwner: "acme/web" }, projectItems: { nodes: [] } };
+
+test("the search retries once without issueType when GitHub rejects the field, and remembers it", async () => {
+  const queries = [];
+  globalThis.fetch = async (_url, opts) => {
+    const { query } = JSON.parse(opts.body);
+    queries.push(query);
+    const ok = (data) => ({ ok: true, status: 200, json: async () => data });
+    if (query.includes("issueType")) {
+      return ok({ errors: [{ message: "Field 'issueType' doesn't exist on type 'Issue'" }] });
+    }
+    return ok({ data: { search: { issueCount: 1, pageInfo: { hasNextPage: false }, nodes: [issueNode] } } });
+  };
+  const first = await handleMessage({ query: "is:open retry-1" });
+  assert.equal(first.noProject.length, 1);
+  assert.deepEqual(queries.map((q) => q.includes("issueType")), [true, false]);
+
+  queries.length = 0;
+  await handleMessage({ query: "is:open retry-2" });
+  assert.deepEqual(queries.map((q) => q.includes("issueType")), [false], "remembered for the session");
+});
+
+test("an error that does not name issueType is not retried", async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    return { ok: true, status: 200, json: async () => ({ errors: [{ message: "Something else" }] }) };
+  };
+  await assert.rejects(() => handleMessage({ query: "is:open no-retry" }), /Something else/);
+  assert.equal(calls, 1);
 });

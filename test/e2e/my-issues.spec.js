@@ -32,8 +32,9 @@ const OPTIONS = {
 
 const hoursAgo = (h) => new Date(Date.now() - h * 3600e3).toISOString();
 
-function node(number, title, repo, updatedAt, items = []) {
+function node(number, title, repo, updatedAt, items = [], issueType = undefined) {
   return {
+    ...(issueType ? { issueType } : {}),
     __typename: "Issue",
     number,
     title,
@@ -67,7 +68,10 @@ const ISSUES = [
     inBakery("Open", "GREEN", "b-open"),
     inFleet("Todo", "BLUE", "f-todo"),
   ]),
-  node(28, "Van temperature alerts", "acme/fleet", hoursAgo(5), [inFleet("Doing", "ORANGE", "f-doing")]),
+  node(28, "Van temperature alerts", "acme/fleet", hoursAgo(5), [inFleet("Doing", "ORANGE", "f-doing")], {
+    name: "Bug",
+    color: "RED",
+  }),
   node(40, "Fuel card reconciliation", "acme/fleet", hoursAgo(24 * 150), [inFleet(null)]),
   node(199, "Typo on the about page", "acme/site", hoursAgo(50)),
   node(4, "Update the croissant photo", "crumb/site", hoursAgo(24 * 7)),
@@ -105,7 +109,7 @@ async function routeGraphql(context, { search = () => searchResponse(), searched
       });
     }
     searched.push(body.variables || {});
-    const out = await search(body.variables || {});
+    const out = await search(body.variables || {}, body.query || "");
     return route.fulfill({
       status: out.status || 200,
       contentType: "application/json",
@@ -157,7 +161,7 @@ test("the toolbar counts distinct issues, not the sum of the tiles", async ({ co
   await expect(page.locator(".ghmi-summary")).toHaveText("14 issues in 2 projects");
 });
 
-test("a row shows state icon, title, repo#number without the owner, and time since update", async ({ context, page }) => {
+test("a row shows state icon, title, a gray #number chip, and time since update", async ({ context, page }) => {
   await setup(context, page);
   const fleet = tile(page, "Delivery Fleet");
   const row = fleet.locator(".ghmi-row", { hasText: "Van temperature alerts" });
@@ -165,14 +169,66 @@ test("a row shows state icon, title, repo#number without the owner, and time sin
   await expect(row.locator(".ghmi-row-icon svg")).toBeVisible();
   await expect(row.locator("a.ghmi-row-title")).toHaveAttribute("href", "https://github.com/acme/fleet/issues/28");
   await expect(row.locator("a.ghmi-row-title")).toHaveAttribute("title", "Van temperature alerts");
-  await expect(row.locator(".ghmi-row-ref")).toHaveText("fleet#28");
+  await expect(row.locator(".ghmi-row-ref")).toHaveText("#28");
   await expect(row.locator(".ghmi-row-ref")).toHaveAttribute("title", "acme/fleet#28");
   await expect(row.locator("time")).toHaveText("5h");
   await expect(row.locator("time")).toHaveAttribute("datetime", /^\d{4}-\d{2}-\d{2}T/);
 
-  // The owner stays only where a repo name is shared by two owners.
+  // No two issues of this tile share a number, so no repo name in the chips.
   const none = tile(page, "No Project");
-  await expect(none.locator(".ghmi-row-ref")).toHaveText(["acme/site#199", "crumb/site#4"]);
+  await expect(none.locator(".ghmi-row-ref")).toHaveText(["#199", "#4"]);
+  await expect(none.locator(".ghmi-row-ref").first()).toHaveAttribute("title", "acme/site#199");
+
+  // One width per tile: the titles start at the same x.
+  const widths = await fleet.locator(".ghmi-row-ref").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().width)));
+  expect(new Set(widths).size).toBe(1);
+});
+
+test("the repo joins the chip only when two issues of a tile share a number", async ({ context, page }) => {
+  const nodes = [
+    node(7, "Same number, one repo", "acme/web", hoursAgo(1)),
+    node(7, "Same number, other repo", "acme/api", hoursAgo(2)),
+    node(8, "Unique number", "acme/web", hoursAgo(3)),
+  ];
+  await setup(context, page, { graphql: { search: () => searchResponse(nodes) } });
+  const refs = tile(page, "No Project").locator(".ghmi-row-ref");
+  await expect(refs).toHaveText(["web#7", "api#7", "#8"]);
+  await expect(refs.nth(0)).toHaveAttribute("title", "acme/web#7");
+});
+
+test("a row with an issue type shows a tinted chip left of the number, a row without shows nothing", async ({ context, page }) => {
+  await setup(context, page);
+  const typed = tile(page, "Delivery Fleet").locator(".ghmi-row", { hasText: "Van temperature alerts" });
+  await expect(typed.locator(".ghmi-row-type")).toHaveText("Bug");
+  await expect(typed.locator(".ghmi-row-type")).toHaveAttribute("title", "Bug");
+  const t = await typed.locator(".ghmi-row-type").boundingBox();
+  const r = await typed.locator(".ghmi-row-ref").boundingBox();
+  expect(t.x + t.width).toBeLessThanOrEqual(r.x);
+
+  const plain = tile(page, "Delivery Fleet").locator(".ghmi-row", { hasText: "Fuel card reconciliation" });
+  await expect(plain.locator(".ghmi-row-type")).toHaveCount(0);
+});
+
+test("the issue type collapses to a colored dot with a tooltip in a narrow tile", async ({ context, page }) => {
+  await setup(context, page);
+  await page.setViewportSize({ width: 520, height: 900 });
+  const chip = tile(page, "Delivery Fleet").locator(".ghmi-row-type");
+  await expect.poll(async () => (await chip.boundingBox()).width).toBeLessThanOrEqual(10);
+  await expect(chip).toHaveAttribute("title", "Bug");
+  await expect(chip.locator(".ghmi-row-type-name")).toHaveText("Bug"); // clipped, still in the accessibility tree
+});
+
+test("the view still renders, without type chips, when GitHub rejects issueType", async ({ context, page }) => {
+  await setup(context, page, {
+    graphql: {
+      search: (vars, query) =>
+        /issueType/.test(query)
+          ? { errors: [{ message: "Field 'issueType' doesn't exist on type 'Issue'" }] }
+          : searchResponse(ISSUES.map(({ issueType, ...rest }) => rest)),
+    },
+  });
+  await expect(tile(page, "Delivery Fleet")).toBeVisible();
+  await expect(page.locator(".ghmi-row-type")).toHaveCount(0);
 });
 
 test("an issue in two projects shows in both tiles with each project's status", async ({ context, page }) => {
@@ -399,6 +455,60 @@ test("the sidebar starts collapsed, toggles, persists across reload and works in
   await expect.poll(() => contentWidth(page)).toBeGreaterThanOrEqual(narrow - 1);
 });
 
+test("the collapsed rail shows every icon whole, highlights the active item and keeps the toggle on top", async ({ context, page }) => {
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed", ghmiView: "list" } });
+  await expect(toggle(page)).toHaveAttribute("aria-expanded", "false");
+  const rail = page.locator(".dash-sidebar");
+  await expect.poll(async () => Math.round((await rail.boundingBox()).width)).toBeGreaterThanOrEqual(44);
+  const railBox = await rail.boundingBox();
+  expect(railBox.width).toBeLessThanOrEqual(56);
+
+  const icons = page.locator(".dash-sidebar [data-ghmi-nav] svg");
+  await expect(icons).toHaveCount(4);
+  for (let i = 0; i < 4; i++) {
+    const b = await icons.nth(i).boundingBox();
+    expect(b.width).toBeGreaterThanOrEqual(16);
+    expect(b.x).toBeGreaterThanOrEqual(railBox.x);
+    expect(b.x + b.width).toBeLessThanOrEqual(railBox.x + railBox.width);
+    expect(b.y).toBeGreaterThanOrEqual(railBox.y);
+    expect(b.y + b.height).toBeLessThanOrEqual(railBox.y + railBox.height);
+  }
+  // Each item is a square hit target, with the icon centered in it.
+  const link = page.getByRole("link", { name: "Created by me" });
+  const lb = await link.boundingBox();
+  expect(lb.width).toBeGreaterThanOrEqual(30);
+  expect(Math.abs(lb.width - lb.height)).toBeLessThan(2);
+  const ib = await link.locator("svg").boundingBox();
+  expect(Math.abs(ib.x + ib.width / 2 - (lb.x + lb.width / 2))).toBeLessThan(1.5);
+
+  // The active item carries a visible background; the others do not.
+  const bg = (name) => page.getByRole("link", { name }).evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(await bg("Assigned to me")).not.toBe("rgba(0, 0, 0, 0)");
+  expect(await bg("Created by me")).toBe("rgba(0, 0, 0, 0)");
+  await link.hover();
+  expect(await bg("Created by me")).not.toBe("rgba(0, 0, 0, 0)");
+  await link.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  expect(await link.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe("solid");
+
+  // The toggle sits in the title row, at the top of the rail, and stays there.
+  const title = await page.locator(".issues-header").boundingBox();
+  const tb = await toggle(page).boundingBox();
+  expect(tb.y).toBeGreaterThanOrEqual(title.y - 1);
+  expect(tb.y).toBeLessThanOrEqual(title.y + title.height);
+  await page.evaluate(() => {
+    document.querySelector(".dash-pane").style.minHeight = "3000px";
+    window.scrollTo(0, 400);
+  });
+  // It scrolls with the page, stays above the icons (never covers them), never at the bottom.
+  const docY = await toggle(page).evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  expect(docY).toBeLessThanOrEqual(title.y + title.height);
+  const first = await page.locator(".dash-sidebar [data-ghmi-nav] svg").first().boundingBox();
+  const tbox = await toggle(page).boundingBox();
+  expect(tbox.y + tbox.height).toBeLessThanOrEqual(first.y);
+});
+
 test("the sidebar toggle is a focusable button", async ({ context, page }) => {
   await setup(context, page);
   await toggle(page).focus();
@@ -526,4 +636,16 @@ test("Show N more keeps keyboard focus on the first revealed row", async ({ cont
   await page.keyboard.press("Enter");
   await expect(open.locator(".ghmi-row")).toHaveCount(8);
   await expect(open.locator(".ghmi-row-title").nth(5)).toBeFocused();
+});
+
+test("a long owner/repo chip is capped so the title keeps its room", async ({ context, page }) => {
+  const nodes = [
+    node(1234, "A title that needs room", "acme-corporation/web-frontend", hoursAgo(1)),
+    node(1234, "Same repo name, other owner", "globex-industries/web-frontend", hoursAgo(2)),
+    node(5, "Short", "acme-corporation/web-frontend", hoursAgo(3)),
+  ];
+  await setup(context, page, { graphql: { search: () => searchResponse(nodes) } });
+  const refs = tile(page, "No Project").locator(".ghmi-row-ref");
+  await expect(refs.first()).toHaveAttribute("title", "acme-corporation/web-frontend#1234");
+  for (const w of await refs.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width))) expect(w).toBeLessThan(160);
 });

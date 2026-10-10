@@ -15,7 +15,7 @@ None of this leaves your browser except the token itself, which is sent — over
 
 ## What it reads from GitHub pages
 
-To render its features, the extension reads issue titles, labels, status, sub-issue and dependency relationships, the issues assigned to you (when you open your My Issues dashboard) together with which Projects they belong to, and Projects v2 field values — from the GitHub page you're on and from the GitHub API — and displays that information back to you, in your own browser. None of it is transmitted anywhere else, logged, or retained beyond what's listed above.
+To render its features, the extension reads issue titles, labels, status, sub-issue and dependency relationships, the issues assigned to you (when you open your My Issues dashboard) together with which Projects they belong to and their issue type, and Projects v2 field values — from the GitHub page you're on and from the GitHub API — and displays that information back to you, in your own browser. None of it is transmitted anywhere else, logged, or retained beyond what's listed above.
 
 ## What it doesn't do
 

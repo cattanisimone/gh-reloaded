@@ -1,5 +1,5 @@
 // features/my-issues/layout.js — pure helpers behind the Project tiles on the
-// My Issues dashboard: time since update, repo#number labels, the per-Status
+// My Issues dashboard: time since update, `#number` chips, the per-Status
 // cap, distribution-bar widths and the distinct issue count.
 //
 // Kept out of content.js so the unit tests can load it on its own.
@@ -25,24 +25,35 @@
     return `${Math.floor(days / 365)}y`;
   }
 
-  // Maps each `nameWithOwner` in the set to the label shown before the issue
-  // number: just the repo name, unless the same name appears under two
-  // different owners, in which case the owner stays to tell them apart.
-  function repoLabels(issues) {
-    const ownersByName = new Map();
-    for (const { nameWithOwner } of issues) {
-      const [owner, name] = String(nameWithOwner || "").split("/");
-      if (name === undefined) continue;
-      if (!ownersByName.has(name)) ownersByName.set(name, new Set());
-      ownersByName.get(name).add(owner);
+  // The `#591` chip of every issue in one tile. The chip is just the number;
+  // the tooltip carries `owner/repo#591`. The repo name goes inside the chip
+  // (`repo#591`) only when two issues of the tile share a number from
+  // different repos, and the owner too if that repo name is itself shared.
+  // Returns a Map keyed by issue url: { text, title, ch }, `ch` being the
+  // widest chip of the tile (in characters) so the column stays aligned.
+  function refChips(issues) {
+    const reposByNumber = new Map();
+    for (const i of issues) {
+      if (!reposByNumber.has(i.number)) reposByNumber.set(i.number, new Set());
+      reposByNumber.get(i.number).add(String(i.nameWithOwner || ""));
     }
-    const labels = new Map();
-    for (const { nameWithOwner } of issues) {
-      const full = String(nameWithOwner || "");
-      const [, name] = full.split("/");
-      labels.set(full, name === undefined ? full : ownersByName.get(name).size > 1 ? full : name);
+    const chips = new Map();
+    let ch = 0;
+    for (const i of issues) {
+      const full = String(i.nameWithOwner || "");
+      const clash = reposByNumber.get(i.number);
+      let prefix = "";
+      if (clash.size > 1) {
+        const name = full.split("/")[1];
+        const sameName = [...clash].filter((r) => r.split("/")[1] === name).length > 1;
+        prefix = name === undefined || sameName ? full : name;
+      }
+      const text = `${prefix}#${i.number}`;
+      ch = Math.max(ch, text.length);
+      chips.set(i.url, { text, title: `${full}#${i.number}` });
     }
-    return labels;
+    for (const chip of chips.values()) chip.ch = ch;
+    return chips;
   }
 
   // First `cap` items of a Status, and how many are left behind a "Show N
@@ -75,6 +86,15 @@
     });
   }
 
+  // The issue type as a chip: null when there is none (no placeholder), the
+  // color a name the palette knows or gray.
+  function typeChip(issueType) {
+    const name = String(issueType?.name || "").trim();
+    if (!name) return null;
+    const upper = String(issueType.color || "").toUpperCase();
+    return { name, color: KNOWN_COLORS.has(upper) ? upper : "GRAY" };
+  }
+
   // Distinct issues across every tile: one in two Projects counts once.
   function distinctCount(projects, noProject) {
     const urls = new Set();
@@ -83,5 +103,5 @@
     return urls.size;
   }
 
-  global.GHMI_LAYOUT = { relativeTime, repoLabels, capStatus, barSegments, distinctCount };
+  global.GHMI_LAYOUT = { relativeTime, refChips, typeChip, capStatus, barSegments, distinctCount };
 })(typeof window !== "undefined" ? window : globalThis);

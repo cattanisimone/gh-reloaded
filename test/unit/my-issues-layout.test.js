@@ -13,7 +13,7 @@ vm.runInNewContext(
   readFileSync(new URL("../../features/my-issues/layout.js", import.meta.url), "utf8"),
   context
 );
-const { relativeTime, repoLabels, capStatus, barSegments, distinctCount } = context.GHMI_LAYOUT;
+const { relativeTime, refChips, typeChip, capStatus, barSegments, distinctCount } = context.GHMI_LAYOUT;
 // Values built inside the vm context carry its own Array prototype; a JSON
 // round trip lets deepEqual compare them with plain literals.
 const plain = (v) => JSON.parse(JSON.stringify(v));
@@ -35,22 +35,41 @@ test("relativeTime formats 1h, 2d, 3w, 5mo and clamps the future to 0m", () => {
   assert.equal(relativeTime("not a date", NOW), "");
 });
 
-test("repoLabels keeps the owner only for repo names shared by two owners", () => {
-  const labels = repoLabels([
-    { nameWithOwner: "acme/web" },
-    { nameWithOwner: "acme/api" },
-    { nameWithOwner: "acme/site" },
-    { nameWithOwner: "crumb/site" },
-    { nameWithOwner: "acme/web" },
-  ]);
-  assert.equal(labels.get("acme/web"), "web");
-  assert.equal(labels.get("acme/api"), "api");
-  assert.equal(labels.get("acme/site"), "acme/site");
-  assert.equal(labels.get("crumb/site"), "crumb/site");
+const I = (number, repo, url = `${repo}#${number}`) => ({ number, nameWithOwner: repo, url });
+
+test("refChips shows just the number, with owner/repo#number as the tooltip", () => {
+  const chips = refChips([I(591, "acme/web"), I(7, "acme/api")]);
+  assert.equal(chips.get("acme/web#591").text, "#591");
+  assert.equal(chips.get("acme/web#591").title, "acme/web#591");
+  assert.equal(chips.get("acme/api#7").text, "#7");
 });
 
-test("repoLabels falls back to the raw value when there is no owner", () => {
-  assert.equal(repoLabels([{ nameWithOwner: "" }]).get(""), "");
+test("refChips adds the repo name only when a number is shared by two repos in the tile", () => {
+  const chips = refChips([I(5, "acme/web"), I(5, "acme/api"), I(6, "acme/web")]);
+  assert.equal(chips.get("acme/web#5").text, "web#5");
+  assert.equal(chips.get("acme/api#5").text, "api#5");
+  assert.equal(chips.get("acme/web#6").text, "#6");
+});
+
+test("refChips keeps the owner too when the repo name itself is shared", () => {
+  const chips = refChips([I(4, "acme/site"), I(4, "crumb/site")]);
+  assert.equal(chips.get("acme/site#4").text, "acme/site#4");
+  assert.equal(chips.get("crumb/site#4").text, "crumb/site#4");
+});
+
+test("refChips gives every chip of a tile the same width, the widest text", () => {
+  const chips = refChips([I(5, "acme/web"), I(5, "acme/api"), I(12345, "acme/web")]);
+  assert.equal(new Set([...chips.values()].map((c) => c.ch)).size, 1);
+  assert.equal(chips.get("acme/web#12345").ch, 6);
+});
+
+test("typeChip: nothing without a type, palette color or gray otherwise", () => {
+  assert.equal(typeChip(null), null);
+  assert.equal(typeChip(undefined), null);
+  assert.equal(typeChip({ name: "  ", color: "BLUE" }), null);
+  assert.deepEqual(plain(typeChip({ name: "Bug", color: "red" })), { name: "Bug", color: "RED" });
+  assert.deepEqual(plain(typeChip({ name: "Task", color: "MAGENTA" })), { name: "Task", color: "GRAY" });
+  assert.deepEqual(plain(typeChip({ name: "Task" })), { name: "Task", color: "GRAY" });
 });
 
 test("capStatus shows 5 and counts the rest; no button at <=5", () => {

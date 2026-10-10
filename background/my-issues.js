@@ -52,7 +52,10 @@ const PROJECT_ITEMS_SELECTION = `
   }
 `;
 
-const SEARCH_QUERY = `
+// `issueType` is an organization feature: a token or API version that does
+// not know the field fails validation outright (no partial data), so the
+// query is built with or without it and falls back, see fetchAllIssues().
+const searchQuery = (withType) => `
   query($q: String!, $first: Int!, $after: String, $projectItemsFirst: Int!, $projectItemsAfter: String) {
     search(query: $q, type: ISSUE, first: $first, after: $after) {
       issueCount
@@ -67,6 +70,7 @@ const SEARCH_QUERY = `
           state
           updatedAt
           repository { nameWithOwner }
+          ${withType ? "issueType { name color }" : ""}
           ${PROJECT_ITEMS_SELECTION}
         }
       }
@@ -206,7 +210,7 @@ export function buildGroups(issues, optionOrderByProject = {}) {
   return { projects, noProject };
 }
 
-function toIssue(node) {
+export function toIssue(node) {
   const items = (node.projectItems?.nodes || [])
     .map((it) => ({
       projectId: it.project?.id,
@@ -234,6 +238,7 @@ function toIssue(node) {
     state: node.state,
     updatedAt: node.updatedAt || "",
     nameWithOwner: node.repository?.nameWithOwner || "",
+    issueType: node.issueType?.name ? { name: node.issueType.name, color: node.issueType.color || null } : null,
     projectItems: items,
   };
 }
@@ -262,6 +267,13 @@ async function fetchRemainingProjectItems(issueId, after) {
   return extra;
 }
 
+// Whether the search may ask for `issueType`; flips off for the session the
+// first time GitHub rejects the field.
+let issueTypesSupported = true;
+export function resetIssueTypeSupport() {
+  issueTypesSupported = true;
+}
+
 async function fetchAllIssues(query) {
   const issues = [];
   let totalCount = 0;
@@ -274,11 +286,17 @@ async function fetchAllIssues(query) {
     // for one inaccessible Project node — take the readable data and let
     // toIssue() drop the unreadable membership to "No Project" rather than
     // failing the whole view. See lib/github-api.js.
-    const data = await ghGraphQL(
-      SEARCH_QUERY,
-      { q: query, first: PAGE_SIZE, after, projectItemsFirst: PROJECT_ITEMS_PAGE, projectItemsAfter: null },
-      { partial: true }
-    );
+    const vars = { q: query, first: PAGE_SIZE, after, projectItemsFirst: PROJECT_ITEMS_PAGE, projectItemsAfter: null };
+    let data;
+    try {
+      data = await ghGraphQL(searchQuery(issueTypesSupported), vars, { partial: true });
+    } catch (e) {
+      // An unknown `issueType` is a validation error: retry once without the
+      // field and remember it for the session, so rows render without chips.
+      if (!issueTypesSupported || !/issueType/.test(e?.message || "")) throw e;
+      issueTypesSupported = false;
+      data = await ghGraphQL(searchQuery(false), vars, { partial: true });
+    }
     const search = data?.search;
     if (!search) break;
     totalCount = search.issueCount ?? totalCount;

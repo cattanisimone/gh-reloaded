@@ -23,9 +23,17 @@
       /*PANE*/
       .dash-pane { display: grid; grid-template-columns: 256px minmax(0, 1fr); gap: 16px; }
       /*END-PANE*/
-      .dash-sidebar { border-right: 1px solid #d0d7de; padding-right: 8px; }
-      .nav-item { display: flex; gap: 8px; align-items: center; padding: 6px 8px; color: inherit; text-decoration: none; }
-      .issues-header { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+      .dash-sidebar { border-right: 1px solid #d0d7de; padding: 0 8px 0 0; overflow: hidden; }
+      /* Mimics the real navigation: a list whose items keep their own
+         padding, each a link with its own padding, a fixed-size icon
+         wrapper with a margin, and a text label. */
+      .nav-list { list-style: none; margin: 0; padding: 0 8px; }
+      .nav-li { position: relative; padding: 0 4px; }
+      .nav-li[aria-current="page"]::before { content: ""; position: absolute; left: -4px; top: 8px; width: 3px; height: 16px; border-radius: 2px; background: #0969da; }
+      .nav-item { display: flex; align-items: center; min-width: 200px; padding: 6px 12px; color: inherit; text-decoration: none; }
+      .nav-icon { display: inline-flex; flex: 0 0 20px; width: 20px; margin-right: 8px; }
+      .issues-title { margin: 0; font-size: 20px; line-height: 32px; }
+      .issues-header { display: flex; gap: 8px; align-items: center; min-height: 32px; margin-bottom: 12px; }
       .issues-header input { flex: 1; height: 28px; }
       .issue-list { border: 1px solid #d0d7de; border-radius: 6px; }
       .issue-row { padding: 10px 12px; border-bottom: 1px solid #d0d7de; }
@@ -36,12 +44,12 @@
     <main>
       <div class="dash-pane">
         <aside class="dash-sidebar">
-          <div class="nav-group">
-          <a class="nav-item" href="/issues/assigned"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg><span>Assigned to me</span></a>
-          <a class="nav-item" href="/issues/created"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg><span>Created by me</span></a>
-          <a class="nav-item" href="/issues/mentioned"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg><span>Mentioning me</span></a>
-          <a class="nav-item" href="/issues/recent"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg><span>Recently updated</span></a>
-          </div>
+          <nav aria-label="Dashboard"><ul class="nav-list">
+            <li class="nav-li" aria-current="page"><a class="nav-item" href="/issues/assigned"><span class="nav-icon"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg></span><span>Assigned to me</span></a></li>
+            <li class="nav-li"><a class="nav-item" href="/issues/created"><span class="nav-icon"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg></span><span>Created by me</span></a></li>
+            <li class="nav-li"><a class="nav-item" href="/issues/mentioned"><span class="nav-icon"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg></span><span>Mentioning me</span></a></li>
+            <li class="nav-li"><a class="nav-item" href="/issues/recent"><span class="nav-icon"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Z"></path></svg></span><span>Recently updated</span></a></li>
+          </ul></nav>
           <section class="views">
             <h2>Views</h2>
             <ul><li><a href="/issues?q=label%3Abug">Bakery bugs</a></li></ul>
@@ -53,6 +61,7 @@
                search updates the URL query, which the content script
                re-fetches against. -->
           <div class="issues-header">
+            <h1 class="issues-title">Issues</h1>
             <input type="text" aria-label="Search all issues" value="assignee:@me is:open" />
           </div>
 

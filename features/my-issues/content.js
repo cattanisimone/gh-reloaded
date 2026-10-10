@@ -283,9 +283,16 @@
     return Number.isNaN(d.getTime()) ? "" : d.toLocaleString();
   }
 
-  function rowHtml(issue, labels) {
-    const full = issue.nameWithOwner || "";
-    const label = labels.get(full) ?? full;
+  function typeChipHtml(issueType, theme) {
+    const t = L.typeChip(issueType);
+    if (!t) return "";
+    const p = paletteFor(t.color, theme);
+    const name = escapeHtml(t.name);
+    return `<span class="ghmi-row-type" title="${name}" style="--ghmi-type-fg:${p.fg}; --ghmi-type-bg:${p.bg}"><span class="ghmi-row-type-name">${name}</span></span>`;
+  }
+
+  function rowHtml(issue, chips, theme) {
+    const chip = chips.get(issue.url) || { text: `#${issue.number}`, title: `${issue.nameWithOwner || ""}#${issue.number}`, ch: 0 };
     const ago = L.relativeTime(issue.updatedAt);
     const title = escapeHtml(issue.title || "");
     const time = ago
@@ -295,21 +302,22 @@
       <li class="ghmi-row">
         <span class="ghmi-row-icon">${issueIconSvg(issue.state === "CLOSED")}</span>
         <a class="ghmi-row-title" href="${escapeHtml(issue.url)}" target="_blank" rel="noopener" title="${title}">${title}</a>
-        <span class="ghmi-row-ref" title="${escapeHtml(full)}#${issue.number}">${escapeHtml(label)}#${issue.number}</span>
+        ${typeChipHtml(issue.issueType, theme)}
+        <span class="ghmi-row-ref" title="${escapeHtml(chip.title)}" style="--ghmi-ref-ch:${chip.ch}">${escapeHtml(chip.text)}</span>
         ${time}
       </li>`;
   }
 
   // One capped list of rows, with its "Show N more" button.
-  function rowsHtml(issues, labels, key) {
+  function rowsHtml(issues, chips, theme, key) {
     const { visible, hidden } = L.capStatus(issues, STATUS_CAP, expandedStatuses.has(key));
     const more = hidden
       ? `<button type="button" class="ghmi-more" data-key="${escapeHtml(key)}" aria-expanded="false">Show ${hidden} more</button>`
       : "";
-    return `<ul class="ghmi-rows" data-rows-key="${escapeHtml(key)}">${visible.map((i) => rowHtml(i, labels)).join("")}</ul>${more}`;
+    return `<ul class="ghmi-rows" data-rows-key="${escapeHtml(key)}">${visible.map((i) => rowHtml(i, chips, theme)).join("")}</ul>${more}`;
   }
 
-  function statusGroupHtml(status, projectKey, labels, theme) {
+  function statusGroupHtml(status, projectKey, chips, theme) {
     const name = status.name || "No Status";
     const p = paletteFor(status.color, theme);
     const pill = status.name
@@ -321,7 +329,7 @@
           <span class="ghmi-status-name" ${pill}>${escapeHtml(name)}</span>
           <span class="ghmi-status-count">${status.issues.length}</span>
         </div>
-        <div class="ghmi-status-rows">${rowsHtml(status.issues, labels, `${projectKey}|${status.optionId || status.name || "none"}`)}</div>
+        <div class="ghmi-status-rows">${rowsHtml(status.issues, chips, theme, `${projectKey}|${status.optionId || status.name || "none"}`)}</div>
       </section>`;
   }
 
@@ -361,7 +369,8 @@
       </details>`;
   }
 
-  function projectTileHtml(project, labels, theme) {
+  function projectTileHtml(project, theme) {
+    const chips = L.refChips(project.statuses.flatMap((s) => s.issues));
     const title = escapeHtml(project.title || "Untitled project");
     const titleHtml = project.url
       ? `<a class="ghmi-tile-title" href="${escapeHtml(project.url)}" target="_blank" rel="noopener">${title}</a>`
@@ -377,11 +386,12 @@
       url: project.url,
       segs,
       theme,
-      bodyHtml: project.statuses.map((s) => statusGroupHtml(s, key, labels, theme)).join(""),
+      bodyHtml: project.statuses.map((s) => statusGroupHtml(s, key, chips, theme)).join(""),
     });
   }
 
-  function noProjectTileHtml(issues, labels, theme) {
+  function noProjectTileHtml(issues, theme) {
+    const chips = L.refChips(issues);
     const key = "none";
     return tileHtml({
       key,
@@ -389,7 +399,7 @@
       count: issues.length,
       segs: [{ name: "No Project", count: issues.length, color: "GRAY", width: 100 }],
       theme,
-      bodyHtml: rowsHtml(issues, labels, key),
+      bodyHtml: rowsHtml(issues, chips, theme, key),
     });
   }
 
@@ -418,12 +428,10 @@
       return;
     }
 
-    const all = projects.flatMap((p) => p.statuses.flatMap((s) => s.issues)).concat(noProject);
-    const labels = L.repoLabels(all);
     panel.innerHTML =
       `<div class="ghmi-grid">` +
-      projects.map((p) => projectTileHtml(p, labels, theme)).join("") +
-      (noProject.length ? noProjectTileHtml(noProject, labels, theme) : "") +
+      projects.map((p) => projectTileHtml(p, theme)).join("") +
+      (noProject.length ? noProjectTileHtml(noProject, theme) : "") +
       `</div>`;
     panel.dataset.state = "done";
 
@@ -606,6 +614,10 @@
         span.appendChild(child);
       } else if (child.nodeType === Node.ELEMENT_NODE && child.localName !== "svg" && !child.querySelector("svg") && textOf(child)) {
         child.setAttribute("data-ghmi-label", "");
+      } else if (child.nodeType === Node.ELEMENT_NODE && (child.localName === "svg" || child.querySelector("svg"))) {
+        // The icon (or its wrapper): its own margins and fixed widths are
+        // reset in the rail so the glyph can be centered and never clipped.
+        child.setAttribute("data-ghmi-icon", "");
       }
     }
   }
@@ -617,10 +629,25 @@
       for (const c of el.children) {
         if (c === toggle) continue;
         if (!keep.has(c)) c.setAttribute("data-ghmi-rail-hide", "");
-        else if (!links.includes(c)) walk(c);
+        else if (!links.includes(c)) {
+          // Wrappers on the way to a link (list, list item, group): their
+          // own padding and widths would push the icon out of the rail.
+          c.setAttribute("data-ghmi-rail-path", "");
+          walk(c);
+        }
       }
     };
     walk(sidebar);
+  }
+
+  // The current item, as the page marks it: aria-current on the link or on
+  // the list item holding it.
+  function isActiveNav(link, sidebar) {
+    for (let n = link; n && n !== sidebar; n = n.parentElement) {
+      const v = n.getAttribute("aria-current");
+      if (v && v !== "false") return true;
+    }
+    return false;
   }
 
   function ensureToggle(sidebar) {
@@ -670,6 +697,8 @@
 
     for (const link of links) {
       link.setAttribute("data-ghmi-nav", "");
+      if (isActiveNav(link, sidebar)) link.setAttribute("data-ghmi-active", "");
+      else link.removeAttribute("data-ghmi-active");
       if (!link.querySelector("[data-ghmi-label]")) markNavLabels(link);
       if (collapsed) {
         if (!link.hasAttribute("title")) {
@@ -698,7 +727,7 @@
       el.removeAttribute("data-ghmi-titled");
     });
     document.querySelectorAll("[data-ghmi-pane]").forEach((el) => el.style.removeProperty("--ghmi-cols"));
-    for (const attr of ["sidebar", "pane", "rail", "content", "rail-hide", "nav", "label"]) {
+    for (const attr of ["sidebar", "pane", "rail", "content", "rail-hide", "rail-path", "nav", "label", "icon", "active"]) {
       document.querySelectorAll(`[data-ghmi-${attr}]`).forEach((el) => el.removeAttribute(`data-ghmi-${attr}`));
     }
   }

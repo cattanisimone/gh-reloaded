@@ -116,8 +116,7 @@
 .ghmi-seg-btn:focus-visible,
 .ghmi-link-btn:focus-visible,
 .ghmi-more:focus-visible,
-.ghmi-btn:focus-visible,
-.ghmi-sidebar-toggle:focus-visible {
+.ghmi-btn:focus-visible {
   outline: 2px solid var(--ghmi-focus);
   outline-offset: 1px;
 }
@@ -347,12 +346,60 @@ a.ghmi-tile-title:hover {
   color: var(--ghmi-muted);
   font-size: 12px;
 }
+/* A small neutral chip, one width per tile (--ghmi-ref-ch, in characters of
+   the monospace face) so the titles stay aligned. */
 .ghmi-row-ref {
+  box-sizing: content-box;
+  min-width: min(calc(var(--ghmi-ref-ch, 0) * 1ch), 16ch);
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ghmi-muted) 16%, transparent);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 18px;
+  text-align: center;
+  white-space: nowrap;
 }
 .ghmi-row-time {
   min-width: 2.5em;
   text-align: right;
+}
+
+/* The issue type, tinted with its own color; a dot in a narrow tile. */
+.ghmi-row-type {
+  position: relative;
+  flex: 0 0 auto;
+  max-width: 9em;
+  padding: 0 7px;
+  border: 1px solid var(--ghmi-type-fg);
+  border-radius: 999px;
+  background: var(--ghmi-type-bg);
+  color: var(--ghmi-type-fg);
+  font-size: 11px;
+  line-height: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@container (max-width: 460px) {
+  .ghmi-row-type {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 0;
+    background: var(--ghmi-type-fg);
+  }
+  /* Clipped, not removed, so the name stays in the accessibility tree. */
+  .ghmi-row-type-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
 }
 
 .ghmi-more {
@@ -373,34 +420,76 @@ a.ghmi-tile-title:hover {
    Everything is keyed on data-ghmi-* attributes the content script adds
    after finding the sidebar by the visible text of its navigation items;
    no GitHub class names. No transitions, so prefers-reduced-motion holds by
-   construction. */
+   construction. Colors come from currentColor and GitHub's own tokens, so
+   light and dark both keep their contrast. */
 
 .ghmi-sidebar-toggle {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   appearance: none;
-  margin: 4px 0;
-  padding: 2px 8px;
-  border: 1px solid #d1d9e0;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 1px solid var(--borderColor-default, color-mix(in srgb, currentColor 30%, transparent));
   border-radius: 6px;
   background: transparent;
   color: inherit;
   font: inherit;
-  line-height: 1.4;
+  line-height: 1;
   cursor: pointer;
 }
+.ghmi-sidebar-toggle:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
 
+/* The rail: a real 48px column, never clipped by anything on the way. */
 [data-ghmi-sidebar="collapsed"] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  align-self: stretch !important;
+  box-sizing: border-box !important;
   width: 48px !important;
-  min-width: 0 !important;
+  min-width: 48px !important;
   max-width: 48px !important;
-  overflow: hidden;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
 }
 
 [data-ghmi-sidebar="collapsed"] .ghmi-sidebar-toggle {
-  margin: 4px auto;
+  margin: 0 0 8px;
 }
 
 [data-ghmi-sidebar="collapsed"] [data-ghmi-rail-hide] {
+  display: none !important;
+}
+
+/* Wrappers between the sidebar and a nav item lose their own spacing, fixed
+   widths and decorations. */
+[data-ghmi-sidebar="collapsed"] [data-ghmi-rail-path] {
+  display: block !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: visible !important;
+  position: static !important;
+  background: none !important;
+}
+[data-ghmi-sidebar="collapsed"] [data-ghmi-rail-path]::before,
+[data-ghmi-sidebar="collapsed"] [data-ghmi-rail-path]::after,
+[data-ghmi-sidebar="collapsed"] [data-ghmi-nav]::before,
+[data-ghmi-sidebar="collapsed"] [data-ghmi-nav]::after {
   display: none !important;
 }
 
@@ -418,12 +507,51 @@ a.ghmi-tile-title:hover {
   border: 0 !important;
 }
 
+/* Each item: a 32px square hit target with the icon centered in it. */
 [data-ghmi-sidebar="collapsed"] [data-ghmi-nav] {
   display: flex !important;
-  justify-content: center;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  margin: 2px auto !important;
+  padding: 0 !important;
   gap: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  border-radius: 6px !important;
+  overflow: visible !important;
+  color: inherit;
+}
+[data-ghmi-sidebar="collapsed"] [data-ghmi-icon] {
+  display: inline-flex !important;
+  flex: none !important;
+  align-items: center;
+  justify-content: center;
+  width: auto !important;
+  min-width: 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+[data-ghmi-sidebar="collapsed"] [data-ghmi-nav] svg {
+  display: block !important;
+  flex: none !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+}
+[data-ghmi-sidebar="collapsed"] [data-ghmi-nav]:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent) !important;
+}
+[data-ghmi-sidebar="collapsed"] [data-ghmi-nav][data-ghmi-active] {
+  background: color-mix(in srgb, currentColor 16%, transparent) !important;
+}
+[data-ghmi-sidebar="collapsed"] [data-ghmi-nav]:focus-visible,
+.ghmi-sidebar-toggle:focus-visible {
+  outline: 2px solid var(--focus-outlineColor, currentColor) !important;
+  outline-offset: 1px !important;
 }
 
 /* The pane gives the freed width to the content. Grid: the track list is the
