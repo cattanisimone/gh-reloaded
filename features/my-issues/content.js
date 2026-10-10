@@ -208,6 +208,9 @@
     root.className = "ghmi-root";
     root.dataset.theme = githubTheme();
     root.innerHTML = toolbarHtml();
+    // Mounted on the fallback (no result rows rendered yet): remembered so
+    // the poll can move it once the rows arrive.
+    if (!before) root.dataset.fallback = "1";
     parent.insertBefore(root, before);
 
     root.querySelectorAll(".ghmi-seg-btn").forEach((btn) => {
@@ -259,7 +262,7 @@
     const panel = root.querySelector(".ghmi-panel");
     const showing = root.dataset.view === "grouped" && panel.dataset.state === "done" && !!panel.querySelector(".ghmi-tile");
     root.querySelector(".ghmi-bulk").hidden = !showing;
-    if (!showing) root.querySelector(".ghmi-summary").textContent = "";
+    root.querySelector(".ghmi-summary").textContent = showing ? root.dataset.summary || "" : "";
   }
 
   function plural(n, word) {
@@ -303,7 +306,7 @@
     const more = hidden
       ? `<button type="button" class="ghmi-more" data-key="${escapeHtml(key)}" aria-expanded="false">Show ${hidden} more</button>`
       : "";
-    return `<ul class="ghmi-rows">${visible.map((i) => rowHtml(i, labels)).join("")}</ul>${more}`;
+    return `<ul class="ghmi-rows" data-rows-key="${escapeHtml(key)}">${visible.map((i) => rowHtml(i, labels)).join("")}</ul>${more}`;
   }
 
   function statusGroupHtml(status, projectKey, labels, theme) {
@@ -425,11 +428,12 @@
     panel.dataset.state = "done";
 
     const distinct = L.distinctCount(projects, noProject);
-    root.querySelector(".ghmi-summary").textContent = truncated
+    root.dataset.summary = truncated
       ? `Showing the first ${fetchedCount} of ${totalCount} issues. Narrow the search to see all.`
       : projects.length
         ? `${plural(distinct, "issue")} in ${plural(projects.length, "project")}`
         : plural(distinct, "issue");
+    updateToolbar(root);
   }
 
   // In-memory UI state, wired once on the panel (a re-render replaces its
@@ -451,6 +455,10 @@
         // collapsed tiles are replayed by the render.
         const root = document.getElementById(ROOT_ID);
         if (root && lastResult) renderGroups(root, lastResult.data, root.dataset.theme || githubTheme());
+        // The button is gone after the re-render: keep keyboard focus on the
+        // first row it revealed instead of dropping it to <body>.
+        const list = [...panel.querySelectorAll("[data-rows-key]")].find((u) => u.dataset.rowsKey === more.dataset.key);
+        list?.querySelectorAll(".ghmi-row-title")[STATUS_CAP]?.focus();
         return;
       }
       // Links inside a <summary> must navigate, not toggle the tile.
@@ -577,6 +585,10 @@
     const display = getComputedStyle(pane).display;
     const kind = /grid/.test(display) ? "grid" : /flex/.test(display) ? "flex" : null;
     if (!kind) return null;
+    // A rail is a column: a stacked (column) flex pane or a single-track grid
+    // would turn it into a 48px strip that clips the nav items.
+    if (kind === "flex" && !/^row/.test(getComputedStyle(pane).flexDirection)) return null;
+    if (kind === "grid" && getComputedStyle(pane).gridTemplateColumns.split(/\s+(?![^(]*\))/).filter(Boolean).length < 2) return null;
     // The sidebar must be the leading item of the pane to become a rail.
     if (pane.firstElementChild !== el) return null;
     return { sidebar: el, pane, kind, links };
@@ -723,6 +735,13 @@
     lastResult = null;
   }
 
+  // A root mounted before the native rows existed sits at the end of <main>;
+  // once a results block can be anchored on, it has to move in front of it.
+  function needsRemount() {
+    const root = document.getElementById(ROOT_ID);
+    return !!root && root.dataset.fallback === "1" && !!findMount().before;
+  }
+
   const debouncedSync = debounce(sync, 150);
 
   document.addEventListener("turbo:load", debouncedSync);
@@ -751,6 +770,9 @@
       lastUrl = location.href;
       debouncedSync();
     } else if (isMyIssuesPage() && !document.getElementById(ROOT_ID)) {
+      debouncedSync();
+    } else if (isMyIssuesPage() && needsRemount()) {
+      document.getElementById(ROOT_ID)?.remove();
       debouncedSync();
     } else if (sidebarFound && !document.querySelector(`.${TOGGLE_CLASS}`)) {
       debouncedSync();

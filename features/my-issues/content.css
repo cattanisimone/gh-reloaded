@@ -148,16 +148,9 @@
    page widens. */
 .ghmi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(520px, 100%), 1fr));
   gap: 12px;
   align-items: start;
-}
-
-/* Below 520px of panel width the minimum would overflow: let one tile fill. */
-@media (max-width: 600px) {
-  .ghmi-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 .ghmi-tile {

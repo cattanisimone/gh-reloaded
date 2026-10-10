@@ -458,3 +458,72 @@ test("injects nothing when the feature is disabled", async ({ context, page }) =
   await expect(page.locator("#ghmi-root")).toHaveCount(0);
   await expect(page.locator(".issue-list")).toBeVisible();
 });
+
+// ------------------------------------------------- adversarial-review fixes
+
+test("mounts before the results when the rows arrive after the first sync", async ({ context, page }) => {
+  await seedStorage(context, { ghmiEnabled: true, ghmiView: "grouped", ghmiSidebar: "expanded", ...TOKENS });
+  await routeApi(context);
+  await routeGraphql(context);
+  const html = fs
+    .readFileSync(path.join(FIXTURES_DIR, "my-issues.html"), "utf8")
+    .replace(/<div class="issue-list">[\s\S]*?<\/div>\s*<\/div>\s*<div class="pagination">/, '<div class="issue-list" id="late"></div><div class="pagination">')
+    .replace("</body>", `<script>setTimeout(() => { document.getElementById("late").innerHTML = '<div class="issue-row"><a href="/acme/orders-api/issues/591">Add pickup time slots to checkout</a></div>'; }, 1200);</script></body>`);
+  await context.route("https://github.com/**", (route) =>
+    route.request().resourceType() === "document"
+      ? route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: html })
+      : route.abort()
+  );
+  await page.goto(ISSUES_URL);
+  await expect(page.locator("#late .issue-row")).toHaveCount(1);
+  await expect(page.locator("#late")).toBeHidden();
+  expect(await page.evaluate(() => document.getElementById("ghmi-root").parentElement.className)).toBe("dash-content");
+});
+
+test("the summary survives switching to List and back", async ({ context, page }) => {
+  await setup(context, page);
+  await expect(page.locator(".ghmi-summary")).toHaveText("14 issues in 2 projects");
+  await page.locator("#ghmi-root .ghmi-seg-btn[data-view='list']").click();
+  await expect(page.locator(".issue-list")).toBeVisible();
+  await page.locator("#ghmi-root .ghmi-seg-btn[data-view='grouped']").click();
+  await expect(page.locator(".ghmi-summary")).toHaveText("14 issues in 2 projects");
+});
+
+test("adds no sidebar toggle in a vertically stacked flex pane", async ({ context, page }) => {
+  await seedStorage(context, { ghmiEnabled: true, ghmiView: "list", ghmiSidebar: "collapsed", ...TOKENS });
+  await routeApi(context);
+  await routeGraphql(context);
+  const html = fs
+    .readFileSync(path.join(FIXTURES_DIR, "my-issues.html"), "utf8")
+    .replace(/\/\*PANE\*\/[\s\S]*?\/\*END-PANE\*\//, ".dash-pane { display: flex; flex-direction: column; }");
+  await context.route("https://github.com/**", (route) =>
+    route.request().resourceType() === "document"
+      ? route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: html })
+      : route.abort()
+  );
+  await page.goto(ISSUES_URL);
+  await expect(page.locator("#ghmi-root")).toHaveCount(1);
+  await page.waitForTimeout(1000);
+  await expect(toggle(page)).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Created by me" })).toBeVisible();
+});
+
+test("a tile never overflows a narrow panel", async ({ context, page }) => {
+  await page.setViewportSize({ width: 800, height: 900 });
+  await setup(context, page, { storage: { ghmiSidebar: "expanded" } });
+  await expect(page.locator(".ghmi-tile").first()).toBeVisible();
+  const { sw, cw } = await page.evaluate(() => ({
+    sw: document.documentElement.scrollWidth,
+    cw: document.documentElement.clientWidth,
+  }));
+  expect(sw).toBeLessThanOrEqual(cw);
+});
+
+test("Show N more keeps keyboard focus on the first revealed row", async ({ context, page }) => {
+  await setup(context, page);
+  const open = tile(page, "Bakery App").locator(".ghmi-status", { hasText: "Open" }).first();
+  await open.locator(".ghmi-more").focus();
+  await page.keyboard.press("Enter");
+  await expect(open.locator(".ghmi-row")).toHaveCount(8);
+  await expect(open.locator(".ghmi-row-title").nth(5)).toBeFocused();
+});
