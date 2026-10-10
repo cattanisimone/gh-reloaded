@@ -2,87 +2,209 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Plan · #11 My Issues by project</title>
 <style>
-  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa;--warn:#9a6700}
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa;--warn:#9a6700;--done:#8250df}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
   main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
-  h3{font-size:14px;margin:14px 0 6px;color:var(--muted)}
+  h3{font-size:14px;margin:16px 0 6px;color:var(--muted)}
   .meta{color:var(--muted);margin:0} a{color:var(--accent)}
   table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
   th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:13px;word-break:break-word}
   .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto}
-  .tag{display:inline-block;font-size:12px;padding:0 6px;border-radius:10px;border:1px solid var(--line);color:var(--muted)}
+  .tag{display:inline-block;font-size:12px;padding:0 6px;border-radius:10px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
   .tag.keep{color:var(--ok);border-color:var(--ok)} .tag.add{color:var(--accent);border-color:var(--accent)} .tag.shared{color:var(--warn);border-color:var(--warn)}
-  /* mockup */
-  .gh{border:1px solid var(--line);border-radius:6px;background:#fff;font-size:13px;min-width:340px}
-  .gh-top{display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--soft)}
-  .gh-search{flex:1;border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--muted);background:#fff;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;flex-shrink:0}
-  .seg span{padding:3px 8px;font-size:12px} .seg .on{background:var(--accent);color:#fff}
-  .proj{border-top:1px solid var(--line)} .proj>.h{padding:6px 12px;font-weight:600;display:flex;gap:6px;align-items:center}
-  .cnt{background:#eaeef2;border-radius:10px;padding:0 6px;font-size:11px;font-weight:500}
-  .st{margin:0 12px 6px 24px;border-left:3px solid var(--c,#8c959f);padding-left:8px}
-  .st .h{font-size:12px;font-weight:600;display:flex;gap:6px;align-items:center;padding:2px 0}
-  .row{display:flex;gap:6px;padding:3px 0;align-items:baseline} .row .t{color:var(--fg)} .row .r{color:var(--muted);font-size:12px;white-space:nowrap}
-  .dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--ok);flex-shrink:0;transform:translateY(1px)}
+  .note{font-size:13px;color:var(--muted)}
+  /* ---------- mockup ---------- */
+  .page{display:flex;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:12px;min-width:640px;overflow:hidden}
+  .side{border-right:1px solid var(--line);padding:8px;background:#fff;flex-shrink:0}
+  .side.open{width:170px} .side.rail{width:44px;padding:8px 6px}
+  .tgl{display:inline-flex;align-items:center;justify-content:center;width:28px;height:24px;border:1px solid var(--line);border-radius:6px;background:var(--soft);font-size:13px;margin-bottom:6px}
+  .nav{display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:6px;color:var(--fg);white-space:nowrap}
+  .nav.on{background:var(--soft);box-shadow:inset 3px 0 0 var(--accent)} .nav i{font-style:normal;width:16px;text-align:center;color:var(--muted)}
+  .side .sec{margin-top:10px;color:var(--muted);font-size:11px;font-weight:600}
+  .content{flex:1;min-width:0;padding:10px 12px}
+  .ttl{font-size:15px;font-weight:600;margin-bottom:6px}
+  .search{border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tb{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .tb .sum{flex:1;min-width:120px} .tb .sum b{font-weight:600} .tb .sum span{color:var(--muted)}
+  .lnk{color:var(--accent)} .sep{color:#8c959f}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .seg span{padding:2px 8px} .seg .on{background:var(--accent);color:#fff;font-weight:600}
+  .glyph{width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#0969da,#8250df);display:inline-block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;align-items:start}
+  .tile{border:1px solid var(--line);border-radius:8px;background:#fff}
+  .th{display:flex;align-items:center;gap:6px;padding:8px 10px 4px}
+  .th b{font-weight:600;color:var(--fg)} .pill{background:#eaeef2;border-radius:10px;padding:0 6px;font-size:11px}
+  .th .open{margin-left:auto;color:var(--accent);font-size:11px;white-space:nowrap}
+  .bar{display:flex;gap:2px;height:7px;margin:4px 10px 3px}
+  .bar span{border-radius:2px}
+  .leg{color:var(--muted);font-size:11px;padding:0 10px 6px}
+  .sg{display:flex;gap:8px;border-top:1px solid var(--line);padding:6px 10px}
+  .gut{width:118px;flex-shrink:0;display:flex;align-items:flex-start;gap:4px}
+  .sp{display:inline-flex;align-items:center;gap:4px;border:1px solid;border-radius:10px;padding:0 6px;font-size:11px;font-weight:600;white-space:nowrap}
+  .sp::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .gc{color:var(--muted);font-size:11px}
+  .rows{flex:1;min-width:0}
+  .r{display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid #eaeef2}
+  .r:last-child{border-bottom:0}
+  .ic{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--ok);flex-shrink:0;position:relative}
+  .ic::after{content:"";position:absolute;inset:2.5px;border-radius:50%;background:var(--ok)}
+  .ic.cl{border-color:var(--done)} .ic.cl::after{background:var(--done)}
+  .r .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .r .ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-size:10.5px;white-space:nowrap}
+  .r .tm{color:#818b98;font-size:10.5px;width:24px;text-align:right}
+  .more{color:var(--accent);padding:3px 0 0;font-size:11px}
+  .tile.col .sg{display:none} .tile.col .th{padding-bottom:2px}
+  .tile.col .cmp{display:flex;align-items:center;gap:8px;padding:0 10px 8px}
+  .tile.col .cmp .bar{flex:0 0 120px;margin:0} .tile.col .cmp .leg{padding:0}
+  .stack .sg{flex-direction:column;gap:4px} .stack .gut{width:auto}
   .states{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:10px}
   .msg{border:1px solid var(--line);border-radius:6px;padding:10px;font-size:12px;background:#fff}
   .msg b{display:block;margin-bottom:2px} .msg.bad{border-color:var(--bad)} .msg.warn{border-color:var(--warn);background:#fff8c5}
   .btn{display:inline-block;margin-top:6px;border:1px solid var(--line);border-radius:6px;padding:2px 8px;background:var(--soft)}
+  .pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
 </style></head><body><main>
 
 <h1>#11 · Group My Issues by Project and status</h1>
-<p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/11">cattanisimone/gh-reloaded#11</a> · Size: <b>normal</b> (new UI surface, new content script, shared-module change) · PR <a href="https://github.com/cattanisimone/gh-reloaded/pull/27">#27</a></p>
-<p class="meta">Goal: on <code>github.com/issues</code>, a read-only <b>Project → Status → issues</b> view of the dashboard's full current result set, next to the native list.</p>
+<p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/11">cattanisimone/gh-reloaded#11</a> · Size: <b>normal</b> (new UI surface, new content script, shared-module change) · PR <a href="https://github.com/cattanisimone/gh-reloaded/pull/27">#27</a> · <b>Revision 2</b>: tile grid, row anatomy, toolbar, collapsible sidebar</p>
+<p class="meta">Goal: on <code>github.com/issues</code>, a read-only view of the dashboard's full result set as a grid of <b>Project tiles</b>, each listing issues by that Project's real Status, plus a sidebar that collapses to an icon rail.</p>
 
-<p><span class="tag keep">prototype</span> PR #27 already has a working prototype (rebased on <code>main</code> 0.8.0, the three earlier review threads resolved). This plan <b>keeps its architecture</b> and lists what implementation still adds: tests for every acceptance criterion and a few behaviour gaps.</p>
+<p><span class="tag keep">kept</span> The prototype's data layer (<code>background/my-issues.js</code>, the <code>partial</code> flag in <code>ghGraphQL</code>, query derivation from <code>q</code> and the tab path) stays as is: it already returns <code>updatedAt</code>, <code>nameWithOwner</code>, <code>state</code> and each Project's Status order and color. <b>No GraphQL field is added.</b> <span class="tag add">changed</span> The layout, the toolbar and a new collapsible sidebar.</p>
 
 <h2>What changes for users</h2>
 <ul>
-  <li>A <b>List / Group by project</b> switch on the My Issues dashboard. The last choice is remembered.</li>
-  <li>Grouped: one collapsible group per Project (alphabetical), inside it the Project's <b>own Status options in board order</b>, then <b>No Status</b>; a final <b>No Project</b> group. Counts on every group.</li>
-  <li>An issue in two Projects shows in both, each time with <i>that</i> Project's status.</li>
-  <li>Groups follow the search box, filters, saved views and the Assigned / Created / Mentioned tab, and cover the whole paginated result set.</li>
-  <li>Clear loading, empty, no-token, error and "showing first N of M" states. Switching back to List restores the native page untouched.</li>
+  <li>A one-line toolbar: summary of <b>distinct</b> issues (<i>34 issues in 3 projects</i>), <b>Expand all · Collapse all</b> (grouped view only), and the <b>List | Group by project</b> switch (last choice remembered).</li>
+  <li>Grouped: a responsive grid of collapsible <b>Project tiles</b> (1 to 3 columns), alphabetical, <b>No Project</b> last. Each tile has a Status <b>distribution bar</b> and a text legend; collapsed tiles keep header, bar and legend, so <i>Collapse all</i> is the overview.</li>
+  <li>Inside a tile, issues per Status in the Project's own option order (No Status last), the <b>first 5</b> per Status then <i>Show N more</i>. Rows: state icon · title · <code>repo#number</code> · time since update.</li>
+  <li>The left sidebar collapses to an <b>icon rail</b> (collapsed by default, in List and grouped view alike), remembered across reloads.</li>
+  <li>Unchanged: an issue in two Projects shows in both tiles with each Project's status; loading, empty, no-token, error and "first N of M" states; List restores the native page; feature off leaves the page (sidebar included) untouched.</li>
 </ul>
 
 <h2>Mockup</h2>
-<div class="scroll">
-<div class="gh">
-  <div class="gh-top">
-    <div class="gh-search">is:issue state:open assignee:@me</div>
-    <div class="seg new"><span>List</span><span class="on">Group by project</span></div>
-  </div>
-  <div class="proj new">
-    <div class="h">▾ Platform roadmap <span class="cnt">3</span></div>
-    <div class="st" style="--c:#bf8700"><div class="h">▾ In progress <span class="cnt">1</span></div>
-      <div class="row"><span class="dot"></span><span class="t">Retry failed webhooks</span><span class="r">acme/api #412</span></div></div>
-    <div class="st" style="--c:#0969da"><div class="h">▾ Todo <span class="cnt">1</span></div>
-      <div class="row"><span class="dot"></span><span class="t">Rate-limit dashboard</span><span class="r">acme/web #88</span></div></div>
-    <div class="st"><div class="h">▾ No Status <span class="cnt">1</span></div>
-      <div class="row"><span class="dot"></span><span class="t">Audit log export</span><span class="r">acme/api #430</span></div></div>
-  </div>
-  <div class="proj new">
-    <div class="h">▾ Q4 bugs <span class="cnt">1</span></div>
-    <div class="st" style="--c:#1a7f37"><div class="h">▾ Triaged <span class="cnt">1</span></div>
-      <div class="row"><span class="dot"></span><span class="t">Retry failed webhooks</span><span class="r">acme/api #412</span></div></div>
-  </div>
-  <div class="proj new">
-    <div class="h">▾ No Project <span class="cnt">1</span></div>
-    <div class="st" style="border:0"><div class="row"><span class="dot"></span><span class="t">Typo in README</span><span class="r">me/dotfiles #3</span></div></div>
-  </div>
-</div>
-</div>
-<p class="meta" style="font-size:13px">#412 appears twice: "In progress" on one board, "Triaged" on the other. The search box and tabs stay visible; only the native result list is hidden while grouped.</p>
+<p class="note">Light theme, invented placeholder data. New parts dashed. The <code>screenshots/my-issues.svg</code> mockup starts from the dark-theme SVG in the review comment.</p>
 
-<h3>Other states (shown in place of the groups)</h3>
+<h3>Sidebar collapsed (default) · grouped view</h3>
+<div class="scroll">
+<div class="page">
+  <div class="side rail new">
+    <div class="tgl" title="Expand sidebar">»</div>
+    <div class="nav on" title="Assigned to me"><i>◉</i></div>
+    <div class="nav" title="Created by me"><i>☺</i></div>
+    <div class="nav" title="Mentioning me"><i>@</i></div>
+    <div class="nav" title="Recently updated"><i>◷</i></div>
+  </div>
+  <div class="content">
+    <div class="ttl">Assigned to me</div>
+    <div class="search">is:issue state:open assignee:@me sort:updated-desc</div>
+    <div class="tb new">
+      <div class="sum"><b>34 issues</b> <span>in 3 projects</span></div>
+      <span class="lnk">Expand all</span><span class="sep">·</span><span class="lnk">Collapse all</span>
+      <span class="glyph" title="GH Reloaded"></span>
+      <span class="seg"><span>List</span><span class="on">Group by project</span></span>
+    </div>
+    <div class="grid new">
+      <div class="tile">
+        <div class="th">▾ <b class="lnk" style="color:var(--fg)">Bakery App</b><span class="pill">24</span><span class="open">Open project ↗</span></div>
+        <div class="bar" role="img" aria-label="20 Open · 3 In Progress · 1 Blocked"><span style="flex:20;background:#0969da"></span><span style="flex:3;background:#bf8700"></span><span style="flex:1;background:#cf222e"></span></div>
+        <div class="leg">20 Open · 3 In Progress · 1 Blocked</div>
+        <div class="sg"><div class="gut"><span class="sp" style="color:#0969da">Open</span><span class="gc">20</span></div>
+          <div class="rows">
+            <div class="r"><span class="ic"></span><span class="t">Add pickup time slots to checkout</span><span class="ref">orders-api#591</span><span class="tm">2d</span></div>
+            <div class="r"><span class="ic"></span><span class="t">Show allergen details on product pages</span><span class="ref">orders-api#602</span><span class="tm">3d</span></div>
+            <div class="r"><span class="ic"></span><span class="t">Fix rounding on loyalty points</span><span class="ref">mobile-app#593</span><span class="tm">3d</span></div>
+            <div class="r"><span class="ic"></span><span class="t">Redesign the order confirmation email</span><span class="ref">mobile-app#441</span><span class="tm">4d</span></div>
+            <div class="r"><span class="ic"></span><span class="t">Support gift notes on orders</span><span class="ref">mobile-app#443</span><span class="tm">5d</span></div>
+            <div class="more">Show 15 more</div>
+          </div></div>
+        <div class="sg"><div class="gut"><span class="sp" style="color:#9a6700">In Progress</span><span class="gc">3</span></div>
+          <div class="rows">
+            <div class="r"><span class="ic"></span><span class="t">Prototype live oven status</span><span class="ref">ovens-hub#77</span><span class="tm">1h</span></div>
+            <div class="r"><span class="ic"></span><span class="t">Migrate menu to the new CMS</span><span class="ref">site#210</span><span class="tm">6h</span></div>
+            <div class="r"><span class="ic"></span><span class="t">Cache the daily specials</span><span class="ref">orders-api#588</span><span class="tm">1w</span></div>
+          </div></div>
+        <div class="sg"><div class="gut"><span class="sp" style="color:#cf222e">Blocked</span><span class="gc">1</span></div>
+          <div class="rows"><div class="r"><span class="ic"></span><span class="t">Card payments at the counter</span><span class="ref">pos#12</span><span class="tm">3w</span></div></div></div>
+      </div>
+      <div class="tile">
+        <div class="th">▾ <b>Delivery Fleet</b><span class="pill">6</span><span class="open">Open project ↗</span></div>
+        <div class="bar" role="img" aria-label="2 Todo · 3 Doing · 1 No Status"><span style="flex:2;background:#1a7f37"></span><span style="flex:3;background:#8250df"></span><span style="flex:1;background:#8c959f"></span></div>
+        <div class="leg">2 Todo · 3 Doing · 1 No Status</div>
+        <div class="sg"><div class="gut"><span class="sp" style="color:#1a7f37">Todo</span><span class="gc">2</span></div>
+          <div class="rows">
+            <div class="r"><span class="ic"></span><span class="t">Route planner for morning rounds</span><span class="ref">fleet#31</span><span class="tm">2d</span></div>
+            <div class="r"><span class="ic"></span><span class="t">Add pickup time slots to checkout</span><span class="ref">orders-api#591</span><span class="tm">2d</span></div>
+          </div></div>
+        <div class="sg"><div class="gut"><span class="sp" style="color:#8250df">Doing</span><span class="gc">3</span></div>
+          <div class="rows">
+            <div class="r"><span class="ic"></span><span class="t">Van temperature alerts</span><span class="ref">fleet#28</span><span class="tm">5h</span></div>
+            <div class="r"><span class="ic cl"></span><span class="t">Driver shift swap</span><span class="ref">fleet#22</span><span class="tm">1d</span></div>
+            <div class="r"><span class="ic"></span><span class="t">Track deliveries on the map</span><span class="ref">site#205</span><span class="tm">5mo</span></div>
+          </div></div>
+        <div class="sg"><div class="gut"><span class="sp" style="color:#59636e">No Status</span><span class="gc">1</span></div>
+          <div class="rows"><div class="r"><span class="ic"></span><span class="t">Fuel card reconciliation</span><span class="ref">fleet#40</span><span class="tm">3w</span></div></div></div>
+      </div>
+      <div class="tile">
+        <div class="th">▾ <b>No Project</b><span class="pill">5</span></div>
+        <div class="bar" role="img" aria-label="5 No Project"><span style="flex:1;background:#8c959f"></span></div>
+        <div class="leg">5 issues</div>
+        <div class="sg"><div class="rows">
+          <div class="r"><span class="ic"></span><span class="t">Typo on the about page</span><span class="ref">site#199</span><span class="tm">2d</span></div>
+          <div class="r"><span class="ic"></span><span class="t">Update the croissant photo</span><span class="ref">crumb/site#4</span><span class="tm">1w</span></div>
+          <div class="r"><span class="ic"></span><span class="t">Bump the build image</span><span class="ref">pos#9</span><span class="tm">2w</span></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<p class="note">"Add pickup time slots" is in two tiles with each Project's status; the summary still counts it once (34 distinct). <code>crumb/site#4</code> keeps its owner because another owner's <code>site</code> repo is in the same result set. No Project: flat list, no gutter, single gray segment.</p>
+
+<div class="pair">
+<div>
+<h3>Sidebar expanded · tiles collapsed (overview)</h3>
+<div class="scroll"><div class="page" style="min-width:420px">
+  <div class="side open new">
+    <div class="tgl" title="Collapse sidebar">«</div>
+    <div class="nav on"><i>◉</i>Assigned to me</div>
+    <div class="nav"><i>☺</i>Created by me</div>
+    <div class="nav"><i>@</i>Mentioning me</div>
+    <div class="nav"><i>◷</i>Recently updated</div>
+    <div class="sec">Views</div>
+    <div class="nav"><i>▤</i>Bakery bugs</div>
+  </div>
+  <div class="content">
+    <div class="grid" style="grid-template-columns:1fr">
+      <div class="tile col"><div class="th">▸ <b>Bakery App</b><span class="pill">24</span><span class="open">Open ↗</span></div>
+        <div class="cmp"><div class="bar"><span style="flex:20;background:#0969da"></span><span style="flex:3;background:#bf8700"></span><span style="flex:1;background:#cf222e"></span></div><div class="leg">20 Open · 3 In Progress · 1 Blocked</div></div></div>
+      <div class="tile col"><div class="th">▸ <b>Delivery Fleet</b><span class="pill">6</span><span class="open">Open ↗</span></div>
+        <div class="cmp"><div class="bar"><span style="flex:2;background:#1a7f37"></span><span style="flex:3;background:#8250df"></span><span style="flex:1;background:#8c959f"></span></div><div class="leg">2 Todo · 3 Doing · 1 No Status</div></div></div>
+      <div class="tile col"><div class="th">▸ <b>No Project</b><span class="pill">5</span></div>
+        <div class="cmp"><div class="bar"><span style="flex:1;background:#8c959f"></span></div><div class="leg">5 issues</div></div></div>
+    </div>
+  </div>
+</div></div>
+</div>
+<div>
+<h3>Narrow tile (&lt; 460px): gutter stacks above rows</h3>
+<div class="tile stack" style="max-width:300px">
+  <div class="th">▾ <b>Delivery Fleet</b><span class="pill">6</span><span class="open">Open ↗</span></div>
+  <div class="bar"><span style="flex:2;background:#1a7f37"></span><span style="flex:3;background:#8250df"></span><span style="flex:1;background:#8c959f"></span></div>
+  <div class="leg">2 Todo · 3 Doing · 1 No Status</div>
+  <div class="sg"><div class="gut"><span class="sp" style="color:#1a7f37">Todo</span><span class="gc">2</span></div>
+    <div class="rows"><div class="r"><span class="ic"></span><span class="t">Route planner for morning rounds</span><span class="ref">fleet#31</span><span class="tm">2d</span></div>
+    <div class="r"><span class="ic"></span><span class="t">Add pickup time slots to checkout</span><span class="ref">orders-api#591</span><span class="tm">2d</span></div></div></div>
+</div>
+</div>
+</div>
+
+<h3>Other states (shown in place of the tiles, unchanged)</h3>
 <div class="states">
   <div class="msg"><b>Loading</b>Loading issues…</div>
   <div class="msg"><b>Empty</b>No issues match this search.</div>
   <div class="msg bad"><b>No token / 401 / 403</b>Add a GitHub token to group issues by project.<br><span class="btn">Open settings</span></div>
   <div class="msg bad"><b>API error</b>Couldn't load issues: &lt;message&gt;. Switch to List for the native view.</div>
-  <div class="msg warn"><b>Truncated</b>Showing the first 500 of 742 issues. Narrow the search to see all.</div>
-  <div class="msg"><b>Feature off</b>No switch, page untouched.</div>
+  <div class="msg warn"><b>Truncated</b> (toolbar summary) Showing the first 500 of 742 issues. Narrow the search to see all.</div>
+  <div class="msg"><b>Feature off</b>No switch, no sidebar toggle, page untouched.</div>
 </div>
 
 <h2>How it works</h2>
@@ -93,18 +215,19 @@
     <rect x="10" y="40" width="160" height="90" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
     <text x="90" y="62" text-anchor="middle" font-weight="600">github.com/issues</text>
     <text x="90" y="82" text-anchor="middle" fill="#59636e" font-size="12">URL q + tab path</text>
-    <text x="90" y="100" text-anchor="middle" fill="#59636e" font-size="12">turbo:load / render,</text>
-    <text x="90" y="116" text-anchor="middle" fill="#59636e" font-size="12">URL poll</text>
-    <rect x="220" y="40" width="190" height="90" rx="6" fill="#fff" stroke="#0969da" stroke-dasharray="5 3"/>
-    <text x="315" y="62" text-anchor="middle" font-weight="600">features/my-issues/</text>
-    <text x="315" y="82" text-anchor="middle" fill="#59636e" font-size="12">currentQuery() → normalize</text>
-    <text x="315" y="100" text-anchor="middle" fill="#59636e" font-size="12">switch, hide/show list,</text>
-    <text x="315" y="116" text-anchor="middle" fill="#59636e" font-size="12">render groups + states</text>
-    <rect x="460" y="40" width="190" height="90" rx="6" fill="#fff" stroke="#0969da" stroke-dasharray="5 3"/>
+    <text x="90" y="100" text-anchor="middle" fill="#59636e" font-size="12">sidebar nav (by text)</text>
+    <text x="90" y="116" text-anchor="middle" fill="#59636e" font-size="12">turbo:load, URL poll</text>
+    <rect x="220" y="30" width="190" height="110" rx="6" fill="#fff" stroke="#0969da" stroke-dasharray="5 3"/>
+    <text x="315" y="50" text-anchor="middle" font-weight="600">features/my-issues/</text>
+    <text x="315" y="70" text-anchor="middle" fill="#59636e" font-size="12">layout.js (pure): time,</text>
+    <text x="315" y="86" text-anchor="middle" fill="#59636e" font-size="12">repo label, cap, bar widths</text>
+    <text x="315" y="104" text-anchor="middle" fill="#59636e" font-size="12">content.js: toolbar, tiles,</text>
+    <text x="315" y="120" text-anchor="middle" fill="#59636e" font-size="12">sidebar toggle, states</text>
+    <rect x="460" y="40" width="190" height="90" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
     <text x="555" y="62" text-anchor="middle" font-weight="600">background/my-issues.js</text>
-    <text x="555" y="82" text-anchor="middle" fill="#59636e" font-size="12">paginate search (≤10×50)</text>
-    <text x="555" y="100" text-anchor="middle" fill="#59636e" font-size="12">+ Status option order</text>
-    <text x="555" y="116" text-anchor="middle" fill="#59636e" font-size="12">buildGroups() (pure)</text>
+    <text x="555" y="82" text-anchor="middle" fill="#59636e" font-size="12">unchanged: paginated</text>
+    <text x="555" y="100" text-anchor="middle" fill="#59636e" font-size="12">search, Status order,</text>
+    <text x="555" y="116" text-anchor="middle" fill="#59636e" font-size="12">buildGroups()</text>
     <rect x="700" y="40" width="150" height="90" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
     <text x="775" y="62" text-anchor="middle" font-weight="600">GitHub GraphQL</text>
     <text x="775" y="82" text-anchor="middle" fill="#59636e" font-size="12">search(type: ISSUE)</text>
@@ -112,67 +235,123 @@
     <text x="775" y="116" text-anchor="middle" fill="#59636e" font-size="12">via lib/github-api.js</text>
     <line x1="170" y1="85" x2="218" y2="85" stroke="#59636e" marker-end="url(#a)"/>
     <line x1="410" y1="78" x2="458" y2="78" stroke="#59636e" marker-end="url(#a)"/>
-    <text x="434" y="30" text-anchor="middle" font-size="11" fill="#59636e">message GHMI_FETCH_GROUPS</text><line x1="434" y1="34" x2="434" y2="74" stroke="#d1d9e0" stroke-dasharray="2 2"/>
+    <text x="434" y="22" text-anchor="middle" font-size="11" fill="#59636e">GHMI_FETCH_GROUPS</text>
     <line x1="458" y1="98" x2="412" y2="98" stroke="#59636e" marker-end="url(#a)"/>
     <text x="434" y="114" text-anchor="middle" font-size="11" fill="#59636e">groups</text>
     <line x1="650" y1="78" x2="698" y2="78" stroke="#59636e" marker-end="url(#a)"/>
     <line x1="698" y1="98" x2="652" y2="98" stroke="#59636e" marker-end="url(#a)"/>
-    <text x="430" y="165" text-anchor="middle" font-size="12" fill="#59636e">One fetch per distinct query: in-flight de-dup + the shared 60 s API cache.</text><text x="430" y="183" text-anchor="middle" font-size="12" fill="#59636e">A query change re-fetches; a re-render alone does not.</text>
+    <text x="430" y="168" text-anchor="middle" font-size="12" fill="#59636e">Sidebar and tiles are pure DOM/CSS work on the page; only the grouped data goes through the worker.</text>
+    <text x="430" y="186" text-anchor="middle" fill="#59636e" font-size="12">Collapsed tiles and "Show N more" live in memory (survive a re-render, not a reload).</text>
   </g>
 </svg>
 </div>
 
+<h3>Sidebar: finding it and reflowing without GitHub's class names</h3>
+<div class="scroll">
+<svg viewBox="0 0 860 150" width="100%" style="min-width:600px" role="img" aria-label="Sidebar anchoring steps">
+  <defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+  <g font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2328">
+    <rect x="5" y="20" width="195" height="80" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="102" y="40" text-anchor="middle" font-weight="600">1. Find the 4 nav items</text>
+    <text x="102" y="58" text-anchor="middle" fill="#59636e">links whose visible text is</text>
+    <text x="102" y="74" text-anchor="middle" fill="#59636e">Assigned to me / Created by me /</text>
+    <text x="102" y="90" text-anchor="middle" fill="#59636e">Mentioning me / Recently updated</text>
+    <rect x="220" y="20" width="195" height="80" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="317" y="40" text-anchor="middle" font-weight="600">2. Sidebar = their LCA,</text>
+    <text x="317" y="58" text-anchor="middle" fill="#59636e">climbed while it contains no</text>
+    <text x="317" y="74" text-anchor="middle" fill="#59636e">search box and no result rows;</text>
+    <text x="317" y="90" text-anchor="middle" fill="#59636e">→ data-ghmi-sidebar</text>
+    <rect x="435" y="20" width="200" height="80" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="535" y="40" text-anchor="middle" font-weight="600">3. Pane = first ancestor</text>
+    <text x="535" y="58" text-anchor="middle" fill="#59636e">that also holds the results;</text>
+    <text x="535" y="74" text-anchor="middle" fill="#59636e">read getComputedStyle().display</text>
+    <text x="535" y="90" text-anchor="middle" fill="#59636e">→ data-ghmi-pane="grid|flex"</text>
+    <rect x="655" y="20" width="200" height="80" rx="6" fill="#fff" stroke="#0969da" stroke-dasharray="5 3"/>
+    <text x="755" y="40" text-anchor="middle" font-weight="600">4. Our CSS on our attributes</text>
+    <text x="755" y="58" text-anchor="middle" fill="#59636e">grid: first track → 48px,</text>
+    <text x="755" y="74" text-anchor="middle" fill="#59636e">content track minmax(0,1fr)</text>
+    <text x="755" y="90" text-anchor="middle" fill="#59636e">flex: 0 0 48px; content flex:1</text>
+    <line x1="200" y1="60" x2="218" y2="60" stroke="#59636e" marker-end="url(#b)"/>
+    <line x1="415" y1="60" x2="433" y2="60" stroke="#59636e" marker-end="url(#b)"/>
+    <line x1="635" y1="60" x2="653" y2="60" stroke="#59636e" marker-end="url(#b)"/>
+    <text x="430" y="128" text-anchor="middle" fill="#d1242f">Any step fails (items missing, LCA contains results, pane neither grid nor flex) → no toggle, page untouched.</text>
+  </g>
+</svg>
+</div>
+<ul class="note">
+  <li>Grid pane: the track list is rewritten from the live computed <code>grid-template-columns</code> (first track replaced by <code>48px</code>), set as a CSS custom property on the pane and consumed by our stylesheet, so GitHub's other tracks survive. Flex pane: <code>flex-basis</code>/<code>width</code> on the sidebar, <code>max-width:none</code> on the content sibling.</li>
+  <li>Rail: each nav link keeps GitHub's own icon SVG; its text gets a visually-hidden class (clip, not <code>display:none</code>) and the link a <code>title</code>. Every other sidebar child (the Views section) gets <code>hidden</code>-by-attribute. No transition, so <code>prefers-reduced-motion</code> is respected by construction.</li>
+  <li>The toggle is a <code>&lt;button aria-expanded aria-label="Collapse sidebar | Expand sidebar"&gt;</code> inserted as the sidebar's first child, with a visible <code>:focus-visible</code> outline. State: <code>ghmiSidebar</code> in <code>chrome.storage.local</code>, followed via <code>onChanged</code>; re-applied after Turbo navigations.</li>
+</ul>
+
 <h2>Changes by file</h2>
 <table>
   <tr><th>File</th><th>Change</th><th>Why</th></tr>
-  <tr><td><code>background/my-issues.js</code> <span class="tag keep">prototype</span></td><td>Search pagination, per-Project Status option order, extra <code>projectItems</code> pages, pure <code>normalizeQuery</code> / <code>buildGroups</code>.</td><td>Full result set, not the DOM slice; real Status order.</td></tr>
-  <tr><td><code>features/my-issues/content.js</code>, <code>content.css</code> <span class="tag keep">prototype</span> <span class="tag add">+</span></td><td>Switch, mount anchored on content (results rows, not class names), states, SPA re-sync. <b>Add:</b> re-fetch when the query changes without a URL change, (e.g. a saved view applied in place), if the e2e test shows the URL poll misses it.</td><td>AC 1, 3, 5, 7.</td></tr>
-  <tr><td><code>lib/github-api.js</code> <span class="tag shared">shared</span></td><td>Opt-in <code>partial: true</code> for <code>ghGraphQL</code>; default unchanged.</td><td>One unreadable Project must not fail the whole view.</td></tr>
-  <tr><td><code>background.js</code> <span class="tag shared">shared</span></td><td>Register the feature in <code>FEATURES</code>.</td><td>Generic router.</td></tr>
-  <tr><td><code>manifest.json</code> <span class="tag shared">shared</span></td><td>New content script for <code>github.com/issues</code> and <code>/issues/*</code>. No new permission; <code>version</code> untouched.</td><td>New page target.</td></tr>
-  <tr><td><code>options/</code> <span class="tag shared">shared</span></td><td><code>ghmiEnabled</code> feature switch, on by default.</td><td>Same pattern as the other features.</td></tr>
-  <tr><td><code>README.md</code>, <code>PRIVACY.md</code>, <code>screenshots/my-issues.svg</code></td><td>Feature section, stored view preference, mockup.</td><td>Definition of done.</td></tr>
-  <tr><td><code>test/…</code> <span class="tag add">+</span></td><td>Unit + e2e below; fixture <code>my-issues.html</code> refreshed from real dashboard markup.</td><td>Test plan.</td></tr>
+  <tr><td><code>background/my-issues.js</code> <span class="tag keep">kept</span></td><td>No change (data already has every field the tiles need).</td><td>Member's comment, §intro.</td></tr>
+  <tr><td><code>features/my-issues/layout.js</code> <span class="tag add">new</span></td><td>Pure helpers on <code>globalThis.GHMI_LAYOUT</code> (pattern of <code>dependency-graph/lineage.js</code>): <code>relativeTime</code> (1h, 2d, 3w, 5mo), <code>repoLabels</code> (drop owner unless the repo name is ambiguous), <code>capStatus</code> (first 5 + hidden count), <code>barSegments</code> (widths, gray for No Status / unknown color), <code>distinctCount</code>.</td><td>Unit-testable without a DOM.</td></tr>
+  <tr><td><code>features/my-issues/content.js</code> <span class="tag add">rewrite render</span></td><td>Toolbar line (summary, Expand/Collapse all, switch, glyph); tile grid with <code>&lt;details&gt;</code>, bar <code>role="img"</code> + <code>aria-label</code>, legend, gutter Status lists, <code>Show N more</code> (<code>aria-expanded</code>); GitHub open/closed issue octicons inline; <code>&lt;time datetime&gt;</code>; in-memory collapse/expand state; sidebar finder + toggle. Fetch, query and states logic kept.</td><td>Layout §1–5.</td></tr>
+  <tr><td><code>features/my-issues/content.css</code> <span class="tag add">rewrite</span></td><td><code>grid-template-columns: repeat(auto-fill, minmax(520px,1fr))</code>; tile <code>container-type: inline-size</code> with an <code>@container (max-width: 460px)</code> stack rule; ellipsis rows; sidebar rail rules on <code>[data-ghmi-*]</code> only.</td><td>Responsive tiles; no hashed classes.</td></tr>
+  <tr><td><code>manifest.json</code> <span class="tag shared">shared</span></td><td>Add <code>layout.js</code> before <code>content.js</code> in the my-issues entry. No new permission; <code>version</code> untouched.</td><td>Load the helpers.</td></tr>
+  <tr><td><code>lib/github-api.js</code>, <code>background.js</code> <span class="tag shared">shared</span> <span class="tag keep">kept</span></td><td>As in the prototype: opt-in <code>partial</code> on <code>ghGraphQL</code>; feature in <code>FEATURES</code>.</td><td>No change in this revision.</td></tr>
+  <tr><td><code>options/options.html</code> <span class="tag shared">shared</span></td><td><code>ghmiEnabled</code> description: "…organized as Project tiles by each project's real status columns, with a collapsible sidebar."</td><td>The switch now also controls the sidebar.</td></tr>
+  <tr><td><code>README.md</code></td><td>Feature section rewritten for tiles, row anatomy, 5-per-Status cap, sidebar.</td><td>Source of truth.</td></tr>
+  <tr><td><code>PRIVACY.md</code></td><td>List <code>ghmiEnabled</code>, <code>ghmiView</code>, <code>ghmiSidebar</code>; nothing else persisted.</td><td>Stored data.</td></tr>
+  <tr><td><code>screenshots/my-issues.svg</code></td><td>Replaced, starting from the review comment's SVG, adjusted to the final layout; invented data only.</td><td>Visible change.</td></tr>
+  <tr><td><code>test/…</code> <span class="tag add">+</span></td><td>Unit <code>my-issues-layout.test.js</code>; e2e rows below; fixture refreshed (sidebar + results) with invented names.</td><td>Test plan.</td></tr>
 </table>
 
 <h2>Data, permissions, privacy</h2>
 <ul>
-  <li><b>Reads</b>: issues matching the dashboard query, their Project memberships, Status values and the Projects' Status options, under the user's <b>default</b> token (the dashboard is that account's own view).</li>
-  <li><b>Stores</b>: two new <code>chrome.storage.local</code> keys, <code>ghmiEnabled</code> (feature switch) and <code>ghmiView</code> (<code>list</code> | <code>grouped</code>). <code>PRIVACY.md</code> updated.</li>
-  <li><b>Sends</b>: nothing new; only GitHub's API, as today. <b>No new permission</b>: <code>api.github.com</code> is already a host permission.</li>
+  <li><b>Reads</b>: unchanged (issues for the dashboard query, Project memberships, Status values and options, default token).</li>
+  <li><b>Stores</b>: three <code>chrome.storage.local</code> keys: <code>ghmiEnabled</code> (feature switch), <code>ghmiView</code> (<code>list</code> | <code>grouped</code>), <span class="tag add">new</span> <code>ghmiSidebar</code> (<code>collapsed</code> default | <code>expanded</code>). Tile collapse and <i>Show N more</i> are memory only.</li>
+  <li><b>Sends</b>: nothing new. <b>No new permission.</b></li>
 </ul>
 
 <h2>Test plan</h2>
 <div class="scroll">
 <table>
   <tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
-  <tr><td>Control appears and survives SPA navigation / page updates</td><td>e2e</td><td><code>re-injects the switch after a turbo navigation and a list re-render</code> <span class="tag add">new</span></td></tr>
-  <tr><td>Complete filtered set, including pagination</td><td>unit + e2e</td><td><code>fetchGroups follows search pages until hasNextPage is false</code>, <code>…follows extra projectItems pages</code> <span class="tag add">new</span>; e2e <code>groups issues by project and status…</code> with a mocked 2-page search</td></tr>
-  <tr><td>Groups and counts update on search / filter / saved view / tab</td><td>e2e</td><td><code>re-fetches and regroups when the query changes</code> <span class="tag add">new</span>; <code>derives the query from the dashboard tab…</code></td></tr>
+  <tr><td colspan="3"><b>Kept from revision 1</b></td></tr>
+  <tr><td>Control appears and survives SPA navigation / page updates</td><td>e2e</td><td><code>re-injects the switch after a turbo navigation and a list re-render</code></td></tr>
+  <tr><td>Complete filtered set, including pagination</td><td>unit + e2e</td><td><code>fetchGroups follows search pages until hasNextPage is false</code>, <code>…follows extra projectItems pages</code>; e2e with a mocked 2-page search</td></tr>
+  <tr><td>Groups and counts update on search / filter / saved view / tab</td><td>e2e</td><td><code>re-fetches and regroups when the query changes</code>; <code>derives the query from the dashboard tab…</code></td></tr>
   <tr><td>Status attributed to the right Project; missing Status / Project explicit</td><td>unit</td><td><code>buildGroups places an issue under every project…</code>, <code>…No Status last</code>, <code>…into noProject</code></td></tr>
-  <tr><td>Loading, empty, partial-permission, error states; no false "complete"</td><td>unit + e2e</td><td><code>shows loading, empty, no-token and error states</code> <span class="tag add">new</span>; <code>labels a truncated set as "first N of M"</code> <span class="tag add">new</span>; unit <code>ghGraphQL with partial:true…</code>, <code>an unreadable project degrades to No Project</code> <span class="tag add">new</span></td></tr>
-  <tr><td>Large sets: pagination cap, caching, no repeated requests</td><td>unit + e2e</td><td><code>fetchGroups stops at the page cap and flags truncated</code> <span class="tag add">new</span>; e2e <code>does not refetch on a re-render with the same query</code> <span class="tag add">new</span> (counts mocked API calls)</td></tr>
-  <tr><td>Back to List restores native behaviour and layout</td><td>e2e</td><td><code>switching back to List restores the native list</code></td></tr>
-  <tr><td>Read-only</td><td>unit</td><td><code>the feature only issues GraphQL queries, never mutations</code> <span class="tag add">new</span></td></tr>
-  <tr><td>Feature disabled</td><td>e2e</td><td><code>injects nothing when the feature is disabled</code></td></tr>
+  <tr><td>Loading, empty, partial-permission, error, truncated states</td><td>unit + e2e</td><td><code>shows loading, empty, no-token and error states</code>; <code>labels a truncated set as "first N of M"</code>; <code>ghGraphQL with partial:true…</code></td></tr>
+  <tr><td>Large sets: cap, cache, no repeated requests</td><td>unit + e2e</td><td><code>fetchGroups stops at the page cap…</code>; <code>does not refetch on a re-render with the same query</code></td></tr>
+  <tr><td>Back to List restores native page; read-only; feature disabled</td><td>e2e + unit</td><td><code>switching back to List restores the native list</code>; <code>only issues GraphQL queries, never mutations</code>; <code>injects nothing when the feature is disabled</code></td></tr>
+  <tr><td colspan="3"><b>New in revision 2</b></td></tr>
+  <tr><td>Time since update, short form</td><td>unit</td><td><code>relativeTime formats 1h, 2d, 3w, 5mo and clamps the future to 0m</code></td></tr>
+  <tr><td><code>repo#number</code> drops the owner unless the repo name is ambiguous</td><td>unit</td><td><code>repoLabels keeps owner only for repo names shared by two owners</code></td></tr>
+  <tr><td>5 per Status, then <i>Show N more</i></td><td>unit</td><td><code>capStatus shows 5 and counts the rest; no button at ≤5</code></td></tr>
+  <tr><td>Bar proportional, real colors, gray No Status / unknown</td><td>unit</td><td><code>barSegments widths sum to 100 and map colors with gray fallback</code></td></tr>
+  <tr><td>Summary counts distinct issues</td><td>unit + e2e</td><td><code>distinctCount counts an issue in two projects once</code>; e2e summary text</td></tr>
+  <tr><td>Tiles in Project Status order with bar and legend</td><td>e2e</td><td><code>renders a tile per project with statuses in option order, bar and legend</code> (checks <code>aria-label</code> = legend)</td></tr>
+  <tr><td><i>Show N more</i> expands in place</td><td>e2e</td><td><code>Show N more reveals the remaining rows and sets aria-expanded</code></td></tr>
+  <tr><td>Collapse all / Expand all; collapsed tile keeps bar and legend</td><td>e2e</td><td><code>Collapse all and Expand all toggle every tile</code></td></tr>
+  <tr><td>Gutter stacks at narrow width</td><td>e2e</td><td><code>stacks the status gutter above rows below 460px of tile width</code> (narrow viewport, compare boxes)</td></tr>
+  <tr><td>No Project renders flat</td><td>e2e</td><td><code>No Project tile lists issues without a status gutter</code></td></tr>
+  <tr><td>Sidebar collapsed on first load, toggles, persists, works in List</td><td>e2e</td><td><code>sidebar starts collapsed, toggles, persists across reload and works in List view</code> (checks <code>aria-expanded</code>, accessible names of rail items, content width grows)</td></tr>
+  <tr><td>Feature disabled → native sidebar</td><td>e2e</td><td><code>leaves the sidebar native when the feature is disabled</code></td></tr>
+  <tr><td>Nav items missing → no toggle, no error</td><td>e2e</td><td><code>adds no sidebar toggle when the nav items are not found</code> (fixture variant, page errors collected)</td></tr>
 </table>
 </div>
-<p class="meta" style="font-size:13px">Fixture: refresh <code>test/e2e/fixtures/my-issues.html</code> from the live dashboard (search box, tabs, results list), so the mount anchor is tested on real markup, not hand-written HTML. Every new e2e spec runs 3× (<code>--repeat-each=3</code>).</p>
+<p class="note">Fixture: refresh <code>test/e2e/fixtures/my-issues.html</code> from real dashboard markup (sidebar with the four nav items and Views, search box, results), with every Project, repository, user and issue name replaced by invented ones (the bakery placeholders). Existing e2e mocks move to the same invented data. Every new e2e spec runs 3× (<code>--repeat-each=3</code>).</p>
 
 <h2>Risks and open questions</h2>
 <ul>
-  <li><b>Dashboard DOM churn</b>: the mount and the "hide native list" step rely on finding the results block. Default: anchor on content (the issue-link rows and the search box), fail safe (no switch rather than a broken page), refresh the fixture from real markup.</li>
-  <li><b>Saved views whose query is not in the URL</b>: if a saved view only shows up in the page and not in <code>?q=</code>, we read the search box's visible value instead. Default: URL <code>q</code> → search box value → tab path.</li>
-  <li><b>Token choice</b>: issues span many owners, but one search uses one token. Default: the <b>default</b> token; Projects of owners it cannot read degrade to No Project. Per-owner tokens could come later.</li>
-  <li><b>Cap of 500 issues</b> (10 pages × 50). Default: keep it, with the explicit "first N of M" notice.</li>
-  <li><b>Project order</b>: GitHub exposes no personal Project order. Default: alphabetical, No Project last; issues most recently updated first.</li>
+  <li><b>Sidebar reflow and nav anchors are unverified against live github.com</b> from here, and the dashboard markup may differ from the fixture. Default: fixture refreshed from real markup, strict fail-safe (no toggle), and I flag in the PR any step that looks fragile on the real page.</li>
+  <li><b>Grid track rewrite</b>: if GitHub's pane uses named areas or a responsive track list that changes per breakpoint, replacing the first computed track may misfit. Default: recompute on resize (debounced); if the pane is neither a plain grid nor flex, no toggle.</li>
+  <li><b>Content max-width</b>: the results column may be capped by its own container, so freed space may not all be used. Default: lift <code>max-width</code> only on the content sibling inside the pane we marked, nothing higher up.</li>
+  <li><b>Nav text is English-only</b>: GitHub's UI is English, but a localized label would make the sidebar step fail safe (no toggle). Default: accept.</li>
+  <li><b>520px tile minimum</b> gives one column below ~1100px of content width. Default: as specified; collapsed sidebar by default helps.</li>
 </ul>
 
 <h2>Out of scope</h2>
 <ul>
-  <li>PR review requests, Project draft items, assignment through custom Project fields (excluded by the issue).</li>
-  <li>Editing anything (status, assignee, Project): the view is read-only.</li>
-  <li>Per-owner token fan-out for one dashboard search.</li>
+  <li>Labels in rows (no extra query fields, no room in a tile).</li>
+  <li>Persisting tile collapse or <i>Show N more</i> state; a setting for the per-Status cap.</li>
+  <li>Special handling of any Status name (no "Blocked" or "Done" logic).</li>
+  <li>PR review requests, Project draft items, editing anything, per-owner token fan-out.</li>
 </ul>
 
 </main></body></html>
