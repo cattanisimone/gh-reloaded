@@ -400,3 +400,81 @@ test("offers no entry button when the feature is disabled", async ({ context, pa
   await page.waitForTimeout(1500);
   await expect(page.locator("#ghsm-enter")).toHaveCount(0);
 });
+
+// Header variants with invented names: the description as a sibling, as a
+// bare text node next to the heading, inside the heading's wrapper, absent,
+// on an empty column, and as bare text directly in the column.
+test("hides every description variant and keeps only the dot, the name and one pill", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup-headers.html");
+  await page.goto(BOARD_URL);
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-bar")).toHaveCount(1);
+
+  const visibleText = (id) =>
+    page.locator(`#${id}`).evaluate((col) => {
+      const out = [];
+      const walker = document.createTreeWalker(col, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (!n.textContent.trim() || n.parentElement.closest(".board-view-column-card")) continue;
+        const style = getComputedStyle(n.parentElement);
+        if (style.display === "none" || parseFloat(style.fontSize) === 0 || n.parentElement.closest("[data-ghsm-hide]")) continue;
+        out.push(n.textContent.trim());
+      }
+      return out;
+    });
+
+  const expected = {
+    "c-sibling": ["Alpha", "Effort: 3"],
+    "c-bare": ["Bravo", "Effort: 4"],
+    "c-inner": ["Charlie", "1"],
+    "c-none": ["Delta", "1"],
+    "c-empty": ["Echo", "0"],
+    "c-direct": ["Foxtrot", "1"],
+  };
+  for (const [id, texts] of Object.entries(expected)) {
+    expect(await visibleText(id), id).toEqual(texts);
+    const col = page.locator(`#${id}`);
+    await expect(col.locator(".status-dot")).toBeVisible();
+    await expect(col.locator("h3")).toBeVisible();
+    await expect(col.locator('button[aria-label="Column menu"]')).toBeHidden();
+    // The first card keeps its own size.
+    const card = col.locator(".board-view-column-card a").first();
+    if (await card.count()) await expect(card).toHaveCSS("font-size", "16px");
+  }
+
+  // Everything is restored on exit.
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#c-bare")).toContainText("Bravo bare description");
+  await expect(page.locator("[data-ghsm-quiet], [data-ghsm-sticky]")).toHaveCount(0);
+  await expect(page.locator("#c-direct")).not.toHaveAttribute("style", /ghsm/);
+});
+
+test("leaves a gap under the bar and keeps sticky headers clear of it", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup-headers.html");
+  await page.goto(BOARD_URL);
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-bar")).toHaveCount(1);
+
+  const barBottom = async () => {
+    const b = await page.locator("#ghsm-bar").boundingBox();
+    return b.y + b.height;
+  };
+  const header = page.locator("#c-sibling .column-header");
+  const first = await header.boundingBox();
+  expect(first.y).toBeGreaterThanOrEqual((await barBottom()) + 8 - 1);
+
+  // The offset follows the bar's measured height.
+  const h = await page.evaluate(() => document.documentElement.style.getPropertyValue("--ghsm-bar-h"));
+  expect(parseFloat(h)).toBeGreaterThan(0);
+  await page.evaluate(() => (document.getElementById("ghsm-bar").style.height = "80px"));
+  await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--ghsm-bar-h"))).toBe("80px");
+  expect((await header.boundingBox()).y).toBeGreaterThanOrEqual((await barBottom()) + 8 - 1);
+
+  // Scrolled, the sticky header still sits below the bar, not under it or away from it.
+  await page.evaluate(() => window.scrollTo(0, 600));
+  await expect.poll(async () => Math.round((await header.boundingBox()).y - (await barBottom()))).toBe(8);
+});

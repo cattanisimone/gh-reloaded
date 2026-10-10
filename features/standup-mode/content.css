@@ -75,7 +75,21 @@ body.ghsm-active nav[aria-label="Select view"] {
 }
 
 body.ghsm-active {
-  padding-top: 44px !important;
+  padding-top: calc(var(--ghsm-bar-h, 44px) + 8px) !important;
+}
+
+/* Sticky headers: their own `top` was meant for the hidden global header. */
+body.ghsm-active [data-ghsm-sticky] {
+  top: var(--ghsm-sticky-top, 0px) !important;
+}
+
+/* An element that holds a kept header part but also owns bare text (the
+   description) is silenced; what is inside it restores the original size. */
+body.ghsm-active [data-ghsm-quiet] {
+  font-size: 0 !important;
+}
+body.ghsm-active [data-ghsm-quiet] > *:not([data-ghsm-quiet]) {
+  font-size: var(--ghsm-fs, 14px) !important;
 }
 
 /* What content.js marked as not worth reading in a standup: GitHub's own

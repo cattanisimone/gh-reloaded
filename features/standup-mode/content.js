@@ -262,6 +262,17 @@
     return (document.querySelector(SELECTED_TAB_SELECTOR)?.textContent || "").trim();
   }
 
+  let barObserver = null;
+  function trackBarHeight(bar) {
+    const set = () => document.documentElement.style.setProperty(BAR_H_VAR, `${bar.offsetHeight}px`);
+    set();
+    barObserver?.disconnect();
+    if (typeof ResizeObserver === "function") {
+      barObserver = new ResizeObserver(set);
+      barObserver.observe(bar);
+    }
+  }
+
   function ensureBar() {
     let bar = document.getElementById(BAR_ID);
     if (bar) return bar;
@@ -450,7 +461,9 @@
   // `data-ghsm-*` mark that CSS acts on and exit removes; nothing is moved or
   // removed from GitHub's DOM. If an anchor is not found, that part of the
   // page simply stays as it is.
-  const LAYOUT_ATTRS = ["data-ghsm-hide", "data-ghsm-flat", "data-ghsm-row", "data-ghsm-pill", "data-ghsm-keep", "data-ghsm-float"];
+  const LAYOUT_ATTRS = ["data-ghsm-hide", "data-ghsm-flat", "data-ghsm-row", "data-ghsm-pill", "data-ghsm-keep", "data-ghsm-float", "data-ghsm-quiet", "data-ghsm-sticky"];
+  const BAR_H_VAR = "--ghsm-bar-h";
+  const BAR_GAP = 8;
   const VIEW_NAV_SELECTOR = 'nav[aria-label="Select view"]';
   const HEADING_SELECTOR = 'h1,h2,h3,h4,[role="heading"]';
   const BUTTON_SELECTOR = 'button,[role="button"]';
@@ -461,6 +474,8 @@
   const GROUP_HEADER_SELECTOR = '[class*="Board-module__horizontalGroupHeader"]';
 
   function clearLayout() {
+    for (const node of document.querySelectorAll("[data-ghsm-quiet]")) node.style.removeProperty("--ghsm-fs");
+    for (const node of document.querySelectorAll("[data-ghsm-sticky]")) node.style.removeProperty("--ghsm-sticky-top");
     for (const attr of LAYOUT_ATTRS) {
       for (const node of document.querySelectorAll(`[${attr}]`)) node.removeAttribute(attr);
     }
@@ -541,6 +556,32 @@
     return (("value" in filterInput ? filterInput.value : filterInput.textContent) || "").trim();
   }
 
+  // Silences the bare text of `nodes`: the original font size is read
+  // first (a silenced parent would otherwise zero it), then kept.
+  function silence(nodes) {
+    const sizes = nodes.map((n) => getComputedStyle(n).fontSize);
+    nodes.forEach((n, i) => {
+      n.style.setProperty("--ghsm-fs", sizes[i]);
+      mark(n, "data-ghsm-quiet");
+    });
+  }
+
+  // GitHub's sticky headers have a `top` computed for the global header
+  // that is hidden now. Under the window's own scroll they sit just below
+  // the bar; inside a scrolling container the container already starts
+  // below the bar, so they stick to its top.
+  function markSticky(node) {
+    if (getComputedStyle(node).position !== "sticky") return;
+    let scroller = node.parentElement;
+    while (scroller && scroller !== document.body && scroller !== document.documentElement) {
+      if (/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) break;
+      scroller = scroller.parentElement;
+    }
+    const inContainer = scroller && scroller !== document.body && scroller !== document.documentElement;
+    node.style.setProperty("--ghsm-sticky-top", inContainer ? "0px" : `calc(var(${BAR_H_VAR}, 44px) + ${BAR_GAP}px)`);
+    mark(node, "data-ghsm-sticky");
+  }
+
   // Reduces a column header to one row: the status dot and the name on the
   // left and a single metric pill on the right (the field sum when the
   // column has one, else the card count), with the "..." menu and the
@@ -572,22 +613,43 @@
     // The status dot: an icon or empty marker ahead of the name.
     const dots = zone.filter(
       (n) =>
-        n.matches("svg, img, span:empty, i:empty") &&
+        n.matches("svg, img, span:empty, i:empty, div:empty") &&
         !n.parentElement?.closest("svg") &&
         !inHeading(n) &&
         !inButton(n) &&
         !inPill(n) &&
         !!(n.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING)
     );
-    // Whatever other text there is (the description) goes.
-    for (const n of zone) {
-      if (inHeading(n) || n.contains(heading) || inButton(n) || inPill(n) || !hasOwnText(n)) continue;
-      mark(n, "data-ghsm-hide");
-    }
-
     const kept = [...dots, heading, ...(chosen ? [chosen] : [])];
     for (const n of kept) mark(n, "data-ghsm-keep");
     if (chosen) mark(chosen, "data-ghsm-pill");
+
+    // Allowlist: in the header zone only the dot, the name and the chosen
+    // pill stay visible. Every other element goes; an element that holds a
+    // kept part but also owns bare text (a description sitting next to the
+    // heading) cannot be hidden, so its own text is silenced with
+    // `font-size: 0` and the elements inside it restore the original size.
+    const inKept = (n) => kept.some((k) => k === n || k.contains(n));
+    const holdsKept = (n) => kept.some((k) => n.contains(k));
+    const hidden = new Set();
+    const quiet = [];
+    for (const n of zone) {
+      if (inKept(n)) continue;
+      if (holdsKept(n)) {
+        if (hasOwnText(n)) quiet.push(n);
+      } else if (!hidden.has(n.parentElement)) {
+        hidden.add(n);
+        mark(n, "data-ghsm-hide");
+      }
+    }
+    const columnText = Array.from(column.childNodes).some(
+      (c) => c.nodeType === 3 && c.textContent.trim() && (!firstCard || !!(c.compareDocumentPosition(firstCard) & Node.DOCUMENT_POSITION_FOLLOWING))
+    );
+    if (columnText) quiet.push(column);
+    silence(quiet);
+
+    // Sticky header parts keep clear of the bar.
+    for (const n of [...zone, column]) markSticky(n);
 
     let row = heading.parentElement;
     while (row && row !== column && !kept.every((n) => row.contains(n))) row = row.parentElement;
@@ -608,6 +670,7 @@
     for (const b of header.querySelectorAll(BUTTON_SELECTOR)) {
       if (!textOf(b) && !b.querySelector("img")) mark(b, "data-ghsm-hide");
     }
+    markSticky(header);
   }
 
   function updateFilterText(text) {
@@ -793,7 +856,7 @@
     savedScroll = { x: window.scrollX, y: window.scrollY };
     savedScrolls = captureBoardScrolls();
     savedFocus = document.activeElement;
-    ensureBar();
+    trackBarHeight(ensureBar());
     document.body.classList.add(ACTIVE_CLASS);
     updateBoardOffset();
     document.addEventListener("keydown", onKeydown, true);
@@ -823,6 +886,9 @@
     clearLayout();
     document.body.classList.remove(ACTIVE_CLASS);
     document.documentElement.style.removeProperty(LEFT_VAR);
+    document.documentElement.style.removeProperty(BAR_H_VAR);
+    barObserver?.disconnect();
+    barObserver = null;
     document.getElementById(BAR_ID)?.remove();
     cards = [];
     cardSignature = "";
