@@ -78,6 +78,57 @@ body.ghsm-active {
   padding-top: 44px !important;
 }
 
+/* What content.js marked as not worth reading in a standup: GitHub's own
+   title row (the bar carries the name), the filter bar and the View
+   button, the "..." menus, descriptions and the pill that is not shown. */
+body.ghsm-active [data-ghsm-hide] {
+  display: none !important;
+}
+
+/* Column header on one line: dot and name on the left, one metric pill on
+   the right. Wrappers between the header row and the parts that stay are
+   dissolved so those parts become the row's own items. */
+body.ghsm-active [data-ghsm-flat] {
+  display: contents !important;
+}
+body.ghsm-active [data-ghsm-row] {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+body.ghsm-active [data-ghsm-row] [data-ghsm-keep] {
+  flex: none !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+body.ghsm-active [data-ghsm-row] h1,
+body.ghsm-active [data-ghsm-row] h2,
+body.ghsm-active [data-ghsm-row] h3,
+body.ghsm-active [data-ghsm-row] h4,
+body.ghsm-active [data-ghsm-row] [role="heading"] {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+body.ghsm-active [data-ghsm-pill] {
+  margin-left: auto !important;
+}
+/* When the header's parts sit directly in the column, with no row of
+   their own, the pill floats to the right of the line instead. */
+body.ghsm-active .board-view-column > [data-ghsm-keep] {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+body.ghsm-active .board-view-column > [data-ghsm-float] {
+  float: right !important;
+}
+
 /* Fit the columns to the window instead of scrolling sideways, the same
    way Full-width board does — but only when that feature is NOT already
    active, so the two never fight. Measured left offset comes from
@@ -139,6 +190,18 @@ body.ghsm-active:not(.ghfw-active) [class*="column-frame-module__Box__"] {
 }
 #ghsm-bar .ghsm-view {
   color: #57606a;
+}
+#ghsm-bar .ghsm-filter {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 28%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #57606a;
+}
+#ghsm-bar .ghsm-filter[hidden] {
+  display: none;
 }
 #ghsm-bar .ghsm-summary {
   flex: 1 1 auto;
@@ -305,6 +368,7 @@ body.ghsm-active .ghsm-focus {
     color: #c9d1d9;
   }
   #ghsm-bar .ghsm-view,
+  #ghsm-bar .ghsm-filter,
   #ghsm-bar .ghsm-note {
     color: #8b949e;
   }

@@ -12,8 +12,9 @@
 // label); the API-backed badges are simply absent.
 //
 // Everything here is read-only and local to this tab: it only adds a bar,
-// badges and CSS classes, never touching issues, Project fields, or card
-// order. The "currently presenting" state is deliberately kept in memory
+// badges, CSS classes and `data-ghsm-*` marks (to hide GitHub's own title
+// row, filter bar and editing controls and to compact the column headers),
+// never touching issues, Project fields, or card order. The "currently presenting" state is deliberately kept in memory
 // (not chrome.storage), so entering/exiting never leaks to other tabs or
 // survives a reload. Only the feature's on/off switch and its two
 // thresholds (stale days, review-like status keywords) live in storage,
@@ -194,7 +195,9 @@
   let cards = []; // current scanned cards
   let cardSignature = ""; // what the last signals request was made for
   let signals = null; // latest { cards, columns, summary } from the background
-  let signalsState = "idle"; // idle | loading | ready | no-token | unavailable
+  let signalsState = "idle"; // idle | loading | ready | empty | no-token | no-access | no-items | error
+  let signalsDetail = ""; // why the state is "error", shown as the note's tooltip
+  let signalsWarning = ""; // what went wrong on the cards a partial read could not get
   let requestSeq = 0;
   let savedScroll = null; // { x, y } window scroll to restore on exit
   let savedScrolls = []; // [{ el, left, top }] nested board scrollers to restore on exit
@@ -272,6 +275,9 @@
     const view = viewName();
     if (view) title.append(el("span", "ghsm-view", view));
 
+    const filter = el("div", "ghsm-filter");
+    filter.hidden = true;
+
     const summary = el("div", "ghsm-summary");
     summary.id = "ghsm-summary";
     summary.setAttribute("aria-live", "polite");
@@ -283,7 +289,7 @@
     exitBtn.setAttribute("aria-label", "Exit standup mode");
     exitBtn.addEventListener("click", exit);
 
-    bar.append(title, summary, exitBtn);
+    bar.append(title, filter, summary, exitBtn);
     document.body.appendChild(bar);
     return bar;
   }
@@ -302,8 +308,11 @@
 
   const NOTES = {
     loading: "Reading board signals…",
+    empty: "No cards on this board yet.",
     "no-token": "Add a GitHub token in Settings to see stale, blocked and at-risk signals.",
-    unavailable: "Board signals are unavailable (the token may lack Projects access).",
+    "no-access": "Board signals are unavailable (the token may lack Projects access).",
+    "no-items": "Nothing to check: this board has no issues or pull requests.",
+    error: "Board signals could not be loaded.",
   };
 
   function renderSummary() {
@@ -311,13 +320,17 @@
     if (!box) return;
     box.replaceChildren();
     if (NOTES[signalsState]) {
-      box.append(el("span", "ghsm-note", NOTES[signalsState]));
+      const note = el("span", "ghsm-note", NOTES[signalsState]);
+      if (signalsState === "error" && signalsDetail) note.title = signalsDetail;
+      box.append(note);
       return;
     }
     const entries = summaryEntries();
     const partial = !!(signals?.incomplete || signals?.edgesIncomplete);
     if (signals?.incomplete) {
-      box.append(el("span", "ghsm-note", "Some cards could not be read, so bottleneck and critical-path signals are off."));
+      const note = el("span", "ghsm-note", "Some cards could not be read, so bottleneck and critical-path signals are off.");
+      if (signalsWarning) note.title = signalsWarning;
+      box.append(note);
     } else if (signals?.edgesIncomplete) {
       box.append(el("span", "ghsm-note", "Some dependencies could not be read, so the critical-path signal is off."));
     }
@@ -428,20 +441,250 @@
     }
   }
 
+  // ---- reclaimed layout: hide what a standup does not read, compact headers ----
+  //
+  // GitHub's own markup is matched by structure and visible text, never by a
+  // hashed class: the project title is the page's first heading outside the
+  // board, the filter bar is found by its input's label, and a column header
+  // is whatever precedes the column's first card. Everything is a
+  // `data-ghsm-*` mark that CSS acts on and exit removes; nothing is moved or
+  // removed from GitHub's DOM. If an anchor is not found, that part of the
+  // page simply stays as it is.
+  const LAYOUT_ATTRS = ["data-ghsm-hide", "data-ghsm-flat", "data-ghsm-row", "data-ghsm-pill", "data-ghsm-keep", "data-ghsm-float"];
+  const VIEW_NAV_SELECTOR = 'nav[aria-label="Select view"]';
+  const HEADING_SELECTOR = 'h1,h2,h3,h4,[role="heading"]';
+  const BUTTON_SELECTOR = 'button,[role="button"]';
+  const FILTER_HINT_RE = /filter|search/i;
+  const ADD_CONTROL_RE = /^(\+\s*)?(add item|new item|add status|add column|new column)/i;
+  const COUNT_RE = /^\d+(\s*\/\s*\d+)?$/;
+  const SUM_RE = /^[^:]{1,40}:\s*[-+]?\d[\d.,]*\s*[a-z%]{0,3}$/i;
+  const GROUP_HEADER_SELECTOR = '[class*="Board-module__horizontalGroupHeader"]';
+
+  function clearLayout() {
+    for (const attr of LAYOUT_ATTRS) {
+      for (const node of document.querySelectorAll(`[${attr}]`)) node.removeAttribute(attr);
+    }
+  }
+
+  function mark(node, attr) {
+    node.setAttribute(attr, "");
+  }
+
+  const textOf = (node) => (node.textContent || "").trim();
+  const hasOwnText = (node) => Array.from(node.childNodes).some((c) => c.nodeType === 3 && c.textContent.trim());
+
+  // The board's own anchor, or the parent of its first column when the
+  // class prefix has changed.
+  function boardRoot() {
+    return document.querySelector(BOARD_CONTAINER_SELECTOR) || document.querySelector(COLUMN_SELECTOR)?.parentElement || null;
+  }
+
+  // The outermost ancestor of `node` (itself included) that holds neither
+  // the board nor the view tabs: the whole row of page chrome `node` is in.
+  function chromeRow(node, board) {
+    const nav = document.querySelector(VIEW_NAV_SELECTOR);
+    const holdsAnchor = (n) => n.contains(board) || !!nav?.contains(n) || !!(nav && n.contains(nav));
+    if (holdsAnchor(node)) return null;
+    let row = node;
+    while (row.parentElement && row.parentElement !== document.body && row.parentElement.tagName !== "MAIN" && !holdsAnchor(row.parentElement)) {
+      row = row.parentElement;
+    }
+    return row;
+  }
+
+  function findFilterInput(outside) {
+    const candidates = document.querySelectorAll('input, textarea, [role="combobox"], [role="searchbox"]');
+    return (
+      Array.from(candidates).find((n) => {
+        if (!outside(n)) return false;
+        const hint = `${n.getAttribute("aria-label") || ""} ${n.getAttribute("placeholder") || ""} ${n.getAttribute("title") || ""}`;
+        return FILTER_HINT_RE.test(hint);
+      }) || null
+    );
+  }
+
+  // The project's own title row. It is the page's first level-1 heading
+  // outside the board and the view tabs; failing that, the first element
+  // before the board whose whole text is the project name from the tab title.
+  function findTitle(board, outside) {
+    const main = document.querySelector("main") || document.body;
+    const heading = Array.from(main.querySelectorAll('h1,[role="heading"][aria-level="1"]')).find(outside);
+    if (heading) return heading;
+    const name = (document.title || "").split(" · ")[0].trim();
+    if (!name) return null;
+    return (
+      Array.from(main.querySelectorAll("*")).find(
+        (n) => !n.children.length && textOf(n) === name && outside(n) && !!(n.compareDocumentPosition(board) & Node.DOCUMENT_POSITION_FOLLOWING)
+      ) || null
+    );
+  }
+
+  // Hides the page chrome a standup does not read and returns the active
+  // filter's text, so the bar can show which subset of the board this is.
+  function hidePageChrome(board) {
+    const outside = (n) => !board.contains(n) && !n.closest(`#${BAR_ID}, ${VIEW_NAV_SELECTOR}`);
+    const hideRowOf = (node) => {
+      const row = node && chromeRow(node, board);
+      if (row) mark(row, "data-ghsm-hide");
+    };
+    hideRowOf(findTitle(board, outside));
+    const filterInput = findFilterInput(outside);
+    hideRowOf(filterInput);
+    for (const b of document.querySelectorAll(BUTTON_SELECTOR)) {
+      if (outside(b) && /^view$/i.test(textOf(b))) mark(b, "data-ghsm-hide");
+    }
+    for (const b of board.querySelectorAll(BUTTON_SELECTOR)) {
+      if (b.closest(CARD_SELECTOR)) continue;
+      if (ADD_CONTROL_RE.test((b.getAttribute("aria-label") || textOf(b)).trim())) mark(b, "data-ghsm-hide");
+    }
+    if (!filterInput) return "";
+    return (("value" in filterInput ? filterInput.value : filterInput.textContent) || "").trim();
+  }
+
+  // Reduces a column header to one row: the status dot and the name on the
+  // left and a single metric pill on the right (the field sum when the
+  // column has one, else the card count), with the "..." menu and the
+  // description hidden. The header is whatever precedes the column's first
+  // card, found by position so it does not depend on GitHub's wrappers.
+  function compactColumnHeader(column) {
+    const heading = column.querySelector(HEADING_SELECTOR);
+    if (!heading || heading.closest(CARD_SELECTOR)) return;
+    const firstCard = column.querySelector(CARD_SELECTOR);
+    const zone = Array.from(column.querySelectorAll("*")).filter(
+      (n) => !n.closest(CARD_SELECTOR) && (!firstCard || (!n.contains(firstCard) && n.compareDocumentPosition(firstCard) & Node.DOCUMENT_POSITION_FOLLOWING))
+    );
+    const inHeading = (n) => n === heading || heading.contains(n);
+    const inButton = (n) => !!n.closest(BUTTON_SELECTOR);
+
+    const buttons = zone.filter((n) => n.matches(BUTTON_SELECTOR) && !n.contains(heading) && !inHeading(n));
+    for (const b of buttons) mark(b, "data-ghsm-hide");
+
+    // Count and field-sum pills: the outermost element whose whole text
+    // reads like one.
+    const isPill = (n) => !inHeading(n) && !n.contains(heading) && !inButton(n) && !n.querySelector(BUTTON_SELECTOR) && (COUNT_RE.test(textOf(n)) || SUM_RE.test(textOf(n)));
+    const pillCandidates = zone.filter(isPill);
+    const pills = pillCandidates.filter((n) => !pillCandidates.some((o) => o !== n && o.contains(n)));
+    const sum = pills.find((n) => SUM_RE.test(textOf(n)));
+    const chosen = sum || pills.find((n) => COUNT_RE.test(textOf(n))) || null;
+    for (const pill of pills) if (pill !== chosen) mark(pill, "data-ghsm-hide");
+
+    const inPill = (n) => pills.some((p) => p === n || p.contains(n));
+    // The status dot: an icon or empty marker ahead of the name.
+    const dots = zone.filter(
+      (n) =>
+        n.matches("svg, img, span:empty, i:empty") &&
+        !n.parentElement?.closest("svg") &&
+        !inHeading(n) &&
+        !inButton(n) &&
+        !inPill(n) &&
+        !!(n.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING)
+    );
+    // Whatever other text there is (the description) goes.
+    for (const n of zone) {
+      if (inHeading(n) || n.contains(heading) || inButton(n) || inPill(n) || !hasOwnText(n)) continue;
+      mark(n, "data-ghsm-hide");
+    }
+
+    const kept = [...dots, heading, ...(chosen ? [chosen] : [])];
+    for (const n of kept) mark(n, "data-ghsm-keep");
+    if (chosen) mark(chosen, "data-ghsm-pill");
+
+    let row = heading.parentElement;
+    while (row && row !== column && !kept.every((n) => row.contains(n))) row = row.parentElement;
+    if (!row) return;
+    if (row === column || (firstCard && row.contains(firstCard))) {
+      if (chosen) mark(chosen, "data-ghsm-float");
+      return;
+    }
+    mark(row, "data-ghsm-row");
+    for (const n of kept) {
+      for (let wrapper = n.parentElement; wrapper && wrapper !== row; wrapper = wrapper.parentElement) mark(wrapper, "data-ghsm-flat");
+    }
+  }
+
+  // A swimlane header keeps its name, avatar and totals; the collapse
+  // chevron and the menu, icon-only buttons, go.
+  function compactGroupHeader(header) {
+    for (const b of header.querySelectorAll(BUTTON_SELECTOR)) {
+      if (!textOf(b) && !b.querySelector("img")) mark(b, "data-ghsm-hide");
+    }
+  }
+
+  function updateFilterText(text) {
+    const node = document.querySelector(`#${BAR_ID} .ghsm-filter`);
+    if (!node) return;
+    node.hidden = !text;
+    node.textContent = text ? `Filter: ${text}` : "";
+    node.title = text ? `Filter: ${text}` : "";
+  }
+
+  function applyLayout() {
+    if (!active) return;
+    const board = boardRoot();
+    clearLayout();
+    if (!board) {
+      updateFilterText("");
+      return;
+    }
+    updateFilterText(hidePageChrome(board));
+    for (const column of board.querySelectorAll(COLUMN_SELECTOR)) compactColumnHeader(column);
+    for (const header of board.querySelectorAll(GROUP_HEADER_SELECTOR)) compactGroupHeader(header);
+  }
+
   // ---- fetching signals ----
 
   function scanCards() {
     cards = collectCards();
-    return cards.map((c) => `${c.key}|${c.columnName}`).sort().join(",");
+    return `${countColumns()}:${cards.map((c) => `${c.key}|${c.columnName}`).sort().join(",")}`;
+  }
+
+  function describeDetail(detail) {
+    if (!detail) return "";
+    return `${detail.message || "Unknown error"}${detail.status ? ` (HTTP ${detail.status})` : ""}`;
+  }
+
+  function failWith(state, detail) {
+    signals = null;
+    signalsWarning = "";
+    signalsState = state;
+    signalsDetail = describeDetail(detail);
+    if (state === "error") console.warn(`[gh-reloaded] Standup signals could not be loaded: ${signalsDetail || "unknown error"}`);
+  }
+
+  // A thrown background call carries the HTTP status; only a refusal
+  // (401/403) says anything about the token.
+  function failureFromResponse(resp) {
+    if (chrome.runtime.lastError || !resp) {
+      failWith("error", { message: chrome.runtime.lastError?.message || "No response from the extension" });
+    } else if (resp.hasToken === false) {
+      failWith("no-token");
+    } else if (!resp.ok) {
+      failWith(resp.status === 401 || resp.status === 403 ? "no-access" : "error", { message: resp.error, status: resp.status });
+    } else if (resp.reason === "no-token" || resp.reason === "no-access" || resp.reason === "no-items") {
+      failWith(resp.reason);
+    } else {
+      failWith("error", resp.detail || { message: "No signals were returned" });
+    }
   }
 
   async function requestSignals() {
     if (!active) return;
     const project = projectFromLocation();
     const seq = ++requestSeq;
-    if (!project || !cards.length) {
+    if (!project) {
+      failWith("error", { message: "This is not a Projects page" });
+      renderSummary();
+      applySignals();
+      return;
+    }
+    if (!cards.length) {
+      // No cards yet: either the board is still rendering (no columns
+      // either) or it really is empty. Neither is an error, and a card
+      // arriving changes the signature, which asks again.
       signals = null;
-      signalsState = "unavailable";
+      signalsWarning = "";
+      signalsDetail = "";
+      signalsState = countColumns() ? "empty" : "loading";
       renderSummary();
       applySignals();
       return;
@@ -461,18 +704,13 @@
     };
     chrome.runtime.sendMessage({ type: MESSAGE_TYPE, payload }, (resp) => {
       if (!active || seq !== requestSeq) return; // exited, or a newer request superseded this one
-      if (chrome.runtime.lastError || !resp?.ok) {
-        signals = null;
-        signalsState = resp && resp.hasToken === false ? "no-token" : "unavailable";
-      } else if (!resp.hasToken) {
-        signals = null;
-        signalsState = "no-token";
-      } else if (!resp.signals) {
-        signals = null;
-        signalsState = "unavailable";
+      if (chrome.runtime.lastError || !resp?.ok || !resp.hasToken || !resp.signals) {
+        failureFromResponse(resp);
       } else {
         signals = resp.signals;
         signalsState = "ready";
+        signalsDetail = "";
+        signalsWarning = describeDetail(resp.warning);
       }
       renderSummary();
       applySignals();
@@ -487,6 +725,7 @@
       requestSignals();
     }
     applySignals();
+    applyLayout();
   }
 
   const debouncedRefreshBoard = debounce(refreshBoard, 250);
@@ -565,6 +804,7 @@
     cardSignature = scanCards();
     renderSummary();
     applySignals();
+    applyLayout();
     requestSignals();
     scheduleSignalsRefresh();
     document.getElementById("ghsm-exit")?.focus();
@@ -580,6 +820,7 @@
     clearTimeout(focusTimer);
     clearInterval(refreshTimer);
     clearMarks();
+    clearLayout();
     document.body.classList.remove(ACTIVE_CLASS);
     document.documentElement.style.removeProperty(LEFT_VAR);
     document.getElementById(BAR_ID)?.remove();
@@ -587,6 +828,8 @@
     cardSignature = "";
     signals = null;
     signalsState = "idle";
+    signalsDetail = "";
+    signalsWarning = "";
     for (const k of Object.keys(jumpIndex)) delete jumpIndex[k];
     // Restore the pre-entry scroll and focus as reasonably as possible:
     // the nested board scrollers first, then the window, then focus. Skip

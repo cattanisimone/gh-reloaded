@@ -1,7 +1,10 @@
 <!--
   Fixture: GitHub Projects v2 "Board" (kanban) view, used by standup-mode.
-  Same anchors as board.html, with more cards and an "In review" column. See fixtures/README.md for capture date and how to
-  refresh. Hand-trimmed to the anchors the content scripts key on; the
+  Same anchors as board.html, with more cards and an "In review" column, plus
+  the chrome standup mode hides: the project title row, the filter bar, the
+  View button, and the column headers (status dot, name, count pill, "..."
+  menu, field-sum pill, description). Names are generic placeholders. See
+  fixtures/README.md for capture date and how to refresh. Hand-trimmed to the anchors the content scripts key on; the
   CSS-module class names keep GitHub's build-hash prefixes (matched by
   prefix in the content scripts) with the hashes dropped.
 -->
@@ -18,7 +21,17 @@
       nav[aria-label="Select view"] { display: flex; align-items: center; padding: 4px 16px; border-bottom: 1px solid #d0d7de; }
       [role="tab"] { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; }
       .ViewNavigationContainer { position: relative; display: flex; align-items: center; flex: 1; }
+      .project-title-row { display: flex; align-items: center; gap: 8px; padding: 12px 16px; }
+      .project-title-row h1 { margin: 0; font-size: 20px; }
+      .toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; }
+      .toolbar input { width: 320px; height: 28px; }
+      .view-options { padding: 0 16px 8px; }
       .boardContainer { padding: 16px; }
+      .column-header { display: block; }
+      .column-title-row { display: flex; align-items: center; gap: 6px; }
+      .column-title-row h3 { margin: 0; font-size: 14px; }
+      .column-header .Counter, .column-header .sum { padding: 0 6px; border-radius: 10px; background: #eaeef2; font-size: 12px; }
+      .column-header .column-description { margin: 2px 0 8px; font-size: 12px; color: #57606a; }
       .board-view-column { display: inline-block; vertical-align: top; width: 280px; margin-right: 24px; }
       .board-view-column-card { display: block; width: 240px; min-height: 72px; margin: 8px 0; padding: 12px; border: 1px solid #d0d7de; border-radius: 6px; }
     </style>
@@ -27,6 +40,11 @@
     <main>
       <!-- View-tabs bar. The selected tab's octicon-project glyph is how
            both board features recognize a Board (vs Table/Roadmap). -->
+      <div class="project-title-row">
+        <svg class="octicon octicon-lock" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect width="10" height="7" x="3" y="7"></rect></svg>
+        <h1>Platform roadmap</h1>
+      </div>
+
       <div class="prc-PageLayout-index-module__topBarActions--ab12">
         <div class="prc-ButtonGroup-index-module__ButtonGroup--c1"><button>Insights</button><button>Workflows</button></div>
         <div class="prc-ButtonGroup-index-module__ButtonGroup--c2"><button>Project details</button><button>⋯</button></div>
@@ -41,13 +59,30 @@
         </div>
       </nav>
 
+      <!-- Filter bar and the View button, which sits in its own row. -->
+      <div class="toolbar">
+        <input type="text" aria-label="Filter by keyword or by field" placeholder="Filter by keyword or by field" value="assignee:@me -status:Done" />
+        <span>6 results</span>
+        <button type="button" aria-label="Clear filter">Clear</button>
+      </div>
+      <div class="view-options"><button type="button">View</button></div>
+
       <!-- Board body. Three columns of issue cards (card discovery is just
            "any issue/PR link inside a .board-view-column-card"). Card #2
            carries a visible "P1" label, the DOM-only priority signal
            standup-mode reads when there is no token. -->
       <div class="Board-module__boardContainer--b1">
         <div class="board-view-column">
-          <h3>Todo</h3>
+          <div class="column-header">
+            <div class="column-title-row">
+              <svg class="status-dot" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="#2da44e"></circle></svg>
+              <h3>Todo</h3>
+              <span class="Counter">2</span>
+              <button type="button" aria-label="Column menu"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="3" cy="8" r="1.5"></circle><circle cx="8" cy="8" r="1.5"></circle><circle cx="13" cy="8" r="1.5"></circle></svg></button>
+            </div>
+            <span class="sum">Effort: 5</span>
+            <p class="column-description">Items waiting to start</p>
+          </div>
           <div class="board-view-column-card">
             <a href="/acme/web/issues/2">Set up the build</a>
             <span>P1</span>
@@ -56,9 +91,18 @@
             <span>Draft: plan the offsite</span>
             <span>Blocked</span>
           </div>
+          <button type="button">+ Add item</button>
         </div>
         <div class="board-view-column">
-          <h3>In progress</h3>
+          <div class="column-header">
+            <div class="column-title-row">
+              <svg class="status-dot" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="#2da44e"></circle></svg>
+              <h3>In progress</h3>
+              <span class="Counter">2</span>
+              <button type="button" aria-label="Column menu"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="3" cy="8" r="1.5"></circle><circle cx="8" cy="8" r="1.5"></circle><circle cx="13" cy="8" r="1.5"></circle></svg></button>
+            </div>
+            <p class="column-description">Work that is underway</p>
+          </div>
           <div class="board-view-column-card">
             <a href="/acme/web/issues/3">Wire up the dashboard</a>
           </div>
@@ -67,7 +111,16 @@
           </div>
         </div>
         <div class="board-view-column">
-          <h3>In review</h3>
+          <div class="column-header">
+            <div class="column-title-row">
+              <svg class="status-dot" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="#2da44e"></circle></svg>
+              <h3>In review</h3>
+              <span class="Counter">2</span>
+              <button type="button" aria-label="Column menu"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="3" cy="8" r="1.5"></circle><circle cx="8" cy="8" r="1.5"></circle><circle cx="13" cy="8" r="1.5"></circle></svg></button>
+            </div>
+            <span class="sum">Effort: 8</span>
+            <p class="column-description">Waiting for a second pair of eyes</p>
+          </div>
           <div class="board-view-column-card">
             <a href="/acme/web/issues/4">Review the API changes</a>
           </div>

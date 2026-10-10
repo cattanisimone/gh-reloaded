@@ -101,6 +101,234 @@ test("keeps the whole board visible and flags what needs attention", async ({ co
   await expect(page.locator("#ghsm-enter")).toHaveCount(1);
 });
 
+test("leaves one header: hides the title row, the filter bar and the controls that only edit", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+
+  await expect(page.locator(".project-title-row")).toBeVisible();
+  await expect(page.locator(".toolbar")).toBeVisible();
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-bar")).toHaveCount(1);
+
+  // GitHub's own title row, the filter bar and the View button are gone; the bar is the only header.
+  await expect(page.locator(".project-title-row")).toBeHidden();
+  await expect(page.locator(".toolbar")).toBeHidden();
+  await expect(page.locator(".view-options button")).toBeHidden();
+  await expect(page.getByRole("button", { name: "Add item" })).toBeHidden();
+  await expect(page.locator("#ghsm-bar .ghsm-project")).toHaveText("Platform roadmap");
+
+  // The filter still applies to the board, so the bar says which subset this is.
+  await expect(page.locator("#ghsm-bar .ghsm-filter")).toHaveText("Filter: assignee:@me -status:Done");
+
+  // Everything comes back on exit.
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".project-title-row")).toBeVisible();
+  await expect(page.locator(".toolbar")).toBeVisible();
+  await expect(page.locator(".view-options button")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Add item" })).toBeVisible();
+  await expect(page.locator("[data-ghsm-hide], [data-ghsm-flat], [data-ghsm-row], [data-ghsm-pill], [data-ghsm-keep]")).toHaveCount(0);
+  await expect(page.locator(".column-header .column-description").first()).toBeVisible();
+});
+
+test("shows no filter text in the bar when the board is not filtered", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  await page.locator(".toolbar input").fill("");
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-bar")).toHaveCount(1);
+  await expect(page.locator("#ghsm-bar .ghsm-filter")).toBeHidden();
+});
+
+test("compacts each column header to a dot and name on the left and one metric pill on the right", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-bar")).toHaveCount(1);
+
+  const column = (name) => page.locator(".board-view-column", { has: page.locator(`h3:text-is("${name}")`) });
+
+  for (const name of ["Todo", "In progress", "In review"]) {
+    const col = column(name);
+    await expect(col.locator(".column-description")).toBeHidden();
+    await expect(col.locator('button[aria-label="Column menu"]')).toBeHidden();
+    await expect(col.locator(".status-dot")).toBeVisible();
+    await expect(col.locator("h3")).toBeVisible();
+  }
+
+  // A field-sum pill wins over the count pill; never both.
+  await expect(column("Todo").locator(".sum")).toBeVisible();
+  await expect(column("Todo").locator(".Counter")).toBeHidden();
+  await expect(column("In review").locator(".sum")).toBeVisible();
+  await expect(column("In review").locator(".Counter")).toBeHidden();
+  // No field-sum configured: fall back to the card count.
+  await expect(column("In progress").locator(".Counter")).toBeVisible();
+  await expect(column("In progress").locator(".sum")).toHaveCount(0);
+
+  // One row: the pill sits to the right of the name, on the same line.
+  for (const [name, pill] of [["Todo", ".sum"], ["In progress", ".Counter"]]) {
+    const heading = await column(name).locator("h3").boundingBox();
+    const dot = await column(name).locator(".status-dot").boundingBox();
+    const metric = await column(name).locator(pill).boundingBox();
+    expect(dot.x).toBeLessThan(heading.x);
+    expect(metric.x).toBeGreaterThan(heading.x + heading.width);
+    expect(Math.abs(metric.y + metric.height / 2 - (heading.y + heading.height / 2))).toBeLessThan(8);
+  }
+  await expect(column("Todo")).toContainText("Effort: 5");
+});
+
+test("still keeps the header on one line when the column has no wrapper around its parts", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  await page.evaluate(() => {
+    for (const w of document.querySelectorAll(".column-header, .column-title-row")) w.replaceWith(...w.childNodes);
+  });
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-bar")).toHaveCount(1);
+
+  const col = page.locator(".board-view-column", { has: page.locator('h3:text-is("Todo")') });
+  await expect(col.locator(".column-description")).toBeHidden();
+  await expect(col.locator('button[aria-label="Column menu"]')).toBeHidden();
+  await expect(col.locator(".Counter")).toBeHidden();
+  const heading = await col.locator("h3").boundingBox();
+  const metric = await col.locator(".sum").boundingBox();
+  expect(metric.x).toBeGreaterThan(heading.x + heading.width);
+  expect(Math.abs(metric.y + metric.height / 2 - (heading.y + heading.height / 2))).toBeLessThan(10);
+});
+
+test("compacts a group header, dropping the chevron and menu but keeping the name, avatar and total", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup-grouped.html");
+  await page.goto(BOARD_URL);
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-bar")).toHaveCount(1);
+
+  const group = page.locator('[class*="Board-module__horizontalGroupHeader"]');
+  await expect(group.locator('button[aria-label="Collapse group"]')).toBeHidden();
+  await expect(group.locator('button[aria-label="Group menu"]')).toBeHidden();
+  await expect(group.locator(".avatar")).toBeVisible();
+  await expect(group.locator(".group-name")).toBeVisible();
+  await expect(group.locator(".group-total")).toBeVisible();
+});
+
+// ---- why the signals may be missing ----
+
+const summaryNote = (page) => page.locator("#ghsm-summary .ghsm-note");
+
+test("an error on one card still gives signals for the rest of the board, and says so", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, [
+    {
+      method: "POST",
+      match: (p) => p === "/graphql",
+      json: (_url, request) => {
+        const { variables } = JSON.parse(request.postData());
+        const data = {};
+        for (const [k, number] of Object.entries(variables)) {
+          const m = /^n(\d+)$/.exec(k);
+          if (m) data[`i${m[1]}`] = number === 5 ? null : { issueOrPullRequest: issueNode(number) };
+        }
+        return { data, errors: [{ type: "NOT_FOUND", path: ["i1"], message: "Could not resolve to a Repository with the name 'acme/gone'." }] };
+      },
+    },
+  ]);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  await page.locator("#ghsm-enter").click();
+
+  await expect(card(page, 4).locator(".ghsm-chip-stale")).toHaveText("Stale");
+  await expect(card(page, 3).locator(".ghsm-chip-priority")).toHaveText("High");
+  await expect(summaryNote(page)).toContainText("Some cards could not be read");
+  await expect(page.locator("#ghsm-summary .ghsm-sum-stale")).toHaveText("1 stale in review");
+  await expect(summaryNote(page)).not.toContainText("token");
+});
+
+test("blames the token only when GitHub refuses access", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, [{ method: "POST", match: (p) => p === "/graphql", status: 403, json: { message: "Forbidden" } }]);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  await page.locator("#ghsm-enter").click();
+  await expect(summaryNote(page)).toContainText("the token may lack Projects access");
+});
+
+test("blames the token for a 200 whose only error is 'Resource not accessible'", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, [
+    { method: "POST", match: (p) => p === "/graphql", json: { data: null, errors: [{ message: "Resource not accessible by personal access token" }] } },
+  ]);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  await page.locator("#ghsm-enter").click();
+  await expect(summaryNote(page)).toContainText("the token may lack Projects access");
+});
+
+test("shows a neutral message, with the detail in a tooltip, for any other failure", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, [{ method: "POST", match: (p) => p === "/graphql", status: 502, json: { message: "Bad gateway" } }]);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  const warnings = [];
+  page.on("console", (m) => m.type() === "warning" && warnings.push(m.text()));
+  await page.locator("#ghsm-enter").click();
+  await expect(summaryNote(page)).toHaveText("Board signals could not be loaded.");
+  await expect(summaryNote(page)).toHaveAttribute("title", /502/);
+  await expect(summaryNote(page)).not.toContainText("token");
+  await expect.poll(() => warnings.some((w) => w.includes("Standup signals") && w.includes("502"))).toBe(true);
+});
+
+test("a project that returns nothing readable is not reported as a token problem", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, [{ method: "POST", match: (p) => p === "/graphql", json: { data: {} } }]);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  await page.locator("#ghsm-enter").click();
+  await expect(summaryNote(page)).toHaveText("Board signals could not be loaded.");
+  await expect(summaryNote(page)).not.toContainText("token");
+  await expect(page.locator(".board-view-column-card:visible")).toHaveCount(6);
+});
+
+test("shows the loading note, not an error, while the board has not rendered any cards yet", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  const columns = await page.evaluate(() => {
+    const board = document.querySelector('[class*="Board-module__boardContainer"]');
+    const html = board.innerHTML;
+    board.replaceChildren();
+    window.__board = html;
+    return html.length;
+  });
+  expect(columns).toBeGreaterThan(0);
+  await page.locator("#ghsm-enter").click();
+  await expect(summaryNote(page)).toHaveText("Reading board signals…");
+
+  // The board arrives: the real signals replace the note.
+  await page.evaluate(() => {
+    document.querySelector('[class*="Board-module__boardContainer"]').innerHTML = window.__board;
+  });
+  await expect(page.locator("#ghsm-summary .ghsm-sum-stale")).toHaveText("1 stale in review");
+});
+
+test("an empty board says so instead of showing an error", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  await page.evaluate(() => document.querySelectorAll(".board-view-column-card").forEach((c) => c.remove()));
+  await page.locator("#ghsm-enter").click();
+  await expect(summaryNote(page)).toHaveText("No cards on this board yet.");
+});
+
 test("still presents the board without a token, with the DOM-visible signals only", async ({ context, page }) => {
   await routeApi(context, API);
   await routeGithub(context, "board-standup.html");

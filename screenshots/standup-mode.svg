@@ -16,19 +16,32 @@
     <rect x="750" y="9" width="118" height="26" rx="13" fill="none" stroke="#8957e5"/>
     <text x="766" y="26" fill="#d2a8ff">1 bottleneck</text>
   </g>
+  <text x="890" y="26" fill="#8b949e" font-size="12">Filter: assignee:@me -status:Done</text>
   <rect x="1130" y="8" width="52" height="28" rx="6" fill="#21262d" stroke="#30363d"/>
   <text x="1143" y="26" fill="#c9d1d9" font-size="12" font-weight="700">Exit</text>
 
   <!-- Label -->
-  <text x="20" y="70" fill="#58a6ff" font-size="11" font-weight="700" letter-spacing="0.6">STANDUP MODE — THE WHOLE BOARD, WITH WHAT NEEDS ATTENTION FLAGGED</text>
+  <text x="20" y="70" fill="#58a6ff" font-size="11" font-weight="700" letter-spacing="0.6">STANDUP MODE — ONE SLIM HEADER, COMPACT COLUMN HEADERS, WHAT NEEDS ATTENTION FLAGGED</text>
 
   <!-- Bottleneck column outline -->
   <rect x="606" y="84" width="284" height="408" rx="8" fill="none" stroke="#8957e5" stroke-width="2" stroke-dasharray="6 4"/>
   <text x="620" y="104" fill="#d2a8ff" font-size="11" font-weight="700">Bottleneck · 4 of 9 open cards (44%)</text>
-  <text x="40" y="126" fill="#e6edf3" font-size="15" font-weight="700">Todo</text>
-  <text x="330" y="126" fill="#e6edf3" font-size="15" font-weight="700">In Progress</text>
-  <text x="620" y="126" fill="#e6edf3" font-size="15" font-weight="700">In Review</text>
-  <text x="910" y="126" fill="#e6edf3" font-size="15" font-weight="700">Done</text>
+  <circle cx="46" cy="121" r="5" fill="#8b949e"/>
+  <text x="58" y="126" fill="#e6edf3" font-size="15" font-weight="700">Todo</text>
+  <rect x="218" y="109" width="78" height="20" rx="10" fill="#21262d" stroke="#30363d"/>
+  <text x="228" y="123" fill="#8b949e" font-size="11" font-weight="700">Effort: 5</text>
+  <circle cx="336" cy="121" r="5" fill="#d29922"/>
+  <text x="348" y="126" fill="#e6edf3" font-size="15" font-weight="700">In Progress</text>
+  <rect x="550" y="109" width="36" height="20" rx="10" fill="#21262d" stroke="#30363d"/>
+  <text x="560" y="123" fill="#8b949e" font-size="11" font-weight="700">12</text>
+  <circle cx="626" cy="121" r="5" fill="#a371f7"/>
+  <text x="638" y="126" fill="#e6edf3" font-size="15" font-weight="700">In Review</text>
+  <rect x="798" y="109" width="78" height="20" rx="10" fill="#21262d" stroke="#30363d"/>
+  <text x="808" y="123" fill="#8b949e" font-size="11" font-weight="700">Effort: 8</text>
+  <circle cx="916" cy="121" r="5" fill="#3fb950"/>
+  <text x="928" y="126" fill="#e6edf3" font-size="15" font-weight="700">Done</text>
+  <rect x="1136" y="109" width="30" height="20" rx="10" fill="#21262d" stroke="#30363d"/>
+  <text x="1146" y="123" fill="#8b949e" font-size="11" font-weight="700">9</text>
   <rect x="40" y="140" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
   <text x="54" y="162" fill="#c9d1d9" font-size="12">Rotate the signing keys</text>
   <rect x="54" y="180" width="30" height="18" rx="9" fill="#3b2300" stroke="#bd561d"/>
