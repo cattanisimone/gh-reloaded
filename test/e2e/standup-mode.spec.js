@@ -478,3 +478,50 @@ test("leaves a gap under the bar and keeps sticky headers clear of it", async ({
   await page.evaluate(() => window.scrollTo(0, 600));
   await expect.poll(async () => Math.round((await header.boundingBox()).y - (await barBottom()))).toBe(8);
 });
+
+// Real column headers of a grouped board: separate frames found by their
+// `data-board-column` attribute, with the description as a sibling of the
+// header wrapper and the count next to the name.
+test("compacts the column frames of a grouped board: no description, one pill, one line", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-standup-grouped-headers.html");
+  await page.goto(BOARD_URL);
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-bar")).toHaveCount(1);
+
+  const visibleText = (id) =>
+    page.locator(`#${id}`).evaluate((frame) => {
+      const out = [];
+      const walker = document.createTreeWalker(frame, NodeFilter.SHOW_TEXT);
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        const text = n.textContent.replace(/ /g, " ").trim();
+        if (!text || n.parentElement.closest(".prc-VisuallyHidden-VisuallyHidden-Q0qSB")) continue;
+        let hidden = false;
+        for (let el = n.parentElement; el && el !== frame.parentElement; el = el.parentElement) {
+          const style = getComputedStyle(el);
+          if (style.display === "none" || parseFloat(style.fontSize) === 0) hidden = true;
+        }
+        if (!hidden) out.push(text);
+      }
+      return out;
+    });
+
+  expect(await visibleText("col-progress")).toEqual(["In Progress", "Effort: 13"]);
+  expect(await visibleText("col-todo")).toEqual(["Todo", "3"]);
+  expect(await visibleText("col-review")).toEqual(["In Review", "Effort: 2"]);
+
+  for (const id of ["col-progress", "col-todo", "col-review"]) {
+    const frame = page.locator(`#${id}`);
+    await expect(frame.locator("button")).toBeHidden();
+    // The hidden "(n)" text stays for assistive technology.
+    await expect(frame.locator(".prc-VisuallyHidden-VisuallyHidden-Q0qSB")).toHaveCount(1);
+    // One line: the dot and the name on the left, one pill on the right.
+    const dot = await frame.locator(".ColorDecorator-module__ColorDecoratorMain__S7eSG").boundingBox();
+    const name = await frame.locator("h2").boundingBox();
+    const pill = await frame.locator("[data-ghsm-pill]").boundingBox();
+    expect(dot.x).toBeLessThan(name.x);
+    expect(pill.x).toBeGreaterThan(name.x + name.width);
+    expect(Math.abs(pill.y + pill.height / 2 - (name.y + name.height / 2))).toBeLessThan(10);
+  }
+});

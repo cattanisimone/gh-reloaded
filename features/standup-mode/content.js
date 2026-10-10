@@ -461,7 +461,7 @@
   // `data-ghsm-*` mark that CSS acts on and exit removes; nothing is moved or
   // removed from GitHub's DOM. If an anchor is not found, that part of the
   // page simply stays as it is.
-  const LAYOUT_ATTRS = ["data-ghsm-hide", "data-ghsm-flat", "data-ghsm-row", "data-ghsm-pill", "data-ghsm-keep", "data-ghsm-float", "data-ghsm-quiet", "data-ghsm-sticky"];
+  const LAYOUT_ATTRS = ["data-ghsm-hide", "data-ghsm-flat", "data-ghsm-row", "data-ghsm-pill", "data-ghsm-keep", "data-ghsm-float", "data-ghsm-quiet", "data-ghsm-sticky", "data-ghsm-frame"];
   const BAR_H_VAR = "--ghsm-bar-h";
   const BAR_GAP = 8;
   const VIEW_NAV_SELECTOR = 'nav[aria-label="Select view"]';
@@ -471,6 +471,9 @@
   const ADD_CONTROL_RE = /^(\+\s*)?(add item|new item|add status|add column|new column)/i;
   const COUNT_RE = /^\d+(\s*\/\s*\d+)?$/;
   const SUM_RE = /^[^:]{1,40}:\s*[-+]?\d[\d.,]*\s*[a-z%]{0,3}$/i;
+  // The "(4)" text next to a count is its accessible name: it is clipped
+  // already and must stay in the DOM.
+  const VISUALLY_HIDDEN_RE = /^\(\d+\)$/;
   const GROUP_HEADER_SELECTOR = '[class*="Board-module__horizontalGroupHeader"]';
 
   function clearLayout() {
@@ -582,18 +585,34 @@
     mark(node, "data-ghsm-sticky");
   }
 
+  // The column header frames. The real attribute first: on a grouped board
+  // the headers are a separate row of frames carrying `data-board-column`
+  // and no `.board-view-column`. Then the board's own columns, then, where
+  // neither exists, the widest ancestor of a level-2 heading that holds no
+  // card and no other level-2 heading. A frame that holds another is skipped.
+  function headerFrames(board) {
+    const inCard = (n) => !!n.closest(CARD_SELECTOR);
+    const found = new Set([...board.querySelectorAll("[data-board-column]"), ...board.querySelectorAll(COLUMN_SELECTOR)].filter((n) => !inCard(n)));
+    for (const h of board.querySelectorAll("h2")) {
+      if (inCard(h) || h.closest(GROUP_HEADER_SELECTOR) || Array.from(found).some((f) => f.contains(h))) continue;
+      let frame = h;
+      while (frame.parentElement && frame.parentElement !== board && !frame.parentElement.querySelector(CARD_SELECTOR) && frame.parentElement.querySelectorAll("h2").length === 1) frame = frame.parentElement;
+      found.add(frame);
+    }
+    return Array.from(found).filter((f) => !Array.from(found).some((o) => o !== f && f.contains(o)));
+  }
+
   // Reduces a column header to one row: the status dot and the name on the
   // left and a single metric pill on the right (the field sum when the
-  // column has one, else the card count), with the "..." menu and the
-  // description hidden. The header is whatever precedes the column's first
-  // card, found by position so it does not depend on GitHub's wrappers.
+  // column has one, else the card count). The header is the whole frame
+  // minus its cards: only the dot, the name and that pill stay; everything
+  // else (menu, description wherever it sits, the other pill) is hidden.
   function compactColumnHeader(column) {
     const heading = column.querySelector(HEADING_SELECTOR);
     if (!heading || heading.closest(CARD_SELECTOR)) return;
+    mark(column, "data-ghsm-frame");
     const firstCard = column.querySelector(CARD_SELECTOR);
-    const zone = Array.from(column.querySelectorAll("*")).filter(
-      (n) => !n.closest(CARD_SELECTOR) && (!firstCard || (!n.contains(firstCard) && n.compareDocumentPosition(firstCard) & Node.DOCUMENT_POSITION_FOLLOWING))
-    );
+    const zone = Array.from(column.querySelectorAll("*")).filter((n) => !n.closest(CARD_SELECTOR) && !n.querySelector(CARD_SELECTOR));
     const inHeading = (n) => n === heading || heading.contains(n);
     const inButton = (n) => !!n.closest(BUTTON_SELECTOR);
 
@@ -634,7 +653,7 @@
     const hidden = new Set();
     const quiet = [];
     for (const n of zone) {
-      if (inKept(n)) continue;
+      if (inKept(n) || VISUALLY_HIDDEN_RE.test(textOf(n))) continue;
       if (holdsKept(n)) {
         if (hasOwnText(n)) quiet.push(n);
       } else if (!hidden.has(n.parentElement)) {
@@ -642,9 +661,7 @@
         mark(n, "data-ghsm-hide");
       }
     }
-    const columnText = Array.from(column.childNodes).some(
-      (c) => c.nodeType === 3 && c.textContent.trim() && (!firstCard || !!(c.compareDocumentPosition(firstCard) & Node.DOCUMENT_POSITION_FOLLOWING))
-    );
+    const columnText = Array.from(column.childNodes).some((c) => c.nodeType === 3 && c.textContent.trim());
     if (columnText) quiet.push(column);
     silence(quiet);
 
@@ -668,7 +685,10 @@
   // chevron and the menu, icon-only buttons, go.
   function compactGroupHeader(header) {
     for (const b of header.querySelectorAll(BUTTON_SELECTOR)) {
-      if (!textOf(b) && !b.querySelector("img")) mark(b, "data-ghsm-hide");
+      // Icon-only: no avatar and no text beyond a visually hidden label.
+      const clone = b.cloneNode(true);
+      for (const label of clone.querySelectorAll('[class*="VisuallyHidden"]')) label.remove();
+      if (!textOf(clone) && !b.querySelector("img")) mark(b, "data-ghsm-hide");
     }
     markSticky(header);
   }
@@ -690,7 +710,7 @@
       return;
     }
     updateFilterText(hidePageChrome(board));
-    for (const column of board.querySelectorAll(COLUMN_SELECTOR)) compactColumnHeader(column);
+    for (const frame of headerFrames(board)) compactColumnHeader(frame);
     for (const header of board.querySelectorAll(GROUP_HEADER_SELECTOR)) compactGroupHeader(header);
   }
 

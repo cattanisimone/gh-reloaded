@@ -133,13 +133,13 @@ body.ghsm-active [data-ghsm-pill] {
 }
 /* When the header's parts sit directly in the column, with no row of
    their own, the pill floats to the right of the line instead. */
-body.ghsm-active .board-view-column > [data-ghsm-keep] {
+body.ghsm-active [data-ghsm-frame] > [data-ghsm-keep] {
   display: inline-block !important;
   vertical-align: middle !important;
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
-body.ghsm-active .board-view-column > [data-ghsm-float] {
+body.ghsm-active [data-ghsm-frame] > [data-ghsm-float] {
   float: right !important;
 }
 
