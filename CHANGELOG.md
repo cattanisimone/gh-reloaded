@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.8.0...v0.9.0) (2026-10-10)
+
+
+### Features
+
+* group My Issues dashboard by project and status ([#27](https://github.com/cattanisimone/gh-reloaded/issues/27)) ([f7c4096](https://github.com/cattanisimone/gh-reloaded/commit/f7c4096bdca9bc2c863e815f26c6df86efa1a582))
+
 ## [0.8.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.7.0...v0.8.0) (2026-10-08)
 
 
