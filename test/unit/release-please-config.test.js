@@ -5,8 +5,8 @@
 // Nothing goes over the network.
 //
 // The deep imports below are not a public API, and release-please is pinned
-// with `~17.9.0` in package.json so this stays on the version the
-// release-please-action@v5 workflow runs. If an upgrade moves these modules,
+// with `~17.6.0` in package.json, the version bundled in
+// release-please-action@v5, so the test runs the code the release job runs. If an upgrade moves these modules,
 // the test fails loudly at import time.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -80,7 +80,7 @@ test("features and bug fixes keep their sections", async () => {
   assert.match(body, /### Bug Fixes/);
 });
 
-for (const type of ["refactor", "test", "docs", "ci", "chore", "build", "style"]) {
+for (const type of ["refactor", "test", "docs", "ci", "chore", "build", "style", "revert"]) {
   test(`${type} commits are hidden and do not open a release PR alone`, async () => {
     assert.equal(await releasePullRequest(`${type}: internal change`), undefined);
   });

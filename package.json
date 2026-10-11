@@ -11,6 +11,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "release-please": "~17.9.0"
+    "release-please": "~17.6.0"
   }
 }

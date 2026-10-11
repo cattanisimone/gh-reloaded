@@ -92,7 +92,7 @@ The PR title's type decides the next version, so pick it by what a user notices 
 - `feat`: something new to see or use (a feature, an option, visible behavior) → minor.
 - `fix`, `perf`: a user-visible defect gone, or noticeably faster → patch.
 - Breaking (`feat!:` or `fix!:` plus a `BREAKING CHANGE:` line in the PR body): a feature or option removed or renamed, saved settings that stop working, or a new permission the user must accept → major, or minor while the version is below 1.0.
-- `refactor`, `test`, `docs`, `ci`, `chore`, `build`, `style`: nothing changes for users → no release. The changelog hides them, so a release made only of these opens no release PR. A PR that mixes types takes the highest one.
+- `refactor`, `test`, `docs`, `ci`, `chore`, `build`, `style`, `revert`: nothing changes for users, or the revert waits for the next release → no release on its own. The changelog hides them, so a release made only of these opens no release PR. A PR that mixes types takes the highest one.
 
 The changelog lists *Features*, *Bug Fixes* and *Performance*. The rules are in `release-please-config.json` and `test/unit/release-please-config.test.js` checks them.
 
