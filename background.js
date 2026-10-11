@@ -10,10 +10,11 @@
 import { hasAnyToken } from "./lib/github-api.js";
 import * as dependencyGraph from "./background/dependency-graph.js";
 import * as boardDependencies from "./background/board-dependencies.js";
+import * as standupMode from "./background/standup-mode.js";
 import * as htmlPreview from "./background/html-preview.js";
 import * as myIssues from "./background/my-issues.js";
 
-const FEATURES = [dependencyGraph, boardDependencies, htmlPreview, myIssues];
+const FEATURES = [dependencyGraph, boardDependencies, standupMode, htmlPreview, myIssues];
 
 chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage();

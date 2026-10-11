@@ -77,6 +77,25 @@
             </div>
             <div class="feature-row">
               <div class="feature-text">
+                <span class="feature-title">Standup mode</span>
+                <span class="feature-desc">A "Standup" button on Board views that turns the board into a compact presentation and flags what needs attention: stale reviews, orphan blocks, critical paths at risk, bottlenecks.</span>
+              </div>
+              <button id="feature-ghsm" type="button" role="switch" aria-checked="false" aria-label="Standup mode" class="switch">
+                <span class="switch-track"><span class="switch-knob"></span></span>
+              </button>
+            </div>
+            <div class="feature-row feature-row-fields">
+              <div class="feature-text">
+                <span class="feature-title">Standup mode signals</span>
+                <span class="feature-desc">How long a card may sit in a review-like column before it is flagged, and which column names count as review-like (comma-separated, matched at the start of a word).</span>
+              </div>
+              <div class="feature-fields">
+                <label>Stale after (days)<input id="ghsm-stale-days" type="number" min="1" max="60" step="1" placeholder="3"></label>
+                <label>Review-like statuses<input id="ghsm-review-keywords" type="text" placeholder="review, qa, test, deploy, release"></label>
+              </div>
+            </div>
+            <div class="feature-row">
+              <div class="feature-text">
                 <span class="feature-title">HTML preview <span class="badge">Experimental</span></span>
                 <span class="feature-desc">Renders .html files from PR diffs and file pages, sandboxed away from your GitHub session.</span>
               </div>
