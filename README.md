@@ -135,7 +135,7 @@ Versioning and releases are automated with [Release Please](https://github.com/g
 The flow:
 
 1. PR titles are [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, …), enforced on every PR by [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml). PRs are squash-merged with the title as the commit message, so each PR becomes one conventional commit on `main`.
-2. On each push to `main`, Release Please reads those commits and keeps a single **release PR** open that bumps `manifest.json` (and the `version.txt` it maintains) and updates `CHANGELOG.md`. A `feat` bumps the minor version, a `fix` the patch version; pre-1.0, a `feat` still bumps the minor.
+2. On each push to `main`, Release Please reads those commits and keeps a single **release PR** open that bumps `manifest.json` (and the `version.txt` it maintains) and updates `CHANGELOG.md`. A `feat` bumps the minor version, a `fix` or `perf` the patch version, and a breaking change (`!`) the major version, or the minor while below 1.0. Other types (`refactor`, `test`, `docs`, `ci`, `chore`, `build`, `style`) make no release on their own. See [Picking the PR type](AGENTS.md#picking-the-pr-type).
 3. Merging that release PR creates the `vX.Y.Z` tag and the GitHub Release, then the publish job packages the extension, uploads it to the Chrome Web Store (if the store secrets below are configured), and attaches `gh-reloaded-<version>.zip` to the release.
 
 The zip bundles `manifest.json`, `background.js`, `background/`, `features/`, `icons/`, `lib/`, and `options/` — the same explicit path list as before, so neither `version.txt` nor the test harness ships.
