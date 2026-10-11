@@ -83,7 +83,20 @@ A change is ready to hand off when all of these hold:
 - **PR title:** [Conventional Commits](https://www.conventionalcommits.org/), e.g. `docs: consolidate contributor conventions in AGENTS.md`. A title check (`pr-title.yml`) enforces this on every PR. PRs are squash-merged, so the title becomes the commit on `main` — and that commit is what drives the next version.
 - **Link the issue:** end the PR body with `Fixes cattanisimone/gh-reloaded#<N>` so merging the PR closes the issue.
 - **PR body:** use the [pull request template](.github/pull_request_template.md) — a summary, the linked issue, how the change was verified, and the definition-of-done checklist.
-- **Version:** don't touch `manifest.json`'s `version` in a regular PR. [Release Please](https://github.com/googleapis/release-please) owns it: it reads the conventional commits merged to `main` and keeps a single release PR open that bumps the version (a `feat` the minor, a `fix` the patch, a `!` the major, or the minor while below 1.0) and updates `CHANGELOG.md`. Merging that release PR cuts the `vX.Y.Z` tag, the GitHub Release, and the Chrome Web Store upload. See the README's [Releasing](README.md#releasing) section.
+- **Version:** don't touch `manifest.json`'s `version` in a regular PR. [Release Please](https://github.com/googleapis/release-please) owns it: it reads the conventional commits merged to `main` and keeps a single release PR open that bumps the version and updates `CHANGELOG.md`. Merging that release PR cuts the `vX.Y.Z` tag, the GitHub Release, and the Chrome Web Store upload. See the README's [Releasing](README.md#releasing) section and the guide below.
+
+### Picking the PR type
+
+The PR title's type decides the next version, so pick it by what a user notices after updating:
+
+- `feat`: something new to see or use (a feature, an option, visible behavior) → minor.
+- `fix`, `perf`: a user-visible defect gone, or noticeably faster → patch.
+- Breaking (`feat!:` or `fix!:` plus a `BREAKING CHANGE:` line in the PR body): a feature or option removed or renamed, saved settings that stop working, or a new permission the user must accept → major, or minor while the version is below 1.0.
+- `refactor`, `test`, `docs`, `ci`, `chore`, `build`, `style`, `revert`: nothing changes for users, or the revert waits for the next release → no release on its own. The changelog hides them, so a release made only of these opens no release PR. A PR that mixes types takes the highest one.
+
+The changelog lists *Features*, *Bug Fixes* and *Performance*. The rules are in `release-please-config.json` and `test/unit/release-please-config.test.js` checks them.
+
+The Chrome Web Store accepts versions made of up to four dot-separated integers that always increase, with no pre-release suffix such as `-beta`.
 
 ## Local testing
 
