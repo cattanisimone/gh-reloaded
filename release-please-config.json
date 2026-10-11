@@ -2,10 +2,28 @@
   "release-type": "simple",
   "include-component-in-tag": false,
   "bootstrap-sha": "cd0d751ac66952385d1d858891db6152a4bff05d",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": false,
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance" },
+    { "type": "refactor", "section": "Refactoring", "hidden": true },
+    { "type": "test", "section": "Tests", "hidden": true },
+    { "type": "docs", "section": "Documentation", "hidden": true },
+    { "type": "ci", "section": "Continuous Integration", "hidden": true },
+    { "type": "chore", "section": "Miscellaneous", "hidden": true },
+    { "type": "build", "section": "Build System", "hidden": true },
+    { "type": "style", "section": "Styles", "hidden": true }
+  ],
   "packages": {
     ".": {
       "extra-files": [
-        { "type": "json", "path": "manifest.json", "jsonpath": "$.version" }
+        {
+          "type": "json",
+          "path": "manifest.json",
+          "jsonpath": "$.version"
+        }
       ]
     }
   }
