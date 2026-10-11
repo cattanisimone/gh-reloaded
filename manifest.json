@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GH Reloaded",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Small UI enhancements for GitHub: dependency graphs, quick-create, board dependency arrows, full-width boards, standup mode, HTML previews.",
   "homepage_url": "https://gh-reloaded.simone3-cattani.chatgpt.site/",
   "permissions": [

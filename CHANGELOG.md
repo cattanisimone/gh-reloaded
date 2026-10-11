@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.9.0...v0.10.0) (2026-10-11)
+
+
+### Features
+
+* add standup mode for Projects Board views ([#26](https://github.com/cattanisimone/gh-reloaded/issues/26)) ([619cb05](https://github.com/cattanisimone/gh-reloaded/commit/619cb056e733699b33adb56f99381b5f3a076d47))
+
 ## [0.9.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.8.0...v0.9.0) (2026-10-10)
 
 
