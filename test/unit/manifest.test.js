@@ -87,16 +87,41 @@ export function isZipped(file, { paths, excludes }) {
   });
 }
 
+// Resolves Chrome's `__MSG_key__` form against the default locale's messages, so the limits
+// apply to the text the store sees. `messages` is the parsed messages.json (or undefined).
+export function resolveMessage(value, messages) {
+  const m = typeof value === "string" && value.match(/^__MSG_(.+)__$/);
+  if (!m) return value;
+  const entry = messages && Object.entries(messages).find(([k]) => k.toLowerCase() === m[1].toLowerCase());
+  assert.ok(entry && typeof entry[1].message === "string", `${value} has no message in the default locale`);
+  return entry[1].message;
+}
+
+function localizedManifestString(key) {
+  let messages;
+  if (manifest.default_locale) {
+    const path = `_locales/${manifest.default_locale}/messages.json`;
+    if (existsSync(path)) messages = JSON.parse(readFileSync(path, "utf8"));
+  }
+  return resolveMessage(manifest[key], messages);
+}
+
 test("description fits the store's 132-character limit", () => {
-  assert.ok(
-    [...manifest.description].length <= DESCRIPTION_MAX,
-    `description is ${[...manifest.description].length} characters`,
-  );
+  const description = localizedManifestString("description");
+  assert.ok([...description].length <= DESCRIPTION_MAX, `description is ${[...description].length} characters`);
   assert.ok([...("x".repeat(139))].length > DESCRIPTION_MAX);
 });
 
 test("name fits the store's 75-character limit", () => {
-  assert.ok([...manifest.name].length <= NAME_MAX);
+  assert.ok([...localizedManifestString("name")].length <= NAME_MAX);
+});
+
+test("localized strings are resolved before measuring", () => {
+  const messages = { appDesc: { message: "x".repeat(140) } };
+  assert.equal(resolveMessage("__MSG_appDesc__", messages).length, 140);
+  assert.equal(resolveMessage("__MSG_APPDESC__", messages).length, 140);
+  assert.equal(resolveMessage("plain", messages), "plain");
+  assert.throws(() => resolveMessage("__MSG_missing__", messages));
 });
 
 test("version is one to four dot-separated integers", () => {
@@ -113,18 +138,21 @@ test("every file the manifest references ships in the release zip", () => {
   const files = referencedPaths(manifest);
   assert.ok(files.length > 0);
   const all = listFiles();
+  const packaged = all.filter((f) => isZipped(f, zip));
   for (const pattern of files) {
-    const matches = expandResource(pattern, all);
-    assert.ok(matches.length > 0, `${pattern} matches no file`);
-    for (const f of matches) {
-      assert.ok(existsSync(f), `${f} does not exist`);
-      assert.ok(isZipped(f, zip), `${f} is not in the release zip`);
+    if (!pattern.includes("*")) {
+      assert.ok(existsSync(pattern), `${pattern} does not exist`);
+      assert.ok(isZipped(pattern, zip), `${pattern} is not in the release zip`);
+      continue;
     }
+    // A glob only has to match files that ship; checkout-only matches (tests, .DS_Store) are irrelevant.
+    assert.ok(expandResource(pattern, packaged).length > 0, `${pattern} matches no file in the release zip`);
   }
   // negative samples
   assert.equal(isZipped("tools/x.js", zip), false);
   assert.equal(isZipped("icons/.DS_Store", zip), false);
   assert.deepEqual(expandResource("images/*.png", ["images/a.png", "images/b.svg", "x/images/a.png"]), ["images/a.png"]);
+  assert.deepEqual(expandResource("*", ["manifest.json", "test/a.js"].filter((f) => isZipped(f, { paths: ["manifest.json"], excludes: [] }))), ["manifest.json"]);
   assert.deepEqual(
     referencedPaths({ default_locale: "en", declarative_net_request: { rule_resources: [{ path: "r.json" }] } }).sort(),
     ["_locales/en/messages.json", "r.json"],
