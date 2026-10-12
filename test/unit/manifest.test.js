@@ -185,6 +185,22 @@ test("the default locale must define every localized key", () => {
   assert.deepEqual(localizedValues("__MSG_d__", { en: { d: { message: "a" } }, it: locales.it }, "en"), ["a", "ok"]);
 });
 
+// Chrome requires default_locale whenever a _locales directory is packaged, even if no
+// manifest string is localized (e.g. only action.default_title is).
+export function assertLocalesHaveDefault(localeMessages, defaultLocale) {
+  if (Object.keys(localeMessages).length === 0) return;
+  assert.ok(defaultLocale !== undefined, "_locales is packaged but the manifest has no default_locale");
+  assert.ok(localeMessages[defaultLocale] !== undefined, `default_locale ${defaultLocale} has no messages.json`);
+}
+
+test("a packaged _locales directory requires default_locale", () => {
+  assertLocalesHaveDefault(packagedLocales(), manifest.default_locale);
+  assert.doesNotThrow(() => assertLocalesHaveDefault({}, undefined));
+  assert.throws(() => assertLocalesHaveDefault({ en: {} }, undefined), /default_locale/);
+  assert.throws(() => assertLocalesHaveDefault({ en: {} }, "it"), /no messages/);
+  assert.doesNotThrow(() => assertLocalesHaveDefault({ en: {} }, "en"));
+});
+
 test("a localized string requires a default_locale", () => {
   const locales = { en: { d: { message: "ok" } } };
   assert.throws(() => localizedValues("__MSG_d__", locales, undefined), /default_locale/);
