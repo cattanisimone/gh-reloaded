@@ -109,23 +109,36 @@ export function resolveMessage(value, messages) {
   return entry[1].message;
 }
 
-function localizedManifestString(key) {
-  let messages;
-  if (manifest.default_locale) {
-    const path = `_locales/${manifest.default_locale}/messages.json`;
-    if (existsSync(path)) messages = JSON.parse(readFileSync(path, "utf8"));
+// The manifest string as the store sees it in every packaged locale (Chrome picks the user's
+// preferred locale before the default one), or just the literal when it is not localized.
+export function localizedValues(value, localeMessages) {
+  if (!/^__MSG_(.+)__$/.test(value ?? "")) return [value];
+  const all = Object.entries(localeMessages);
+  return all.length ? all.map(([, messages]) => resolveMessage(value, messages)) : [resolveMessage(value, undefined)];
+}
+
+function packagedLocales() {
+  if (!existsSync("_locales")) return {};
+  const out = {};
+  for (const dir of readdirSync("_locales")) {
+    const path = `_locales/${dir}/messages.json`;
+    if (existsSync(path)) out[dir] = JSON.parse(readFileSync(path, "utf8"));
   }
-  return resolveMessage(manifest[key], messages);
+  return out;
+}
+
+function localizedManifestStrings(key) {
+  return localizedValues(manifest[key], packagedLocales());
 }
 
 test("description fits the store's 132-character limit", () => {
-  const description = localizedManifestString("description");
-  assert.ok([...description].length <= DESCRIPTION_MAX, `description is ${[...description].length} characters`);
-  assert.ok([...("x".repeat(139))].length > DESCRIPTION_MAX);
+  for (const description of localizedManifestStrings("description")) {
+    assert.ok([...description].length <= DESCRIPTION_MAX, `description is ${[...description].length} characters`);
+  }
 });
 
 test("name fits the store's 75-character limit", () => {
-  assert.ok([...localizedManifestString("name")].length <= NAME_MAX);
+  for (const name of localizedManifestStrings("name")) assert.ok([...name].length <= NAME_MAX);
 });
 
 test("localized strings are resolved before measuring", () => {
@@ -134,6 +147,14 @@ test("localized strings are resolved before measuring", () => {
   assert.equal(resolveMessage("__MSG_APPDESC__", messages).length, 140);
   assert.equal(resolveMessage("plain", messages), "plain");
   assert.throws(() => resolveMessage("__MSG_missing__", messages));
+});
+
+test("every packaged locale's translation is measured", () => {
+  const locales = { en: { d: { message: "short" } }, it: { d: { message: "y".repeat(140) } } };
+  const lengths = localizedValues("__MSG_d__", locales).map((v) => v.length);
+  assert.deepEqual(lengths, [5, 140]);
+  assert.deepEqual(localizedValues("plain", locales), ["plain"]);
+  assert.throws(() => localizedValues("__MSG_d__", { fr: {} }));
 });
 
 test("version is one to four dot-separated integers", () => {
