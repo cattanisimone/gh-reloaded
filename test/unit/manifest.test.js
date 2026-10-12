@@ -42,7 +42,10 @@ export function referencedPaths(m) {
   for (const w of m.web_accessible_resources || []) {
     for (const p of w.resources || []) add(p);
   }
-  for (const h of m.file_handlers || []) add(h.action);
+  for (const h of m.file_handlers || []) {
+    add(h.action);
+    for (const i of h.icons || []) add(i?.src);
+  }
   const mime = m.mime_types_handler;
   if (typeof mime === "string") add(mime);
   else for (const h of [].concat(mime || [])) add(h?.handler_url);
@@ -172,6 +175,7 @@ test("every file the manifest references ships in the release zip", () => {
     ["a.js", "images/*"],
   );
   assert.deepEqual(referencedPaths({ file_handlers: [{ action: "/h.html" }, { action: "g.html" }] }).sort(), ["g.html", "h.html"]);
+  assert.deepEqual(referencedPaths({ file_handlers: [{ action: "h.html", icons: [{ src: "/csv.png" }, { src: "i/a.png" }] }] }).sort(), ["csv.png", "h.html", "i/a.png"]);
   assert.deepEqual(referencedPaths({ mime_types_handler: [{ handler_url: "/m.html" }] }), ["m.html"]);
   assert.deepEqual(referencedPaths({ mime_types_handler: "n.html" }), ["n.html"]);
   assert.deepEqual(
