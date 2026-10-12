@@ -122,8 +122,15 @@ export function resolveMessage(value, messages) {
 // preferred locale before the default one), or just the literal when it is not localized.
 // Chrome allows sparse translations (a missing key falls back to the default locale), so only
 // locales that define the key are measured; at least one must, or the placeholder is dangling.
-export function localizedValues(value, localeMessages) {
+// The default locale must define the key: it ends Chrome's fallback chain.
+export function localizedValues(value, localeMessages, defaultLocale) {
   if (!/^__MSG_(.+)__$/.test(value ?? "")) return [value];
+  if (defaultLocale !== undefined) {
+    assert.ok(
+      findMessage(value, localeMessages[defaultLocale]) !== undefined,
+      `${value} has no message in the default locale (${defaultLocale})`
+    );
+  }
   const found = Object.values(localeMessages)
     .map((messages) => findMessage(value, messages))
     .filter((message) => message !== undefined);
@@ -142,7 +149,7 @@ function packagedLocales() {
 }
 
 function localizedManifestStrings(key) {
-  return localizedValues(manifest[key], packagedLocales());
+  return localizedValues(manifest[key], packagedLocales(), manifest.default_locale);
 }
 
 test("description fits the store's 132-character limit", () => {
@@ -171,6 +178,12 @@ test("every packaged locale's translation is measured", () => {
   assert.throws(() => localizedValues("__MSG_d__", { fr: {} }));
   // sparse translation: a locale without the key is skipped, not an error
   assert.deepEqual(localizedValues("__MSG_d__", { en: { d: { message: "ok" } }, fr: {} }), ["ok"]);
+});
+
+test("the default locale must define every localized key", () => {
+  const locales = { en: {}, it: { d: { message: "ok" } } };
+  assert.throws(() => localizedValues("__MSG_d__", locales, "en"));
+  assert.deepEqual(localizedValues("__MSG_d__", { en: { d: { message: "a" } }, it: locales.it }, "en"), ["a", "ok"]);
 });
 
 test("version is one to four dot-separated integers", () => {
