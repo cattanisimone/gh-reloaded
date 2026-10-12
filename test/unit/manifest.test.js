@@ -125,12 +125,11 @@ export function resolveMessage(value, messages) {
 // The default locale must define the key: it ends Chrome's fallback chain.
 export function localizedValues(value, localeMessages, defaultLocale) {
   if (!/^__MSG_(.+)__$/.test(value ?? "")) return [value];
-  if (defaultLocale !== undefined) {
-    assert.ok(
-      findMessage(value, localeMessages[defaultLocale]) !== undefined,
-      `${value} has no message in the default locale (${defaultLocale})`
-    );
-  }
+  assert.ok(defaultLocale !== undefined, `${value} is localized but the manifest has no default_locale`);
+  assert.ok(
+    findMessage(value, localeMessages[defaultLocale]) !== undefined,
+    `${value} has no message in the default locale (${defaultLocale})`
+  );
   const found = Object.values(localeMessages)
     .map((messages) => findMessage(value, messages))
     .filter((message) => message !== undefined);
@@ -172,18 +171,24 @@ test("localized strings are resolved before measuring", () => {
 
 test("every packaged locale's translation is measured", () => {
   const locales = { en: { d: { message: "short" } }, it: { d: { message: "y".repeat(140) } } };
-  const lengths = localizedValues("__MSG_d__", locales).map((v) => v.length);
+  const lengths = localizedValues("__MSG_d__", locales, "en").map((v) => v.length);
   assert.deepEqual(lengths, [5, 140]);
   assert.deepEqual(localizedValues("plain", locales), ["plain"]);
-  assert.throws(() => localizedValues("__MSG_d__", { fr: {} }));
+  assert.throws(() => localizedValues("__MSG_d__", { fr: {} }, "fr"));
   // sparse translation: a locale without the key is skipped, not an error
-  assert.deepEqual(localizedValues("__MSG_d__", { en: { d: { message: "ok" } }, fr: {} }), ["ok"]);
+  assert.deepEqual(localizedValues("__MSG_d__", { en: { d: { message: "ok" } }, fr: {} }, "en"), ["ok"]);
 });
 
 test("the default locale must define every localized key", () => {
   const locales = { en: {}, it: { d: { message: "ok" } } };
   assert.throws(() => localizedValues("__MSG_d__", locales, "en"));
   assert.deepEqual(localizedValues("__MSG_d__", { en: { d: { message: "a" } }, it: locales.it }, "en"), ["a", "ok"]);
+});
+
+test("a localized string requires a default_locale", () => {
+  const locales = { en: { d: { message: "ok" } } };
+  assert.throws(() => localizedValues("__MSG_d__", locales, undefined), /default_locale/);
+  assert.deepEqual(localizedValues("plain", locales, undefined), ["plain"]);
 });
 
 test("version is one to four dot-separated integers", () => {
