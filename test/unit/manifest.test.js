@@ -137,14 +137,20 @@ export function localizedValues(value, localeMessages, defaultLocale) {
   return found;
 }
 
-function packagedLocales() {
-  if (!existsSync("_locales")) return {};
+// Every directory under _locales counts as a locale; one without messages.json is invalid.
+export function readLocales(root, dirs, read = (path) => JSON.parse(readFileSync(path, "utf8")), exists = existsSync) {
   const out = {};
-  for (const dir of readdirSync("_locales")) {
-    const path = `_locales/${dir}/messages.json`;
-    if (existsSync(path)) out[dir] = JSON.parse(readFileSync(path, "utf8"));
+  for (const dir of dirs) {
+    const path = `${root}/${dir}/messages.json`;
+    assert.ok(exists(path), `${path} is missing: a _locales directory needs a messages.json`);
+    out[dir] = read(path);
   }
   return out;
+}
+
+function packagedLocales() {
+  if (!existsSync("_locales")) return {};
+  return readLocales("_locales", readdirSync("_locales"));
 }
 
 function localizedManifestStrings(key) {
@@ -199,6 +205,11 @@ test("a packaged _locales directory requires default_locale", () => {
   assert.throws(() => assertLocalesHaveDefault({ en: {} }, undefined), /default_locale/);
   assert.throws(() => assertLocalesHaveDefault({ en: {} }, "it"), /no messages/);
   assert.doesNotThrow(() => assertLocalesHaveDefault({ en: {} }, "en"));
+});
+
+test("a locale directory without messages.json fails", () => {
+  assert.throws(() => readLocales("_locales", ["fr"], () => ({}), () => false), /messages\.json/);
+  assert.deepEqual(readLocales("_locales", ["fr"], () => ({ a: 1 }), () => true), { fr: { a: 1 } });
 });
 
 test("a localized string requires a default_locale", () => {
