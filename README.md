@@ -117,7 +117,7 @@ Marked experimental: it renders arbitrary third-party HTML/JS, and the inline Pr
 
 ### My Issues by project — [features/my-issues](features/my-issues)
 
-On GitHub's own **My Issues** dashboard (`github.com/issues`), adds a `List | Group by project` switch next to the native flat list. Switched on, it reorganizes the same issues as a responsive grid of **Project tiles** (one to three columns), each listing its issues by that Project's real Status — so work spread across several Projects is readable at a glance; switched off, GitHub's own list is restored untouched. On by default (the switch appears, the native list stays selected until you pick the grouped view).
+On GitHub's own **My Issues** dashboard (`github.com/issues`), adds a `List | Group by project` switch next to the native flat list. Switched on, it reorganizes the same issues as a responsive grid of **Project tiles** (one to three columns, a column being added only while every issue title keeps room to read), each listing its issues by that Project's real Status — so work spread across several Projects is readable at a glance; switched off, GitHub's own list is restored untouched. On by default (the switch appears, the native list stays selected until you pick the grouped view).
 
 ![My Issues by project mockup: the My Issues dashboard with a collapsed icon sidebar, a one-line toolbar (summary, Expand all / Collapse all, List / Group by project switch) and a grid of Project tiles, each with a Status distribution bar, a legend and Status groups with issue rows, plus an explicit "No Project" tile](screenshots/my-issues.svg)
 

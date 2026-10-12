@@ -144,10 +144,16 @@
 }
 
 /* The grid of Project tiles: one column when narrow, two or three as the
-   page widens. */
+   page widens. A column is added only while every tile keeps room for a
+   readable issue title: the minimum tile width is that title width plus the
+   fixed furniture around it (tile and status paddings, the status gutter, the
+   icon, #ref and gaps, the type chip and the time). */
 .ghmi-grid {
+  --ghmi-title-min: 320px;
+  --ghmi-row-furniture: 310px;
+  --ghmi-tile-min: calc(var(--ghmi-title-min) + var(--ghmi-row-furniture));
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(520px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--ghmi-tile-min), 100%), 1fr));
   gap: 12px;
   align-items: start;
 }

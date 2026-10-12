@@ -649,3 +649,63 @@ test("a long owner/repo chip is capped so the title keeps its room", async ({ co
   await expect(refs.first()).toHaveAttribute("title", "acme-corporation/web-frontend#1234");
   for (const w of await refs.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width))) expect(w).toBeLessThan(160);
 });
+
+// Column count of the Project tile grid, plus the narrowest issue title of any
+// tile (the title is what a column must leave room for).
+async function gridMetrics(page) {
+  return page.evaluate(() => {
+    const grid = document.querySelector(".ghmi-grid");
+    const tiles = [...grid.querySelectorAll(".ghmi-tile")];
+    const cols = new Set(tiles.map((t) => Math.round(t.getBoundingClientRect().x))).size;
+    const titles = [...grid.querySelectorAll(".ghmi-row-title")].map((t) => t.getBoundingClientRect().width);
+    const rootStyle = getComputedStyle(grid);
+    return {
+      cols,
+      minTitle: titles.length ? Math.min(...titles) : Infinity,
+      titleMin: parseFloat(rootStyle.getPropertyValue("--ghmi-title-min")),
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    };
+  });
+}
+
+for (const sidebar of ["collapsed", "expanded"]) {
+  test(`the grid adds a column only while every title keeps room to read (sidebar ${sidebar})`, async ({ context, page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await setup(context, page, { storage: { ghmiSidebar: sidebar } });
+    await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+    for (let width = 1024; width <= 2560; width += 64) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(async () => (await gridMetrics(page)).overflow, { message: `overflow at ${width}` }).toBeLessThanOrEqual(0);
+      const m = await gridMetrics(page);
+      expect(m.titleMin, "--ghmi-title-min is defined").toBeGreaterThan(0);
+      if (m.cols > 1) expect(m.minTitle, `shortest title at ${width}px`).toBeGreaterThanOrEqual(m.titleMin);
+    }
+  });
+}
+
+test("the grid shows two columns at 1920px, not three", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed" } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(2);
+});
+
+test("the grid is still responsive: one, two, then three columns as the page widens", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed" } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(1);
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(2);
+  await page.setViewportSize({ width: 2560, height: 900 });
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(3);
+});
+
+test("a phone-width page keeps one column and does not scroll sideways", async ({ context, page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed" } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  const m = await gridMetrics(page);
+  expect(m.cols).toBe(1);
+  expect(m.overflow).toBeLessThanOrEqual(0);
+});
