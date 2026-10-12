@@ -48,7 +48,11 @@ export function referencedPaths(m) {
   }
   const mime = m.mime_types_handler;
   if (typeof mime === "string") add(mime);
-  else for (const h of [].concat(mime || [])) add(h?.handler_url);
+  else if (mime && typeof mime === "object") {
+    // Either `{ handler_url }` or the documented `{ "<mime/type>": { handler_url } }` dictionary.
+    if (mime.handler_url) add(mime.handler_url);
+    for (const h of Array.isArray(mime) ? mime : Object.values(mime)) add(h?.handler_url);
+  }
   add(m.storage?.managed_schema);
   for (const c of m.input_components || []) {
     add(c.input_view);
@@ -101,20 +105,30 @@ export function isZipped(file, { paths, excludes }) {
 
 // Resolves Chrome's `__MSG_key__` form against the default locale's messages, so the limits
 // apply to the text the store sees. `messages` is the parsed messages.json (or undefined).
-export function resolveMessage(value, messages) {
+function findMessage(value, messages) {
   const m = typeof value === "string" && value.match(/^__MSG_(.+)__$/);
-  if (!m) return value;
-  const entry = messages && Object.entries(messages).find(([k]) => k.toLowerCase() === m[1].toLowerCase());
-  assert.ok(entry && typeof entry[1].message === "string", `${value} has no message in the default locale`);
-  return entry[1].message;
+  const entry = m && messages && Object.entries(messages).find(([k]) => k.toLowerCase() === m[1].toLowerCase());
+  return entry && typeof entry[1].message === "string" ? entry[1].message : undefined;
+}
+
+export function resolveMessage(value, messages) {
+  if (!/^__MSG_(.+)__$/.test(value ?? "")) return value;
+  const message = findMessage(value, messages);
+  assert.ok(message !== undefined, `${value} has no message in the default locale`);
+  return message;
 }
 
 // The manifest string as the store sees it in every packaged locale (Chrome picks the user's
 // preferred locale before the default one), or just the literal when it is not localized.
+// Chrome allows sparse translations (a missing key falls back to the default locale), so only
+// locales that define the key are measured; at least one must, or the placeholder is dangling.
 export function localizedValues(value, localeMessages) {
   if (!/^__MSG_(.+)__$/.test(value ?? "")) return [value];
-  const all = Object.entries(localeMessages);
-  return all.length ? all.map(([, messages]) => resolveMessage(value, messages)) : [resolveMessage(value, undefined)];
+  const found = Object.values(localeMessages)
+    .map((messages) => findMessage(value, messages))
+    .filter((message) => message !== undefined);
+  assert.ok(found.length > 0, `${value} has no message in any packaged locale`);
+  return found;
 }
 
 function packagedLocales() {
@@ -155,6 +169,8 @@ test("every packaged locale's translation is measured", () => {
   assert.deepEqual(lengths, [5, 140]);
   assert.deepEqual(localizedValues("plain", locales), ["plain"]);
   assert.throws(() => localizedValues("__MSG_d__", { fr: {} }));
+  // sparse translation: a locale without the key is skipped, not an error
+  assert.deepEqual(localizedValues("__MSG_d__", { en: { d: { message: "ok" } }, fr: {} }), ["ok"]);
 });
 
 test("version is one to four dot-separated integers", () => {
@@ -198,6 +214,7 @@ test("every file the manifest references ships in the release zip", () => {
   assert.deepEqual(referencedPaths({ file_handlers: [{ action: "/h.html" }, { action: "g.html" }] }).sort(), ["g.html", "h.html"]);
   assert.deepEqual(referencedPaths({ file_handlers: [{ action: "h.html", icons: [{ src: "/csv.png" }, { src: "i/a.png" }] }] }).sort(), ["csv.png", "h.html", "i/a.png"]);
   assert.deepEqual(referencedPaths({ mime_types_handler: [{ handler_url: "/m.html" }] }), ["m.html"]);
+  assert.deepEqual(referencedPaths({ mime_types_handler: { "application/pdf": { handler_url: "viewer.html" } } }), ["viewer.html"]);
   assert.deepEqual(referencedPaths({ mime_types_handler: "n.html" }), ["n.html"]);
   assert.deepEqual(
     referencedPaths({ storage: { managed_schema: "s.json" }, input_components: [{ input_view: "/v.html", options_page: "io.html" }] }).sort(),
