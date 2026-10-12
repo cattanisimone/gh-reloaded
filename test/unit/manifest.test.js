@@ -3,7 +3,7 @@
 // and exclusions are read from the `zip -r` step of release.yml (no second copy kept here).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 
 const DESCRIPTION_MAX = 132;
 const NAME_MAX = 75;
@@ -43,6 +43,11 @@ export function referencedPaths(m) {
     for (const p of w.resources || []) add(p);
   }
   for (const h of m.file_handlers || []) add(h.action);
+  add(m.storage?.managed_schema);
+  for (const c of m.input_components || []) {
+    add(c.input_view);
+    add(c.options_page);
+  }
   for (const r of m.declarative_net_request?.rule_resources || []) add(r.path);
   if (m.default_locale) add(`_locales/${m.default_locale}/messages.json`);
   return [...out];
@@ -143,6 +148,7 @@ test("every file the manifest references ships in the release zip", () => {
   for (const pattern of files) {
     if (!pattern.includes("*")) {
       assert.ok(existsSync(pattern), `${pattern} does not exist`);
+      assert.ok(statSync(pattern).isFile(), `${pattern} is not a regular file`);
       assert.ok(isZipped(pattern, zip), `${pattern} is not in the release zip`);
       continue;
     }
@@ -163,5 +169,10 @@ test("every file the manifest references ships in the release zip", () => {
     ["a.js", "images/*"],
   );
   assert.deepEqual(referencedPaths({ file_handlers: [{ action: "/h.html" }, { action: "g.html" }] }).sort(), ["g.html", "h.html"]);
+  assert.deepEqual(
+    referencedPaths({ storage: { managed_schema: "s.json" }, input_components: [{ input_view: "/v.html", options_page: "io.html" }] }).sort(),
+    ["io.html", "s.json", "v.html"],
+  );
+  assert.equal(statSync("options").isFile(), false);
   assert.deepEqual(referencedPaths({ action: { default_popup: "p.html" }, options_page: "o.html" }).sort(), ["o.html", "p.html"]);
 });
