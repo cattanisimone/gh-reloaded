@@ -3,7 +3,7 @@
 // and exclusions are read from the `zip -r` step of release.yml (no second copy kept here).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 
 const DESCRIPTION_MAX = 132;
 const NAME_MAX = 75;
@@ -41,7 +41,28 @@ export function referencedPaths(m) {
   for (const w of m.web_accessible_resources || []) {
     for (const p of w.resources || []) add(p);
   }
+  for (const r of m.declarative_net_request?.rule_resources || []) add(r.path);
+  if (m.default_locale) add(`_locales/${m.default_locale}/messages.json`);
   return [...out];
+}
+
+// Every file under dir, as repo-relative paths.
+function listFiles(dir = ".") {
+  const out = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.name === "node_modules" || e.name === ".git") continue;
+    const path = dir === "." ? e.name : `${dir}/${e.name}`;
+    if (e.isDirectory()) out.push(...listFiles(path));
+    else out.push(path);
+  }
+  return out;
+}
+
+// Expands a manifest resource pattern (`*` matches any run of characters) to existing files.
+export function expandResource(pattern, files) {
+  if (!pattern.includes("*")) return [pattern];
+  const re = new RegExp("^" + pattern.replace(/[.+^${}()|[\]\\?]/g, "\\$&").replace(/\*/g, ".*") + "$");
+  return files.filter((f) => re.test(f));
 }
 
 // Parses the `zip -r "<out>" <paths...> -x <patterns...>` command out of release.yml.
@@ -90,12 +111,22 @@ test("every file the manifest references ships in the release zip", () => {
   assert.ok(zip.paths.includes("manifest.json"));
   const files = referencedPaths(manifest);
   assert.ok(files.length > 0);
-  for (const f of files) {
-    assert.ok(existsSync(f), `${f} does not exist`);
-    assert.ok(isZipped(f, zip), `${f} is not in the release zip`);
+  const all = listFiles();
+  for (const pattern of files) {
+    const matches = expandResource(pattern, all);
+    assert.ok(matches.length > 0, `${pattern} matches no file`);
+    for (const f of matches) {
+      assert.ok(existsSync(f), `${f} does not exist`);
+      assert.ok(isZipped(f, zip), `${f} is not in the release zip`);
+    }
   }
   // negative samples
   assert.equal(isZipped("tools/x.js", zip), false);
   assert.equal(isZipped("icons/.DS_Store", zip), false);
+  assert.deepEqual(expandResource("images/*.png", ["images/a.png", "images/b.svg", "x/images/a.png"]), ["images/a.png"]);
+  assert.deepEqual(
+    referencedPaths({ default_locale: "en", declarative_net_request: { rule_resources: [{ path: "r.json" }] } }).sort(),
+    ["_locales/en/messages.json", "r.json"],
+  );
   assert.deepEqual(referencedPaths({ action: { default_popup: "p.html" }, options_page: "o.html" }).sort(), ["o.html", "p.html"]);
 });
