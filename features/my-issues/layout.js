@@ -103,5 +103,22 @@
     return urls.size;
   }
 
-  global.GHMI_LAYOUT = { relativeTime, refChips, typeChip, capStatus, barSegments, distinctCount };
+  // The user's tile-width overrides (Settings > Advanced). Whole pixels in
+  // 280-2000; anything else is "not set" (null) so the CSS default applies.
+  // A max below the effective minimum (the default one when none is set) is
+  // ignored, since it could never be honoured.
+  const DEFAULT_TILE_MIN = 630; // matches --ghmi-tile-min in content.css
+  function tileWidth(value) {
+    if (value === "" || value == null) return null;
+    const n = Math.floor(Number(value));
+    return Number.isFinite(n) && n > 0 ? Math.min(2000, Math.max(280, n)) : null;
+  }
+  function tileWidths(minRaw, maxRaw) {
+    const min = tileWidth(minRaw);
+    let max = tileWidth(maxRaw);
+    if (max !== null && max < (min ?? DEFAULT_TILE_MIN)) max = null;
+    return { min, max };
+  }
+
+  global.GHMI_LAYOUT = { relativeTime, refChips, typeChip, capStatus, barSegments, distinctCount, tileWidths };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -117,7 +117,7 @@ Marked experimental: it renders arbitrary third-party HTML/JS, and the inline Pr
 
 ### My Issues by project — [features/my-issues](features/my-issues)
 
-On GitHub's own **My Issues** dashboard (`github.com/issues`), adds a `List | Group by project` switch next to the native flat list. Switched on, it reorganizes the same issues as a responsive grid of **Project tiles** (one to three columns, a column being added only while every issue title keeps room to read), each listing its issues by that Project's real Status — so work spread across several Projects is readable at a glance; switched off, GitHub's own list is restored untouched. On by default (the switch appears, the native list stays selected until you pick the grouped view).
+On GitHub's own **My Issues** dashboard (`github.com/issues`), adds a `List | Group by project` switch next to the native flat list. Switched on, it reorganizes the same issues as a responsive grid of **Project tiles** (one to three columns, a column being added only while every issue title keeps room to read), each listing its issues by that Project's real Status — so work spread across several Projects is readable at a glance; switched off, GitHub's own list is restored untouched. On by default (the switch appears, the native list stays selected until you pick the grouped view). Settings → Advanced lets you set a minimum and a maximum tile width (280–2000 px; the default minimum is 630 px, no maximum), with a **Reset to defaults** button.
 
 ![My Issues by project mockup: the My Issues dashboard with a collapsed icon sidebar, a one-line toolbar (summary, Expand all / Collapse all, List / Group by project switch) and a grid of Project tiles, each with a Status distribution bar, a legend and Status groups with issue rows, plus an explicit "No Project" tile](screenshots/my-issues.svg)
 
@@ -138,7 +138,7 @@ background.js                       Service worker entry point: opens Settings, 
 lib/github-api.js                   Shared GitHub REST/GraphQL client (auth, caching) used by every feature
 background/<feature>.js             One feature's server-side logic (GitHub calls, computation) + its MESSAGE_TYPE
 features/<feature>/                 One feature's content-script side: DOM injection, rendering, styling
-options/                             Settings page (GitHub tokens, quick-create shortcuts, feature toggles)
+options/                             Settings page (GitHub tokens, quick-create shortcuts, feature toggles, advanced layout)
 icons/                               Toolbar/extensions-page icons
 ```
 

@@ -7,7 +7,7 @@
 // and the disabled-feature state. All names are invented.
 import fs from "node:fs";
 import path from "node:path";
-import { test, expect, routeGithub, routeApi, seedStorage, FIXTURES_DIR } from "./support/extension.js";
+import { test, expect, routeGithub, routeApi, seedStorage, backgroundWorker, FIXTURES_DIR } from "./support/extension.js";
 
 const ISSUES_URL = "https://github.com/issues";
 
@@ -710,4 +710,35 @@ test("a phone-width page keeps one column and does not scroll sideways", async (
   const m = await gridMetrics(page);
   expect(m.cols).toBe(1);
   expect(m.overflow).toBeLessThanOrEqual(0);
+});
+
+test("a saved minimum tile width changes the column count, live", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed" } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(2);
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => chrome.storage.local.set({ ghmiTileMin: 400 }));
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(3);
+  await worker.evaluate(() => chrome.storage.local.remove("ghmiTileMin"));
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(2);
+});
+
+test("a saved maximum tile width limits how wide a tile grows", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed", ghmiTileMax: 700 } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  const widths = () => page.locator(".ghmi-tile").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
+  await expect.poll(async () => Math.max(...(await widths()))).toBeLessThanOrEqual(700);
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => chrome.storage.local.remove("ghmiTileMax"));
+  await expect.poll(async () => Math.max(...(await widths()))).toBeGreaterThan(700);
+});
+
+test("a maximum below the minimum is ignored", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed", ghmiTileMax: 500 } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  const widths = await page.locator(".ghmi-tile").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
+  expect(Math.max(...widths)).toBeGreaterThan(500);
 });

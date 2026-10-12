@@ -413,3 +413,52 @@ reviewKeywordsInput.addEventListener("change", async () => {
 });
 
 loadStandupSettings();
+
+// My Issues tile width (Advanced). Same rule as the standup thresholds: an
+// empty or invalid value clears the key. Values are whole pixels in 280-2000,
+// and a maximum below the effective minimum (630 by default) is rejected.
+const TILE_LIMITS = { min: 280, max: 2000, defaultMin: 630 };
+const tileMinInput = document.getElementById("ghmi-tile-min");
+const tileMaxInput = document.getElementById("ghmi-tile-max");
+
+function tileWidthValue(input) {
+  if (input.value.trim() === "") return null;
+  const n = Math.floor(Number(input.value));
+  return Number.isFinite(n) && n > 0 ? Math.min(TILE_LIMITS.max, Math.max(TILE_LIMITS.min, n)) : null;
+}
+
+async function saveTileWidth(input, key, floor) {
+  const value = tileWidthValue(input);
+  if (value !== null && value >= floor()) {
+    input.value = String(value);
+    await chrome.storage.local.set({ [key]: value });
+  } else {
+    input.value = "";
+    await chrome.storage.local.remove(key);
+  }
+}
+
+tileMinInput.addEventListener("change", async () => {
+  await saveTileWidth(tileMinInput, "ghmiTileMin", () => 0);
+  // A raised minimum can leave the saved maximum below it.
+  const max = tileWidthValue(tileMaxInput);
+  if (max !== null && max < (tileWidthValue(tileMinInput) ?? TILE_LIMITS.defaultMin)) {
+    tileMaxInput.value = "";
+    await chrome.storage.local.remove("ghmiTileMax");
+  }
+});
+tileMaxInput.addEventListener("change", () =>
+  saveTileWidth(tileMaxInput, "ghmiTileMax", () => tileWidthValue(tileMinInput) ?? TILE_LIMITS.defaultMin)
+);
+document.getElementById("ghmi-tile-reset").addEventListener("click", async () => {
+  tileMinInput.value = "";
+  tileMaxInput.value = "";
+  await chrome.storage.local.remove(["ghmiTileMin", "ghmiTileMax"]);
+});
+
+async function loadTileWidths() {
+  const { ghmiTileMin, ghmiTileMax } = await chrome.storage.local.get(["ghmiTileMin", "ghmiTileMax"]);
+  tileMinInput.value = ghmiTileMin ?? "";
+  tileMaxInput.value = ghmiTileMax ?? "";
+}
+loadTileWidths();

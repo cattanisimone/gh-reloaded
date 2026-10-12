@@ -113,3 +113,29 @@ test("distinctCount counts an issue in two projects once", () => {
   assert.equal(distinctCount(projects, [c]), 3);
   assert.equal(distinctCount([], []), 0);
 });
+
+test("tileWidths: empty or junk input means no override", () => {
+  const { tileWidths } = context.GHMI_LAYOUT;
+  assert.deepEqual(plain(tileWidths(undefined, undefined)), { min: null, max: null });
+  assert.deepEqual(plain(tileWidths("", "")), { min: null, max: null });
+  assert.deepEqual(plain(tileWidths("abc", "-5")), { min: null, max: null });
+  assert.deepEqual(plain(tileWidths(NaN, Infinity)), { min: null, max: null });
+});
+
+test("tileWidths: whole pixels, clamped to 280-2000", () => {
+  const { tileWidths } = context.GHMI_LAYOUT;
+  assert.deepEqual(plain(tileWidths(700.9, 900)), { min: 700, max: 900 });
+  assert.deepEqual(plain(tileWidths("700", undefined)), { min: 700, max: null });
+  assert.equal(tileWidths(100, undefined).min, 280);
+  assert.equal(tileWidths(5000, undefined).min, 2000);
+  assert.equal(tileWidths(undefined, 5000).max, 2000);
+});
+
+test("tileWidths: a max below the effective min is ignored", () => {
+  const { tileWidths } = context.GHMI_LAYOUT;
+  assert.deepEqual(plain(tileWidths(800, 700)), { min: 800, max: null });
+  // No min set: the default minimum (630px) is the floor.
+  assert.deepEqual(plain(tileWidths(undefined, 500)), { min: null, max: null });
+  assert.deepEqual(plain(tileWidths(undefined, 630)), { min: null, max: 630 });
+  assert.deepEqual(plain(tileWidths(800, 800)), { min: 800, max: 800 });
+});

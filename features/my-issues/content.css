@@ -165,6 +165,8 @@
 .ghmi-tile {
   container-type: inline-size;
   min-width: 0;
+  box-sizing: border-box;
+  max-width: var(--ghmi-tile-max, none);
   border: 1px solid var(--ghmi-border);
   border-radius: 6px;
   background: var(--ghmi-bg);
