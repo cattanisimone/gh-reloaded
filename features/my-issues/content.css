@@ -147,7 +147,11 @@
    page widens. A column is added only while every tile keeps room for a
    readable issue title: the minimum tile width is that title width plus the
    fixed furniture around it (tile and status paddings, the status gutter, the
-   icon, #ref and gaps, the type chip and the time). */
+   icon, #ref and gaps, the type chip and the time). The allowance is sized
+   for a typical row: a row carrying both a long repo-qualified reference and
+   a long issue type has less room, and its title ellipsizes (the full title
+   is in the link's tooltip) rather than every tile paying for that worst
+   case with a column. */
 .ghmi-grid {
   --ghmi-title-min: 320px;
   --ghmi-row-furniture: 310px;
