@@ -46,6 +46,8 @@ Import it in `background.js` and add it to the `FEATURES` array — the generic 
 
 **`manifest.json`**: add your content script's files to a `content_scripts` entry — reuse the existing one if your `matches` overlap with another feature's, add a new entry otherwise.
 
+The Chrome Web Store caps the manifest `description` at 132 characters and the `name` at 75, and `version` must be one to four dot-separated integers. Every file the manifest references must also be in the release zip (the `zip -r` step of `release.yml`). `test/unit/manifest.test.js` enforces all of this in `npm test`.
+
 ## Design rules
 
 - **No remotely-hosted code.** Chrome Web Store policy disallows it for MV3, and it's also just simpler: no CDN scripts, everything bundled in the repo.
@@ -116,7 +118,7 @@ npm test
 
 `npm test` runs two suites, and the same command runs in CI (`.github/workflows/ci.yml`) on every pull request:
 
-- **Unit tests** (`npm run test:unit`) — Node's built-in test runner over the pure logic: the effort-weighted critical path in `background/dependency-graph.js`, per-owner token resolution and response caching in `lib/github-api.js`, the path/URL helpers in `background/html-preview.js`, and the standup-mode attention rules (stale, orphan block, critical path at risk, bottleneck) in `background/standup-mode.js`. These import the real modules; a small `chrome` stub (`test/support/chrome-stub.js`) stands in for the extension storage API they touch at load. The only runtime source change this harness required was adding `export` to those already-existing pure functions so tests can import them — no behavior change.
+- **Unit tests** (`npm run test:unit`) — Node's built-in test runner over the pure logic: the effort-weighted critical path in `background/dependency-graph.js`, per-owner token resolution and response caching in `lib/github-api.js`, the path/URL helpers in `background/html-preview.js`, and the standup-mode attention rules (stale, orphan block, critical path at risk, bottleneck) in `background/standup-mode.js`. `test/unit/manifest.test.js` checks the manifest against the Chrome Web Store limits and the release zip contents. These import the real modules; a small `chrome` stub (`test/support/chrome-stub.js`) stands in for the extension storage API they touch at load. The only runtime source change this harness required was adding `export` to those already-existing pure functions so tests can import them — no behavior change.
 - **End-to-end tests** (`npm run test:e2e`) — Playwright loads the extension unpacked into headless Chromium and drives it against saved fixtures of the GitHub pages each feature targets (`test/e2e/fixtures/`, see its README for how to refresh them). Every github.com page is served from a fixture and every api.github.com call is mocked at the extension's boundary, so the suite is deterministic and offline. Each feature has a main-path test and a disabled-state test.
 
 The e2e suite needs the full Chromium build (Playwright's `channel: "chromium"`) — only it loads extensions headless; the default bundled headless shell can't.
