@@ -28,6 +28,12 @@ export function referencedPaths(m) {
   const icon = m.action?.default_icon;
   if (typeof icon === "string") add(icon);
   else for (const p of Object.values(icon || {})) add(p);
+  // `icon_variants` is an array of objects mapping a size (or "any") to a path, next to non-path keys.
+  for (const list of [m.icon_variants, m.action?.icon_variants]) {
+    for (const v of Array.isArray(list) ? list : []) {
+      for (const [k, p] of Object.entries(v || {})) if (/^(\d+|any)$/.test(k)) add(p);
+    }
+  }
   add(m.action?.default_popup);
   add(m.options_page);
   add(m.options_ui?.page);
@@ -255,6 +261,10 @@ test("every file the manifest references ships in the release zip", () => {
   assert.deepEqual(
     referencedPaths({ web_accessible_resources: [{ resources: ["/images/*", "/a.js"] }] }).sort(),
     ["a.js", "images/*"],
+  );
+  assert.deepEqual(
+    referencedPaths({ icon_variants: [{ 16: "/a.png", color_schemes: ["dark"] }], action: { icon_variants: [{ any: "b.svg" }] } }).sort(),
+    ["a.png", "b.svg"],
   );
   assert.deepEqual(referencedPaths({ file_handlers: [{ action: "/h.html" }, { action: "g.html" }] }).sort(), ["g.html", "h.html"]);
   assert.deepEqual(referencedPaths({ file_handlers: [{ action: "h.html", icons: [{ src: "/csv.png" }, { src: "i/a.png" }] }] }).sort(), ["csv.png", "h.html", "i/a.png"]);
