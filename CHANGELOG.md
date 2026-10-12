@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.10.0...v0.11.0) (2026-10-12)
+
+
+### Features
+
+* keep issue titles readable in the My Issues tile grid ([#43](https://github.com/cattanisimone/gh-reloaded/issues/43)) ([5c97fcc](https://github.com/cattanisimone/gh-reloaded/commit/5c97fcccaeae42a44b14640a59e20c9863a51e49))
+
+
+### Bug Fixes
+
+* keep the manifest within the Chrome Web Store limits ([#41](https://github.com/cattanisimone/gh-reloaded/issues/41)) ([70373b3](https://github.com/cattanisimone/gh-reloaded/commit/70373b352f86a72fee4fcca6045085883f8c83ae))
+
 ## [0.10.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.9.0...v0.10.0) (2026-10-11)
 
 
