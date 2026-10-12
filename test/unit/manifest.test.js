@@ -21,7 +21,8 @@ export function isValidVersion(v) {
 // Every file path the manifest points at, wherever it appears.
 export function referencedPaths(m) {
   const out = new Set();
-  const add = (p) => typeof p === "string" && p && out.add(p);
+  // Chrome accepts root-relative paths ("/images/*"); the repo file list has none.
+  const add = (p) => typeof p === "string" && p && out.add(p.replace(/^\/+/, ""));
   add(m.background?.service_worker);
   for (const p of Object.values(m.icons || {})) add(p);
   const icon = m.action?.default_icon;
@@ -127,6 +128,10 @@ test("every file the manifest references ships in the release zip", () => {
   assert.deepEqual(
     referencedPaths({ default_locale: "en", declarative_net_request: { rule_resources: [{ path: "r.json" }] } }).sort(),
     ["_locales/en/messages.json", "r.json"],
+  );
+  assert.deepEqual(
+    referencedPaths({ web_accessible_resources: [{ resources: ["/images/*", "/a.js"] }] }).sort(),
+    ["a.js", "images/*"],
   );
   assert.deepEqual(referencedPaths({ action: { default_popup: "p.html" }, options_page: "o.html" }).sort(), ["o.html", "p.html"]);
 });
