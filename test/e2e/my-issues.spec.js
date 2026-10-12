@@ -683,12 +683,14 @@ for (const sidebar of ["collapsed", "expanded"]) {
   });
 }
 
-test("the grid shows two columns at 1920px, not three", async ({ context, page }) => {
-  await page.setViewportSize({ width: 1920, height: 900 });
-  await setup(context, page, { storage: { ghmiSidebar: "collapsed" } });
-  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
-  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(2);
-});
+for (const sidebar of ["collapsed", "expanded"]) {
+  test(`the grid shows two columns at 1920px, not three (sidebar ${sidebar})`, async ({ context, page }) => {
+    await page.setViewportSize({ width: 1920, height: 900 });
+    await setup(context, page, { storage: { ghmiSidebar: sidebar } });
+    await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+    await expect.poll(async () => (await gridMetrics(page)).cols).toBe(2);
+  });
+}
 
 test("the grid is still responsive: one, two, then three columns as the page widens", async ({ context, page }) => {
   await page.setViewportSize({ width: 1024, height: 900 });
