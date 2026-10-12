@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1970" viewBox="0 0 1440 1970" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"><style>.m{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}</style>
-<rect width="1440" height="1970" fill="#010409"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="2034" viewBox="0 0 1440 2034" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"><style>.m{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}</style>
+<rect width="1440" height="2034" fill="#010409"/>
 <text x="20" y="26" fill="#db6d28" font-size="11" font-weight="700" letter-spacing="0.6">MY ISSUES, GROUPED BY PROJECT — TILE GRID WITH STATUS LISTS AND COLLAPSIBLE SIDEBAR (invented placeholder data) — gray #N chips, issue-type chips</text>
 <text x="20" y="56" fill="#db6d28" font-size="11" text-anchor="start" font-weight="700">SIDEBAR COLLAPSED (default) — icon rail; tiles use the freed width</text>
 <rect x="20" y="78" width="34" height="34" rx="6" fill="#0d1117" stroke="#30363d"/>
@@ -321,23 +321,23 @@
 <text x="436" y="1716" fill="#e6edf3" font-size="12.5" text-anchor="start" font-weight="400">Plan the summer promo page</text>
 <rect x="1316" y="1704" width="40" height="16" rx="8" fill="#6e7681" fill-opacity="0.25"/><text x="1336" y="1716" fill="#8b949e" font-size="11" text-anchor="middle" font-weight="400" class="m">#125</text>
 <text x="1404" y="1716" fill="#6e7681" font-size="11" text-anchor="end" font-weight="400">14d</text>
-<rect x="-312" y="1780" width="568.0" height="52" rx="8" fill="#0d1117" stroke="#30363d"/>
-<path d="M-296,1800 l6,5 l-6,5" fill="none" stroke="#8b949e" stroke-width="1.6"/>
-<text x="-276" y="1811" fill="#e6edf3" font-size="14" text-anchor="start" font-weight="600">Customer Requests</text>
-<rect x="-130" y="1797" width="26" height="18" rx="9" fill="#30363d"/>
-<text x="-117" y="1810" fill="#c9d1d9" font-size="11" text-anchor="middle" font-weight="400">2</text>
-<rect x="-74" y="1802" width="118.0" height="8" rx="2" fill="#a371f7"/>
-<text x="56" y="1811" fill="#8b949e" font-size="11" text-anchor="start" font-weight="400">2 Accepted</text>
 <rect x="270" y="1780" width="1150" height="52" rx="8" fill="#0d1117" stroke="#30363d"/>
 <path d="M286,1800 l6,5 l-6,5" fill="none" stroke="#8b949e" stroke-width="1.6"/>
-<text x="306" y="1811" fill="#e6edf3" font-size="14" text-anchor="start" font-weight="600">No Project</text>
-<rect x="396" y="1797" width="26" height="18" rx="9" fill="#30363d"/>
-<text x="409" y="1810" fill="#c9d1d9" font-size="11" text-anchor="middle" font-weight="400">1</text>
-<rect x="508" y="1802" width="118.0" height="8" rx="2" fill="#6e7681"/>
-<text x="1220" y="1811" fill="#8b949e" font-size="11" text-anchor="start" font-weight="400">1 issue</text>
-<line x1="-562" y1="1854" x2="598" y2="1854" stroke="#21262d"/>
-<text x="20" y="1878" fill="#8b949e" font-size="11.5" text-anchor="start" font-weight="400">1  Responsive tile grid (auto-fill, 630px minimum): 1 column when narrow (as here, with the sidebar expanded), 2 or 3 as the page widens, a column being added only while every issue title keeps room to read. Tile header = collapse chevron, project name, count, distribution bar, legend ('{count} {Status name}').</text>
-<text x="20" y="1898" fill="#8b949e" font-size="11.5" text-anchor="start" font-weight="400">2  Inside a tile: status pill + count in a left gutter, rows to the right, first 5 per status then 'Show N more'. Collapsed tiles keep the bar, so 'Collapse all' is the overview.</text>
-<text x="20" y="1918" fill="#8b949e" font-size="11.5" text-anchor="start" font-weight="400">3  Row = state icon, one-line title, repo#number (owner dropped unless ambiguous), time since update. No labels in this version.</text>
-<text x="20" y="1938" fill="#8b949e" font-size="11.5" text-anchor="start" font-weight="400">4  Sidebar toggle « / »: collapsed by default, remembered, works in List and Group-by-project alike. Collapsed it is an icon rail, so Assigned / Created / Mentioning stay one click away.</text>
+<text x="306" y="1811" fill="#e6edf3" font-size="14" text-anchor="start" font-weight="600">Customer Requests</text>
+<rect x="452" y="1797" width="26" height="18" rx="9" fill="#30363d"/>
+<text x="465" y="1810" fill="#c9d1d9" font-size="11" text-anchor="middle" font-weight="400">2</text>
+<rect x="508" y="1802" width="118.0" height="8" rx="2" fill="#a371f7"/>
+<text x="1220" y="1811" fill="#8b949e" font-size="11" text-anchor="start" font-weight="400">2 Accepted</text>
+<rect x="270" y="1844" width="1150" height="52" rx="8" fill="#0d1117" stroke="#30363d"/>
+<path d="M286,1864 l6,5 l-6,5" fill="none" stroke="#8b949e" stroke-width="1.6"/>
+<text x="306" y="1875" fill="#e6edf3" font-size="14" text-anchor="start" font-weight="600">No Project</text>
+<rect x="396" y="1861" width="26" height="18" rx="9" fill="#30363d"/>
+<text x="409" y="1874" fill="#c9d1d9" font-size="11" text-anchor="middle" font-weight="400">1</text>
+<rect x="508" y="1866" width="118.0" height="8" rx="2" fill="#6e7681"/>
+<text x="1220" y="1875" fill="#8b949e" font-size="11" text-anchor="start" font-weight="400">1 issue</text>
+<line x1="20" y1="1918" x2="1420" y2="1918" stroke="#21262d"/>
+<text x="20" y="1942" fill="#8b949e" font-size="11.5" text-anchor="start" font-weight="400">1  Responsive tile grid (auto-fill, 630px minimum): 1 column when narrow (as here, with the sidebar expanded), 2 or 3 as the page widens, a column being added only while every issue title keeps room to read. Tile header = collapse chevron, project name, count, distribution bar, legend ('{count} {Status name}').</text>
+<text x="20" y="1962" fill="#8b949e" font-size="11.5" text-anchor="start" font-weight="400">2  Inside a tile: status pill + count in a left gutter, rows to the right, first 5 per status then 'Show N more'. Collapsed tiles keep the bar, so 'Collapse all' is the overview.</text>
+<text x="20" y="1982" fill="#8b949e" font-size="11.5" text-anchor="start" font-weight="400">3  Row = state icon, one-line title, repo#number (owner dropped unless ambiguous), time since update. No labels in this version.</text>
+<text x="20" y="2002" fill="#8b949e" font-size="11.5" text-anchor="start" font-weight="400">4  Sidebar toggle « / »: collapsed by default, remembered, works in List and Group-by-project alike. Collapsed it is an icon rail, so Assigned / Created / Mentioning stay one click away.</text>
 </svg>
