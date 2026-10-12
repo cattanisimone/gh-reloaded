@@ -42,6 +42,7 @@ export function referencedPaths(m) {
   for (const w of m.web_accessible_resources || []) {
     for (const p of w.resources || []) add(p);
   }
+  for (const h of m.file_handlers || []) add(h.action);
   for (const r of m.declarative_net_request?.rule_resources || []) add(r.path);
   if (m.default_locale) add(`_locales/${m.default_locale}/messages.json`);
   return [...out];
@@ -161,5 +162,6 @@ test("every file the manifest references ships in the release zip", () => {
     referencedPaths({ web_accessible_resources: [{ resources: ["/images/*", "/a.js"] }] }).sort(),
     ["a.js", "images/*"],
   );
+  assert.deepEqual(referencedPaths({ file_handlers: [{ action: "/h.html" }, { action: "g.html" }] }).sort(), ["g.html", "h.html"]);
   assert.deepEqual(referencedPaths({ action: { default_popup: "p.html" }, options_page: "o.html" }).sort(), ["o.html", "p.html"]);
 });
