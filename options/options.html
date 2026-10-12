@@ -14,6 +14,7 @@
         <a href="#features">Features</a>
         <a href="#tokens-section">Tokens</a>
         <a href="#shortcuts-section">Shortcuts</a>
+        <a href="#advanced-section">Advanced</a>
         <a class="btn btn-secondary btn-sm" href="https://gh-reloaded.simone3-cattani.chatgpt.site/" target="_blank" rel="noopener">Website <span aria-hidden="true">↗</span></a>
       </nav>
     </header>
@@ -173,6 +174,33 @@
             <span class="spacer"></span>
             <p id="shortcuts-status" class="status" role="status"></p>
             <button id="save-shortcuts" type="button" class="btn btn-primary">Save shortcuts</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="advanced-section">
+        <div class="section-intro">
+          <div class="kicker">04 / Advanced</div>
+          <h2>Fine-tune the layout.</h2>
+          <p>
+            My Issues shows Projects as tiles and adds a column only while every tile keeps
+            room to read its issue titles. Set your own limits here; leave a field empty to keep the default.
+          </p>
+        </div>
+        <div class="section-body">
+          <div class="feature-row feature-row-fields">
+            <div class="feature-text">
+              <span class="feature-title">My Issues tile width</span>
+              <span class="feature-desc">Between 280 and 2000 px. The default minimum is 630 px and there is no maximum. A maximum below the minimum is ignored. Changes apply to open pages straight away.</span>
+            </div>
+            <div class="feature-fields">
+              <label>Minimum (px)<input id="ghmi-tile-min" type="number" min="280" max="2000" step="1" placeholder="630"></label>
+              <label>Maximum (px)<input id="ghmi-tile-max" type="number" min="280" max="2000" step="1" placeholder="no limit"></label>
+            </div>
+          </div>
+          <div class="actions">
+            <span class="spacer"></span>
+            <button id="ghmi-tile-reset" type="button" class="btn btn-secondary">Reset to defaults</button>
           </div>
         </div>
       </section>

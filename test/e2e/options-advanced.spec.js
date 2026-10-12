@@ -1,0 +1,54 @@
+// E2E: the Advanced section of the Settings page (My Issues tile width).
+// Empty or invalid input clears the setting; Reset to defaults clears both.
+import { test, expect, backgroundWorker } from "./support/extension.js";
+
+async function openOptions(context, page) {
+  const worker = await backgroundWorker(context);
+  const id = new URL(worker.url()).host;
+  await page.goto(`chrome-extension://${id}/options/options.html`);
+  return worker;
+}
+
+const stored = (worker) => worker.evaluate(() => chrome.storage.local.get(["ghmiTileMin", "ghmiTileMax"]));
+
+test("the Advanced section saves, validates and clears the tile widths", async ({ context, page }) => {
+  const worker = await openOptions(context, page);
+  await expect(page.locator('nav a[href="#advanced-section"]')).toBeVisible();
+  const min = page.locator("#ghmi-tile-min");
+  const max = page.locator("#ghmi-tile-max");
+
+  await min.fill("700");
+  await min.dispatchEvent("change");
+  await max.fill("900");
+  await max.dispatchEvent("change");
+  await expect.poll(() => stored(worker)).toEqual({ ghmiTileMin: 700, ghmiTileMax: 900 });
+
+  // A max below the min is rejected and the field cleared.
+  await max.fill("500");
+  await max.dispatchEvent("change");
+  await expect.poll(() => stored(worker)).toEqual({ ghmiTileMin: 700 });
+  await expect(max).toHaveValue("");
+
+  // Out-of-range values are clamped.
+  await min.fill("100");
+  await min.dispatchEvent("change");
+  await expect.poll(() => stored(worker)).toEqual({ ghmiTileMin: 280 });
+  await expect(min).toHaveValue("280");
+
+  // Junk clears.
+  await min.fill("");
+  await min.dispatchEvent("change");
+  await expect.poll(() => stored(worker)).toEqual({});
+});
+
+test("Reset to defaults clears both fields and both keys", async ({ context, page }) => {
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => chrome.storage.local.set({ ghmiTileMin: 700, ghmiTileMax: 900 }));
+  await openOptions(context, page);
+  await expect(page.locator("#ghmi-tile-min")).toHaveValue("700");
+  await expect(page.locator("#ghmi-tile-max")).toHaveValue("900");
+  await page.locator("#ghmi-tile-reset").click();
+  await expect(page.locator("#ghmi-tile-min")).toHaveValue("");
+  await expect(page.locator("#ghmi-tile-max")).toHaveValue("");
+  await expect.poll(() => stored(worker)).toEqual({});
+});

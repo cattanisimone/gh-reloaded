@@ -7,7 +7,7 @@
 // and the disabled-feature state. All names are invented.
 import fs from "node:fs";
 import path from "node:path";
-import { test, expect, routeGithub, routeApi, seedStorage, FIXTURES_DIR } from "./support/extension.js";
+import { test, expect, routeGithub, routeApi, seedStorage, backgroundWorker, FIXTURES_DIR } from "./support/extension.js";
 
 const ISSUES_URL = "https://github.com/issues";
 
@@ -648,4 +648,97 @@ test("a long owner/repo chip is capped so the title keeps its room", async ({ co
   const refs = tile(page, "No Project").locator(".ghmi-row-ref");
   await expect(refs.first()).toHaveAttribute("title", "acme-corporation/web-frontend#1234");
   for (const w of await refs.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width))) expect(w).toBeLessThan(160);
+});
+
+// Column count of the Project tile grid, plus the narrowest issue title of any
+// tile (the title is what a column must leave room for).
+async function gridMetrics(page) {
+  return page.evaluate(() => {
+    const grid = document.querySelector(".ghmi-grid");
+    const tiles = [...grid.querySelectorAll(".ghmi-tile")];
+    const cols = new Set(tiles.map((t) => Math.round(t.getBoundingClientRect().x))).size;
+    const titles = [...grid.querySelectorAll(".ghmi-row-title")].map((t) => t.getBoundingClientRect().width);
+    const rootStyle = getComputedStyle(grid);
+    return {
+      cols,
+      minTitle: titles.length ? Math.min(...titles) : Infinity,
+      titleMin: parseFloat(rootStyle.getPropertyValue("--ghmi-title-min")),
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    };
+  });
+}
+
+for (const sidebar of ["collapsed", "expanded"]) {
+  test(`the grid adds a column only while every title keeps room to read (sidebar ${sidebar})`, async ({ context, page }) => {
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await setup(context, page, { storage: { ghmiSidebar: sidebar } });
+    await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+    for (let width = 1024; width <= 2560; width += 64) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(async () => (await gridMetrics(page)).overflow, { message: `overflow at ${width}` }).toBeLessThanOrEqual(0);
+      const m = await gridMetrics(page);
+      expect(m.titleMin, "--ghmi-title-min is defined").toBeGreaterThan(0);
+      if (m.cols > 1) expect(m.minTitle, `shortest title at ${width}px`).toBeGreaterThanOrEqual(m.titleMin);
+    }
+  });
+}
+
+for (const sidebar of ["collapsed", "expanded"]) {
+  test(`the grid shows two columns at 1920px, not three (sidebar ${sidebar})`, async ({ context, page }) => {
+    await page.setViewportSize({ width: 1920, height: 900 });
+    await setup(context, page, { storage: { ghmiSidebar: sidebar } });
+    await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+    await expect.poll(async () => (await gridMetrics(page)).cols).toBe(2);
+  });
+}
+
+test("the grid is still responsive: one, two, then three columns as the page widens", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed" } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(1);
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(2);
+  await page.setViewportSize({ width: 2560, height: 900 });
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(3);
+});
+
+test("a phone-width page keeps one column and does not scroll sideways", async ({ context, page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed" } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  const m = await gridMetrics(page);
+  expect(m.cols).toBe(1);
+  expect(m.overflow).toBeLessThanOrEqual(0);
+});
+
+test("a saved minimum tile width changes the column count, live", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed" } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(2);
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => chrome.storage.local.set({ ghmiTileMin: 400 }));
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(3);
+  await worker.evaluate(() => chrome.storage.local.remove("ghmiTileMin"));
+  await expect.poll(async () => (await gridMetrics(page)).cols).toBe(2);
+});
+
+test("a saved maximum tile width limits how wide a tile grows", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed", ghmiTileMax: 700 } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  const widths = () => page.locator(".ghmi-tile").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
+  await expect.poll(async () => Math.max(...(await widths()))).toBeLessThanOrEqual(700);
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => chrome.storage.local.remove("ghmiTileMax"));
+  await expect.poll(async () => Math.max(...(await widths()))).toBeGreaterThan(700);
+});
+
+test("a maximum below the minimum is ignored", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await setup(context, page, { storage: { ghmiSidebar: "collapsed", ghmiTileMax: 500 } });
+  await expect(page.locator(".ghmi-grid .ghmi-tile").first()).toBeVisible();
+  const widths = await page.locator(".ghmi-tile").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
+  expect(Math.max(...widths)).toBeGreaterThan(500);
 });

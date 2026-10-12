@@ -18,6 +18,8 @@
   const STORAGE_ENABLED = "ghmiEnabled";
   const STORAGE_VIEW = "ghmiView"; // "list" | "grouped"
   const STORAGE_SIDEBAR = "ghmiSidebar"; // "collapsed" (default) | "expanded"
+  const STORAGE_TILE_MIN = "ghmiTileMin"; // px, optional (Settings > Advanced)
+  const STORAGE_TILE_MAX = "ghmiTileMax"; // px, optional
   const MESSAGE_TYPE_GROUPS = "GHMI_FETCH_GROUPS"; // matches background/my-issues.js
 
   function extensionAlive() {
@@ -420,6 +422,18 @@
     panel.appendChild(box);
   }
 
+  // The user's tile-width overrides, as custom properties on each grid. An
+  // unset value removes the property so the stylesheet's default applies.
+  let tileWidths = { min: null, max: null };
+  function applyTileWidths(scope = document) {
+    for (const grid of scope.querySelectorAll(".ghmi-grid")) {
+      for (const [prop, px] of [["--ghmi-tile-min", tileWidths.min], ["--ghmi-tile-max", tileWidths.max]]) {
+        if (px) grid.style.setProperty(prop, `${px}px`);
+        else grid.style.removeProperty(prop);
+      }
+    }
+  }
+
   function renderGroups(root, data, theme) {
     const panel = root.querySelector(".ghmi-panel");
     const { projects = [], noProject = [], totalCount = 0, fetchedCount = 0, truncated } = data;
@@ -434,6 +448,7 @@
       (noProject.length ? noProjectTileHtml(noProject, theme) : "") +
       `</div>`;
     panel.dataset.state = "done";
+    applyTileWidths(panel);
 
     const distinct = L.distinctCount(projects, noProject);
     root.dataset.summary = truncated
@@ -737,11 +752,13 @@
       teardown();
       return;
     }
-    const stored = await chrome.storage.local.get([STORAGE_ENABLED, STORAGE_VIEW, STORAGE_SIDEBAR]);
+    const stored = await chrome.storage.local.get([STORAGE_ENABLED, STORAGE_VIEW, STORAGE_SIDEBAR, STORAGE_TILE_MIN, STORAGE_TILE_MAX]);
     if (stored[STORAGE_ENABLED] === false) {
       teardown();
       return;
     }
+    tileWidths = L.tileWidths(stored[STORAGE_TILE_MIN], stored[STORAGE_TILE_MAX]);
+    applyTileWidths();
     const root = ensureRoot();
     const view = stored[STORAGE_VIEW] === "grouped" ? "grouped" : "list";
     applyView(root, view);
@@ -784,6 +801,11 @@
   chrome.storage.onChanged.addListener((changes) => {
     if (!extensionAlive()) return;
     if (changes[STORAGE_ENABLED] || changes[STORAGE_VIEW] || changes[STORAGE_SIDEBAR]) debouncedSync();
+    else if (changes[STORAGE_TILE_MIN] || changes[STORAGE_TILE_MAX]) {
+      // Reflow in place: no refetch, no re-render.
+      tileWidths = L.tileWidths(changes[STORAGE_TILE_MIN] ? changes[STORAGE_TILE_MIN].newValue : tileWidths.min, changes[STORAGE_TILE_MAX] ? changes[STORAGE_TILE_MAX].newValue : tileWidths.max);
+      applyTileWidths();
+    }
   });
 
   // Belt-and-suspenders SPA detection, as the other features do: Turbo
