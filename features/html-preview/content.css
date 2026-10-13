@@ -79,6 +79,14 @@ ul.ghhp-tab-list + ul {
      column (see content.js), not a boxed context — a left/right
      border here would just draw a stray vertical line down the page. */
   overflow: hidden;
+  /* The panel takes the code section's slot, whose parent may be a flex
+     row or a grid whose items size to their content: without these the
+     panel collapses to a thin strip instead of spanning the file view. */
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 100%;
+  grid-column: 1 / -1;
 }
 
 .ghhp-frame {

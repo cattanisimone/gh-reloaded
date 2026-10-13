@@ -205,3 +205,40 @@ test.describe("re-render restores controls (#16)", () => {
     await expect(page.locator('[class*="BlobContent-module__blobContentSection"]')).toBeVisible();
   });
 });
+
+// Layout regression: the panel takes the code section's slot, and in GitHub's
+// markup that slot can sit in a flex row or a grid whose items size to their
+// content. A panel left to auto-size there collapses into a thin strip.
+test.describe("blob preview layout", () => {
+  const WRAPPERS = {
+    "flex row": ["display:flex;flex-direction:row;align-items:flex-start", "section"],
+    "grid": ["display:grid;grid-template-columns:auto 1fr", "section"],
+  };
+  for (const [name, [style]] of Object.entries(WRAPPERS)) {
+    for (const width of [1280, 600]) {
+      test(`blob: Preview panel spans the file view in a ${name} at ${width}px`, async ({ context, page }) => {
+        await page.setViewportSize({ width, height: 800 });
+        await routeApi(context, CONTENTS_API);
+        await routeGithub(context, "blob.html", {
+          transform: (html) =>
+            html
+              .replace('<section class="BlobContent', `<div id="slot" style="${style}"><section class="BlobContent`)
+              .replace("</section>", "</section></div>"),
+        });
+        await page.goto("https://github.com/acme/web/blob/main/docs/index.html");
+        const panel = page.locator("#ghhp-blob-panel");
+        await expect(panel).toBeVisible();
+
+        const geo = await page.evaluate(() => {
+          const slot = document.getElementById("slot").getBoundingClientRect();
+          const p = document.getElementById("ghhp-blob-panel").getBoundingClientRect();
+          const f = document.querySelector("#ghhp-blob-panel iframe").getBoundingClientRect();
+          return { slot: slot.width, panel: p.width, frame: f.width, scroll: document.documentElement.scrollWidth, inner: innerWidth };
+        });
+        expect(geo.panel).toBeGreaterThanOrEqual(geo.slot - 1);
+        expect(geo.frame).toBeGreaterThanOrEqual(geo.slot - 2);
+        expect(geo.scroll).toBeLessThanOrEqual(geo.inner);
+      });
+    }
+  }
+});
