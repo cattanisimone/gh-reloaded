@@ -54,6 +54,12 @@ The Chrome Web Store caps the manifest `description` at 132 characters and the `
 - **Read from the environment, don't hardcode conventions.** e.g. a sub-issue's "done-ness" is GitHub's own issue `state`, not a guess at what a board's terminal Status column is *named* — every board can call it whatever it wants.
 - **Degrade gracefully.** A feature that depends on Projects v2, org-level custom fields, or issue dependencies should still render something useful when that data is absent (wrong token permissions, feature not enabled on that repo/org, etc.) rather than failing outright.
 - **Anchor on visible text over specific selectors when injecting into GitHub's own DOM.** GitHub's markup churns across redesigns; a heading's visible text is more likely to survive that than a class name or `data-testid`.
+- **Never depend on a CSS-module prefix.** GitHub's hashed class names move: `BlobContent-module__blobContentSection` became `blobContentSection__<hash>` and `index-module__topBarActions` became `topBarActions__<hash>`. Match the stable middle of the class (`[class*="blobContentSection"]`), or better a role, an ARIA attribute or visible text. Keep fixtures on real class names and cover both the old and the new naming in a test.
+- **A fallback must not hide a broken anchor.** When the anchor is missing, do nothing and retry on the next scan, or use a fallback the issue designed. Never insert into a different container because it happens to be there: it renders broken UI (a flex row squeezing a panel) instead of none. A designed fallback needs a test that asserts the primary anchor is used on current markup, so the fallback cannot mask an anchor break.
+- **Fixtures do not prove the live page works.** For a feature that injects into GitHub's markup, compare the real DOM and layout of the target page before and after the change (an anonymous Playwright probe is enough for public pages). If the page cannot be opened that way (private repositories, organization Projects), say so in the pull request under "Not verified on live github.com" and name what to look at.
+- **Map the sibling routes and views.** A control added to a page also exists on its neighbours (blob / blame / raw, Conversation / Files changed, table / board views). Decide what it does on each, keep a toggle set complete on all of them (Preview | Code | Blame everywhere), and test A → B → A plus browser back and forward.
+- **An automatic default never overrides an explicit choice.** Auto-selecting a tab on arrival is fine; doing it right after the user clicked the opposite tab is not.
+- **Sweep for the same defect.** When you fix a selector or layout break, search the repository for the same pattern (`grep -rn "module__" features/`) and fix the other occurrences in the same pull request when they are small, or list them under "Follow-ups".
 
 ## Keep docs in sync with features
 
@@ -73,6 +79,7 @@ A change is ready to hand off when all of these hold:
 
 - [ ] Every acceptance criterion in the issue is met, or the PR explains which one is not and why.
 - [ ] Tests pass — `npm test` runs the unit and e2e suites (see [Running the tests](#running-the-tests)).
+- [ ] A change that injects into GitHub's markup was checked on the live page, or the PR says it was not (see the design rules above).
 - [ ] `README.md`'s "Features" section is updated when a feature's behavior changes.
 - [ ] The feature's `screenshots/` mockup is refreshed when the change is visible.
 - [ ] `PRIVACY.md` is updated when stored data or requested permissions change.
