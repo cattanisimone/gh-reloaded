@@ -349,12 +349,12 @@ body.ghsm-active .board-view-column-card.ghsm-flag-blocked {
 
 /* Bottleneck column: outlined, with a small label from the reason text
    content.js puts on the column. */
-body.ghsm-active .board-view-column[data-ghsm-bottleneck] {
+body.ghsm-active [data-ghsm-bottleneck] {
   outline: 2px dashed #8250df;
   outline-offset: 2px;
   border-radius: 8px;
 }
-body.ghsm-active .board-view-column[data-ghsm-bottleneck]::before {
+body.ghsm-active [data-ghsm-bottleneck]::before {
   content: "Bottleneck · " attr(data-ghsm-reason);
   display: block;
   margin-bottom: 4px;
@@ -425,7 +425,7 @@ body.ghsm-active .ghsm-focus {
     color: #ffa657;
   }
   #ghsm-bar .ghsm-sum-bottleneck,
-  body.ghsm-active .board-view-column[data-ghsm-bottleneck]::before {
+  body.ghsm-active [data-ghsm-bottleneck]::before {
     background: transparent;
     border-color: #8957e5;
     color: #d2a8ff;
@@ -440,7 +440,7 @@ body.ghsm-active .ghsm-focus {
   body.ghsm-active .board-view-column-card.ghsm-flag-blocked {
     background-color: #3c1618 !important;
   }
-  body.ghsm-active .board-view-column[data-ghsm-bottleneck] {
+  body.ghsm-active [data-ghsm-bottleneck] {
     outline-color: #8957e5;
   }
 }

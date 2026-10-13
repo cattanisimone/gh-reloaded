@@ -539,6 +539,8 @@ test("finds columns and cards in [data-board-column] frames, with no .board-view
   // The "In review" frame has no visible heading: its name is the attribute's value.
   await expect(page.locator("#ghsm-summary .ghsm-sum-bottleneck")).toHaveText("1 bottleneck");
   await expect(page.locator('[data-board-column="In review"][data-ghsm-bottleneck]')).toHaveCount(1);
+  // ...and the bottleneck is drawn, not only detected.
+  await expect(page.locator('[data-board-column="In review"]')).toHaveCSS("outline-style", "dashed");
 });
 
 test("still works on the previous class naming (Board-module__boardContainer__…)", async ({ context, page }) => {

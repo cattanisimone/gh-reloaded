@@ -19,11 +19,24 @@ test("leaves the board alone when the feature is disabled", async ({ context, pa
   await expect(page.locator("body.ghfw-active")).toHaveCount(0);
 });
 
+// The feature's CSS (not just its JS measurement) must find the board: the
+// container's own right edge sits on the window's right edge. The fixtures
+// give the container no width of its own (the test pins it to 400px), so without the rules it falls short.
+const expectReachesRightEdge = async (page) => {
+  await page.evaluate(() => { document.querySelector('[class*="boardContainer__"]').style.width = "400px"; });
+  await expect
+    .poll(() => page.evaluate(() => {
+      const r = document.querySelector('[class*="boardContainer__"]').getBoundingClientRect();
+      return Math.abs(window.innerWidth - r.right) <= 2;
+    }))
+    .toBe(true);
+};
+
 test("stretches the board container to the window's right edge", async ({ context, page }) => {
   await routeGithub(context, "board.html");
   await page.goto(BOARD_URL);
   await expect(page.locator("body.ghfw-active")).toHaveCount(1);
-  await expect(page.locator('[class*="boardContainer__"]')).toHaveCSS("margin-right", /^-?\d/);
+  await expectReachesRightEdge(page);
   await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--ghfw-board-left"))).not.toBe("");
 });
 
@@ -31,6 +44,7 @@ test("stretches a grouped board (Group by)", async ({ context, page }) => {
   await routeGithub(context, "board-standup-grouped.html");
   await page.goto(BOARD_URL);
   await expect(page.locator("body.ghfw-active")).toHaveCount(1);
+  await expectReachesRightEdge(page);
   await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--ghfw-board-left"))).not.toBe("");
 });
 
@@ -53,6 +67,7 @@ test("measures the board offset next to an open slice-by panel", async ({ contex
 test("still stretches a board on the previous class naming", async ({ context, page }) => {
   await routeGithub(context, "board-legacy-classes.html");
   await page.goto(BOARD_URL);
+  await expectReachesRightEdge(page);
   await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--ghfw-board-left"))).not.toBe("");
 });
 
