@@ -73,13 +73,29 @@
   // right after the second-to-last one — i.e. between those two groups
   // — rather than trying to append at the very end, so it doesn't end
   // up wedged inside the last group or after the "..." menu.
+  //
+  // GitHub's CSS-module classes are matched by their local name plus
+  // `__` (today's `topBarActions__x`), with the previous
+  // `index-module__topBarActions--x` naming kept as a fallback. If the
+  // groups themselves aren't recognisable, the visible "Insights" button
+  // still identifies the group to insert after.
+  const TOP_BAR_SELECTOR = '[class*="topBarActions__"], [class*="index-module__topBarActions"]';
+
+  function isButtonGroup(el) {
+    const cls = (el.className || "").toString();
+    return cls.includes("ButtonGroup__") || cls.includes("index-module__ButtonGroup");
+  }
+
   function findTopBarInsertionPoint() {
-    const topBar = document.querySelector('[class*="index-module__topBarActions"]');
+    const topBar = document.querySelector(TOP_BAR_SELECTOR);
     if (!topBar) return null;
-    const groups = Array.from(topBar.children).filter((el) =>
-      (el.className || "").toString().includes("index-module__ButtonGroup")
+    const groups = Array.from(topBar.children).filter(isButtonGroup);
+    if (groups.length >= 2) return groups[groups.length - 2];
+    return (
+      Array.from(topBar.children).find((child) =>
+        Array.from(child.querySelectorAll("button, a")).some((b) => b.textContent.trim() === "Insights")
+      ) || null
     );
-    return groups.length >= 2 ? groups[groups.length - 2] : null;
   }
 
   function buildRoot(shortcuts) {
