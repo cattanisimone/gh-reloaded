@@ -69,6 +69,10 @@ test("still stretches a board on the previous class naming", async ({ context, p
   await page.goto(BOARD_URL);
   await expectReachesRightEdge(page);
   await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--ghfw-board-left"))).not.toBe("");
+  // The old column frame class (column-frame-module__Box__) still gets the flexible sizing.
+  await expect
+    .poll(() => page.evaluate(() => getComputedStyle(document.querySelector('[class*="column-frame-"][class*="Box__"]')).minWidth))
+    .toBe("140px");
 });
 
 test("re-applies full width after the board re-renders", async ({ context, page }) => {

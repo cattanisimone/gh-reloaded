@@ -50,7 +50,8 @@ body.ghfw-active [class*="horizontalGroupHeader__"] {
   min-width: 0 !important;
 }
 
-body.ghfw-active [class*="ColumnFrame__"] {
+body.ghfw-active [class*="ColumnFrame__"],
+body.ghfw-active [class*="column-frame-"][class*="Box__"] {
   flex: 1 1 0 !important;
   width: 0 !important;
   min-width: 140px !important;

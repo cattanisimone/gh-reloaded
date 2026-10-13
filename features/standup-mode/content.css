@@ -165,7 +165,8 @@ body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupContainer__"] {
 body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupHeader__"] {
   min-width: 0 !important;
 }
-body.ghsm-active:not(.ghfw-active) [class*="ColumnFrame__"] {
+body.ghsm-active:not(.ghfw-active) [class*="ColumnFrame__"],
+body.ghsm-active:not(.ghfw-active) [class*="column-frame-"][class*="Box__"] {
   flex: 1 1 0 !important;
   width: 0 !important;
   min-width: 140px !important;
