@@ -28,9 +28,15 @@
     <main>
       <!-- View-tabs bar. The selected tab's octicon-project glyph is how
            both board features recognize a Board (vs Table/Roadmap). -->
-      <div class="prc-PageLayout-index-module__topBarActions--ab12">
-        <div class="prc-ButtonGroup-index-module__ButtonGroup--c1"><button>Insights</button><button>Workflows</button></div>
-        <div class="prc-ButtonGroup-index-module__ButtonGroup--c2"><button>Project details</button><button>⋯</button></div>
+      <!-- Project top bar, as GitHub serves it today: CSS-module classes
+           without the index-module__ prefix. Four children: the status
+           update pill, the avatar list, then the two button groups that
+           quick-create inserts between. -->
+      <div class="topBarActions__Ab12Cd">
+        <button class="statusUpdatePill__Ef34Gh">Add status update</button>
+        <div class="avatarList__Ij56Kl"><span>+3</span></div>
+        <div class="ButtonGroup__Mn78Op"><button>Insights</button><button>Workflows</button></div>
+        <div class="ButtonGroup__Mn78Op"><button>Project details</button><button>⋯</button></div>
       </div>
 
       <nav aria-label="Select view">
