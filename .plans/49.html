@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #49 quick-create top bar</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;word-break:break-word} .scroll{overflow-x:auto}
+</style></head><body><main>
+  <h1><a href="https://github.com/cattanisimone/gh-reloaded/issues/49">#49</a> · Quick-create buttons fall back to floating on Projects pages</h1>
+  <p class="meta">Size: <b>simple</b> (a selector fix in one function, no new UI, permission or storage) · Goal: put the buttons back in the project top bar on GitHub's current markup.</p>
+
+  <h2>What changes for users</h2>
+  <ul>
+    <li>The quick-create buttons show up in the project top bar again, between Insights/Workflows and Project details/"…".</li>
+    <li>They still float at the bottom-right only when no top bar can be found.</li>
+    <li>Nothing changes visually compared with <code>screenshots/quick-create.svg</code>, so there is no mockup.</li>
+  </ul>
+
+  <h2>How it works</h2>
+  <div class="scroll"><svg viewBox="0 0 860 200" width="100%" role="img" aria-label="anchor lookup order" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="13">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+    <rect x="10" y="20" width="200" height="60" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="110" y="45" text-anchor="middle">Top bar</text><text x="110" y="64" text-anchor="middle" fill="#59636e" font-size="11">topBarActions__ or index-module__</text>
+    <rect x="260" y="20" width="250" height="60" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="385" y="45" text-anchor="middle">Second-to-last ButtonGroup</text><text x="385" y="64" text-anchor="middle" fill="#59636e" font-size="11">ButtonGroup__ or index-module__</text>
+    <rect x="560" y="20" width="290" height="60" rx="6" fill="#dafbe1" stroke="#1a7f37"/>
+    <text x="705" y="55" text-anchor="middle">Insert after it (in the top bar)</text>
+    <rect x="260" y="120" width="250" height="60" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="385" y="145" text-anchor="middle">Child holding the "Insights"</text><text x="385" y="164" text-anchor="middle">button (visible text)</text>
+    <rect x="560" y="120" width="290" height="60" rx="6" fill="#ffebe9" stroke="#d1242f"/>
+    <text x="705" y="155" text-anchor="middle">Floating fallback (is-floating)</text>
+    <line x1="210" y1="50" x2="258" y2="50" stroke="#59636e" marker-end="url(#a)"/>
+    <line x1="510" y1="50" x2="558" y2="50" stroke="#59636e" marker-end="url(#a)"/><text x="534" y="42" text-anchor="middle" font-size="11" fill="#1a7f37">≥2</text>
+    <line x1="385" y1="80" x2="385" y2="118" stroke="#59636e" marker-end="url(#a)"/><text x="392" y="104" font-size="11" fill="#59636e">fewer than 2</text>
+    <line x1="510" y1="150" x2="558" y2="150" stroke="#59636e" marker-end="url(#a)"/><text x="534" y="142" text-anchor="middle" font-size="11" fill="#59636e">none</text>
+    <path d="M510 135 Q540 95 600 82" fill="none" stroke="#59636e" marker-end="url(#a)"/><text x="548" y="102" font-size="11" fill="#1a7f37">found</text>
+    <path d="M110 80 V190 H540 Q552 190 558 172" fill="none" stroke="#59636e" stroke-dasharray="4 3" marker-end="url(#a)"/><text x="120" y="184" font-size="11" fill="#59636e">no top bar (after 4 s wait)</text>
+  </svg></div>
+  <p>Every class is matched by its local name followed by <code>__</code> (today's naming), with the old <code>index-module__</code> prefix kept as a fallback. This is the same rule #46 applied to the board features.</p>
+
+  <h2>Changes by file</h2>
+  <table><tr><th>File</th><th>Change</th><th>Why</th></tr>
+    <tr><td><code>features/quick-create/content.js</code></td><td><code>findTopBarInsertionPoint</code>: new selectors plus the fallback that finds the "Insights" button by its visible text</td><td>The fix</td></tr>
+    <tr><td><code>test/e2e/fixtures/board.html</code></td><td>Top bar re-synced to the current markup: <code>topBarActions__</code>, status pill, avatar list, two <code>ButtonGroup__</code></td><td>The fixture was stale, so the bug went unnoticed</td></tr>
+    <tr><td><code>test/e2e/quick-create.spec.js</code></td><td>Placement tests (current and legacy markup), floating fallback</td><td>Covers the acceptance criteria</td></tr>
+    <tr><td><code>test/unit/module-classes.test.js</code></td><td>Also checks <code>quick-create/content.js</code></td><td>Stops a prefix-only selector from coming back</td></tr>
+    <tr><td><code>features/quick-create/README.md</code>, <code>test/e2e/fixtures/README.md</code></td><td>Known-limitations line, fixture table</td><td>Keep the docs accurate</td></tr>
+  </table>
+
+  <h2>Data, permissions, privacy</h2><p>None.</p>
+
+  <h2>Test plan</h2>
+  <table><tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
+    <tr><td>Buttons in the top bar between the two groups on the current markup</td><td>e2e, <code>board.html</code></td><td>places the buttons between the Insights and Project details groups</td></tr>
+    <tr><td>No dependency on the <code>index-module__</code> prefix</td><td>unit + e2e</td><td><code>module-classes.test.js</code>; finds the top bar by the Insights text when the groups are unrecognisable</td></tr>
+    <tr><td>Floating fallback without a top bar</td><td>e2e, <code>board.html</code> with the bar stripped</td><td>falls back to a floating button when the top bar is missing</td></tr>
+    <tr><td>Old prefixed markup still works</td><td>e2e, <code>board-legacy-classes.html</code></td><td>places the buttons in the top bar on the previous class naming</td></tr>
+    <tr><td>README / screenshot accurate</td><td>review</td><td>No layout change; limitation line updated</td></tr>
+  </table>
+
+  <h2>Risks and open questions</h2>
+  <ul><li>The live class names come from the issue's inspection, not a fresh capture (default: trust it; the "Insights" text fallback covers small differences).</li></ul>
+
+  <h2>Out of scope</h2>
+  <ul><li>Board dependency arrows still use <code>view-navigation-module__</code>, which breaks for the same reason (listed as a follow-up).</li></ul>
+</main></body></html>
