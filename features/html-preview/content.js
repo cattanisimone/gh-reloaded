@@ -249,10 +249,10 @@
   // what actually goes into the fetch — background/html-preview.js
   // resolves the real split against the Contents API.
   function parseBlobUrl() {
-    const m = location.pathname.match(/^\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
+    const m = location.pathname.match(/^\/([^/]+)\/([^/]+)\/(blob|blame)\/(.+)$/);
     if (!m) return null;
-    const segments = m[3].split("/").map(decodeURIComponent);
-    return { owner: m[1], repo: m[2], ref: segments[0], path: segments.slice(1).join("/"), segments };
+    const segments = m[4].split("/").map(decodeURIComponent);
+    return { owner: m[1], repo: m[2], route: m[3], ref: segments[0], path: segments.slice(1).join("/"), segments };
   }
 
   // GitHub's own "Code | Preview" toggle for Markdown files is exactly
@@ -348,7 +348,11 @@
 
   function injectBlobPreviewTab() {
     const info = parseBlobUrl();
-    const key = info ? `${info.owner}/${info.repo}/${info.ref}/${info.path}` : null;
+    const key = info ? `${info.route}:${info.owner}/${info.repo}/${info.ref}/${info.path}` : null;
+    // The Blame page keeps the same three-way toggle as the blob page, so
+    // Preview doesn't vanish from it — but there it is only a link back to
+    // the blob route (which opens on Preview), with no panel of its own.
+    const isBlame = info?.route === "blame";
 
     if (!info || !isHtmlPath(info.path)) {
       blobKey = null;
@@ -371,7 +375,7 @@
     if (
       blobKey === key &&
       ourTab &&
-      document.getElementById("ghhp-blob-panel") &&
+      (isBlame || document.getElementById("ghhp-blob-panel")) &&
       blobTabs?.code.isConnected &&
       blobTabs?.blame.isConnected
     ) {
@@ -447,6 +451,24 @@
     // through an adjacent-sibling selector.
     tabs.container.insertAdjacentElement("beforebegin", ourList);
     joinTabLists(ourList);
+
+    if (isBlame) {
+      // Cloned from the Blame tab, which is the selected one on this page.
+      tabItem.removeAttribute("data-selected");
+      tab.removeAttribute("aria-current");
+      tab.setAttribute("aria-pressed", "false");
+      const blobPath = `/${info.owner}/${info.repo}/blob/${info.segments.map(encodeURIComponent).join("/")}`;
+      if (tab.tagName === "A") {
+        // A real link: GitHub's own client-side navigation handles it.
+        tab.setAttribute("href", blobPath);
+      } else {
+        tab.addEventListener("click", (e) => {
+          e.preventDefault();
+          location.assign(blobPath);
+        });
+      }
+      return;
+    }
 
     // The actual code content lives in its own full-width section below
     // the header/toolbar row the tabs sit in (confirmed from GitHub's

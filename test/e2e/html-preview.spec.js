@@ -293,7 +293,9 @@ test.describe("Blame -> Code keeps the code view", () => {
     await routeGithub(context, "blob.html");
     await page.goto(BLAME);
     await page.waitForTimeout(SCAN_MS);
-    await expect(page.locator("#ghhp-blob-tab")).toHaveCount(0);
+    // The Blame page keeps all three options, but Preview has no panel there.
+    await expect(page.locator("#ghhp-blob-tab")).toBeVisible();
+    await expect(page.locator("#ghhp-blob-panel")).toHaveCount(0);
 
     await page.evaluate(() => {
       const code = [...document.querySelectorAll('ul[aria-label] [role="tab"]')].find((t) => t.textContent.trim() === "Code");
@@ -324,3 +326,44 @@ test.describe("Blame -> Code keeps the code view", () => {
   });
 });
 
+test.describe("Preview stays available on the Blame page", () => {
+  const BLAME = "https://github.com/acme/web/blame/main/docs/index.html";
+
+  test("blame: the three-way toggle is Preview | Code | Blame, with Blame selected", async ({ context, page }) => {
+    await routeApi(context, CONTENTS_API);
+    await routeGithub(context, "blob.html");
+    await page.goto(BLAME);
+
+    const tab = page.locator("#ghhp-blob-tab");
+    await expect(tab).toBeVisible();
+    await expect(tab).toContainText("Preview");
+    await expect(tab).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator("ul.ghhp-tab-list")).toHaveCount(1);
+    await expect(page.locator("#ghhp-blob-panel")).toHaveCount(0);
+    // It links back to the blob route, which opens on Preview.
+    await expect(tab).toHaveAttribute("href", "/acme/web/blob/main/docs/index.html");
+  });
+
+  test("blame: no Preview tab for a non-HTML file", async ({ context, page }) => {
+    await routeApi(context, CONTENTS_API);
+    await routeGithub(context, "blob.html");
+    await page.goto("https://github.com/acme/web/blame/main/README.md");
+    await page.waitForTimeout(SCAN_MS);
+    await expect(page.locator("#ghhp-blob-tab")).toHaveCount(0);
+  });
+
+  test("blame: going back to the blob route replaces the link with the real tab and panel", async ({ context, page }) => {
+    await routeApi(context, CONTENTS_API);
+    await routeGithub(context, "blob.html");
+    await page.goto(BLAME);
+    await expect(page.locator("#ghhp-blob-tab")).toBeVisible();
+
+    await page.evaluate(() => {
+      history.pushState({}, "", "/acme/web/blob/main/docs/index.html");
+      document.dispatchEvent(new Event("turbo:load"));
+    });
+    await expect(page.locator("#ghhp-blob-panel")).toBeVisible({ timeout: 6000 });
+    await expect(page.locator("#ghhp-blob-tab")).toHaveCount(1);
+    await expect(page.locator("ul.ghhp-tab-list")).toHaveCount(1);
+  });
+});
