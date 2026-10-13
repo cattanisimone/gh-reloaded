@@ -525,3 +525,56 @@ test("compacts the column frames of a grouped board: no description, one pill, o
     expect(Math.abs(pill.y + pill.height / 2 - (name.y + name.height / 2))).toBeLessThan(10);
   }
 });
+
+test("finds columns and cards in [data-board-column] frames, with no .board-view-column", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-data-columns.html");
+  await page.goto(BOARD_URL);
+
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator(".board-view-column")).toHaveCount(0);
+  await expect(page.locator("#ghsm-summary .ghsm-sum-stale")).toHaveText("1 stale in review");
+  await expect(card(page, 4).locator(".ghsm-chip-stale")).toHaveText("Stale");
+  // The "In review" frame has no visible heading: its name is the attribute's value.
+  await expect(page.locator("#ghsm-summary .ghsm-sum-bottleneck")).toHaveText("1 bottleneck");
+  await expect(page.locator('[data-board-column="In review"][data-ghsm-bottleneck]')).toHaveCount(1);
+});
+
+test("still works on the previous class naming (Board-module__boardContainer__…)", async ({ context, page }) => {
+  await seedStorage(context, TOKEN);
+  await routeApi(context, API);
+  await routeGithub(context, "board-legacy-classes.html");
+  await page.goto(BOARD_URL);
+
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("#ghsm-summary .ghsm-sum-stale")).toHaveText("1 stale in review");
+});
+
+test("offers the entry button again after the board re-renders and the view changes", async ({ context, page }) => {
+  await routeGithub(context, "board-standup.html");
+  await page.goto(BOARD_URL);
+  await expect(page.locator("#ghsm-enter")).toHaveCount(1);
+
+  // GitHub swaps the view-tabs bar and the board on in-app navigation.
+  await page.evaluate(() => {
+    const nav = document.querySelector('nav[aria-label="Select view"]');
+    const copy = nav.cloneNode(true);
+    nav.replaceWith(copy);
+    history.pushState({}, "", "/orgs/acme/projects/7/views/2");
+  });
+  await expect(page.locator("#ghsm-enter")).toHaveCount(1);
+});
+
+test("offers no entry button on a Table view", async ({ context, page }) => {
+  await routeGithub(context, "board-standup.html");
+  await page.route("**/orgs/acme/projects/7", (r) => r.fallback());
+  await page.goto(BOARD_URL);
+  await expect(page.locator("#ghsm-enter")).toHaveCount(1);
+  await page.evaluate(() => {
+    const svg = document.querySelector('nav[aria-label="Select view"] [aria-selected="true"] svg');
+    svg.setAttribute("class", "octicon octicon-table");
+  });
+  await page.evaluate(() => history.pushState({}, "", "/orgs/acme/projects/7/views/3"));
+  await expect(page.locator("#ghsm-enter")).toHaveCount(0);
+});
