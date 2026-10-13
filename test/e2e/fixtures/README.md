@@ -10,6 +10,8 @@ These are the saved GitHub pages the end-to-end tests run against. Serving them 
 | `board.html` | A Projects v2 **Board** (kanban) view | quick-create, board-dependencies, full-width-board, standup-mode (disabled state, entry button) |
 | `board-standup.html` | A Projects v2 **Board** view with five cards across Todo / In progress / In review, plus the project title row, filter bar, View button and full column headers (dot, count pill, "..." menu, field-sum pill, description) | standup-mode (signals, hidden chrome, compact headers) |
 | `board-standup-grouped.html` | A **Board** view using Group by: two horizontal sections that repeat the same three columns | standup-mode (column positions, group headers) |
+| `board-data-columns.html` | The same board with columns as `[data-board-column]` frames and no `.board-view-column`, one frame without a visible heading | standup-mode (columns and cards on current markup) |
+| `board-legacy-classes.html` | The same board with the previous `Board-module__…--hash` class naming | standup-mode (old build keeps working) |
 | `pr-files.html` | A pull request "Files changed" page with one changed `.html` file | html-preview (PR globe button) |
 | `blob.html` | A single-file blob page for an `.html` file | html-preview (blob Preview tab) |
 | `pr-files-lazy.html` | A "Files changed" page whose file path is not yet resolvable | html-preview #16 regression |
@@ -18,14 +20,14 @@ These are the saved GitHub pages the end-to-end tests run against. Serving them 
 
 ## Capture date and how these were produced
 
-**Last synced against github.com's live markup: 2026-10-01.**
+**Last synced against github.com's live markup: 2026-10-13.**
 
 These are **trimmed, hand-maintained** representations, not raw `Save As` captures. Two reasons the tests can't use literal captures:
 
 - The pages these features target — Projects boards, the redesigned PR diff viewer, blob pages — are authenticated single-page-app shells that render their real DOM client-side after a sequence of API calls. A saved HTML file of one is an empty skeleton; the markup the content scripts anchor on only exists after that JS runs.
 - The suite must be deterministic and runnable with no GitHub token (an acceptance criterion of #18). A fixture frozen to just the anchors each content script keys on gives that; a live page would not.
 
-So each fixture keeps only the structure the content scripts actually look for — and deliberately follows the same "anchor on visible text, not on churny selectors" rule the features themselves follow (see `AGENTS.md`). Where a feature *does* match a CSS-module class by prefix (e.g. `[class*="Board-module__boardContainer"]`), the fixture carries that class with GitHub's build-hash suffix dropped, mirroring what the content script matches. Each file starts with an HTML comment listing the anchors it must preserve.
+So each fixture keeps only the structure the content scripts actually look for — and deliberately follows the same "anchor on visible text, not on churny selectors" rule the features themselves follow (see `AGENTS.md`). Where a feature *does* match a CSS-module class by prefix (e.g. `[class*="boardContainer__"]`), the fixture carries that class in the form GitHub serves today (`boardContainer__xD7rX8`); `board-legacy-classes.html` keeps the previous `Board-module__boardContainer--b1` form, which the content scripts still match as a fallback. Each file starts with an HTML comment listing the anchors it must preserve.
 
 ## How to refresh them
 

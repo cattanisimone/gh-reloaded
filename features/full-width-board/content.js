@@ -38,10 +38,10 @@
   // those are what put it there — and sizing to the viewport's right
   // edge from that point sidesteps the symmetry assumption entirely.
   const LEFT_VAR = "--ghfw-board-left";
-  const SLICER_PANEL_SELECTOR = '[class*="slicer-items-module__SlicerPanel"]';
+  const SLICER_PANEL_SELECTOR = '[class*="SlicerPanel__"], [class*="slicer-items-module__SlicerPanel"]';
 
   function updateBoardOffset() {
-    const container = document.querySelector('[class*="Board-module__boardContainer"]');
+    const container = document.querySelector('[class*="boardContainer__"], [class*="Board-module__boardContainer"]');
     if (!container) return;
     const left = container.getBoundingClientRect().left;
     document.documentElement.style.setProperty(LEFT_VAR, `${Math.max(left, 0)}px`);

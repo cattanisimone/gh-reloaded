@@ -11,6 +11,7 @@
    symmetry assumption entirely. `!important` because this is fighting a
    live React app's own CSS-module rules, not page author styles we
    control. */
+body.ghfw-active [class*="boardContainer__"],
 body.ghfw-active [class*="Board-module__boardContainer"] {
   width: calc(100vw - var(--ghfw-board-left, 0px)) !important;
   max-width: calc(100vw - var(--ghfw-board-left, 0px)) !important;
@@ -33,8 +34,11 @@ body.ghfw-active [class*="Board-module__boardContainer"] {
    room `boardContainer` now has, which is what lets each column's
    flex-grow below have real extra space to fill instead of sitting
    at its bare minimum. */
+body.ghfw-active [class*="boardView__"],
 body.ghfw-active [class*="Board-module__boardView"],
+body.ghfw-active [class*="horizontalGroupAreaContainer__"],
 body.ghfw-active [class*="Board-module__horizontalGroupAreaContainer"],
+body.ghfw-active [class*="horizontalGroupContainer__"],
 body.ghfw-active [class*="Board-module__horizontalGroupContainer"] {
   min-width: 0 !important;
   width: 100% !important;
@@ -46,11 +50,13 @@ body.ghfw-active [class*="Board-module__horizontalGroupContainer"] {
    for the header, leaving the button squeezed or knocked out of
    place. Left to size itself naturally, its inner
    horizontalGroupContainer (covered above) still expands to fill it. */
+body.ghfw-active [class*="horizontalGroupHeader__"],
 body.ghfw-active [class*="Board-module__horizontalGroupHeader"] {
   min-width: 0 !important;
 }
 
-body.ghfw-active [class*="column-frame-module__Box__"] {
+body.ghfw-active [class*="ColumnFrame__"],
+body.ghfw-active [class*="column-frame-"][class*="Box__"] {
   flex: 1 1 0 !important;
   width: 0 !important;
   min-width: 140px !important;

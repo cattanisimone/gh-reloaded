@@ -10,6 +10,7 @@
    board-dependencies feature; declare it here too so the button still
    anchors correctly on a board where that feature's stylesheet isn't
    present. Harmless when both set it. */
+[class*="ViewNavigationContainer__"],
 [class*="view-navigation-module__ViewNavigationContainer"] {
   position: relative;
 }
@@ -69,7 +70,7 @@ body.ghsm-active header[role="banner"],
 body.ghsm-active .js-header-wrapper,
 body.ghsm-active .gh-header-shadow,
 body.ghsm-active [class*="topBarActions"],
-body.ghsm-active [class*="PageLayout-module__"][class*="Header"],
+body.ghsm-active [class*="PageLayout-"][class*="Header"],
 body.ghsm-active nav[aria-label="Select view"] {
   display: none !important;
 }
@@ -147,6 +148,7 @@ body.ghsm-active [data-ghsm-frame] > [data-ghsm-float] {
    way Full-width board does — but only when that feature is NOT already
    active, so the two never fight. Measured left offset comes from
    content.js (--ghsm-board-left). */
+body.ghsm-active:not(.ghfw-active) [class*="boardContainer__"],
 body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardContainer"] {
   width: calc(100vw - var(--ghsm-board-left, 0px)) !important;
   max-width: calc(100vw - var(--ghsm-board-left, 0px)) !important;
@@ -156,16 +158,21 @@ body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardContainer"] {
   padding-right: 8px !important;
   box-sizing: border-box !important;
 }
+body.ghsm-active:not(.ghfw-active) [class*="boardView__"],
 body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardView"],
+body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupAreaContainer__"],
 body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupAreaContainer"],
+body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupContainer__"],
 body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupContainer"] {
   min-width: 0 !important;
   width: 100% !important;
 }
+body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupHeader__"],
 body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupHeader"] {
   min-width: 0 !important;
 }
-body.ghsm-active:not(.ghfw-active) [class*="column-frame-module__Box__"] {
+body.ghsm-active:not(.ghfw-active) [class*="ColumnFrame__"],
+body.ghsm-active:not(.ghfw-active) [class*="column-frame-"][class*="Box__"] {
   flex: 1 1 0 !important;
   width: 0 !important;
   min-width: 140px !important;
@@ -349,12 +356,12 @@ body.ghsm-active .board-view-column-card.ghsm-flag-blocked {
 
 /* Bottleneck column: outlined, with a small label from the reason text
    content.js puts on the column. */
-body.ghsm-active .board-view-column[data-ghsm-bottleneck] {
+body.ghsm-active [data-ghsm-bottleneck] {
   outline: 2px dashed #8250df;
   outline-offset: 2px;
   border-radius: 8px;
 }
-body.ghsm-active .board-view-column[data-ghsm-bottleneck]::before {
+body.ghsm-active [data-ghsm-bottleneck]::before {
   content: "Bottleneck · " attr(data-ghsm-reason);
   display: block;
   margin-bottom: 4px;
@@ -425,7 +432,7 @@ body.ghsm-active .ghsm-focus {
     color: #ffa657;
   }
   #ghsm-bar .ghsm-sum-bottleneck,
-  body.ghsm-active .board-view-column[data-ghsm-bottleneck]::before {
+  body.ghsm-active [data-ghsm-bottleneck]::before {
     background: transparent;
     border-color: #8957e5;
     color: #d2a8ff;
@@ -440,7 +447,7 @@ body.ghsm-active .ghsm-focus {
   body.ghsm-active .board-view-column-card.ghsm-flag-blocked {
     background-color: #3c1618 !important;
   }
-  body.ghsm-active .board-view-column[data-ghsm-bottleneck] {
+  body.ghsm-active [data-ghsm-bottleneck] {
     outline-color: #8957e5;
   }
 }

@@ -38,13 +38,30 @@
   // Same board-only mounting anchor the other board features use — a
   // stable part of every project page's chrome, matched by class prefix
   // since the build-hash suffix churns across deploys.
-  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="view-navigation-module__ViewNavigationContainer"]';
-  const BOARD_CONTAINER_SELECTOR = '[class*="Board-module__boardContainer"]';
+  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="ViewNavigationContainer__"], [class*="view-navigation-module__ViewNavigationContainer"]';
+  const BOARD_CONTAINER_SELECTOR = '[class*="boardContainer__"], [class*="Board-module__boardContainer"]';
   // Board layout's real card box carries this exact, un-hashed class —
   // the same anchor board-dependencies keys on. Columns are its own
   // ancestors; a column's heading text is the card's status/column.
   const CARD_SELECTOR = ".board-view-column-card";
-  const COLUMN_SELECTOR = ".board-view-column";
+  // GitHub used to render `.board-view-column`; today a column is a
+  // `[data-board-column]` frame holding its cards. Both are matched.
+  const COLUMN_SELECTOR = ".board-view-column, [data-board-column]";
+  const GROUP_HEADER_SELECTOR = '[class*="horizontalGroupHeader__"], [class*="Board-module__horizontalGroupHeader"]';
+  // A `[data-board-column]` frame that is a column header, not a column:
+  // inside a group header, or, on a grouped board, a frame with a visible
+  // heading and no card (the header row repeats the columns above the
+  // group rows; the frames of the rows themselves carry no heading).
+  // Legacy `.board-view-column` elements always count.
+  function isHeaderRowFrame(el, grouped) {
+    if (el.classList.contains("board-view-column")) return false;
+    if (el.closest(GROUP_HEADER_SELECTOR)) return true;
+    return grouped && !el.querySelector(CARD_SELECTOR) && !!el.querySelector('h1,h2,h3,h4,[role="heading"]');
+  }
+  function boardColumns(root) {
+    const grouped = !!root.querySelector(GROUP_HEADER_SELECTOR);
+    return Array.from(root.querySelectorAll(COLUMN_SELECTOR)).filter((el) => !isHeaderRowFrame(el, grouped));
+  }
 
   const FLAGS = [
     { id: "stale", chip: "Stale", summary: (n) => `${n} stale in review` },
@@ -94,7 +111,7 @@
   // element inside the column, else the column's own aria-label.
   function columnName(column) {
     const heading = column.querySelector('h1,h2,h3,h4,[role="heading"]');
-    return (heading?.textContent || column.getAttribute("aria-label") || "").trim() || null;
+    return (heading?.textContent || column.getAttribute("aria-label") || column.getAttribute("data-board-column") || "").trim() || null;
   }
 
   // With Group by, the board repeats the same columns in each horizontal
@@ -103,7 +120,7 @@
   // is the number of distinct headings.
   function columnLayout(container) {
     const order = new Map();
-    const indexes = Array.from(container.querySelectorAll(COLUMN_SELECTOR)).map((column, flat) => {
+    const indexes = boardColumns(container).map((column, flat) => {
       const name = columnName(column) ?? `\0${flat}`;
       if (!order.has(name)) order.set(name, order.size);
       return order.get(name);
@@ -128,7 +145,7 @@
     const container = boardContainer();
     const { indexes } = columnLayout(container);
     const found = [];
-    Array.from(container.querySelectorAll(COLUMN_SELECTOR)).forEach((column, flat) => {
+    boardColumns(container).forEach((column, flat) => {
       const columnIndex = indexes[flat];
       const name = columnName(column);
       let draftCount = 0;
@@ -157,7 +174,7 @@
     const container = document.querySelector(BOARD_CONTAINER_SELECTOR);
     if (!container) return snapshot;
     snapshot.push({ el: container, left: container.scrollLeft, top: container.scrollTop });
-    for (const col of container.querySelectorAll(COLUMN_SELECTOR)) {
+    for (const col of boardColumns(container)) {
       snapshot.push({ el: col, left: col.scrollLeft, top: col.scrollTop });
     }
     return snapshot;
@@ -367,7 +384,7 @@
     jumpIndex[id] = i + 1;
     let target = null;
     if (id === "bottleneck") {
-      for (const col of document.querySelectorAll(COLUMN_SELECTOR)) if (columnName(col) === list[i]) target = col;
+      for (const col of boardColumns(document)) if (columnName(col) === list[i]) target = col;
     } else {
       target = cards.find((c) => c.key === list[i])?.el || null;
     }
@@ -440,7 +457,7 @@
     }
 
     const bottlenecks = new Map((signals?.columns || []).map((b) => [b.column, b.reason]));
-    for (const col of document.querySelectorAll(COLUMN_SELECTOR)) {
+    for (const col of boardColumns(document)) {
       const reason = bottlenecks.get(columnName(col));
       if (reason) {
         if (col.dataset.ghsmReason !== reason) col.dataset.ghsmReason = reason;
@@ -474,7 +491,6 @@
   // The "(4)" text next to a count is its accessible name: it is clipped
   // already and must stay in the DOM.
   const VISUALLY_HIDDEN_RE = /^\(\d+\)$/;
-  const GROUP_HEADER_SELECTOR = '[class*="Board-module__horizontalGroupHeader"]';
 
   function clearLayout() {
     for (const node of document.querySelectorAll("[data-ghsm-quiet]")) node.style.removeProperty("--ghsm-fs");
