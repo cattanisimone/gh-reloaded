@@ -42,11 +42,11 @@ test("measures the board offset next to an open slice-by panel", async ({ contex
     const panel = document.createElement("div");
     panel.className = "SlicerPanel__Cj5ISm";
     panel.style.cssText = "float:left;width:200px;height:50px";
-    document.querySelector('[class*="boardContainer__"]').before(panel);
-    document.querySelector('[class*="boardContainer__"]').style.marginLeft = "200px";
+    document.querySelector("main").prepend(panel);
+    document.querySelector("main").style.paddingLeft = "200px";
   });
   await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--ghfw-board-left"))).toBe("200px");
-  await page.evaluate(() => { document.querySelector('[class*="SlicerPanel__"]').style.width = "300px"; document.querySelector('[class*="boardContainer__"]').style.marginLeft = "300px"; });
+  await page.evaluate(() => { document.querySelector('[class*="SlicerPanel__"]').style.width = "300px"; document.querySelector("main").style.paddingLeft = "300px"; });
   await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--ghfw-board-left"))).toBe("300px");
 });
 
@@ -64,7 +64,7 @@ test("re-applies full width after the board re-renders", async ({ context, page 
     document.documentElement.style.removeProperty("--ghfw-board-left");
     const old = document.querySelector('[class*="boardContainer__"]');
     const fresh = old.cloneNode(true);
-    fresh.style.marginLeft = "40px";
+    old.parentElement.style.paddingLeft = "40px";
     old.replaceWith(fresh);
     history.pushState({}, "", "/orgs/acme/projects/7/views/2");
   });

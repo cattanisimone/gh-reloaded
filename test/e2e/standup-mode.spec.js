@@ -211,7 +211,7 @@ test("compacts a group header, dropping the chevron and menu but keeping the nam
   await page.locator("#ghsm-enter").click();
   await expect(page.locator("#ghsm-bar")).toHaveCount(1);
 
-  const group = page.locator('[class*="Board-module__horizontalGroupHeader"]');
+  const group = page.locator('[class*="horizontalGroupHeader__"]');
   await expect(group.locator('button[aria-label="Collapse group"]')).toBeHidden();
   await expect(group.locator('button[aria-label="Group menu"]')).toBeHidden();
   await expect(group.locator(".avatar")).toBeVisible();
@@ -302,7 +302,7 @@ test("shows the loading note, not an error, while the board has not rendered any
   await routeGithub(context, "board-standup.html");
   await page.goto(BOARD_URL);
   const columns = await page.evaluate(() => {
-    const board = document.querySelector('[class*="Board-module__boardContainer"]');
+    const board = document.querySelector('[class*="boardContainer__"]');
     const html = board.innerHTML;
     board.replaceChildren();
     window.__board = html;
@@ -314,7 +314,7 @@ test("shows the loading note, not an error, while the board has not rendered any
 
   // The board arrives: the real signals replace the note.
   await page.evaluate(() => {
-    document.querySelector('[class*="Board-module__boardContainer"]').innerHTML = window.__board;
+    document.querySelector('[class*="boardContainer__"]').innerHTML = window.__board;
   });
   await expect(page.locator("#ghsm-summary .ghsm-sum-stale")).toHaveText("1 stale in review");
 });
