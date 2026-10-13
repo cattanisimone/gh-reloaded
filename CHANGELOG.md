@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2](https://github.com/cattanisimone/gh-reloaded/compare/v0.11.1...v0.11.2) (2026-10-13)
+
+
+### Bug Fixes
+
+* keep HTML Preview controls after SPA navigation and re-renders ([#17](https://github.com/cattanisimone/gh-reloaded/issues/17)) ([8449436](https://github.com/cattanisimone/gh-reloaded/commit/8449436c5bc9689dedbca66e7a42857e0d980d91))
+
 ## [0.11.1](https://github.com/cattanisimone/gh-reloaded/compare/v0.11.0...v0.11.1) (2026-10-13)
 
 
