@@ -10,7 +10,7 @@
    board-dependencies feature; declare it here too so the button still
    anchors correctly on a board where that feature's stylesheet isn't
    present. Harmless when both set it. */
-[class*="view-navigation-module__ViewNavigationContainer"] {
+[class*="ViewNavigationContainer__"] {
   position: relative;
 }
 
@@ -69,7 +69,7 @@ body.ghsm-active header[role="banner"],
 body.ghsm-active .js-header-wrapper,
 body.ghsm-active .gh-header-shadow,
 body.ghsm-active [class*="topBarActions"],
-body.ghsm-active [class*="PageLayout-module__"][class*="Header"],
+body.ghsm-active [class*="PageLayout-"][class*="Header"],
 body.ghsm-active nav[aria-label="Select view"] {
   display: none !important;
 }
@@ -147,7 +147,7 @@ body.ghsm-active [data-ghsm-frame] > [data-ghsm-float] {
    way Full-width board does — but only when that feature is NOT already
    active, so the two never fight. Measured left offset comes from
    content.js (--ghsm-board-left). */
-body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardContainer"] {
+body.ghsm-active:not(.ghfw-active) [class*="boardContainer__"] {
   width: calc(100vw - var(--ghsm-board-left, 0px)) !important;
   max-width: calc(100vw - var(--ghsm-board-left, 0px)) !important;
   margin-left: 0 !important;
@@ -156,16 +156,16 @@ body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardContainer"] {
   padding-right: 8px !important;
   box-sizing: border-box !important;
 }
-body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardView"],
-body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupAreaContainer"],
-body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupContainer"] {
+body.ghsm-active:not(.ghfw-active) [class*="boardView__"],
+body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupAreaContainer__"],
+body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupContainer__"] {
   min-width: 0 !important;
   width: 100% !important;
 }
-body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupHeader"] {
+body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupHeader__"] {
   min-width: 0 !important;
 }
-body.ghsm-active:not(.ghfw-active) [class*="column-frame-module__Box__"] {
+body.ghsm-active:not(.ghfw-active) [class*="ColumnFrame__"] {
   flex: 1 1 0 !important;
   width: 0 !important;
   min-width: 140px !important;

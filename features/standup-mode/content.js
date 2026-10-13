@@ -38,13 +38,15 @@
   // Same board-only mounting anchor the other board features use — a
   // stable part of every project page's chrome, matched by class prefix
   // since the build-hash suffix churns across deploys.
-  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="view-navigation-module__ViewNavigationContainer"]';
-  const BOARD_CONTAINER_SELECTOR = '[class*="Board-module__boardContainer"]';
+  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="ViewNavigationContainer__"]';
+  const BOARD_CONTAINER_SELECTOR = '[class*="boardContainer__"]';
   // Board layout's real card box carries this exact, un-hashed class —
   // the same anchor board-dependencies keys on. Columns are its own
   // ancestors; a column's heading text is the card's status/column.
   const CARD_SELECTOR = ".board-view-column-card";
-  const COLUMN_SELECTOR = ".board-view-column";
+  // GitHub used to render `.board-view-column`; today a column is a
+  // `[data-board-column]` frame holding its cards. Both are matched.
+  const COLUMN_SELECTOR = ".board-view-column, [data-board-column]";
 
   const FLAGS = [
     { id: "stale", chip: "Stale", summary: (n) => `${n} stale in review` },
@@ -94,7 +96,7 @@
   // element inside the column, else the column's own aria-label.
   function columnName(column) {
     const heading = column.querySelector('h1,h2,h3,h4,[role="heading"]');
-    return (heading?.textContent || column.getAttribute("aria-label") || "").trim() || null;
+    return (heading?.textContent || column.getAttribute("aria-label") || column.getAttribute("data-board-column") || "").trim() || null;
   }
 
   // With Group by, the board repeats the same columns in each horizontal
@@ -474,7 +476,7 @@
   // The "(4)" text next to a count is its accessible name: it is clipped
   // already and must stay in the DOM.
   const VISUALLY_HIDDEN_RE = /^\(\d+\)$/;
-  const GROUP_HEADER_SELECTOR = '[class*="Board-module__horizontalGroupHeader"]';
+  const GROUP_HEADER_SELECTOR = '[class*="horizontalGroupHeader__"]';
 
   function clearLayout() {
     for (const node of document.querySelectorAll("[data-ghsm-quiet]")) node.style.removeProperty("--ghsm-fs");
