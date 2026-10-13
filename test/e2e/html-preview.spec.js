@@ -242,3 +242,85 @@ test.describe("blob preview layout", () => {
     }
   }
 });
+
+// Regression (#16, live): GitHub renamed the code section's CSS-module class
+// (the "BlobContent-module__" prefix is gone), so the old selector matched
+// nothing and the panel was inserted into the toolbar's flex row, rendering
+// as a ~300px strip. The panel must sit in the code section's slot instead.
+test.describe("blob preview with GitHub's renamed code section", () => {
+  test("blob: panel takes the code section's slot, not the toolbar row", async ({ context, page }) => {
+    await routeApi(context, CONTENTS_API);
+    await routeGithub(context, "blob.html", {
+      transform: (html) => html.replace("BlobContent-module__blobContentSection--s1", "blobContentSection__x1y2z3"),
+    });
+    await page.goto("https://github.com/acme/web/blob/main/docs/index.html");
+    const panel = page.locator("#ghhp-blob-panel");
+    await expect(panel).toBeVisible();
+
+    const geo = await page.evaluate(() => {
+      const p = document.getElementById("ghhp-blob-panel");
+      const main = document.querySelector("main").getBoundingClientRect();
+      return { inToolbar: !!p.closest(".file-toolbar"), panel: p.getBoundingClientRect().width, main: main.width };
+    });
+    expect(geo.inToolbar).toBe(false);
+    expect(geo.panel).toBeGreaterThanOrEqual(geo.main - 2);
+  });
+
+  test("blob: no panel is placed in the toolbar when no code section is found", async ({ context, page }) => {
+    await routeApi(context, CONTENTS_API);
+    await routeGithub(context, "blob.html", {
+      transform: (html) => html.replace(/<section[\s\S]*?<\/section>/, ""),
+    });
+    await page.goto("https://github.com/acme/web/blob/main/docs/index.html");
+    await page.waitForTimeout(1500);
+    await expect(page.locator("#ghhp-blob-panel")).toHaveCount(0);
+    await expect(page.locator("ul.ghhp-tab-list")).toHaveCount(0);
+  });
+});
+
+// Going Preview -> Blame -> Code: the Blame page carries none of our
+// controls, and landing back on the blob route used to auto-select Preview
+// even though the user had just clicked Code.
+test.describe("Blame -> Code keeps the code view", () => {
+  const BLAME = "https://github.com/acme/web/blame/main/docs/index.html";
+  const goBlob = () => {
+    history.pushState({}, "", "/acme/web/blob/main/docs/index.html");
+    document.dispatchEvent(new Event("turbo:load"));
+  };
+
+  test("blob: clicking Code on the Blame page does not auto-select Preview", async ({ context, page }) => {
+    await routeApi(context, CONTENTS_API);
+    await routeGithub(context, "blob.html");
+    await page.goto(BLAME);
+    await page.waitForTimeout(SCAN_MS);
+    await expect(page.locator("#ghhp-blob-tab")).toHaveCount(0);
+
+    await page.evaluate(() => {
+      const code = [...document.querySelectorAll('ul[aria-label] [role="tab"]')].find((t) => t.textContent.trim() === "Code");
+      code.addEventListener("click", (e) => e.preventDefault());
+      code.click();
+    });
+    await page.evaluate(goBlob);
+
+    const tab = page.locator("#ghhp-blob-tab");
+    await expect(tab).toBeVisible({ timeout: 6000 });
+    await expect(page.locator("#ghhp-blob-panel")).toBeHidden();
+    await expect(page.locator('section[class*="blobContentSection"]')).toBeVisible();
+    await expect(tab).toHaveAttribute("aria-pressed", "false");
+
+    // Preview still works from there.
+    await tab.click();
+    await expect(page.locator("#ghhp-blob-panel")).toBeVisible();
+  });
+
+  test("blob: arriving from Blame without clicking Code still lands on Preview", async ({ context, page }) => {
+    await routeApi(context, CONTENTS_API);
+    await routeGithub(context, "blob.html");
+    await page.goto(BLAME);
+    await page.waitForTimeout(SCAN_MS);
+
+    await page.evaluate(goBlob);
+    await expect(page.locator("#ghhp-blob-panel")).toBeVisible({ timeout: 6000 });
+  });
+});
+

@@ -306,6 +306,23 @@
   let blobKey = null;
   let blobTabs = null;
 
+  // Preview is the default tab for an HTML file, but not when the user
+  // just asked for the code: clicking "Code" on the Blame page lands on
+  // the blob route, where forcing Preview would show the rendered page
+  // after they chose Code. The Blame page has none of our controls, so
+  // remember the click here (capture phase, ahead of GitHub's own
+  // handlers) and let the next blob render skip the auto-select.
+  const CODE_CLICK_WINDOW_MS = 5000;
+  let codeClickedAt = 0;
+  document.addEventListener(
+    "click",
+    (e) => {
+      const el = e.target instanceof Element ? e.target.closest("a, button") : null;
+      if (el && el.textContent.trim() === "Code" && el.closest("ul[aria-label]")) codeClickedAt = Date.now();
+    },
+    true
+  );
+
   // Removes everything injectBlobPreviewTab added — the whole tab list
   // (not just the button inside it, or an empty <ul> is left behind) and
   // the panel — and gives the code section back if Preview had hidden it.
@@ -313,8 +330,20 @@
     document.querySelector("ul.ghhp-tab-list")?.remove();
     document.getElementById("ghhp-blob-tab")?.remove();
     document.getElementById("ghhp-blob-panel")?.remove();
-    document.querySelector('[class*="BlobContent-module__blobContentSection"]')?.removeAttribute("hidden");
+    findBlobCodeSection()?.removeAttribute("hidden");
     blobTabs = null;
+  }
+
+  // The section holding the file's code, which our panel takes the slot of.
+  // GitHub's CSS-module class on it has been renamed before (the
+  // "BlobContent-module__" prefix is gone on the live site), so match the
+  // stable part of the class and fall back to the section labelled by the
+  // file name. Never matches anything inside the toolbar row.
+  function findBlobCodeSection() {
+    return (
+      document.querySelector('section[class*="blobContentSection"]') ||
+      document.querySelector('section[aria-labelledby*="file-name-id"]')
+    );
   }
 
   function injectBlobPreviewTab() {
@@ -428,13 +457,24 @@
     // full-width pane. Anchoring on this section instead means our
     // panel takes over the same slot, at the same width, that the
     // Code/Blame view already renders in.
-    const codeSection = document.querySelector('[class*="BlobContent-module__blobContentSection"]');
+    const codeSection = findBlobCodeSection();
     // A full ARIA tabs implementation ties a tab to its panel via
     // aria-controls — kept as a fallback for older markup that doesn't
     // have the section above.
     const codePanelId = tabs.code.getAttribute("aria-controls");
     const codePanel = codePanelId ? document.getElementById(codePanelId) : null;
     const codeArea = codeSection || codePanel;
+
+    // Without the code area there is no safe slot for the panel: the only
+    // other anchor is the toolbar row, a flex container that squeezes the
+    // panel into a thin strip. Not rendered yet (or markup we don't know),
+    // so take our tab list back out and let the next scan retry.
+    if (!codeArea) {
+      ourList.remove();
+      blobKey = null;
+      blobTabs = null;
+      return;
+    }
 
     // The panel is just a cross-origin iframe onto preview.html (the
     // same page the PR "Files changed" globe button opens as its own
@@ -509,8 +549,9 @@
 
     // Preview is the default landing tab for this file type, same as
     // it is for Markdown — no reason to make the user click through to
-    // it every time.
-    showPreview();
+    // it every time — unless the user just picked Code (see above), in
+    // which case the panel stays hidden and the native code view stays.
+    if (Date.now() - codeClickedAt > CODE_CLICK_WINDOW_MS) showPreview();
   }
 
   // Undoes injectDiffPreviewButtons/injectBlobPreviewTab's DOM changes —
