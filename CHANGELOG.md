@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/cattanisimone/gh-reloaded/compare/v0.11.0...v0.11.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* restore full-width board and standup mode on GitHub's new Projects markup ([#46](https://github.com/cattanisimone/gh-reloaded/issues/46)) ([65f4458](https://github.com/cattanisimone/gh-reloaded/commit/65f4458ba77fd7dc81836d96c17918f2e56362bc))
+
 ## [0.11.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.10.0...v0.11.0) (2026-10-12)
 
 
