@@ -14,7 +14,14 @@ const files = ["full-width-board/content.js", "full-width-board/content.css", "s
 for (const f of files) {
   test(`${f} has no -module__ class selector`, () => {
     const src = fs.readFileSync(path.join(root, "features", f), "utf8");
-    const bad = src.split("\n").filter((l) => /\[class\*=["'][^"']*-module__/.test(l));
+    // A `-module__` selector is only allowed as the previous-naming fallback
+    // next to the current `Name__` form on the same line or the line before.
+    const lines = src.split("\n");
+    const bad = lines.filter((l, i) => {
+      const m = l.match(/\[class\*=["'][^"']*-module__(\w+)["']\]/);
+      if (!m) return false;
+      return !(l.includes(`${m[1]}__"]`) || (lines[i - 1] || "").includes(`${m[1]}__"]`) || (lines[i + 1] || "").includes(`${m[1]}__"]`));
+    });
     assert.deepEqual(bad, []);
   });
 }

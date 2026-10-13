@@ -543,7 +543,7 @@ test("finds columns and cards in [data-board-column] frames, with no .board-view
   await expect(page.locator('[data-board-column="In review"]')).toHaveCSS("outline-style", "dashed");
 });
 
-test("still works on the previous class naming (Board-module__boardContainer__…)", async ({ context, page }) => {
+test("still works on the previous class naming (Board-module__boardContainer--…)", async ({ context, page }) => {
   await seedStorage(context, TOKEN);
   await routeApi(context, API);
   await routeGithub(context, "board-legacy-classes.html");

@@ -23,10 +23,10 @@ test("leaves the board alone when the feature is disabled", async ({ context, pa
 // container's own right edge sits on the window's right edge. The fixtures
 // give the container no width of its own (the test pins it to 400px), so without the rules it falls short.
 const expectReachesRightEdge = async (page) => {
-  await page.evaluate(() => { document.querySelector('[class*="boardContainer__"]').style.width = "400px"; });
+  await page.evaluate(() => { document.querySelector('[class*="boardContainer__"], [class*="Board-module__boardContainer"]').style.width = "400px"; });
   await expect
     .poll(() => page.evaluate(() => {
-      const r = document.querySelector('[class*="boardContainer__"]').getBoundingClientRect();
+      const r = document.querySelector('[class*="boardContainer__"], [class*="Board-module__boardContainer"]').getBoundingClientRect();
       return Math.abs(window.innerWidth - r.right) <= 2;
     }))
     .toBe(true);

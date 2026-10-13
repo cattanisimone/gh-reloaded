@@ -38,8 +38,8 @@
   // Same board-only mounting anchor the other board features use — a
   // stable part of every project page's chrome, matched by class prefix
   // since the build-hash suffix churns across deploys.
-  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="ViewNavigationContainer__"]';
-  const BOARD_CONTAINER_SELECTOR = '[class*="boardContainer__"]';
+  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="ViewNavigationContainer__"], [class*="view-navigation-module__ViewNavigationContainer"]';
+  const BOARD_CONTAINER_SELECTOR = '[class*="boardContainer__"], [class*="Board-module__boardContainer"]';
   // Board layout's real card box carries this exact, un-hashed class —
   // the same anchor board-dependencies keys on. Columns are its own
   // ancestors; a column's heading text is the card's status/column.
@@ -47,7 +47,7 @@
   // GitHub used to render `.board-view-column`; today a column is a
   // `[data-board-column]` frame holding its cards. Both are matched.
   const COLUMN_SELECTOR = ".board-view-column, [data-board-column]";
-  const GROUP_HEADER_SELECTOR = '[class*="horizontalGroupHeader__"]';
+  const GROUP_HEADER_SELECTOR = '[class*="horizontalGroupHeader__"], [class*="Board-module__horizontalGroupHeader"]';
   // A `[data-board-column]` frame that is a column header, not a column:
   // inside a group header, or, on a grouped board, a frame with a visible
   // heading and no card (the header row repeats the columns above the
