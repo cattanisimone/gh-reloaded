@@ -1,0 +1,21 @@
+AGENTS.md
+  s_8bf29aeccda52b::t_23f8f5e19e74d5 57-62,82
+.github/pull_request_template.md
+  s_8bf29aeccda52b::t_8cdb3c574e4a6d 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "15c9b0d27c3ea30c9c6b8adbc373ca9ec005fcc3",
+  "prompts": {},
+  "sessions": {
+    "s_8bf29aeccda52b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a34668f1-ce7b-423a-a845-f8b251b03ef6",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
