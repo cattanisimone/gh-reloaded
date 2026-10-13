@@ -21,4 +21,4 @@ Nothing is preset — this feature doesn't know or assume anything about any spe
 ## Known limitations
 
 - Project scoping is a single `owner/number` match, not a list — a shortcut meant for several (but not all) boards needs one entry per board today.
-- Anchors on the top bar's `index-module__topBarActions`/`index-module__ButtonGroup` class names, read off a live page — resilient to most markup churn, but breaks (falling back to floating) if GitHub renames them outright.
+- Anchors on the top bar's `topBarActions__`/`ButtonGroup__` CSS-module classes (the previous `index-module__` naming still works), and on the visible "Insights" button when the groups aren't recognisable. If GitHub renames the top bar outright, the buttons fall back to floating.
