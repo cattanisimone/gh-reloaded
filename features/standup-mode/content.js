@@ -287,6 +287,16 @@
     return btn;
   }
 
+  function enterNeedsMount() {
+    const btn = document.getElementById(ENTER_ID);
+    if (!btn) return true;
+    const found = findFilterRow();
+    if (!found) return true;
+    const arrows = document.getElementById(ARROWS_ID);
+    const anchor = arrows && arrows.parentElement === found.row ? arrows : found.view;
+    return btn.parentElement !== found.row || btn.nextElementSibling !== anchor;
+  }
+
   function removeEnterButton() {
     document.getElementById(ENTER_ID)?.remove();
   }
@@ -1009,8 +1019,9 @@
     if (location.href !== lastUrl) {
       lastUrl = location.href;
       debouncedSync();
-    } else if (!active && isProjectsPage() && isBoardLayout() && !document.getElementById(ENTER_ID)) {
-      // Same URL, but the filter row re-rendered and dropped our button.
+    } else if (!active && isProjectsPage() && isBoardLayout() && enterNeedsMount()) {
+      // Same URL, but the filter row re-rendered and dropped our button, or
+      // React inserted its own Discard / divider after it: re-place it.
       sync();
     }
   }, 800);

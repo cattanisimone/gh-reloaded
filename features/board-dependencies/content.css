@@ -116,8 +116,14 @@
   box-shadow: none;
 }
 #ghbd-toggle[aria-pressed="true"] {
-  background: var(--button-default-bgColor-selected, #ddf4ff);
+  background: var(--button-default-bgColor-selected, #e6eaef);
   color: var(--fgColor-accent, #0969da);
+}
+#ghbd-toggle[aria-pressed="true"]:hover {
+  background: var(--button-default-bgColor-hover, #eff2f5);
+}
+#ghbd-toggle[aria-pressed="true"]:active {
+  background: var(--button-default-bgColor-active, #e6eaef);
 }
 #ghbd-toggle:focus-visible {
   outline: 2px solid var(--focus-outlineColor, #0969da);

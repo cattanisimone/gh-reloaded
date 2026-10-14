@@ -114,7 +114,11 @@ test("arrows control is a pressed-state icon button with a tooltip and a label",
   await expect(t).not.toHaveAttribute("role", "switch");
   await t.click();
   await expect(t).toHaveAttribute("aria-pressed", "true");
-  await expect(t).toHaveCSS("background-color", "rgb(221, 244, 255)");
+  await page.mouse.move(0, 0);
+  await expect(t).toHaveCSS("background-color", "rgb(230, 234, 239)");
+  await expect(t).toHaveCSS("color", "rgb(9, 105, 218)");
+  await t.hover();
+  await expect(t).toHaveCSS("background-color", "rgb(239, 242, 245)");
   await t.click();
   await expect(t).toHaveAttribute("aria-pressed", "false");
 });
@@ -143,6 +147,34 @@ test("a dirty view (Discard and a divider) keeps both controls between the divid
   await expect(page.locator("#ghsm-enter")).toHaveCount(1);
   await expect(page.locator("#ghbd-toggle")).toHaveCount(1);
   expect((await order(page)).slice(-5)).toEqual(["Discard", "", "ghsm-enter", "ghbd-toggle", "View"]);
+});
+
+test("moves back in front of View when the view becomes dirty after mounting", async ({ context, page }) => {
+  await open(context, page);
+  await expect(page.locator("#ghbd-toggle")).toHaveCount(1);
+  await page.evaluate((sel) => {
+    const row = document.querySelector(sel);
+    const view = Array.from(row.children).find((c) => c.querySelector("button")?.textContent.trim() === "View");
+    const d = document.createElement("div");
+    d.className = "Box__Dd1";
+    d.innerHTML = "<button type=button>Discard</button>";
+    const v = document.createElement("div");
+    v.className = "Divider__Dv1";
+    row.insertBefore(d, view);
+    row.insertBefore(v, view);
+  }, ROW);
+  await expect.poll(async () => (await order(page)).slice(-5), { timeout: 5000 }).toEqual(["Discard", "", "ghsm-enter", "ghbd-toggle", "View"]);
+});
+
+test("restores the order when Standup is placed right before View first", async ({ context, page }) => {
+  await open(context, page);
+  await expect(page.locator("#ghbd-toggle")).toHaveCount(1);
+  await page.evaluate(() => {
+    const t = document.getElementById("ghbd-toggle");
+    const s = document.getElementById("ghsm-enter");
+    t.parentElement.insertBefore(t, s);
+  });
+  await expect.poll(async () => (await order(page)).slice(-3), { timeout: 5000 }).toEqual(["ghsm-enter", "ghbd-toggle", "View"]);
 });
 
 test("re-mounts once, with its state, after the filter row re-renders", async ({ context, page }) => {
@@ -178,6 +210,15 @@ test("Board → Table → Board removes then re-mounts one copy of each", async 
   await expect(page.locator("#ghsm-enter")).toHaveCount(1);
   await expect(page.locator("#ghbd-toggle")).toHaveCount(1);
   expect((await order(page)).slice(-3)).toEqual(["ghsm-enter", "ghbd-toggle", "View"]);
+  // browser back: the history entry of the Table view comes back, then forward to Board
+  await setIcon("octicon octicon-table");
+  await page.goBack();
+  await page.evaluate(() => window.dispatchEvent(new PopStateEvent("popstate")));
+  await expect(page.locator("#ghsm-enter")).toHaveCount(0);
+  await setIcon("octicon octicon-project");
+  await page.goForward();
+  await expect(page.locator("#ghsm-enter")).toHaveCount(1);
+  await expect(page.locator("#ghbd-toggle")).toHaveCount(1);
 });
 
 test("hides both controls while presenting and restores them on exit", async ({ context, page }) => {

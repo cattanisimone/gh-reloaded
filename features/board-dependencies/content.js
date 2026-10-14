@@ -217,6 +217,13 @@
     return toggle;
   }
 
+  function toggleNeedsMount() {
+    const toggle = document.getElementById(TOGGLE_ID);
+    if (!toggle) return true;
+    const found = findFilterRow();
+    return !found || toggle.parentElement !== found.row || toggle.nextElementSibling !== found.view;
+  }
+
   function renderToggle(enabled) {
     const toggle = ensureToggleMounted();
     if (!toggle) return;
@@ -494,8 +501,10 @@
     if (location.href !== lastUrl) {
       lastUrl = location.href;
       debouncedSync();
-    } else if (isProjectsPage() && !document.getElementById(TOGGLE_ID)) {
-      // Same URL, but the view-nav bar re-rendered and dropped our node.
+    } else if (isProjectsPage() && toggleNeedsMount()) {
+      // Same URL, but the filter row re-rendered and dropped our node, or
+      // React inserted its own Discard / divider after it (a view that
+      // became dirty): put it back directly before View.
       sync();
     }
   }, 800);
