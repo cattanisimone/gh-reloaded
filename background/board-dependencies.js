@@ -37,6 +37,13 @@ export async function collectBoardEdges(items, { tolerant = false } = {}) {
   const known = new Set(items.map((i) => keyOf(i.owner, i.repo, i.number)));
   const edgeKeys = new Set();
   const edges = [];
+  // key -> "open" | "closed" for visible issues the dependency API mentions:
+  // each end of an edge appears in the other end's lookup.
+  const states = {};
+
+  function noteState(key, state) {
+    if (state === "open" || state === "closed") states[key] = state;
+  }
 
   function addEdge(fromKey, toKey) {
     if (fromKey === toKey) return;
@@ -69,16 +76,22 @@ export async function collectBoardEdges(items, { tolerant = false } = {}) {
     for (const blocker of blockers) {
       const r = repoFromUrl(blocker.repository_url, item.owner, item.repo);
       const k = keyOf(r.owner, r.repo, blocker.number);
-      if (known.has(k)) addEdge(k, selfKey);
+      if (known.has(k)) {
+        addEdge(k, selfKey);
+        noteState(k, blocker.state);
+      }
     }
     for (const blocked of blocking) {
       const r = repoFromUrl(blocked.repository_url, item.owner, item.repo);
       const k = keyOf(r.owner, r.repo, blocked.number);
-      if (known.has(k)) addEdge(selfKey, k);
+      if (known.has(k)) {
+        addEdge(selfKey, k);
+        noteState(k, blocked.state);
+      }
     }
   });
 
-  return { edges, incomplete };
+  return { edges, incomplete, states };
 }
 
 export async function fetchBoardEdges(items, options) {
@@ -99,5 +112,6 @@ async function strictDeps(item, direction) {
 
 export async function handleMessage(payload) {
   const items = Array.isArray(payload?.items) ? payload.items : [];
-  return { edges: await fetchBoardEdges(items) };
+  const { edges, states } = await collectBoardEdges(items);
+  return { edges, states };
 }

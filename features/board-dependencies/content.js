@@ -10,6 +10,7 @@
 // DOM), but the switch itself is Board-only per the above.
 
 (function () {
+  const GEO = globalThis.GHBD_GEOMETRY;
   const ROOT_ID = "ghbd-root";
   const TOGGLE_ID = "ghbd-toggle";
   const STORAGE_KEY = "ghbdEnabled";
@@ -128,67 +129,37 @@
     };
   }
 
-  function edgePathD(x1, y1, x2, y2) {
-    const dx = Math.max(30, Math.abs(x2 - x1) / 3);
-    const sign = x2 >= x1 ? 1 : -1;
-    return `M ${x1} ${y1} C ${x1 + dx * sign} ${y1}, ${x2 - dx * sign} ${y2}, ${x2} ${y2}`;
-  }
-
-  // Picks the pair of edge midpoints (left/right/top/bottom) closest to
-  // each other between two card rects, so the line reads as "shortest
-  // path between these two boxes" instead of always leaving from the
-  // same side regardless of where the other card actually is.
-  function closestAnchors(a, b) {
-    const pointsOf = (r) => [
-      { x: r.left, y: r.top + r.height / 2 }, // left
-      { x: r.right, y: r.top + r.height / 2 }, // right
-      { x: r.left + r.width / 2, y: r.top }, // top
-      { x: r.left + r.width / 2, y: r.bottom }, // bottom
-    ];
-    let best = null;
-    for (const pa of pointsOf(a)) {
-      for (const pb of pointsOf(b)) {
-        const d = (pa.x - pb.x) ** 2 + (pa.y - pb.y) ** 2;
-        if (!best || d < best.d) best = { d, pa, pb };
-      }
-    }
-    return [best.pa, best.pb];
-  }
-
-  // Board columns read left → right as workflow progress. `from` (the
-  // blocker) SHOULD sit at or ahead of `to` (the card it blocks) — that's
-  // the arrow pointing back toward an earlier column, which is the
-  // correct order and stays neutral. A blocker still behind the card it's
-  // blocking is the interesting case: that card is moving before its own
-  // blocker is done, so the arrow renders as a warning. Same column
-  // (within half a card's width) isn't a directional claim either way.
-  function edgeDirectionClass(fromRect, toRect) {
-    const dx = toRect.left - fromRect.left;
-    const tolerance = Math.min(fromRect.width, toRect.width) / 2;
-    if (Math.abs(dx) <= tolerance) return "";
-    return dx > 0 ? "is-reversed" : "";
-  }
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const COLUMN_SELECTOR = "[data-board-column], .board-view-column";
 
   function ensureOverlay() {
     let root = document.getElementById(ROOT_ID);
     if (root) return root;
     root = document.createElement("div");
     root.id = ROOT_ID;
-    root.innerHTML = `
-      <svg class="ghbd-edges">
-        <defs>
-          <marker id="ghbd-arrow" viewBox="0 0 10 10" refX="8" refY="5"
-                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" class="ghbd-arrowhead"></path>
-          </marker>
-          <marker id="ghbd-arrow-reversed" viewBox="0 0 10 10" refX="8" refY="5"
-                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" class="ghbd-arrowhead-reversed"></path>
-          </marker>
-        </defs>
-      </svg>`;
+    root.innerHTML = '<svg class="ghbd-edges"></svg>';
     document.body.appendChild(root);
     return root;
+  }
+
+  // The column frame holding a card. Its own scroller (the nearest
+  // scrolling ancestor, found by computed style, not by class) is the
+  // viewport the card is visible in.
+  function viewportOf(el, column) {
+    for (let n = el.parentElement; n && n !== column; n = n.parentElement) {
+      const oy = getComputedStyle(n).overflowY;
+      if (oy === "auto" || oy === "scroll") return n.getBoundingClientRect();
+    }
+    return column.getBoundingClientRect();
+  }
+
+  function plainRect(r) {
+    return { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+  }
+
+  function cardState(el) {
+    const icon = el.querySelector("svg[aria-label]");
+    return GEO.stateFromLabel(icon?.getAttribute("aria-label"));
   }
 
   // A small icon plus the switch itself — the icon alone (rather than a
@@ -261,30 +232,111 @@
     const overlay = ensureOverlay();
     const svg = overlay.querySelector(".ghbd-edges");
     let edges = []; // [{from, to}] as "owner/repo#number" keys
+    let states = {}; // key -> "open" | "closed" from the dependency API
     let cardsByKey = new Map();
+    let activeKey = null;
     let raf = null;
 
-    function draw() {
-      const paths = [];
-      for (const e of edges) {
-        const from = cardsByKey.get(e.from);
-        const to = cardsByKey.get(e.to);
-        if (!from || !to) continue; // one end isn't currently rendered — skip
-        const fromRect = from.el.getBoundingClientRect();
-        const toRect = to.el.getBoundingClientRect();
-        // Off-screen (e.g. scrolled out, or virtualized away) on either
-        // end reads as noise more than signal — skip rather than draw an
-        // arrow to/from a collapsed or hidden box.
-        if (fromRect.width === 0 || toRect.width === 0) continue;
-        const [pa, pb] = closestAnchors(fromRect, toRect);
-        const dirClass = edgeDirectionClass(fromRect, toRect);
-        const marker = dirClass === "is-reversed" ? "ghbd-arrow-reversed" : "ghbd-arrow";
-        paths.push(
-          `<path class="ghbd-edge ${dirClass}" marker-end="url(#${marker})" d="${edgePathD(pa.x, pa.y, pb.x, pb.y)}"></path>`
-        );
+    function applyHighlight() {
+      for (const g of svg.querySelectorAll(".ghbd-edge-group")) {
+        const on = activeKey && (g.dataset.from === activeKey || g.dataset.to === activeKey);
+        g.classList.toggle("is-active", !!on);
+        g.classList.toggle("is-faded", !!activeKey && !on);
       }
-      const defs = svg.querySelector("defs").outerHTML;
-      svg.innerHTML = defs + paths.join("");
+    }
+
+    function draw() {
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      // Every end must be a rendered card, in a column, inside that column's
+      // scroll viewport; its rect is clipped to what is actually visible.
+      const info = new Map();
+      for (const [key, c] of cardsByKey) {
+        const col = c.el.closest(COLUMN_SELECTOR);
+        const r = c.el.getBoundingClientRect();
+        if (!col || r.width === 0 || r.height === 0) continue;
+        const vp = viewportOf(c.el, col);
+        const rect = { left: r.left, right: r.right, top: Math.max(r.top, vp.top), bottom: Math.min(r.bottom, vp.bottom) };
+        if (rect.bottom - rect.top < 12) continue;
+        info.set(key, { key, el: c.el, col, colRect: plainRect(col.getBoundingClientRect()), rect, done: GEO.isDone(cardState(c.el), states[key]) });
+      }
+      const doneByKey = new Map([...cardsByKey.keys()].map((k) => [k, info.has(k) ? info.get(k).done : false]));
+      for (const k of cardsByKey.keys()) if (!info.has(k)) doneByKey.set(k, GEO.isDone(cardState(cardsByKey.get(k).el), states[k]));
+      const shown = GEO.visibleEdges(edges, doneByKey)
+        .filter((e) => info.has(e.from) && info.has(e.to))
+        .map((e) => ({ e, src: info.get(e.from), dst: info.get(e.to) }));
+
+      // Ports: the arrows on one side of a card spread along it, ordered by
+      // where the other end is so they do not cross.
+      const ends = new Map();
+      shown.forEach((s, i) => {
+        s.sides = GEO.sides(s.src.colRect, s.dst.colRect);
+        for (const [role, side, self, other] of [["src", s.sides.from, s.src, s.dst], ["dst", s.sides.to, s.dst, s.src]]) {
+          const k = `${self.key}|${side}`;
+          if (!ends.has(k)) ends.set(k, []);
+          ends.get(k).push({ s, role, self, otherY: (other.rect.top + other.rect.bottom) / 2 + (other.rect.left > self.rect.left ? 0.1 : 0) });
+        }
+      });
+      for (const list of ends.values()) {
+        list.sort((p, q) => p.otherY - q.otherY);
+        list.forEach((x, i) => {
+          x.s[x.role + "Y"] = GEO.portY(x.self.rect.top, x.self.rect.bottom, i, list.length);
+        });
+      }
+
+      // Lanes: routes that share a gutter and overlap vertically stack.
+      const groups = new Map();
+      shown.forEach((s) => {
+        const toRight = s.dst.colRect.left > s.src.colRect.left;
+        const k = s.sides.kind === "same" ? `same|${s.dst.colRect.left}` : `gap|${s.dst.colRect.left}|${toRight}`;
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(s);
+      });
+      for (const list of groups.values()) {
+        const lanes = GEO.lanesFor(list.map((s) => [s.srcY, s.dstY]));
+        list.forEach((s, i) => (s.lane = lanes[i]));
+      }
+
+      // Gutter between two column frames, read from the page (8px live).
+      const cols = [...new Set([...info.values()].map((c) => c.colRect.left))].sort((a, b) => a - b);
+      let gap = 8;
+      const colRights = new Map([...info.values()].map((c) => [c.colRect.left, c.colRect.right]));
+      for (let i = 1; i < cols.length; i++) {
+        const g = cols[i] - colRights.get(cols[i - 1]);
+        if (g > 0 && g < 40) { gap = g; break; }
+      }
+
+      const first = [...info.values()][0];
+      let clip = { left: 0, top: 0, right: W, bottom: H };
+      if (first?.col.parentElement) {
+        const b = first.col.parentElement.getBoundingClientRect();
+        clip = { left: Math.max(0, b.left), top: Math.max(0, b.top), right: Math.min(W, b.right), bottom: Math.min(H, b.bottom) };
+      }
+
+      const rects = [...info.values()].map((c) => `<rect x="${c.rect.left}" y="${c.rect.top}" width="${c.rect.right - c.rect.left}" height="${c.rect.bottom - c.rect.top}" fill="black"></rect>`);
+      const body = shown.map((s) => {
+        const { d, sides } = GEO.routeEdge({
+          src: { rect: s.src.rect, col: s.src.colRect, y: s.srcY },
+          dst: { rect: s.dst.rect, col: s.dst.colRect, y: s.dstY },
+          gap,
+          lane: s.lane,
+        });
+        const reversed = sides.kind === "cross" && sides.from === "right";
+        const cls = reversed ? " is-reversed" : "";
+        const marker = reversed ? "ghbd-arrow-reversed" : "ghbd-arrow";
+        return `<g class="ghbd-edge-group" data-from="${s.e.from}" data-to="${s.e.to}"><path class="ghbd-halo" d="${d}"></path><path class="ghbd-edge${cls}" marker-end="url(#${marker})" d="${d}"></path></g>`;
+      });
+      svg.innerHTML = `<defs>
+        <marker id="ghbd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" class="ghbd-arrowhead"></path>
+        </marker>
+        <marker id="ghbd-arrow-reversed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" class="ghbd-arrowhead-reversed"></path>
+        </marker>
+        <clipPath id="ghbd-clip"><rect x="${clip.left}" y="${clip.top}" width="${Math.max(0, clip.right - clip.left)}" height="${Math.max(0, clip.bottom - clip.top)}"></rect></clipPath>
+        <mask id="ghbd-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect x="0" y="0" width="${W}" height="${H}" fill="white"></rect>${rects.join("")}</mask>
+      </defs><g clip-path="url(#ghbd-clip)"><g mask="url(#ghbd-mask)">${body.join("")}</g></g>`;
+      applyHighlight();
     }
 
     function scheduleDraw() {
@@ -311,6 +363,7 @@
         (resp) => {
           if (chrome.runtime.lastError || !resp?.ok) return; // silent — the graph just stays empty
           edges = resp.edges || [];
+          states = resp.states || {};
           scheduleDraw();
         }
       );
@@ -337,11 +390,39 @@
       subtree: true,
     });
 
+    // Hover or keyboard focus on a card highlights its own arrows.
+    function keyFor(target) {
+      if (!(target instanceof Node)) return null;
+      for (const [key, c] of cardsByKey) if (c.el.contains(target)) return key;
+      return null;
+    }
+    function setActive(key) {
+      if (key === activeKey) return;
+      activeKey = key;
+      applyHighlight();
+    }
+    const onOver = (e) => {
+      const key = keyFor(e.target);
+      if (key) setActive(key);
+    };
+    const onOut = (e) => {
+      const key = keyFor(e.target);
+      if (key && key === activeKey && keyFor(e.relatedTarget) !== key) setActive(null);
+    };
+    document.addEventListener("pointerover", onOver, true);
+    document.addEventListener("pointerout", onOut, true);
+    document.addEventListener("focusin", onOver, true);
+    document.addEventListener("focusout", onOut, true);
+
     refetch();
 
     cleanup = () => {
       window.removeEventListener("scroll", debouncedRedraw, { capture: true });
       window.removeEventListener("resize", debouncedRedraw);
+      document.removeEventListener("pointerover", onOver, true);
+      document.removeEventListener("pointerout", onOut, true);
+      document.removeEventListener("focusin", onOver, true);
+      document.removeEventListener("focusout", onOut, true);
       observer.disconnect();
       if (raf) cancelAnimationFrame(raf);
     };

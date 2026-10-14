@@ -68,6 +68,7 @@
         "https://github.com/users/*/projects/*"
       ],
       "js": [
+        "features/board-dependencies/geometry.js",
         "features/board-dependencies/content.js"
       ],
       "css": [
