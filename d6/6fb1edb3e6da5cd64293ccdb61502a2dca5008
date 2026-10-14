@@ -1,0 +1,19 @@
+AGENTS.md
+  s_8bf29aeccda52b::t_7a661426dac5aa 62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d66fb1edb3e6da5cd64293ccdb61502a2dca5008",
+  "prompts": {},
+  "sessions": {
+    "s_8bf29aeccda52b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a34668f1-ce7b-423a-a845-f8b251b03ef6",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Simone Cattani <simone.cattani@satispay.com>"
+    }
+  }
+}
