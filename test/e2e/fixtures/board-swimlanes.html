@@ -4,9 +4,14 @@
   names with their hash suffixes, hashes replaced). Layout CSS mirrors what
   GitHub serves: boardView is the single horizontal scroller (flex column,
   overflow auto, 16px padding), the header row is sticky at the top, the lane
-  area and the columns row carry an inline min-width. Query switches:
-  ?classic gives the boardView a 15px classic scrollbar, ?lanes=scroll makes
-  each lane scroll on its own (the fallback case). See fixtures/README.md.
+  area and the columns row carry an inline min-width, the header frames are
+  overflow-x: auto and each lane band has an inline sticky `top` that a
+  stand-in script writes from the header row's height at load, before any
+  extension compacts it (what GitHub does). Query switches: ?classic gives
+  the boardView a 15px classic scrollbar, ?lanes=scroll makes each lane
+  scroll on its own, ?sums adds an "Effort: N" pill next to each header
+  count, ?tall adds cards and a third lane so a scroll crosses several
+  bands. See fixtures/README.md.
 -->
 <!doctype html>
 <html lang="en" data-color-mode="light">
@@ -26,6 +31,7 @@
       .horizontalGroupHeader__m1n2o3 { position: sticky; top: 0; z-index: 3; background: #fff; display: block; }
       .horizontalGroupContainer__j7k8l9, .horizontalGroupHeader__m1n2o3 > .horizontalGroupContainer__j7k8l9 { display: flex; gap: 8px; }
       .ColumnFrame__d4e5f6 { flex: 0 0 350px; width: 350px; box-sizing: border-box; background: #f6f8fa; border-radius: 6px; }
+      .horizontalGroupHeader__m1n2o3 .ColumnFrame__d4e5f6 { overflow-x: auto; overflow-y: hidden; }
       .Heading__m4n5o6 { display: flex; align-items: center; gap: 8px; padding: 8px 9px 8px 17px; }
       .ColumnTitleWithWorkflowIndicator__p7q8r9 { display: flex; }
       .Box__s1t2u3 { display: flex; align-items: center; gap: 8px; }
@@ -38,7 +44,7 @@
       .prc-VisuallyHidden-VisuallyHidden-Q0qSB { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
       .column-drop-zone { min-height: 60px; padding: 8px; }
       .horizontalGroupAreaContainer__u1v2w3 { display: block; }
-      .styledGroupHeaderWrapper__x4y5z6 { display: flex; position: sticky; top: 52px; z-index: 2; background: #fff; border-bottom: 1px solid #d0d7de; margin-bottom: 8px; }
+      .styledGroupHeaderWrapper__x4y5z6 { display: flex; position: sticky; z-index: 2; background: #fff; border-bottom: 1px solid #d0d7de; margin-bottom: 8px; }
       .groupHeaderContainer__a7b8c9 { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
       .groupHeaderContent__g4h5i6 { display: flex; align-items: center; gap: 8px; font-weight: 600; }
       .effort-pill { border: 1px solid #d0d7de; border-radius: 2em; padding: 0 8px; font-weight: 400; }
@@ -60,6 +66,34 @@
         if (q.includes("classic")) s.textContent += ".boardView__a1b2c3::-webkit-scrollbar{width:15px;height:15px}.boardView__a1b2c3::-webkit-scrollbar-thumb{background:#999}";
         if (q.includes("lanes=scroll")) s.textContent += ".lane-scroll{overflow-x:auto}";
         document.head.append(s);
+        if (q.includes("sums")) {
+          const efforts = [1, 2, 19, 4, 3, 17];
+          document.querySelectorAll(".horizontalGroupHeader__m1n2o3 .AggregateLabels__e4f5g6").forEach((count, i) => {
+            const sum = document.createElement("span");
+            sum.className = count.className;
+            sum.textContent = "Effort: " + efforts[i];
+            count.after(sum);
+          });
+        }
+        if (q.includes("tall")) {
+          const lanes = document.querySelectorAll(".lane-scroll");
+          const third = lanes[0].cloneNode(true);
+          third.querySelector(".groupHeaderContent__g4h5i6 span").textContent = "carol";
+          lanes[lanes.length - 1].after(third);
+          document.querySelectorAll(".lane-scroll").forEach((lane) => {
+            const zone = lane.querySelector(".column-drop-zone:has(.board-view-column-card)");
+            const first = zone.querySelector(".board-view-column-card");
+            for (let i = 0; i < 6; i++) {
+              const copy = first.cloneNode(true);
+              copy.removeAttribute("data-board-card-id");
+              copy.querySelectorAll("[id]").forEach((n) => n.removeAttribute("id"));
+              zone.append(copy);
+            }
+          });
+        }
+        // GitHub writes each band's sticky offset from the header row it measures now.
+        const headerH = document.querySelector(".horizontalGroupHeader__m1n2o3").offsetHeight;
+        document.querySelectorAll(".styledGroupHeaderWrapper__x4y5z6").forEach((band) => { band.style.top = headerH + "px"; });
         // Pointer drag smoke: records the column drop zone under the pointer on release.
         document.addEventListener("pointerup", (e) => {
           const z = document.elementFromPoint(e.clientX, e.clientY)?.closest(".column-drop-zone");
