@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.12.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.11.2...v0.12.0) (2026-10-14)
+
+
+### Features
+
+* move Standup and the arrows switch into the board filter row as native buttons ([#63](https://github.com/cattanisimone/gh-reloaded/issues/63)) ([c5ca51a](https://github.com/cattanisimone/gh-reloaded/commit/c5ca51a5975ef043d682ed2bf6a6b4ed4cd2531f))
+* route board dependency arrows around cards, hide done-to-done links and highlight on hover ([#64](https://github.com/cattanisimone/gh-reloaded/issues/64)) ([a197044](https://github.com/cattanisimone/gh-reloaded/commit/a197044552bbbc5350cf624b63f0672dca0849f6))
+
+
+### Bug Fixes
+
+* keep full-width board titles, cards and swimlanes aligned on narrow windows ([#61](https://github.com/cattanisimone/gh-reloaded/issues/61)) ([f064bfd](https://github.com/cattanisimone/gh-reloaded/commit/f064bfdb478ee504ae0f0f1a640abbfe607ce43f))
+* keep Standup's swimlane bands and compact column headers in place on narrow windows ([#65](https://github.com/cattanisimone/gh-reloaded/issues/65)) ([d09b59c](https://github.com/cattanisimone/gh-reloaded/commit/d09b59c68e20214f905e7989a8b48594f35eb130))
+* mount the board arrows switch on GitHub's current view tabs markup ([#60](https://github.com/cattanisimone/gh-reloaded/issues/60)) ([d806fd6](https://github.com/cattanisimone/gh-reloaded/commit/d806fd6a3f477da2e7659dfa265e9867402b1e44))
+* place quick-create buttons in the Projects top bar on GitHub's current markup ([#52](https://github.com/cattanisimone/gh-reloaded/issues/52)) ([6d88b87](https://github.com/cattanisimone/gh-reloaded/commit/6d88b870eb1036c238683c671e93404af5418d0e))
+
 ## [0.11.2](https://github.com/cattanisimone/gh-reloaded/compare/v0.11.1...v0.11.2) (2026-10-13)
 
 
