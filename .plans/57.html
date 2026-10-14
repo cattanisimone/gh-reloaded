@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #57 board controls in the filter row</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  h3{font-size:14px;margin:14px 0 6px;color:var(--muted)}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} td code{overflow-wrap:anywhere} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:13px} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto}
+  .bad{color:var(--bad)} .ok{color:var(--ok)}
+  /* mockup */
+  .gh{border:1px solid var(--line);border-radius:6px;background:#fff;font-size:13px;min-width:560px;position:relative;overflow:hidden}
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--line);padding:0 12px;position:relative;white-space:nowrap;overflow:hidden}
+  .tab{padding:8px 12px;color:var(--muted)} .tab.sel{color:var(--fg);font-weight:600;box-shadow:inset 0 -2px 0 #fd8c73}
+  .row{display:flex;gap:8px;align-items:center;padding:12px}
+  .filter{flex:1 1 auto;min-width:0;height:32px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;padding:0 10px;color:var(--muted);box-sizing:border-box}
+  .btn{flex:none;height:32px;box-sizing:border-box;border:1px solid var(--line);border-radius:6px;background:#f6f8fa;box-shadow:0 1px 0 rgba(31,35,40,.04);display:inline-flex;align-items:center;gap:8px;padding:0 12px;font-weight:500;color:var(--fg);font-size:14px;line-height:21px}
+  .btn svg{fill:var(--muted)} .ib{width:32px;padding:0;justify-content:center}
+  .ib.on{background:#e6eaef} .ib.on svg{stroke:var(--accent)}
+  .old-sb{position:absolute;right:84px;top:6px;height:26px;border:1px solid var(--line);border-radius:6px;background:#f6f8fa;font:600 12px/24px sans-serif;padding:0 10px}
+  .old-sw{position:absolute;right:16px;top:9px;width:32px;height:18px;border-radius:9px;background:#d0d7de}
+  .cols{display:flex;gap:8px;padding:0 12px 12px}.col{flex:1;height:44px;background:var(--soft);border:1px solid var(--line);border-radius:6px}
+  .cap{font-size:12px;color:var(--muted);margin:4px 0 12px}
+  .sw{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted)}
+  .sw span.l{display:block;margin-top:4px;text-align:center}
+</style></head><body><main>
+  <h1><a href="https://github.com/cattanisimone/gh-reloaded/issues/57">#57</a> · Board: Standup and the arrows switch in the filter row, as native buttons</h1>
+  <p class="meta">Size: <b>normal</b> · Goal: move both board controls out of the view-tabs bar (where they cover tabs) into the filter row, left of GitHub's <b>View</b> button, styled exactly like Primer buttons.</p>
+
+  <h2>What changes for users</h2>
+  <ul>
+    <li><b>Standup</b> and the <b>dependency-arrows</b> control sit in the filter row, in this order, just left of <b>View</b>. They no longer cover or truncate view tabs at any width.</li>
+    <li>Standup becomes a default Primer button (icon + "Standup", 32px). The pill switch becomes a 32×32 icon button with <code>aria-pressed</code> and the tooltip "Dependency arrows (experimental)"; when on it shows the selected fill and a blue icon.</li>
+    <li>Hover, pressed and keyboard focus look like GitHub's own buttons, and colours follow the GitHub theme you picked (light/dark), not only the OS setting.</li>
+    <li>Still Board-only, as today. While presenting in Standup mode the filter row is hidden, so the arrows control is hidden too (arrows keep their state).</li>
+  </ul>
+
+  <h2>Mockup</h2>
+  <h3>Before (today, 1500px): both controls pinned over the view tabs</h3>
+  <div class="scroll"><div class="gh">
+    <div class="tabs"><span class="tab sel">Board</span><span class="tab">General Availability</span><span class="tab">Public Previews</span><span class="tab">Server (GHES)</span><span class="tab">🚀 Recently Shipped</span><span class="tab">Sprint</span>
+      <span class="old-sb">⎚ Standup</span><span class="old-sw"></span></div>
+    <div class="row"><div class="filter">Filter by keyword or by field</div><span class="btn"><svg width="16" height="16"><circle cx="8" cy="8" r="5"/></svg>View</span></div>
+  </div></div>
+  <p class="cap"><span class="bad">✗</span> 26px custom button and pill switch sit on top of the last tabs; the tab bar is wider than the viewport and scrolls under them.</p>
+
+  <h3>After (1500px and 800px): in the filter row, gap 8px on both sides</h3>
+  <div class="scroll"><div class="gh">
+    <div class="tabs"><span class="tab sel">Board</span><span class="tab">General Availability</span><span class="tab">Public Previews</span><span class="tab">Server (GHES)</span><span class="tab">🚀 Recently Shipped</span><span class="tab">Sprint</span></div>
+    <div class="row"><div class="filter">Filter by keyword or by field</div>
+      <span class="btn new"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="9" rx="1.5"/></svg>Standup</span>
+      <span class="btn ib new" title="Dependency arrows (experimental)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#59636e" stroke-width="1.3"><path d="M2 4h3.5L14 12M11 12h3V9M2 12h3.5L14 4M11 4h3v3"/></svg></span>
+      <span class="btn"><svg width="16" height="16"><circle cx="8" cy="8" r="5"/></svg>View</span></div>
+    <div class="cols"><div class="col"></div><div class="col"></div><div class="col"></div><div class="col"></div></div>
+  </div></div>
+  <div class="scroll" style="margin-top:8px"><div class="gh" style="max-width:420px;min-width:420px">
+    <div class="row"><div class="filter">Filter…</div><span class="btn new">Standup</span><span class="btn ib on new"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke-width="1.3"><path d="M2 4h3.5L14 12M11 12h3V9M2 12h3.5L14 4M11 4h3v3"/></svg></span><span class="btn">View</span></div>
+  </div></div>
+  <p class="cap">Narrow viewport: the filter input (flexible) shrinks; the buttons keep their size. Measured live at 800px: filter input still 423px wide, no page scroll. Second frame shows arrows <b>on</b>.</p>
+
+  <h3>States (copied from the live View button, light theme)</h3>
+  <div class="sw">
+    <div><span class="btn">Standup</span><span class="l">rest #f6f8fa</span></div>
+    <div><span class="btn" style="background:#eff2f5">Standup</span><span class="l">hover #eff2f5</span></div>
+    <div><span class="btn" style="background:#e6eaef;box-shadow:none">Standup</span><span class="l">pressed #e6eaef, no shadow</span></div>
+    <div><span class="btn" style="outline:2px solid #0969da;outline-offset:-2px;box-shadow:none">Standup</span><span class="l">keyboard focus</span></div>
+    <div><span class="btn ib"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#59636e" stroke-width="1.3"><path d="M2 4h3.5L14 12M11 12h3V9M2 12h3.5L14 4M11 4h3v3"/></svg></span><span class="l">arrows off</span></div>
+    <div><span class="btn ib on"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke-width="1.3"><path d="M2 4h3.5L14 12M11 12h3V9M2 12h3.5L14 4M11 4h3v3"/></svg></span><span class="l">arrows on (pressed)</span></div>
+  </div>
+
+  <h2>Route matrix</h2>
+  <div class="scroll"><table>
+    <tr><th>View / state</th><th>Standup</th><th>Arrows</th><th>Getting back</th></tr>
+    <tr><td>Board view</td><td>shown</td><td>shown, <code>aria-pressed</code> = stored choice</td><td>—</td></tr>
+    <tr><td>Table / Roadmap view</td><td>removed</td><td>removed (arrows torn down)</td><td>Board tab → both re-mount once</td></tr>
+    <tr><td>Board → Table → Board, browser back / forward</td><td colspan="2">removed then re-mounted, one copy each, order kept</td><td>same as tab switch</td></tr>
+    <tr><td>Dirty view (filter changed: GitHub adds Discard + a divider)</td><td colspan="2">between the divider and View (measured live: no overlap)</td><td>—</td></tr>
+    <tr><td>Standup presenting</td><td colspan="2">hidden with the filter row (as the tabs bar is today)</td><td>Exit / Esc restores the row</td></tr>
+    <tr><td>Standup off in Settings</td><td>absent</td><td>directly left of View</td><td>—</td></tr>
+    <tr><td>Filter row or View button not found</td><td colspan="2">not mounted anywhere; retried on the next 800ms scan (no fallback)</td><td>—</td></tr>
+  </table></div>
+
+  <h2>How it works</h2>
+  <div class="scroll"><svg viewBox="0 0 860 210" width="100%" role="img" aria-label="Anchor and mount flow" font-size="12" font-family="sans-serif">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+    <g fill="#f6f8fa" stroke="#d1d9e0"><rect x="10" y="20" width="170" height="56" rx="6"/><rect x="220" y="20" width="200" height="56" rx="6"/><rect x="460" y="20" width="180" height="56" rx="6"/><rect x="680" y="20" width="170" height="56" rx="6"/></g>
+    <text x="20" y="42">sync(): Projects page and</text><text x="20" y="60">selected tab is a Board</text>
+    <text x="230" y="42">row = [role=region]</text><text x="230" y="60">[aria-label="View filters"]</text>
+    <text x="470" y="42">viewItem = row child holding</text><text x="470" y="60">a button whose text is "View"</text>
+    <text x="690" y="42">insert as row children:</text><text x="690" y="60">Standup · Arrows · View</text>
+    <g stroke="#59636e" marker-end="url(#a)"><line x1="180" y1="48" x2="218" y2="48"/><line x1="420" y1="48" x2="458" y2="48"/><line x1="640" y1="48" x2="678" y2="48"/></g>
+    <g stroke="#d1242f" marker-end="url(#a)"><line x1="320" y1="76" x2="320" y2="118"/><line x1="550" y1="76" x2="550" y2="118"/></g>
+    <rect x="230" y="120" width="420" height="34" rx="6" fill="#fff" stroke="#d1242f"/>
+    <text x="242" y="142" fill="#d1242f">missing → mount nothing, remove stray copies, retry next scan</text>
+    <text x="10" y="186" fill="#59636e">Order, whichever script runs first: Arrows → before viewItem; Standup → before Arrows (or viewItem).</text>
+    <text x="10" y="204" fill="#59636e">No margins: the row's own gap (8px) spaces them. No CSS-module class in any anchor.</text>
+  </svg></div>
+  <p>Live structure (probed 2026-10-14, all widths): <code>div[role=region][aria-label="View filters"]</code> is <code>display:flex; gap:8px; justify-content:space-between</code>, children <code>Box__…</code> (filter, flexible) · [<code>Box__…</code> Discard · <code>Divider__…</code> when dirty] · <code>viewButtonContainer__…</code> (the 32px "View" Primer button). Both content scripts get a small identical <code>findFilterRow()</code> (about 15 lines each) so each feature still ships on its own. Re-renders: GitHub's React tree can drop our nodes; the existing 800ms scan re-mounts by id (no duplicates) and re-applies <code>aria-pressed</code>/title from storage.</p>
+  <p>Styling uses GitHub's own Primer variables with the measured light values as fallback: <code>--button-default-bgColor-rest/hover/active/selected</code>, <code>--button-default-borderColor-rest</code>, <code>--button-default-shadow-resting</code>, <code>--button-default-fgColor-rest</code>, <code>--fgColor-muted</code>, <code>--fgColor-accent</code>, <code>--focus-outlineColor</code>. <code>font-family: inherit</code>, 14px / 500 / 21px, padding <code>0 12px</code> (icon button: 32×32, no padding, 16px icon), transition copied from the View button.</p>
+
+  <h2>Changes by file</h2>
+  <div class="scroll"><table>
+    <tr><th>File</th><th>Change</th><th>Why</th></tr>
+    <tr><td><code>features/board-dependencies/content.js</code></td><td>Mount in the filter row before View; <code>role=switch/aria-checked</code> → <code>aria-pressed</code> + <code>aria-label</code>; new icon-button markup; drop the ViewNavigationContainer anchor</td><td>placement, native look, a11y</td></tr>
+    <tr><td><code>features/board-dependencies/content.css</code></td><td>Primer icon-button styles; remove absolute positioning and the <code>position: relative !important</code> override on ViewNavigationContainer</td><td>no more overlay; stop touching GitHub's bar</td></tr>
+    <tr><td><code>features/standup-mode/content.js</code></td><td>Mount in the filter row (before the arrows button or View); drop the ViewNavigationContainer anchor for the button</td><td>placement, ordering</td></tr>
+    <tr><td><code>features/standup-mode/content.css</code></td><td>Primer default-button styles for <code>#ghsm-enter</code>; remove absolute positioning and the hard-coded font</td><td>native look</td></tr>
+    <tr><td><code>test/e2e/fixtures/board-filter-row.html</code> (new)</td><td>Board with the live tabs bar and filter row (real class names, live flex/gap/sizes, Primer-like View button)</td><td>geometry and state tests</td></tr>
+    <tr><td><code>test/e2e/fixtures/board*.html</code></td><td>Replace the hand-made filter row with the live <code>View filters</code> region</td><td>existing tests keep mounting</td></tr>
+    <tr><td><code>test/e2e/board-controls.spec.js</code> (new), <code>board-dependencies.spec.js</code>, <code>standup-mode.spec.js</code></td><td>New placement/geometry/state tests; rewrite the "mounts in ViewNavigationContainer" tests to the filter row</td><td>test plan below</td></tr>
+    <tr><td><code>README.md</code>, both feature READMEs, <code>screenshots/board-dependencies.svg</code>, <code>screenshots/standup-mode.svg</code></td><td>Describe the new placement; draw the filter row with both buttons</td><td>docs in sync</td></tr>
+  </table></div>
+  <p>No shared files touched (<code>lib/</code>, <code>background.js</code>, <code>options/</code>, <code>manifest.json</code> unchanged).</p>
+
+  <h2>Data, permissions, privacy</h2>
+  <p>None. Same storage key (<code>ghbdEnabled</code>), no new permission, <code>PRIVACY.md</code> unchanged.</p>
+
+  <h2>Test plan</h2>
+  <div class="scroll"><table>
+    <tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
+    <tr><td>No overlap with tabs, filter input or View at 800 / 1100 / 1500px; fully visible</td><td>e2e, <code>board-filter-row.html</code>, 3 viewports</td><td><code>places both controls left of View without overlap at {800,1100,1500}px</code></td></tr>
+    <tr><td>Size, radius, border, fill match View; gap before = after = row gap; no margins</td><td>e2e geometry vs the fixture's View button</td><td><code>matches the native View button: 32px, 6px radius, 1px border, fill, 8px gaps</code></td></tr>
+    <tr><td>Hover / pressed / focus</td><td>e2e: hover darker, mouse-down darker again without shadow, Tab focus ring 2px #0969da at -2px</td><td><code>has native hover, pressed and keyboard-focus states</code></td></tr>
+    <tr><td>Toggle state, title, <code>aria-pressed</code> survive a row re-render; no duplicates</td><td>e2e: replace the region with a fresh copy, toggle on before</td><td><code>re-mounts once with aria-pressed and title intact after the row re-renders</code></td></tr>
+    <tr><td>Order is deterministic</td><td>e2e: Standup · Arrows · View; Standup disabled → Arrows directly left of View</td><td><code>keeps Standup, arrows, View order whichever mounts first</code></td></tr>
+    <tr><td>Board-only; A → B → A; back / forward</td><td>e2e: Board → Table → Board, <code>goBack/goForward</code></td><td><code>withdraws on Table and returns once on Board, also via history</code></td></tr>
+    <tr><td>Dirty view (Discard + divider)</td><td>e2e on fixture variant</td><td><code>sits between the divider and View when the view has unsaved changes</code></td></tr>
+    <tr><td>Graceful degrade, no fallback</td><td>e2e: fixture without the region, and without the View button</td><td><code>mounts nothing anywhere when the filter row is missing</code> (asserts no control in the tabs bar either)</td></tr>
+    <tr><td>Anchors do not depend on CSS-module prefixes</td><td>e2e: same fixture with every class renamed / stripped still mounts; primary anchor asserted (<code>[aria-label="View filters"] &gt; #ghbd-toggle</code>)</td><td><code>finds the filter row by role and visible text, with any class naming</code></td></tr>
+    <tr><td>Existing behaviour (arrows draw, standup enters/exits)</td><td>existing specs on refreshed fixtures</td><td>unchanged names</td></tr>
+    <tr><td>README + screenshots updated</td><td>review</td><td>—</td></tr>
+  </table></div>
+  <p><b>Live check:</b> probed <code>github.com/orgs/github/projects/4247</code> (GitHub Public Roadmap, a public org board, opens anonymously) at 1500 / 1100 / 800px in light and dark. Found the <code>View filters</code> region described above; the View button is 32px, radius 6, border <code>#d1d9e0</code>, fill <code>#f6f8fa</code> → hover <code>#eff2f5</code> → pressed <code>#e6eaef</code> (no shadow), focus 2px <code>#0969da</code> at -2px; dark <code>#212830</code> / <code>#3d444d</code>. Simulated two buttons (104px + 32px) before View: no overlap and no horizontal page scroll at all three widths. After implementing I will load the extension against the same structure and repeat the probe; the private-board case (other owners' markup) stays "not verified" in the PR.</p>
+
+  <h2>Risks and open questions</h2>
+  <ul>
+    <li>The region's <code>aria-label</code> "View filters" is English text; GitHub's UI is English-only today. (Default: accept, require the "View" button too, and log nothing when absent.)</li>
+    <li>Below ~700px GitHub may collapse the filter row differently. (Default: out of scope; the controls simply do not mount if the anchors are gone.)</li>
+    <li>The arrows control is hidden while presenting in Standup mode. (Default: accept; adding it to the standup bar is a follow-up.)</li>
+    <li>Tooltip is the native <code>title</code>, not Primer's JS tooltip. (Default: <code>title</code> + <code>aria-label</code>; no injected tooltip component.)</li>
+    <li>Two copies of the small anchor helper. (Default: duplicate rather than add a shared content-script file to the manifest, so each feature stays independent.)</li>
+  </ul>
+
+  <h2>Out of scope</h2>
+  <ul>
+    <li>Changing what Standup mode or the arrows do, the Settings page, or other board features.</li>
+    <li>An arrows control inside the standup presentation bar.</li>
+  </ul>
+</main></body></html>
