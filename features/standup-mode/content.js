@@ -315,7 +315,13 @@
 
   let barObserver = null;
   function trackBarHeight(bar) {
-    const set = () => document.documentElement.style.setProperty(BAR_H_VAR, `${bar.offsetHeight}px`);
+    const set = () => {
+      document.documentElement.style.setProperty(BAR_H_VAR, `${bar.offsetHeight}px`);
+      // The header row's sticky top follows the bar's height, so the lane
+      // bands' offset (the row's top plus its height) must follow it too.
+      const board = active ? boardRoot() : null;
+      if (board) updateLaneBands(board);
+    };
     set();
     barObserver?.disconnect();
     if (typeof ResizeObserver === "function") {
