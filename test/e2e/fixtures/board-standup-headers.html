@@ -23,9 +23,6 @@
       .ViewNavigationContainer { position: relative; display: flex; align-items: center; flex: 1; }
       .project-title-row { display: flex; align-items: center; gap: 8px; padding: 12px 16px; }
       .project-title-row h1 { margin: 0; font-size: 20px; }
-      .toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 16px; }
-      .toolbar input { width: 320px; height: 28px; }
-      .view-options { padding: 0 16px 8px; }
       .boardContainer { padding: 16px; }
       body { min-height: 2000px; }
       .column-header { display: block; }
@@ -37,6 +34,15 @@
       .board-view-column { min-height: 1800px; }
       .board-view-column { display: inline-block; vertical-align: top; width: 280px; margin-right: 24px; }
       .board-view-column-card { display: block; width: 240px; min-height: 72px; margin: 8px 0; padding: 12px; border: 1px solid #d0d7de; border-radius: 6px; }
+      /* Filter row as on the live page (probed 2026-10-14): a flex region with
+         gap 8px, the flexible filter box on the left, GitHub's own 32px Primer
+         "View" button on the right. */
+      [role="region"][aria-label="View filters"] { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 16px; }
+      .toolbar { display: flex; align-items: center; gap: 8px; flex: 1 1 0; min-width: 0; }
+      .toolbar input { flex: 1 1 auto; min-width: 0; max-width: 480px; height: 32px; }
+      [class*="viewButtonContainer__"] button { box-sizing: border-box; height: 32px; padding: 0 12px; border: 1px solid #d1d9e0; border-radius: 6px; background: #f6f8fa; color: #1f2328; font-weight: 500; font-size: 14px; line-height: 21px; box-shadow: 0 1px 0 rgba(31,35,40,.04); cursor: pointer; }
+      [class*="viewButtonContainer__"] button:hover { background: #eff2f5; }
+      [class*="viewButtonContainer__"] button:active { background: #e6eaef; box-shadow: none; }
     </style>
   </head>
   <body>
@@ -62,13 +68,15 @@
         </div>
       </nav>
 
-      <!-- Filter bar and the View button, which sits in its own row. -->
-      <div class="toolbar">
-        <input type="text" aria-label="Filter by keyword or by field" placeholder="Filter by keyword or by field" value="assignee:@me -status:Done" />
-        <span>6 results</span>
-        <button type="button" aria-label="Clear filter">Clear</button>
+      <!-- Filter row, live markup: the region holds the filter box and the View button. -->
+      <div role="region" aria-label="View filters" class="filterRow__Qx1">
+        <div class="toolbar Box__Fk2">
+          <input type="text" aria-label="Filter by keyword or by field" placeholder="Filter by keyword or by field" value="assignee:@me -status:Done" />
+          <span>6 results</span>
+          <button type="button" aria-label="Clear filter">Clear</button>
+        </div>
+        <div class="view-options viewButtonContainer__Zt3"><button type="button">View</button></div>
       </div>
-      <div class="view-options"><button type="button">View</button></div>
 
       <!-- Board body. Three columns of issue cards (card discovery is just
            "any issue/PR link inside a .board-view-column-card"). Card #2

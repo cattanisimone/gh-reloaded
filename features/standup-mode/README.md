@@ -1,6 +1,6 @@
 # Standup mode
 
-On a GitHub Projects **Board** (kanban) view, adds a **Standup** button to the view-tabs bar that turns the board into a compact, screen-sharing-friendly presentation of the whole board — and flags the cards a standup should talk about.
+On a GitHub Projects **Board** (kanban) view, adds a **Standup** button to the filter row (left of the dependency-arrows button and GitHub's **View** button, styled like GitHub's own buttons) that turns the board into a compact, screen-sharing-friendly presentation of the whole board — and flags the cards a standup should talk about.
 
 On by default; switchable from Settings. The button only appears on Board views — switch to a Table or Roadmap view and it withdraws itself.
 
@@ -47,4 +47,4 @@ Time in status is the moment the project item's Status field last changed. Field
 
 - The rules are heuristics over what a board exposes: a "blocked" status is recognized by a label or column name, and an explanation by keywords in the last few comments.
 - The header and view-tabs chrome are hidden by matching GitHub's own class names by prefix; the title row, filter bar, View button and column headers are found by structure and visible text (the page's first heading, the filter input's label, a button reading "View", whatever precedes a column's first card). None of this could be checked against live github.com while building it, only against the fixtures in `test/e2e/fixtures/`; if a redesign moves an anchor, that part of the chrome simply stays visible (the board and signals still work).
-- Like the other board features, it anchors on class-name fragments read off a live board's DOM (`boardContainer__`, `ViewNavigationContainer__`): the local name followed by `__` (current naming), with the old `Board-module__<name>…` form listed as a fallback. Columns are `[data-board-column]` frames (the older `.board-view-column` is still recognised), and a column with no visible heading is named after that attribute.
+- Like the other board features, it anchors on class-name fragments read off a live board's DOM (`boardContainer__`): the local name followed by `__` (current naming), with the old `Board-module__<name>…` form listed as a fallback. Columns are `[data-board-column]` frames (the older `.board-view-column` is still recognised), and a column with no visible heading is named after that attribute.

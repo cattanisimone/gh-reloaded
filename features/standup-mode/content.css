@@ -1,59 +1,53 @@
 /* features/standup-mode/content.css — the compact board and attention
    signals added while standup mode is active (body.ghsm-active), plus the
-   always-present entry button in the view-tabs bar. `!important` throughout the active
+   always-present entry button in the filter row. `!important` throughout the active
    rules because they fight a live React app's own CSS-module styles, not
    page-author styles we control. */
 
-/* ---- Entry button (board-only, in the view-tabs bar) ---- */
+/* ---- Entry button (board-only, in the filter row) ---- */
 
-/* The view-nav bar is already forced to position:relative by the
-   board-dependencies feature; declare it here too so the button still
-   anchors correctly on a board where that feature's stylesheet isn't
-   present. Harmless when both set it. */
-[class*="ViewNavigationContainer__"],
-[class*="view-navigation-module__ViewNavigationContainer"] {
-  position: relative;
-}
-
-/* Pinned to the left of board-dependencies' switch (which sits at
-   right:16px) so the two never overlap when both are shown on a board. */
+/* A native Primer default button, in the filter row left of the arrows
+   button / View: same height, radius, border, fill and states as GitHub's
+   own "View" button (measured on the live page), colours from GitHub's
+   theme variables with the measured light values as fallback. No margin:
+   the row's own gap spaces it. */
 #ghsm-enter {
-  position: absolute;
-  top: 50%;
-  right: 84px;
-  transform: translateY(-50%);
+  box-sizing: border-box;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 26px;
-  padding: 0 10px;
-  border: 1px solid #d0d7de;
+  justify-content: center;
+  gap: 8px;
+  height: 32px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--button-default-borderColor-rest, #d1d9e0);
   border-radius: 6px;
-  background: #f6f8fa;
-  color: #24292f;
-  font: 600 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--button-default-bgColor-rest, #f6f8fa);
+  box-shadow: var(--button-default-shadow-resting, 0 1px 0 rgba(31, 35, 40, 0.04));
+  color: var(--button-default-fgColor-rest, #25292e);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 21px;
+  white-space: nowrap;
   cursor: pointer;
+  transition: background-color 80ms cubic-bezier(0.33, 1, 0.68, 1);
+}
+#ghsm-enter svg {
+  flex: 0 0 auto;
+  fill: var(--fgColor-muted, #59636e);
 }
 #ghsm-enter:hover {
-  background: #eaeef2;
+  background: var(--button-default-bgColor-hover, #eff2f5);
+}
+#ghsm-enter:active {
+  background: var(--button-default-bgColor-active, #e6eaef);
+  box-shadow: none;
 }
 #ghsm-enter:focus-visible {
-  outline: 2px solid #0969da;
-  outline-offset: 1px;
-}
-
-@media (prefers-color-scheme: dark) {
-  #ghsm-enter {
-    border-color: #30363d;
-    background: #21262d;
-    color: #c9d1d9;
-  }
-  #ghsm-enter:hover {
-    background: #30363d;
-  }
-  #ghsm-enter:focus-visible {
-    outline-color: #58a6ff;
-  }
+  outline: 2px solid var(--focus-outlineColor, #0969da);
+  outline-offset: -2px;
 }
 
 /* ---- Active presentation layer ---- */
@@ -62,9 +56,7 @@
    header actions, and the view-tabs bar (the slim #ghsm-bar below carries
    the project and view name instead). These are GitHub's own chrome; if a
    redesign renames them the board simply keeps its normal header — a
-   graceful no-op. The view-tabs bar is hidden last in the list because it
-   also holds the Standup entry button, which is not needed while
-   presenting. */
+   graceful no-op. */
 body.ghsm-active .AppHeader,
 body.ghsm-active header[role="banner"],
 body.ghsm-active .js-header-wrapper,

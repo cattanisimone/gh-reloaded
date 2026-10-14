@@ -1,7 +1,7 @@
 // features/board-dependencies/content.js — on a GitHub Projects **Board**
 // (kanban) view, optionally draws an arrow between any two currently-
 // rendered cards where one blocks the other. Off by default: a switch,
-// inserted into the view tabs bar's own trailing controls, turns it on —
+// mounted in the filter row, left of GitHub's View button, turns it on —
 // only shown while the currently-selected view is actually a Board, since
 // an arrow between two points only reads as meaningful there. The choice
 // is remembered across reloads via chrome.storage.local.
@@ -14,22 +14,27 @@
   const ROOT_ID = "ghbd-root";
   const TOGGLE_ID = "ghbd-toggle";
   const STORAGE_KEY = "ghbdEnabled";
-  // GitHub Projects v2's view-tabs bar — a stable, always-present part of
-  // every project page's chrome, unlike the board's own card markup. CSS
-  // module class names carry a build-specific hash suffix that will churn
-  // across deploys, so matched by prefix rather than in full. The
-  // trailing "view options" box (the kebab-ish dropdown) is positioned
-  // with an inline `left` offset that tracks the currently-*selected*
-  // tab, not the row's own right edge — mounting into it directly drags
-  // our switch along with it. Mounting into the outer bar instead and
-  // pinning our own switch to ITS right edge (that outer bar is what the
-  // inline `left` offset above is relative to, so it's already a
-  // positioning context) keeps the switch at the true end of the row
-  // regardless of which tab is selected.
-  // Current `ViewNavigationContainer__<hash>` naming first, the previous
-  // `view-navigation-module__ViewNavigationContainer--x` one as a fallback.
-  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="ViewNavigationContainer__"], [class*="view-navigation-module__ViewNavigationContainer"]';
+  // The filter row above the board: a flex region labelled "View filters"
+  // holding the filter box and GitHub's own "View" button. Found by role
+  // and visible text, never by a CSS-module class (those churn: see
+  // AGENTS.md). The buttons are mounted as children of this row, just left
+  // of the View button's wrapper; the row's own gap spaces them. If either
+  // anchor is missing nothing is mounted and the next scan retries.
+  const FILTER_ROW_SELECTOR = '[role="region"][aria-label="View filters"]';
+  const STANDUP_ID = "ghsm-enter";
   const SELECTED_TAB_SELECTOR = 'nav[aria-label="Select view"] [role="tab"][aria-selected="true"], nav[aria-label="Select view"] [role="tab"].selected';
+
+  // { row, view } — the filter row and its child that holds the "View"
+  // button — or null. Same small helper as standup-mode's, duplicated so
+  // each feature still ships on its own.
+  function findFilterRow() {
+    const row = document.querySelector(FILTER_ROW_SELECTOR);
+    if (!row) return null;
+    const view = Array.from(row.children).find((c) =>
+      Array.from(c.querySelectorAll("button")).some((b) => (b.textContent || "").trim() === "View")
+    );
+    return view ? { row, view } : null;
+  }
 
   function isProjectsPage() {
     return /^\/(orgs|users)\/[^/]+\/projects\/\d+/.test(location.pathname);
@@ -162,53 +167,67 @@
     return GEO.stateFromLabel(icon?.getAttribute("aria-label"));
   }
 
-  // A small icon plus the switch itself — the icon alone (rather than a
-  // text label, too wide for this row) is what makes it clear at a
-  // glance what the switch is for, without relying on hovering the
-  // tooltip.
   // Two crossing arrows (a "shuffle"-style glyph) rather than anything
   // link/share-shaped — reads as "these two are connected, in either
   // direction" without implying navigation to somewhere else.
-  function switchHtml() {
+  function iconHtml() {
     return `
-      <svg class="ghbd-toggle-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg class="ghbd-toggle-icon" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M2 4 L5.5 4 L14 12"></path>
         <path d="M11 12 L14 12 L14 9"></path>
         <path d="M2 12 L5.5 12 L14 4"></path>
         <path d="M11 4 L14 4 L14 7"></path>
-      </svg>
-      <span class="ghbd-switch-track"><span class="ghbd-switch-knob"></span></span>`;
+      </svg>`;
   }
 
-  // Mounted into the view tabs bar's own controls, next to the "view
-  // options" button — not floating, so it only ever shows up where a
-  // Board view is actually being looked at. GitHub's SPA re-renders that
-  // bar on its own (switching views, filtering, etc.), which silently
-  // drops our injected node — re-checking on every sync() call, not just
-  // once, is what keeps it from disappearing after that happens.
+  // Mounted in the filter row, between Standup (when present) and View — a
+  // native-looking icon button, only ever shown where a Board view is
+  // being looked at. GitHub's SPA re-renders the row on its own, which
+  // silently drops our node — re-checking on every sync() call, not just
+  // once, is what keeps it from disappearing after that happens. The
+  // position is re-derived each time, so it holds whichever feature
+  // mounted first.
   function ensureToggleMounted() {
-    if (document.getElementById(TOGGLE_ID)) return document.getElementById(TOGGLE_ID);
-    const container = document.querySelector(VIEW_NAV_CONTAINER_SELECTOR);
-    if (!container) return null;
-
-    const toggle = document.createElement("button");
-    toggle.id = TOGGLE_ID;
-    toggle.type = "button";
-    toggle.setAttribute("role", "switch");
-    toggle.setAttribute("aria-checked", "false");
-    toggle.innerHTML = switchHtml();
-    toggle.addEventListener("click", async () => {
-      const next = toggle.getAttribute("aria-checked") !== "true";
-      await chrome.storage.local.set({ [STORAGE_KEY]: next });
-    });
-    container.appendChild(toggle);
+    const found = findFilterRow();
+    if (!found) {
+      document.getElementById(TOGGLE_ID)?.remove();
+      return null;
+    }
+    let toggle = document.getElementById(TOGGLE_ID);
+    if (!toggle) {
+      toggle = document.createElement("button");
+      toggle.id = TOGGLE_ID;
+      toggle.type = "button";
+      toggle.setAttribute("aria-pressed", "false");
+      toggle.setAttribute("aria-label", "Dependency arrows (experimental)");
+      toggle.innerHTML = iconHtml();
+      toggle.addEventListener("click", async () => {
+        const next = toggle.getAttribute("aria-pressed") !== "true";
+        await chrome.storage.local.set({ [STORAGE_KEY]: next });
+      });
+    }
+    if (toggle.parentElement !== found.row || toggle.nextElementSibling !== found.view) {
+      found.row.insertBefore(toggle, found.view);
+    }
+    // Standup mounts before us, or after us — either way it ends up on our left.
+    const standup = document.getElementById(STANDUP_ID);
+    if (standup && standup.parentElement === found.row && standup.nextElementSibling !== toggle) {
+      found.row.insertBefore(standup, toggle);
+    }
     return toggle;
+  }
+
+  function toggleNeedsMount() {
+    const toggle = document.getElementById(TOGGLE_ID);
+    if (!toggle) return true;
+    const found = findFilterRow();
+    return !found || toggle.parentElement !== found.row || toggle.nextElementSibling !== found.view;
   }
 
   function renderToggle(enabled) {
     const toggle = ensureToggleMounted();
     if (!toggle) return;
-    toggle.setAttribute("aria-checked", String(enabled));
+    toggle.setAttribute("aria-pressed", String(enabled));
     toggle.title = enabled
       ? "Dependency arrows (experimental): on — hide arrows between dependent cards"
       : "Dependency arrows (experimental): off — show arrows between dependent cards";
@@ -482,8 +501,10 @@
     if (location.href !== lastUrl) {
       lastUrl = location.href;
       debouncedSync();
-    } else if (isProjectsPage() && !document.getElementById(TOGGLE_ID)) {
-      // Same URL, but the view-nav bar re-rendered and dropped our node.
+    } else if (isProjectsPage() && toggleNeedsMount()) {
+      // Same URL, but the filter row re-rendered and dropped our node, or
+      // React inserted its own Discard / divider after it (a view that
+      // became dirty): put it back directly before View.
       sync();
     }
   }, 800);
