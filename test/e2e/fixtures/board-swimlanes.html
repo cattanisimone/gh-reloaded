@@ -19,7 +19,7 @@
       .tabsContainer__UXpA4w { flex: 1; padding: 0 16px; }
       nav[aria-label="Select view"] { display: flex; align-items: center; padding: 4px 0; }
       [role="tab"] { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; }
-      .filterBar { margin: 8px 16px; height: 32px; border: 1px solid #d0d7de; border-radius: 6px; box-sizing: border-box; }
+      .filterBar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 16px; height: 32px; border: 1px solid #d0d7de; border-radius: 6px; box-sizing: border-box; }
       .boardContainer__xD7rX8 { height: 480px; position: relative; }
       .boardView__a1b2c3 { display: flex; flex-direction: column; overflow: auto; padding: 16px; box-sizing: border-box; height: 100%; width: 100%; }
       .boardView__a1b2c3 > * { flex: none; }
@@ -76,7 +76,7 @@
           <span>Board</span>
         </div>
       </nav></div><div class="viewOptionsMenuContainer__k-VYBM"><button type="button" aria-label="View options">⌄</button></div></div>
-      <div class="filterBar" role="search"></div>
+      <div class="filterBar" role="region" aria-label="View filters"><div class="toolbar Box__Fk2"><input type="text" aria-label="Filter by keyword or by field" placeholder="Filter by keyword or by field" /></div><div class="view-options viewButtonContainer__Zt3"><button type="button">View</button></div></div>
       <div class="boardContainer__xD7rX8">
         <div class="boardView__a1b2c3 horizontalGroup__d4e5f6" data-dnd-drop-id="board" data-dnd-drop-type="board">
           <div class="horizontalGroupHeader__m1n2o3">
