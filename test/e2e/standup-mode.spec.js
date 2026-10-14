@@ -666,20 +666,25 @@ for (const fullWidth of [true, false]) {
 
       test(`scrubbing the board hands bands over without overlap (${label})`, async ({ context, page }) => {
         await presentLanes(context, page, w, { fullWidth, query: `?tall${lanes}` });
+        const measure = () => page.evaluate(({ BAND, HEADER_ROW }) => {
+          const rowBottom = document.querySelector(HEADER_ROW).getBoundingClientRect().bottom;
+          const bands = [...document.querySelectorAll(BAND)].map((b) => { const r = b.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; });
+          return { rowBottom, bands };
+        }, { BAND, HEADER_ROW });
         for (let step = 0; step < 12; step++) {
           await page.evaluate((y) => { document.querySelector('[class*="boardView__"]').scrollTop = y; }, step * 120);
-          await page.waitForTimeout(30);
-          const m = await page.evaluate(({ BAND, HEADER_ROW }) => {
-            const rowBottom = document.querySelector(HEADER_ROW).getBoundingClientRect().bottom;
-            const bands = [...document.querySelectorAll(BAND)].map((b) => { const r = b.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; });
-            return { rowBottom, bands };
-          }, { BAND, HEADER_ROW });
-          for (let i = 1; i < m.bands.length; i++) expect(m.bands[i].top).toBeGreaterThanOrEqual(m.bands[i - 1].bottom - 1);
-          for (const b of m.bands) expect(b.top).toBeGreaterThanOrEqual(m.rowBottom - 1);
-          // A band whose lane is under the header row is stuck right at its bottom.
-          const stuck = m.bands.filter((b) => Math.abs(b.top - m.rowBottom) <= 1);
-          expect(stuck.length).toBeLessThanOrEqual(1);
-          if (step >= 1 && step <= 3) expect(stuck).toHaveLength(1);
+          // Sticky positions settle a frame or two after a scroll (and after the
+          // header row's resize observer fires), more slowly on a busy runner.
+          await expect.poll(async () => {
+            const m = await measure();
+            for (let i = 1; i < m.bands.length; i++) if (m.bands[i].top < m.bands[i - 1].bottom - 1) return `overlap at ${i}`;
+            for (const b of m.bands) if (b.top < m.rowBottom - 1) return `band above the header row (${b.top} < ${m.rowBottom})`;
+            // A band whose lane is under the header row is stuck right at its bottom.
+            const stuck = m.bands.filter((b) => Math.abs(b.top - m.rowBottom) <= 1);
+            if (stuck.length > 1) return `${stuck.length} bands stuck`;
+            if (step >= 1 && step <= 3 && stuck.length !== 1) return `${stuck.length} bands stuck, expected 1`;
+            return "ok";
+          }, { timeout: 5000 }).toBe("ok");
         }
       });
     }
