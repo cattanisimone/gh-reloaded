@@ -2,7 +2,12 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 2147483646; /* just under the toggle button, above everything GitHub renders */
+  /* Above the board's cards, below Primer's overlay layer (menus, dialogs,
+     the issue side panel), which therefore cover the arrows. */
+  z-index: 50;
+  --ghbd-grey: var(--fgColor-muted, #59636e);
+  --ghbd-red: var(--fgColor-danger, #d1242f);
+  --ghbd-halo: var(--bgColor-muted, #f6f8fa);
 }
 
 #ghbd-root .ghbd-edges {
@@ -13,35 +18,68 @@
   overflow: visible;
 }
 
+#ghbd-root .ghbd-edge-group {
+  opacity: 1;
+  transition: opacity 0.12s;
+}
+#ghbd-root .ghbd-edge-group.is-faded {
+  opacity: 0.2;
+}
+
+/* A halo in the column colour under each line keeps it apart from the card
+   borders it runs beside. */
+#ghbd-root .ghbd-halo {
+  fill: none;
+  stroke: var(--ghbd-halo);
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
 #ghbd-root .ghbd-edge {
   fill: none;
-  stroke: #57606a;
+  stroke: var(--ghbd-grey);
   stroke-width: 2;
-  opacity: 0.85;
+  stroke-linejoin: round;
 }
 #ghbd-root .ghbd-edge.is-reversed {
-  stroke: #cf222e;
+  stroke: var(--ghbd-red);
+}
+#ghbd-root .ghbd-edge-group.is-active .ghbd-edge {
+  stroke-width: 3;
 }
 
+#ghbd-root marker {
+  overflow: visible;
+}
+#ghbd-root .ghbd-arrowhead,
+#ghbd-root .ghbd-arrowhead-reversed {
+  stroke: var(--ghbd-halo);
+  stroke-width: 2;
+  paint-order: stroke;
+  stroke-linejoin: round;
+}
 #ghbd-root .ghbd-arrowhead {
-  fill: #57606a;
+  fill: var(--ghbd-grey);
 }
 #ghbd-root .ghbd-arrowhead-reversed {
-  fill: #cf222e;
+  fill: var(--ghbd-red);
 }
 
+/* GitHub's `--fgColor-danger` in dark mode (#f85149) is below 3:1 against
+   the dark card border, so the red is fixed to a shade that meets it. The
+   colour mode is read from GitHub's own attribute, and from the system when
+   it is "auto". */
+:root[data-color-mode="dark"] #ghbd-root {
+  --ghbd-grey: var(--fgColor-muted, #9198a1);
+  --ghbd-red: #ff7b72;
+  --ghbd-halo: var(--bgColor-muted, #151b23);
+}
 @media (prefers-color-scheme: dark) {
-  #ghbd-root .ghbd-edge {
-    stroke: #8b949e;
-  }
-  #ghbd-root .ghbd-edge.is-reversed {
-    stroke: #e5534b;
-  }
-  #ghbd-root .ghbd-arrowhead {
-    fill: #8b949e;
-  }
-  #ghbd-root .ghbd-arrowhead-reversed {
-    fill: #e5534b;
+  :root:not([data-color-mode="light"]):not([data-color-mode="dark"]) #ghbd-root,
+  :root[data-color-mode="auto"] #ghbd-root {
+    --ghbd-grey: var(--fgColor-muted, #9198a1);
+    --ghbd-red: #ff7b72;
+    --ghbd-halo: var(--bgColor-muted, #151b23);
   }
 }
 

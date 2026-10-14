@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
   <defs>
-    <marker id="bd-arrow-red" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L8,4 L0,8 z" fill="#e5534b"/>
+    <marker id="bd-arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto" overflow="visible">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ff7b72" stroke="#0d1117" stroke-width="2" paint-order="stroke"/>
     </marker>
-    <marker id="bd-arrow-gray" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L8,4 L0,8 z" fill="#8b949e"/>
+    <marker id="bd-arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto" overflow="visible">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9198a1" stroke="#0d1117" stroke-width="2" paint-order="stroke"/>
     </marker>
   </defs>
 
@@ -133,15 +133,30 @@
     <text x="913" y="264" fill="#8b949e" font-size="12">flag</text>
   </g>
 
-  <!-- arrows overlay, drawn last so they read on top like the real feature -->
-  <path d="M186,114 C186,54 738,54 738,114" fill="none" stroke="#e5534b" stroke-width="2.5" opacity="0.9" marker-end="url(#bd-arrow-red)"/>
-  <path d="M897,152 C 755,152 715,246 583,246" fill="none" stroke="#8b949e" stroke-width="2.5" opacity="0.9" marker-end="url(#bd-arrow-gray)"/>
+  <!-- arrows overlay: routed in the gutters, halo under each line, cut out behind the cards they cross -->
+  <g fill="none" stroke-linejoin="round">
+    <!-- red: blocker (#88) behind the card it blocks (#97); passes behind #99 -->
+    <g id="a-red">
+      <path d="M303,152 H345 M579,152 H590 Q600,152 600,162 V236 Q600,246 610,246 H621" stroke="#0d1117" stroke-width="4"/>
+      <path d="M303,152 H345 M579,152 H590 Q600,152 600,162 V236 Q600,246 610,246 H621" stroke="#ff7b72" stroke-width="2" marker-end="url(#bd-arrow-red)"/>
+    </g>
+    <!-- gray: #77 done, blocks #97 (mixed pair, still drawn) -->
+    <g id="a-gray">
+      <path d="M897,152 H886 Q876,152 876,162 V236 Q876,246 866,246 H855" stroke="#0d1117" stroke-width="4"/>
+      <path d="M897,152 H886 Q876,152 876,162 V236 Q876,246 866,246 H855" stroke="#9198a1" stroke-width="2" marker-end="url(#bd-arrow-gray)"/>
+    </g>
+    <!-- gray: same column, bracket in the column padding -->
+    <g id="a-same">
+      <path d="M303,246 H308 Q313,246 313,251 V335 Q313,340 308,340 H303" stroke="#0d1117" stroke-width="4"/>
+      <path d="M303,246 H308 Q313,246 313,251 V335 Q313,340 308,340 H303" stroke="#9198a1" stroke-width="2" marker-end="url(#bd-arrow-gray)"/>
+    </g>
+  </g>
 
   <!-- legend -->
   <g font-size="12" fill="#8b949e">
     <line x1="61" y1="540" x2="85" y2="540" stroke="#e5534b" stroke-width="2.5"/>
-    <text x="93" y="544">blocker is behind &#8212; still open, card ahead shouldn't be moving yet</text>
+    <text x="93" y="544">blocker is behind &#8212; the card ahead shouldn't be moving yet (hover a card to highlight its arrows)</text>
     <line x1="61" y1="562" x2="85" y2="562" stroke="#8b949e" stroke-width="2.5"/>
-    <text x="93" y="566">blocker is at/ahead &#8212; resolved or on track</text>
+    <text x="93" y="566">blocker is at/ahead &#8212; resolved or on track. Links between two closed items are not drawn.</text>
   </g>
 </svg>
