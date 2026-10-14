@@ -107,9 +107,10 @@ const SIZES = [1500, 1100, 800];
 const VIEW = '[class*="boardView__"], [class*="Board-module__boardView"]';
 const HEADER_ROW = '[class*="horizontalGroupHeader__"], [class*="Board-module__horizontalGroupHeader"]';
 const HEADER_COLUMNS = `:is(${HEADER_ROW}) [data-board-column]`;
+const AREA = '[class*="horizontalGroupAreaContainer__"], [class*="Board-module__horizontalGroupAreaContainer"]';
 
 // Old naming: Board-module__<name>__<hash> for the layout classes the CSS lists as fallbacks.
-const oldNaming = (html) => html.replace(/\b(boardView|boardContainer|horizontalGroupHeader|horizontalGroupAreaContainer|horizontalGroupContainer)__/g, "Board-module__$1__");
+const oldNaming = (html) => html.replace(/\b(boardView|boardContainer|horizontalGroupHeader|horizontalGroupAreaContainer|horizontalGroupContainer)__(\w+)/g, "Board-module__$1--$2");
 
 const rects = (page, sel) => page.$$eval(sel, (els) => els.map((e) => { const r = e.getBoundingClientRect(); return { l: r.left, r: r.right, w: r.width, h: r.height }; }));
 
@@ -238,7 +239,8 @@ test("widening the window brings the count badge back", async ({ context, page }
 test("the same layout holds on the previous class naming", async ({ context, page }) => {
   await openGrouped(context, page, 800, { transform: oldNaming });
   expect(await page.$$eval(`${HEADER_COLUMNS} h2`, (e) => e.map((x) => x.getBoundingClientRect().height <= 21))).toEqual(Array(6).fill(true));
-  const last = (await rects(page, `[class*="horizontalGroupAreaContainer__"] [data-board-column]:last-child`))[0];
+  expect(await page.locator('[class*="Board-module__boardView"]').count()).toBe(1);
+  const last = (await rects(page, `:is(${AREA}) [data-board-column]:last-child`))[0];
   for (const l of await rects(page, '[class*="styledGroupHeaderWrapper__"]')) expect(Math.abs(l.r - last.r)).toBeLessThanOrEqual(1);
 });
 
@@ -255,6 +257,21 @@ test("with a scroller per lane, headers follow their lane and keep the label vis
   });
   expect(Math.abs(r.last - r.hd)).toBeLessThanOrEqual(1);
   expect(Math.abs(r.labelLeft - r.scLeft)).toBeLessThanOrEqual(1);
+});
+
+test("a long count hides the badge sooner than a short one", async ({ context, page }) => {
+  await openGrouped(context, page, 1100);
+  const badge = page.locator(`${HEADER_COLUMNS} [class*="AggregateLabels__"]`).nth(0);
+  await expect(badge).toBeVisible();
+  await page.evaluate(() => { document.querySelectorAll('[data-board-column] [class*="AggregateLabels__"]')[0].textContent = "1234567"; document.querySelectorAll('[data-board-column] h2 span')[0].textContent = "A rather long column title"; });
+  await expect(badge).toBeHidden();
+});
+
+test("the gutter is the view tabs' offset, not a constant", async ({ context, page }) => {
+  await routeGithub(context, "board-swimlanes.html", { transform: (h) => h.replace(".tabsContainer__UXpA4w { flex: 1; padding: 0 16px; }", ".tabsContainer__UXpA4w { flex: 1; padding: 0 40px; }").replace(".filterBar { margin: 8px 16px;", ".filterBar { margin: 8px 40px;") });
+  await page.goto(GROUPED_URL);
+  await expect.poll(() => page.evaluate(() => document.documentElement.style.getPropertyValue("--ghfw-gutter"))).toBe("40px");
+  await expect.poll(async () => (await rects(page, HEADER_COLUMNS))[0].l).toBe(40);
 });
 
 test("dragging across a scrolled board reaches the column under the pointer", async ({ context, page }) => {
