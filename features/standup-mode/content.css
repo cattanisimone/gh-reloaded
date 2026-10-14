@@ -205,6 +205,29 @@ body.ghsm-active:not(.ghfw-active) .board-view-column-card h3 {
 body.ghsm-active:not(.ghfw-active) .board-view-column-card img {
   flex: none !important;
 }
+
+/* Card top row (repo and number text, then the avatars): the text gives
+   way first and ends in "…", the avatar box never shrinks or leaves the
+   card, with one avatar or several. */
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"] {
+  width: 100% !important;
+  overflow: hidden !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"] > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"] > * > :not(:has(img)) {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"] :has(> img),
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"] :has(img):not(:has(> :not(:has(img)))) {
+  flex: none !important;
+}
 body.ghsm-active:not(.ghfw-active) .board-view-column-card ul[aria-label] li,
 body.ghsm-active:not(.ghfw-active) .board-view-column-card ul[aria-label] li button {
   min-width: 0 !important;

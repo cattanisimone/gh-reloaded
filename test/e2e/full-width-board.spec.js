@@ -152,16 +152,20 @@ for (const w of SIZES) {
   test(`card content stays inside its border at ${w}px`, async ({ context, page }) => {
     await openGrouped(context, page, w);
     const bad = await page.evaluate(() => {
-      const card = document.querySelector(".board-view-column-card");
-      const cr = card.getBoundingClientRect();
       const out = [];
-      for (const el of card.querySelectorAll("*")) {
-        const r = el.getBoundingClientRect();
-        if (r.width && r.right > cr.right + 0.5) out.push(el.className || el.tagName);
+      let stacks = 0;
+      for (const card of document.querySelectorAll(".board-view-column-card")) {
+        const cr = card.getBoundingClientRect();
+        for (const el of card.querySelectorAll("*")) {
+          const r = el.getBoundingClientRect();
+          if (r.width && r.right > cr.right + 0.5) out.push(el.className || el.tagName);
+        }
+        if (card.querySelectorAll("img.avatar").length > 1) stacks++;
       }
-      const av = card.querySelector("img.avatar").getBoundingClientRect();
-      return { out, av: [av.width, av.height], tokens: [...card.querySelectorAll("button")].map((b) => b.scrollWidth > b.clientWidth || b.getBoundingClientRect().width) };
+      const av = document.querySelector(".board-view-column-card img.avatar").getBoundingClientRect();
+      return { out, stacks, av: [av.width, av.height] };
     });
+    expect(bad.stacks).toBeGreaterThan(0);
     expect(bad.out).toEqual([]);
     expect(bad.av).toEqual([20, 20]);
   });
