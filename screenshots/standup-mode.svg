@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
-  <rect x="0" y="0" width="1200" height="520" fill="#0d1117"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="546" viewBox="0 0 1200 546" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+  <rect x="0" y="0" width="1200" height="546" fill="#0d1117"/>
 
   <!-- Slim presentation bar: project + view, signal summary, exit -->
   <rect x="0" y="0" width="1200" height="44" fill="#161b22"/>
@@ -24,7 +24,7 @@
   <text x="20" y="70" fill="#58a6ff" font-size="11" font-weight="700" letter-spacing="0.6">STANDUP MODE — ONE SLIM HEADER, A SMALL GAP BELOW IT, COMPACT COLUMN HEADERS, WHAT NEEDS ATTENTION FLAGGED</text>
 
   <!-- Bottleneck column outline -->
-  <rect x="606" y="84" width="284" height="408" rx="8" fill="none" stroke="#8957e5" stroke-width="2" stroke-dasharray="6 4"/>
+  <rect x="606" y="84" width="284" height="434" rx="8" fill="none" stroke="#8957e5" stroke-width="2" stroke-dasharray="6 4"/>
   <text x="620" y="104" fill="#d2a8ff" font-size="11" font-weight="700">Bottleneck · 4 of 9 open cards (44%)</text>
   <circle cx="46" cy="121" r="5" fill="#8b949e"/>
   <text x="58" y="126" fill="#e6edf3" font-size="15" font-weight="700">Todo</text>
@@ -42,61 +42,68 @@
   <text x="928" y="126" fill="#e6edf3" font-size="15" font-weight="700">Done</text>
   <rect x="1136" y="109" width="30" height="20" rx="10" fill="#21262d" stroke="#30363d"/>
   <text x="1146" y="123" fill="#8b949e" font-size="11" font-weight="700">9</text>
-  <rect x="40" y="140" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
-  <text x="54" y="162" fill="#c9d1d9" font-size="12">Rotate the signing keys</text>
-  <rect x="54" y="180" width="30" height="18" rx="9" fill="#3b2300" stroke="#bd561d"/>
-  <text x="62" y="193" fill="#ffa657" font-size="11" font-weight="700">P1</text>
-  <rect x="90" y="180" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
-  <text x="98" y="193" fill="#8b949e" font-size="11" font-weight="700">2d</text>
-  <rect x="40" y="222" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
-  <text x="54" y="244" fill="#c9d1d9" font-size="12">Document the release flow</text>
-  <rect x="54" y="262" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
-  <text x="62" y="275" fill="#8b949e" font-size="11" font-weight="700">1d</text>
-  <rect x="330" y="140" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
-  <rect x="330" y="140" width="3" height="72" rx="1.5" fill="#fb8f44"/>
-  <text x="344" y="162" fill="#c9d1d9" font-size="12">Rework token storage layer</text>
-  <rect x="344" y="180" width="44" height="18" rx="9" fill="#3b2300" stroke="#bd561d"/>
-  <text x="352" y="193" fill="#ffa657" font-size="11" font-weight="700">High</text>
-  <rect x="394" y="180" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
-  <text x="402" y="193" fill="#8b949e" font-size="11" font-weight="700">3d</text>
-  <rect x="330" y="222" width="256" height="72" rx="6" fill="#3c1618" stroke="#30363d"/>
-  <rect x="330" y="222" width="3" height="72" rx="1.5" fill="#cf222e"/>
-  <text x="344" y="244" fill="#c9d1d9" font-size="12">Migrate the billing job</text>
-  <rect x="344" y="262" width="100" height="18" rx="9" fill="#3c1618" stroke="#da3633"/>
-  <text x="352" y="275" fill="#ff7b72" font-size="11" font-weight="700">Orphan block</text>
-  <rect x="452" y="262" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
-  <text x="460" y="275" fill="#8b949e" font-size="11" font-weight="700">5d</text>
-  <rect x="330" y="304" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
-  <text x="344" y="326" fill="#c9d1d9" font-size="12">Board arrows redesign</text>
-  <rect x="344" y="344" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
-  <text x="352" y="357" fill="#8b949e" font-size="11" font-weight="700">1d</text>
-  <rect x="620" y="140" width="256" height="72" rx="6" fill="#3d2e00" stroke="#30363d"/>
-  <rect x="620" y="140" width="3" height="72" rx="1.5" fill="#d4a72c"/>
-  <text x="634" y="162" fill="#c9d1d9" font-size="12">Review the API changes</text>
-  <rect x="634" y="180" width="48" height="18" rx="9" fill="#3d2e00" stroke="#9e6a03"/>
-  <text x="642" y="193" fill="#e3b341" font-size="11" font-weight="700">Stale</text>
-  <rect x="688" y="180" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
-  <text x="696" y="193" fill="#8b949e" font-size="11" font-weight="700">6d</text>
-  <rect x="620" y="222" width="256" height="72" rx="6" fill="#3d2e00" stroke="#30363d"/>
-  <rect x="620" y="222" width="3" height="72" rx="1.5" fill="#d4a72c"/>
-  <text x="634" y="244" fill="#c9d1d9" font-size="12">Review the docs update</text>
-  <rect x="634" y="262" width="48" height="18" rx="9" fill="#3d2e00" stroke="#9e6a03"/>
-  <text x="642" y="275" fill="#e3b341" font-size="11" font-weight="700">Stale</text>
-  <rect x="688" y="262" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
-  <text x="696" y="275" fill="#8b949e" font-size="11" font-weight="700">4d</text>
-  <rect x="620" y="304" width="256" height="72" rx="6" fill="#3b2300" stroke="#30363d"/>
-  <rect x="620" y="304" width="3" height="72" rx="1.5" fill="#fb8f44"/>
-  <text x="634" y="326" fill="#c9d1d9" font-size="12">Ship the dependency export</text>
-  <rect x="634" y="344" width="136" height="18" rx="9" fill="#3b2300" stroke="#bd561d"/>
-  <text x="642" y="357" fill="#ffa657" font-size="11" font-weight="700">Critical path at risk</text>
-  <rect x="776" y="344" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
-  <text x="784" y="357" fill="#8b949e" font-size="11" font-weight="700">2d</text>
-  <rect x="620" y="386" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
-  <text x="634" y="408" fill="#c9d1d9" font-size="12">Update the changelog</text>
-  <rect x="634" y="426" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
-  <text x="642" y="439" fill="#8b949e" font-size="11" font-weight="700">1d</text>
-  <rect x="910" y="140" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
-  <text x="924" y="162" fill="#c9d1d9" font-size="12">Fix flaky CI on Windows</text>
-  <rect x="910" y="222" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
-  <text x="924" y="244" fill="#c9d1d9" font-size="12">Audit dependency licenses</text>
+  <!-- Lane band of a grouped board: sticks right under the compact column headers -->
+  <rect x="40" y="136" width="1126" height="22" rx="4" fill="#161b22" stroke="#30363d"/>
+  <text x="52" y="151" fill="#c9d1d9" font-size="11" font-weight="700">Team: Platform</text>
+  <rect x="150" y="140" width="28" height="14" rx="7" fill="#21262d" stroke="#30363d"/>
+  <text x="159" y="151" fill="#8b949e" font-size="10" font-weight="700">9</text>
+  <g transform="translate(0,26)">
+    <rect x="40" y="140" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
+    <text x="54" y="162" fill="#c9d1d9" font-size="12">Rotate the signing keys</text>
+    <rect x="54" y="180" width="30" height="18" rx="9" fill="#3b2300" stroke="#bd561d"/>
+    <text x="62" y="193" fill="#ffa657" font-size="11" font-weight="700">P1</text>
+    <rect x="90" y="180" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
+    <text x="98" y="193" fill="#8b949e" font-size="11" font-weight="700">2d</text>
+    <rect x="40" y="222" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
+    <text x="54" y="244" fill="#c9d1d9" font-size="12">Document the release flow</text>
+    <rect x="54" y="262" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
+    <text x="62" y="275" fill="#8b949e" font-size="11" font-weight="700">1d</text>
+    <rect x="330" y="140" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
+    <rect x="330" y="140" width="3" height="72" rx="1.5" fill="#fb8f44"/>
+    <text x="344" y="162" fill="#c9d1d9" font-size="12">Rework token storage layer</text>
+    <rect x="344" y="180" width="44" height="18" rx="9" fill="#3b2300" stroke="#bd561d"/>
+    <text x="352" y="193" fill="#ffa657" font-size="11" font-weight="700">High</text>
+    <rect x="394" y="180" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
+    <text x="402" y="193" fill="#8b949e" font-size="11" font-weight="700">3d</text>
+    <rect x="330" y="222" width="256" height="72" rx="6" fill="#3c1618" stroke="#30363d"/>
+    <rect x="330" y="222" width="3" height="72" rx="1.5" fill="#cf222e"/>
+    <text x="344" y="244" fill="#c9d1d9" font-size="12">Migrate the billing job</text>
+    <rect x="344" y="262" width="100" height="18" rx="9" fill="#3c1618" stroke="#da3633"/>
+    <text x="352" y="275" fill="#ff7b72" font-size="11" font-weight="700">Orphan block</text>
+    <rect x="452" y="262" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
+    <text x="460" y="275" fill="#8b949e" font-size="11" font-weight="700">5d</text>
+    <rect x="330" y="304" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
+    <text x="344" y="326" fill="#c9d1d9" font-size="12">Board arrows redesign</text>
+    <rect x="344" y="344" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
+    <text x="352" y="357" fill="#8b949e" font-size="11" font-weight="700">1d</text>
+    <rect x="620" y="140" width="256" height="72" rx="6" fill="#3d2e00" stroke="#30363d"/>
+    <rect x="620" y="140" width="3" height="72" rx="1.5" fill="#d4a72c"/>
+    <text x="634" y="162" fill="#c9d1d9" font-size="12">Review the API changes</text>
+    <rect x="634" y="180" width="48" height="18" rx="9" fill="#3d2e00" stroke="#9e6a03"/>
+    <text x="642" y="193" fill="#e3b341" font-size="11" font-weight="700">Stale</text>
+    <rect x="688" y="180" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
+    <text x="696" y="193" fill="#8b949e" font-size="11" font-weight="700">6d</text>
+    <rect x="620" y="222" width="256" height="72" rx="6" fill="#3d2e00" stroke="#30363d"/>
+    <rect x="620" y="222" width="3" height="72" rx="1.5" fill="#d4a72c"/>
+    <text x="634" y="244" fill="#c9d1d9" font-size="12">Review the docs update</text>
+    <rect x="634" y="262" width="48" height="18" rx="9" fill="#3d2e00" stroke="#9e6a03"/>
+    <text x="642" y="275" fill="#e3b341" font-size="11" font-weight="700">Stale</text>
+    <rect x="688" y="262" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
+    <text x="696" y="275" fill="#8b949e" font-size="11" font-weight="700">4d</text>
+    <rect x="620" y="304" width="256" height="72" rx="6" fill="#3b2300" stroke="#30363d"/>
+    <rect x="620" y="304" width="3" height="72" rx="1.5" fill="#fb8f44"/>
+    <text x="634" y="326" fill="#c9d1d9" font-size="12">Ship the dependency export</text>
+    <rect x="634" y="344" width="136" height="18" rx="9" fill="#3b2300" stroke="#bd561d"/>
+    <text x="642" y="357" fill="#ffa657" font-size="11" font-weight="700">Critical path at risk</text>
+    <rect x="776" y="344" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
+    <text x="784" y="357" fill="#8b949e" font-size="11" font-weight="700">2d</text>
+    <rect x="620" y="386" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
+    <text x="634" y="408" fill="#c9d1d9" font-size="12">Update the changelog</text>
+    <rect x="634" y="426" width="28" height="18" rx="9" fill="#21262d" stroke="#30363d"/>
+    <text x="642" y="439" fill="#8b949e" font-size="11" font-weight="700">1d</text>
+    <rect x="910" y="140" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
+    <text x="924" y="162" fill="#c9d1d9" font-size="12">Fix flaky CI on Windows</text>
+    <rect x="910" y="222" width="256" height="72" rx="6" fill="#161b22" stroke="#30363d"/>
+    <text x="924" y="244" fill="#c9d1d9" font-size="12">Audit dependency licenses</text>
+  </g>
 </svg>

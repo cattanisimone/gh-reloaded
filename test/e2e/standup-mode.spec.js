@@ -605,3 +605,161 @@ test("standup's own board layout keeps titles, lane headers and cards in line at
   expect(m.spill).toBe(0);
   expect(m.min).toBe(150);
 });
+
+// ---- #62: lane bands and compact column headers on narrow windows ----
+const LANE_URL = `${BOARD_URL}?groupedBy%5BcolumnId%5D=Assignees`;
+const BAND = '[class*="styledGroupHeaderWrapper"]';
+const HEADER_ROW = '[class*="horizontalGroupHeader__"], [class*="Board-module__horizontalGroupHeader"]';
+const SIZES = [1500, 1100, 800];
+
+async function presentLanes(context, page, width, { fullWidth = true, query = "", transform, height = 900 } = {}) {
+  await seedStorage(context, { ghfwEnabled: fullWidth });
+  await routeGithub(context, "board-swimlanes.html", { transform });
+  await page.setViewportSize({ width, height });
+  await page.goto(`${LANE_URL}${query}`);
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("body.ghsm-active")).toHaveCount(1);
+  if (fullWidth) await expect(page.locator("body.ghfw-active")).toHaveCount(1);
+  await expect(page.locator("[data-ghsm-sticky]").first()).toBeAttached();
+  await page.waitForTimeout(300);
+}
+
+const sticky = (page) => page.locator(`${BAND}[data-ghsm-sticky]`);
+
+for (const fullWidth of [true, false]) {
+  for (const w of SIZES) {
+    for (const lanes of ["", "&lanes=scroll"]) {
+      const label = `${w}px, full-width ${fullWidth ? "on" : "off"}${lanes ? ", lanes scroll" : ""}`;
+      test(`lane band sits at the top of its lane, under the header row (${label})`, async ({ context, page }) => {
+        await presentLanes(context, page, w, { fullWidth, query: lanes });
+        const m = await page.evaluate(({ BAND, HEADER_ROW }) => {
+          const row = document.querySelector(HEADER_ROW).getBoundingClientRect();
+          const band = document.querySelector(BAND);
+          const b = band.getBoundingClientRect();
+          const lane = band.closest('[class*="horizontalGroupAreaContainer"]').getBoundingClientRect();
+          const cards = [...band.closest('[class*="horizontalGroupAreaContainer"]').querySelectorAll(".board-view-column-card")].map((c) => c.getBoundingClientRect().top);
+          return { rowBottom: row.bottom, bandTop: b.top, bandBottom: b.bottom, laneTop: lane.top, firstCard: Math.min(...cards) };
+        }, { BAND, HEADER_ROW });
+        expect(Math.abs(m.bandTop - m.laneTop)).toBeLessThanOrEqual(1);
+        expect(Math.abs(m.bandTop - m.rowBottom)).toBeLessThanOrEqual(1);
+        expect(m.bandBottom).toBeLessThanOrEqual(m.firstCard + 1);
+      });
+
+      test(`lane band spans the columns, also after scrolling sideways (${label})`, async ({ context, page }) => {
+        await presentLanes(context, page, w, { fullWidth, query: lanes });
+        await page.evaluate(() => {
+          const v = document.querySelector('[class*="boardView__"]');
+          v.scrollLeft = v.scrollWidth;
+        });
+        await page.waitForTimeout(100);
+        const m = await page.evaluate(({ BAND, HEADER_ROW }) => {
+          const frames = [...document.querySelectorAll(`:is(${HEADER_ROW}) [data-board-column]`)];
+          const lastHeader = frames[frames.length - 1].getBoundingClientRect().right;
+          const lastCol = [...document.querySelector('[class*="horizontalGroupAreaContainer"]').querySelectorAll("[data-board-column]")].pop().getBoundingClientRect().right;
+          return { lastHeader, lastCol, bands: [...document.querySelectorAll(BAND)].map((b) => b.getBoundingClientRect().right) };
+        }, { BAND, HEADER_ROW });
+        for (const r of m.bands) {
+          expect(Math.abs(r - m.lastCol)).toBeLessThanOrEqual(1);
+          expect(Math.abs(r - m.lastHeader)).toBeLessThanOrEqual(1);
+        }
+      });
+
+      test(`scrubbing the board hands bands over without overlap (${label})`, async ({ context, page }) => {
+        await presentLanes(context, page, w, { fullWidth, query: `?tall${lanes}` });
+        const measure = () => page.evaluate(({ BAND, HEADER_ROW }) => {
+          const rowBottom = document.querySelector(HEADER_ROW).getBoundingClientRect().bottom;
+          // A band sticks inside its parent, so where that parent ends it is
+          // pushed up and out under the header row: that is the handover.
+          const bands = [...document.querySelectorAll(BAND)].map((b) => {
+            const r = b.getBoundingClientRect();
+            const end = b.parentElement.getBoundingClientRect().bottom - (parseFloat(getComputedStyle(b).marginBottom) || 0);
+            return { top: r.top, bottom: r.bottom, end, leaving: r.bottom >= end - 1 };
+          });
+          return { rowBottom, bands };
+        }, { BAND, HEADER_ROW });
+        for (let step = 0; step < 12; step++) {
+          await page.evaluate((y) => { document.querySelector('[class*="boardView__"]').scrollTop = y; }, step * 120);
+          // Sticky positions settle a frame or two after a scroll (and after the
+          // header row's resize observer fires), more slowly on a busy runner.
+          await expect.poll(async () => {
+            const m = await measure();
+            for (let i = 1; i < m.bands.length; i++) if (m.bands[i].top < m.bands[i - 1].bottom - 1) return `overlap at ${i}`;
+            for (const b of m.bands) if (b.top < m.rowBottom - 1 && !b.leaving) return `band above the header row (${b.top} < ${m.rowBottom}, band bottom ${b.bottom}, lane end ${b.end})`;
+            // A band whose lane is under the header row is stuck right at its bottom.
+            const stuck = m.bands.filter((b) => Math.abs(b.top - m.rowBottom) <= 1);
+            if (stuck.length > 1) return `${stuck.length} bands stuck`;
+            if (step >= 1 && step <= 3 && stuck.length !== 1) return `${stuck.length} bands stuck, expected 1`;
+            return "ok";
+          }, { timeout: 5000 }).toBe("ok");
+        }
+      });
+    }
+
+    test(`compact headers keep the pill whole and show no scrollbar (${w}px, full-width ${fullWidth ? "on" : "off"})`, async ({ context, page }) => {
+      await presentLanes(context, page, w, { fullWidth, query: "?sums" });
+      const m = await page.$$eval(`:is(${HEADER_ROW}) [data-board-column]`, (frames) =>
+        frames.map((f) => {
+          const pill = f.querySelector("[data-ghsm-pill]").getBoundingClientRect();
+          const h2 = f.querySelector("h2");
+          return { overflow: f.scrollWidth - f.clientWidth, pillRight: pill.right, frameRight: f.getBoundingClientRect().right, pillText: f.querySelector("[data-ghsm-pill]").textContent, h2Over: h2.scrollWidth > h2.clientWidth, ellipsis: getComputedStyle(h2).textOverflow };
+        })
+      );
+      expect(m).toHaveLength(6);
+      for (const f of m) {
+        expect(f.overflow).toBeLessThanOrEqual(0);
+        expect(f.pillRight).toBeLessThanOrEqual(f.frameRight + 0.5);
+        expect(f.pillText).toMatch(/^Effort: \d+$/);
+        expect(f.ellipsis).toBe("ellipsis");
+      }
+    });
+  }
+}
+
+test("gaps under the bar and around the bands are the same at every width", async ({ context, page }) => {
+  const gaps = [];
+  for (const w of SIZES) {
+    await presentLanes(context, page, w, { query: "&lanes=scroll" });
+    gaps.push(
+      await page.evaluate(({ BAND, HEADER_ROW }) => {
+        const bar = document.getElementById("ghsm-bar").getBoundingClientRect().bottom;
+        const row = document.querySelector(HEADER_ROW).getBoundingClientRect();
+        const band = document.querySelector(BAND).getBoundingClientRect();
+        const card = document.querySelector(".board-view-column-card").getBoundingClientRect();
+        return { barToRow: Math.round(row.top - bar), rowToBand: Math.round(band.top - row.bottom), bandToCard: Math.round(card.top - band.bottom) };
+      }, { BAND, HEADER_ROW })
+    );
+    await page.reload();
+  }
+  expect(gaps[1]).toEqual(gaps[0]);
+  expect(gaps[2]).toEqual(gaps[0]);
+});
+
+test("the lane band anchor matches both class namings and marks only the band", async ({ context, page }) => {
+  const old = (html) => html.replace(/\bstyledGroupHeaderWrapper__(\w+)/g, "Board-module__styledGroupHeaderWrapper--$1");
+  for (const transform of [undefined, old]) {
+    await presentLanes(context, page, 1100, { transform });
+    const m = await page.$$eval("[data-ghsm-sticky]", (els) => els.map((e) => e.className));
+    const bands = m.filter((c) => /styledGroupHeaderWrapper/.test(c));
+    expect(bands).toHaveLength(2);
+    expect(bands.every((c) => (transform ? /Board-module__styledGroupHeaderWrapper--/.test(c) : /styledGroupHeaderWrapper__/.test(c)))).toBe(true);
+    await page.reload();
+  }
+});
+
+test("exit puts the band offset and the lane scrollers back", async ({ context, page }) => {
+  await presentLanes(context, page, 800, { query: "&lanes=scroll" });
+  await expect(page.locator("[data-ghsm-lane]")).toHaveCount(2);
+  const before = await page.$$eval(BAND, (els) => els.map((e) => e.style.top));
+  await page.keyboard.press("Escape");
+  await expect(page.locator("body.ghsm-active")).toHaveCount(0);
+  expect(await page.evaluate(() => document.querySelectorAll('[class*="ghsm"], [data-ghsm-lane], [data-ghsm-sticky], [data-ghsm-row]').length)).toBe(0);
+  expect(await page.$$eval(BAND, (els) => els.map((e) => e.style.top))).toEqual(before);
+  expect(await page.$$eval(".lane-scroll", (els) => els.map((e) => getComputedStyle(e).overflowX))).toEqual(["auto", "auto"]);
+});
+
+test("never flattens the board's own scroller, whatever its class is called", async ({ context, page }) => {
+  await presentLanes(context, page, 800, { fullWidth: false, transform: (h) => h.replaceAll("boardView__", "boardScroller__") });
+  const m = await page.evaluate(() => ({ lanes: [...document.querySelectorAll("[data-ghsm-lane]")].map((e) => e.className), wide: document.documentElement.scrollWidth - innerWidth }));
+  expect(m.lanes.some((c) => /boardScroller/.test(c))).toBe(false);
+  expect(m.wide).toBeLessThanOrEqual(0);
+});

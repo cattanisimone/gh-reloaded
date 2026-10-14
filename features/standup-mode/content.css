@@ -76,6 +76,12 @@ body.ghsm-active [data-ghsm-sticky] {
   top: var(--ghsm-sticky-top, 0px) !important;
 }
 
+/* A lane that scrolls sideways on its own would be its band's sticky
+   scroller; the board's scroller moves every lane together instead. */
+body.ghsm-active [data-ghsm-lane] {
+  overflow: visible !important;
+}
+
 /* An element that holds a kept header part but also owns bare text (the
    description) is silenced; what is inside it restores the original size. */
 body.ghsm-active [data-ghsm-quiet] {
@@ -110,11 +116,11 @@ body.ghsm-active [data-ghsm-row] [data-ghsm-keep] {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
 }
-body.ghsm-active [data-ghsm-row] h1,
-body.ghsm-active [data-ghsm-row] h2,
-body.ghsm-active [data-ghsm-row] h3,
-body.ghsm-active [data-ghsm-row] h4,
-body.ghsm-active [data-ghsm-row] [role="heading"] {
+body.ghsm-active [data-ghsm-row] h1[data-ghsm-keep],
+body.ghsm-active [data-ghsm-row] h2[data-ghsm-keep],
+body.ghsm-active [data-ghsm-row] h3[data-ghsm-keep],
+body.ghsm-active [data-ghsm-row] h4[data-ghsm-keep],
+body.ghsm-active [data-ghsm-row] [role="heading"][data-ghsm-keep] {
   flex: 0 1 auto !important;
   min-width: 0 !important;
   overflow: hidden !important;

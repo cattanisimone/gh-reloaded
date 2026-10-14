@@ -315,7 +315,13 @@
 
   let barObserver = null;
   function trackBarHeight(bar) {
-    const set = () => document.documentElement.style.setProperty(BAR_H_VAR, `${bar.offsetHeight}px`);
+    const set = () => {
+      document.documentElement.style.setProperty(BAR_H_VAR, `${bar.offsetHeight}px`);
+      // The header row's sticky top follows the bar's height, so the lane
+      // bands' offset (the row's top plus its height) must follow it too.
+      const board = active ? boardRoot() : null;
+      if (board) updateLaneBands(board);
+    };
     set();
     barObserver?.disconnect();
     if (typeof ResizeObserver === "function") {
@@ -512,7 +518,7 @@
   // `data-ghsm-*` mark that CSS acts on and exit removes; nothing is moved or
   // removed from GitHub's DOM. If an anchor is not found, that part of the
   // page simply stays as it is.
-  const LAYOUT_ATTRS = ["data-ghsm-hide", "data-ghsm-flat", "data-ghsm-row", "data-ghsm-pill", "data-ghsm-keep", "data-ghsm-float", "data-ghsm-quiet", "data-ghsm-sticky", "data-ghsm-frame"];
+  const LAYOUT_ATTRS = ["data-ghsm-hide", "data-ghsm-flat", "data-ghsm-row", "data-ghsm-pill", "data-ghsm-keep", "data-ghsm-float", "data-ghsm-quiet", "data-ghsm-sticky", "data-ghsm-frame", "data-ghsm-lane"];
   const BAR_H_VAR = "--ghsm-bar-h";
   const BAR_GAP = 8;
   const VIEW_NAV_SELECTOR = 'nav[aria-label="Select view"]';
@@ -743,6 +749,42 @@
     markSticky(header);
   }
 
+  // GitHub writes each lane band's inline sticky `top` from the height of
+  // the column-header row it measured before compaction, so once that row
+  // is shorter the band is pushed down by the difference. While presenting
+  // the offset is ours: the row's own sticky top plus its current height.
+  // A lane that scrolls sideways on its own would be the band's sticky
+  // scroller (it never scrolls vertically), so it is flattened (only an
+  // ancestor that does not hold the header row: that is the board's scroller) and the
+  // board's scroller moves every lane together. A missing row or band is
+  // left alone and retried on the next pass.
+  const BAND_SELECTOR = '[class*="styledGroupHeaderWrapper"]';
+  let rowObserver = null;
+  let observedRow = null;
+
+  function updateLaneBands(board) {
+    const row = board.querySelector(GROUP_HEADER_SELECTOR);
+    if (!row) return;
+    const top = (parseFloat(getComputedStyle(row).top) || 0) + row.offsetHeight;
+    for (const band of board.querySelectorAll(BAND_SELECTOR)) {
+      if (getComputedStyle(band).position !== "sticky") continue;
+      band.style.setProperty("--ghsm-sticky-top", `${top}px`);
+      mark(band, "data-ghsm-sticky");
+      for (let node = band.parentElement; node && node !== board && !node.contains(row); node = node.parentElement) {
+        if (/(auto|scroll)/.test(getComputedStyle(node).overflowX)) mark(node, "data-ghsm-lane");
+      }
+    }
+    if (typeof ResizeObserver === "function" && observedRow !== row) {
+      rowObserver?.disconnect();
+      observedRow = row;
+      rowObserver = new ResizeObserver(() => {
+        const b = boardRoot();
+        if (active && b) updateLaneBands(b);
+      });
+      rowObserver.observe(row);
+    }
+  }
+
   function updateFilterText(text) {
     const node = document.querySelector(`#${BAR_ID} .ghsm-filter`);
     if (!node) return;
@@ -762,6 +804,7 @@
     updateFilterText(hidePageChrome(board));
     for (const frame of headerFrames(board)) compactColumnHeader(frame);
     for (const header of board.querySelectorAll(GROUP_HEADER_SELECTOR)) compactGroupHeader(header);
+    updateLaneBands(board);
   }
 
   // ---- fetching signals ----
@@ -915,7 +958,10 @@
   });
 
   const onResize = debounce(() => {
-    if (active) updateBoardOffset();
+    if (!active) return;
+    updateBoardOffset();
+    const board = boardRoot();
+    if (board) updateLaneBands(board);
   }, 100);
 
   // ---- enter / exit ----
@@ -959,6 +1005,9 @@
     document.documentElement.style.removeProperty(BAR_H_VAR);
     barObserver?.disconnect();
     barObserver = null;
+    rowObserver?.disconnect();
+    rowObserver = null;
+    observedRow = null;
     document.getElementById(BAR_ID)?.remove();
     cards = [];
     cardSignature = "";
