@@ -7,11 +7,11 @@ These are the saved GitHub pages the end-to-end tests run against. Serving them 
 | File | Page it stands in for | Features exercised |
 | --- | --- | --- |
 | `issue.html` | An issue with a "Sub-issues" section | dependency-graph |
-| `board.html` | A Projects v2 **Board** (kanban) view | quick-create, board-dependencies, full-width-board, standup-mode (disabled state, entry button) |
+| `board.html` | A Projects v2 **Board** (kanban) view, with the project top bar in its current `topBarActions__` / `ButtonGroup__` naming | quick-create (top-bar placement, floating fallback), board-dependencies, full-width-board, standup-mode (disabled state, entry button) |
 | `board-standup.html` | A Projects v2 **Board** view with five cards across Todo / In progress / In review, plus the project title row, filter bar, View button and full column headers (dot, count pill, "..." menu, field-sum pill, description) | standup-mode (signals, hidden chrome, compact headers) |
 | `board-standup-grouped.html` | A **Board** view using Group by: two horizontal sections that repeat the same three columns | standup-mode (column positions, group headers) |
 | `board-data-columns.html` | The same board with columns as `[data-board-column]` frames and no `.board-view-column`, one frame without a visible heading | standup-mode (columns and cards on current markup) |
-| `board-legacy-classes.html` | The same board with the previous `Board-module__…--hash` class naming | standup-mode (old build keeps working) |
+| `board-legacy-classes.html` | The same board with the previous `Board-module__…--hash` and `index-module__…--hash` class naming | standup-mode, quick-create (old build keeps working) |
 | `pr-files.html` | A pull request "Files changed" page with one changed `.html` file | html-preview (PR globe button) |
 | `blob.html` | A single-file blob page for an `.html` file | html-preview (blob Preview tab) |
 | `pr-files-lazy.html` | A "Files changed" page whose file path is not yet resolvable | html-preview #16 regression |
