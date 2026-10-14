@@ -37,16 +37,30 @@
   font-family: inherit; /* GitHub's own UI font (Mona Sans) instead of a system stack */
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04); /* the native buttons' resting shadow */
-  transition: filter 0.1s;
+  /* Same two soft layers as GitHub's own coloured (primary) button */
+  box-shadow: rgba(31, 35, 40, 0.04) 0 1px 1px 0, rgba(31, 35, 40, 0.03) 0 1px 2px 0;
+  transition: filter 0.08s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 #ghqc-root .ghqc-btn-icon {
   flex: 0 0 auto;
 }
 
+/* A coloured native button gets darker on hover and again when pressed
+   (primary green: #1f883d -> #1c8139 -> #197935, i.e. about 0.95 and 0.89).
+   The fill is user-chosen, so darken whatever it is instead of using a
+   fixed hover colour. Never brighten: that reads as "disabled". */
 #ghqc-root .ghqc-btn:hover {
-  filter: brightness(1.08);
+  filter: brightness(0.95);
+}
+#ghqc-root .ghqc-btn:active {
+  filter: brightness(0.89);
+  box-shadow: none;
+}
+/* Primer's keyboard focus ring, drawn inside the button */
+#ghqc-root .ghqc-btn:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: -2px;
 }
 
 #ghqc-root.is-floating .ghqc-btn {

@@ -124,3 +124,26 @@ test("matches the native buttons' size, shape and spacing", async ({ context, pa
   expect(geo.gapAfter).toBe(geo.barGap);
 });
 
+// A coloured native button darkens on hover and shows Primer's focus ring on
+// keyboard focus; brightening on hover looks disabled next to it.
+test("darkens on hover and shows a focus ring like native coloured buttons", async ({ context, page }) => {
+  await seedStorage(context, { quickCreateShortcuts: SHORTCUTS });
+  await routeGithub(context, "board.html");
+  await page.goto(BOARD_URL);
+
+  const btn = page.locator("#ghqc-root .ghqc-btn");
+  const brightness = () => btn.evaluate((e) => parseFloat(getComputedStyle(e).filter.replace(/[^0-9.]/g, "")) || 1);
+  expect(await brightness()).toBe(1);
+  await btn.hover();
+  await expect.poll(brightness).toBeLessThan(1);
+
+  await page.mouse.move(0, 0);
+  await page.keyboard.press("Tab"); // first tab stop in the fixture may not be ours
+  await btn.evaluate((e) => e.focus({ focusVisible: true }));
+  const ring = await btn.evaluate((e) => {
+    const s = getComputedStyle(e);
+    return { width: s.outlineWidth, style: s.outlineStyle, offset: s.outlineOffset };
+  });
+  expect(ring).toEqual({ width: "2px", style: "solid", offset: "-2px" });
+});
+
