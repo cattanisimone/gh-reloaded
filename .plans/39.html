@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #39 Store-first install</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;overflow-wrap:anywhere} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media(max-width:640px){.cols{grid-template-columns:1fr}}
+  .doc{border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:13px;background:#fff}
+  .doc .h{font-weight:600;border-bottom:1px solid var(--line);margin:8px 0 4px;padding-bottom:2px}
+  .doc .h3{font-weight:600;margin:6px 0 2px} .doc p{margin:2px 0} .tag{font-size:12px;color:var(--muted)}
+  .bad{color:var(--bad)} .ok{color:var(--ok)}
+</style></head><body><main>
+  <h1>#39 · Update README for Store-first installation and correct token permission scopes</h1>
+  <p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/39">cattanisimone/gh-reloaded#39</a> · Size: <b>normal</b> (docs only, but it carries a decision about user-owned Projects, see Risks) · Goal: new users install from the Store, and every token permission is listed under the scope GitHub actually shows it in.</p>
+
+  <h2>What changes for users</h2>
+  <ul>
+    <li>The primary install path is the <a href="https://chromewebstore.google.com/detail/gh-reloaded/nflpdflhgpnhlahgajbgbpbblniggpba">Chrome Web Store listing</a> (checked: HTTP 200). The "isn't on the Chrome Web Store yet" line is removed.</li>
+    <li>Unpacked loading stays, renamed <i>Install unpacked (development and manual testing)</i>, below the token setup.</li>
+    <li>The token section becomes a table grouped by GitHub's real scope: <b>Repository</b> (Issues, Contents, Metadata) and <b>Organization</b> (Projects).</li>
+    <li>A note on what GitHub does not support: a fine-grained token <b>cannot read Projects owned by a personal account</b>, and each fine-grained token has <b>one resource owner</b>. That is why owner tokens exist.</li>
+    <li>SSO guidance is corrected: fine-grained tokens are authorized for an organization when you create them (and may show as <i>pending</i> until an org admin approves). <b>Configure SSO</b> only applies to classic tokens.</li>
+  </ul>
+
+  <h2>Mockup: README before and after</h2>
+  <div class="cols">
+    <div class="doc"><div class="tag">Before</div>
+      <div class="h">Install (unpacked, for now)</div>
+      <p class="bad">This isn't on the Chrome Web Store yet.</p>
+      <div class="h3">1. Load the extension</div><p>Clone, Developer mode, Load unpacked…</p>
+      <div class="h3">2. Create a GitHub token</div>
+      <p>Repository permissions → Read-only:</p>
+      <p>· Issues · <span class="bad">Projects</span> (wrong scope) · Contents</p>
+      <p><span class="bad">Configure SSO / Authorize</span> (classic-token step)</p>
+      <div class="h3">3. Connect it</div><p>Default token, Add owner token…</p>
+    </div>
+    <div class="doc"><div class="tag">After</div>
+      <div class="h">Install</div>
+      <p class="new">Install <b>GH Reloaded from the Chrome Web Store</b> ↗, then open Settings (toolbar icon).</p>
+      <div class="h3">Create a GitHub token</div>
+      <p>Fine-grained · <b>Resource owner</b> = the account or org · <i>Only select repositories</i></p>
+      <table class="new" style="font-size:12px"><tr><th>Scope</th><th>Permission</th><th>For</th></tr>
+        <tr><td>Repository</td><td>Issues: Read-only</td><td>sub-issues, dependencies, custom fields</td></tr>
+        <tr><td>Repository</td><td>Contents: Read-only</td><td>HTML preview, private repos only</td></tr>
+        <tr><td>Repository</td><td>Metadata: Read-only</td><td>added by GitHub automatically</td></tr>
+        <tr><td>Organization</td><td>Projects: Read-only</td><td>Projects v2 Status, Standup, My Issues</td></tr></table>
+      <p class="new">Projects owned by a personal account: not readable with a fine-grained token (GitHub limitation) → features degrade.</p>
+      <p class="new">SSO: fine-grained = authorized at creation (maybe <i>pending</i>); classic = Configure SSO.</p>
+      <div class="h3">Connect it</div><p><b>Default token</b> · <b>Add owner token</b> (one per resource owner) · <b>Save tokens</b> · <b>Test</b></p>
+      <div class="h3">Install unpacked (development and manual testing)</div><p>Clone, Developer mode, Load unpacked…</p>
+    </div>
+  </div>
+
+  <h2>How the permission table was derived</h2>
+  <div class="scroll"><svg viewBox="0 0 860 200" width="100%" role="img" aria-label="Extension API calls mapped to GitHub permissions">
+    <style>.b{fill:#f6f8fa;stroke:#d1d9e0}.t{font:13px sans-serif;fill:#1f2328}.m{font:11px sans-serif;fill:#59636e}.a{stroke:#0969da;stroke-width:1.5;marker-end:url(#h);fill:none}</style>
+    <defs><marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0969da"/></marker></defs>
+    <rect class="b" x="10" y="10" width="400" height="40" rx="6"/><text class="t" x="20" y="34">github-api.js: sub_issues, dependencies, issue fields</text>
+    <rect class="b" x="10" y="60" width="400" height="40" rx="6"/><text class="t" x="20" y="84">background/html-preview.js: contents, git/blobs</text>
+    <rect class="b" x="10" y="110" width="400" height="40" rx="6"/><text class="t" x="20" y="134">standup, my-issues: GraphQL projectV2 items</text>
+    <rect class="b" x="10" y="160" width="400" height="30" rx="6"/><text class="t" x="20" y="180">my-issues: GraphQL search(type: ISSUE)</text>
+    <rect class="b" x="520" y="10" width="330" height="40" rx="6"/><text class="t" x="530" y="34">Repository → Issues: read</text>
+    <rect class="b" x="520" y="60" width="330" height="40" rx="6"/><text class="t" x="530" y="84">Repository → Contents: read</text>
+    <rect class="b" x="520" y="110" width="330" height="40" rx="6"/><text class="t" x="530" y="128">Organization → Projects: read</text><text class="m" x="530" y="143">org resource owner only; user-owned: unsupported</text>
+    <rect class="b" x="520" y="160" width="330" height="30" rx="6"/><text class="t" x="530" y="180">Repository → Issues + Metadata: read</text>
+    <path class="a" d="M410 30H520"/><path class="a" d="M410 80H520"/><path class="a" d="M410 130H520"/><path class="a" d="M410 175H520"/>
+  </svg></div>
+  <p class="meta">Source: GitHub Docs, "Permissions required for fine-grained personal access tokens" (Projects is listed only under Organization permissions) and "Managing your personal access tokens" (gaps: Projects owned by a user account, several organizations at once; Organization permissions require an organization resource owner).</p>
+
+  <h2>Changes by file</h2>
+  <div class="scroll"><table><tr><th>File</th><th>Change</th><th>Why</th></tr>
+    <tr><td><code>README.md</code></td><td>Rewrite the Install section as above (about 40 to 60 lines). Keep the Settings labels verbatim: <b>Default token</b>, <b>Add owner token</b>, <b>Save tokens</b>, <b>Test</b>, <b>Owner login</b>.</td><td>AC 1 to 5.</td></tr>
+    <tr><td><code>CONTRIBUTING.md</code>, <code>AGENTS.md</code></td><td>Unchanged. They already point at unpacked loading for development.</td><td>Nothing links to the old <code>#install-unpacked-for-now</code> anchor (checked with grep).</td></tr>
+    <tr><td><code>options/options.html</code></td><td><b>Unchanged</b> (see Risks: its SSO callout and flat permission box have the same inaccuracy).</td><td>The issue scopes this to documentation.</td></tr>
+  </table></div>
+
+  <h2>Data, permissions, privacy</h2>
+  <p>None. No code, manifest permission or stored data changes. <code>PRIVACY.md</code> is unchanged.</p>
+
+  <h2>Test plan</h2>
+  <div class="scroll"><table><tr><th>Acceptance criterion</th><th>Check</th><th>How</th></tr>
+    <tr><td>A new user reaches the Store listing from the primary install instructions</td><td>manual</td><td>The first step under <i>Install</i> links to the listing; <code>curl -L</code> returns 200</td></tr>
+    <tr><td>No claim that the extension is unavailable on the Store</td><td>manual</td><td><code>grep -i "web store yet\|for now" README.md</code> is empty</td></tr>
+    <tr><td>Unpacked installation still documented</td><td>manual</td><td>Section present, steps unchanged</td></tr>
+    <tr><td>Permission names and scopes match GitHub and the actual API calls</td><td>manual</td><td>Table checked against the two GitHub Docs pages and the call map above</td></tr>
+    <tr><td>README and Settings share the token terminology</td><td>manual</td><td>Every bold UI label in the README appears in <code>options/options.html</code> / <code>options.js</code></td></tr>
+    <tr><td>Links pass a manual link check</td><td>manual</td><td><code>curl -sIL</code> each external link in the edited section (Store, token pages, docs)</td></tr>
+    <tr><td>No regression</td><td>automated</td><td><code>npm test</code> stays green (docs only)</td></tr>
+  </table></div>
+  <p><b>Live check:</b> not applicable, nothing is injected into github.com. The fine-grained token form requires a signed-in account, so the "Resource owner" and permission-group wording comes from GitHub Docs, not from a probe.</p>
+
+  <h2>Risks and open questions</h2>
+  <ul>
+    <li><b>User-owned Projects.</b> A fine-grained token cannot read them. A classic token with <code>read:project</code> can, but reading private repos with a classic token needs the broad <code>repo</code> scope, which breaks the least-privilege rule. <i>Default: say it is unsupported for fine-grained tokens and that the Projects-based signals then degrade. Mention a classic token with <code>read:project</code> only for public repos, saved as that account's owner token. Never recommend <code>repo</code>.</i></li>
+    <li><b>Settings page says the same wrong things</b> (flat "Projects" row, the SSO "authorize the token" callout). <i>Default: leave it unchanged, list it under Follow-ups.</i> Say if you want the small text fix in this PR, but the title would then become <code>fix:</code>.</li>
+    <li><b>My Issues issue types.</b> <code>issueType</code> is read through the issue itself, so I don't expect the Organization → Issue Types permission to be needed. <i>Default: not listed.</i></li>
+    <li><b>PR type.</b> <i>Default: <code>docs:</code>, no release.</i></li>
+  </ul>
+
+  <h2>Out of scope</h2>
+  <ul>
+    <li>Any change to extension code, the Settings page, the manifest or the permissions requested.</li>
+    <li>Rewriting Features, Releasing or other README sections.</li>
+  </ul>
+</main></body></html>
