@@ -259,6 +259,25 @@ test("with a scroller per lane, headers follow their lane and keep the label vis
   expect(Math.abs(r.labelLeft - r.scLeft)).toBeLessThanOrEqual(1);
 });
 
+test("a hidden view tabs bar is not a gutter", async ({ context, page }) => {
+  await openGrouped(context, page, 1100);
+  await expect(page.locator("body.ghfw-gutter")).toHaveCount(1);
+  await page.evaluate(() => { document.querySelector('nav[aria-label="Select view"]').style.display = "none"; });
+  await expect(page.locator("body.ghfw-gutter")).toHaveCount(0);
+});
+
+test("a lane sheds its stale width once its columns shrink", async ({ context, page }) => {
+  await openGrouped(context, page, 800, { url: `${GROUPED_URL}&lanes=scroll` });
+  await expect(page.locator("body.ghfw-lane-scroll")).toHaveCount(1);
+  await page.evaluate(() => {
+    for (const sc of document.querySelectorAll(".lane-scroll")) {
+      for (const c of [...sc.querySelectorAll("[data-board-column]")].slice(1)) c.remove();
+    }
+  });
+  await expect(page.locator("body.ghfw-lane-scroll")).toHaveCount(0);
+  expect(await page.evaluate(() => document.querySelector('[class*="styledGroupHeaderWrapper__"]').style.getPropertyValue("--ghfw-lane-width"))).toBe("");
+});
+
 test("a long count hides the badge sooner than a short one", async ({ context, page }) => {
   await openGrouped(context, page, 1100);
   const badge = page.locator(`${HEADER_COLUMNS} [class*="AggregateLabels__"]`).nth(0);

@@ -110,11 +110,14 @@
     const tabs = document.querySelector(VIEW_TABS_SELECTOR);
     const view = document.querySelector(BOARD_VIEW_SELECTOR);
     const root = document.documentElement.style;
-    if (!container || !tabs || !view) {
+    // A hidden nav (Standup mode hides it) reports a zero rect at left 0:
+    // not a gutter, so treat it as missing.
+    const tabsRect = tabs?.getBoundingClientRect();
+    if (!container || !view || !tabsRect || !tabsRect.width || !tabsRect.height) {
       document.body.classList.remove(GUTTER_CLASS);
       return;
     }
-    const gutter = tabs.getBoundingClientRect().left - container.getBoundingClientRect().left;
+    const gutter = tabsRect.left - container.getBoundingClientRect().left;
     if (!(gutter >= 0 && gutter <= 64)) {
       document.body.classList.remove(GUTTER_CLASS);
       return;
@@ -161,6 +164,10 @@
     const view = document.querySelector(BOARD_VIEW_SELECTOR);
     let perLane = false;
     const widths = [];
+    // Measure without our own previous widths and class, or a stale wide
+    // header keeps the overflow alive forever.
+    document.body.classList.remove(LANE_SCROLL_CLASS);
+    for (const h of document.querySelectorAll(LANE_HEADER_SELECTOR)) h.style.removeProperty("--ghfw-lane-width");
     for (const area of document.querySelectorAll(LANE_AREA_SELECTOR)) {
       for (let n = area; n && n !== view; n = n.parentElement) {
         const ox = getComputedStyle(n).overflowX;
@@ -172,7 +179,6 @@
       }
     }
     document.body.classList.toggle(LANE_SCROLL_CLASS, perLane);
-    for (const h of document.querySelectorAll(LANE_HEADER_SELECTOR)) h.style.removeProperty("--ghfw-lane-width");
     for (const [h, w] of widths) h?.style.setProperty("--ghfw-lane-width", `${w}px`);
   }
 
