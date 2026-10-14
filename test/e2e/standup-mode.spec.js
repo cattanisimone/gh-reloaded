@@ -668,7 +668,13 @@ for (const fullWidth of [true, false]) {
         await presentLanes(context, page, w, { fullWidth, query: `?tall${lanes}` });
         const measure = () => page.evaluate(({ BAND, HEADER_ROW }) => {
           const rowBottom = document.querySelector(HEADER_ROW).getBoundingClientRect().bottom;
-          const bands = [...document.querySelectorAll(BAND)].map((b) => { const r = b.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; });
+          // A band sticks inside its parent, so where that parent ends it is
+          // pushed up and out under the header row: that is the handover.
+          const bands = [...document.querySelectorAll(BAND)].map((b) => {
+            const r = b.getBoundingClientRect();
+            const end = b.parentElement.getBoundingClientRect().bottom - (parseFloat(getComputedStyle(b).marginBottom) || 0);
+            return { top: r.top, bottom: r.bottom, end, leaving: r.bottom >= end - 1 };
+          });
           return { rowBottom, bands };
         }, { BAND, HEADER_ROW });
         for (let step = 0; step < 12; step++) {
@@ -678,7 +684,7 @@ for (const fullWidth of [true, false]) {
           await expect.poll(async () => {
             const m = await measure();
             for (let i = 1; i < m.bands.length; i++) if (m.bands[i].top < m.bands[i - 1].bottom - 1) return `overlap at ${i}`;
-            for (const b of m.bands) if (b.top < m.rowBottom - 1) return `band above the header row (${b.top} < ${m.rowBottom})`;
+            for (const b of m.bands) if (b.top < m.rowBottom - 1 && !b.leaving) return `band above the header row (${b.top} < ${m.rowBottom}, band bottom ${b.bottom}, lane end ${b.end})`;
             // A band whose lane is under the header row is stuck right at its bottom.
             const stuck = m.bands.filter((b) => Math.abs(b.top - m.rowBottom) <= 1);
             if (stuck.length > 1) return `${stuck.length} bands stuck`;
