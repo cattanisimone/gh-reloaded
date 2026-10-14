@@ -284,19 +284,6 @@
         });
       }
 
-      // Lanes: routes that share a gutter and overlap vertically stack.
-      const groups = new Map();
-      shown.forEach((s) => {
-        const toRight = s.dst.colRect.left > s.src.colRect.left;
-        const k = s.sides.kind === "same" ? `same|${s.dst.colRect.left}` : `gap|${s.dst.colRect.left}|${toRight}`;
-        if (!groups.has(k)) groups.set(k, []);
-        groups.get(k).push(s);
-      });
-      for (const list of groups.values()) {
-        const lanes = GEO.lanesFor(list.map((s) => [s.srcY, s.dstY]));
-        list.forEach((s, i) => (s.lane = lanes[i]));
-      }
-
       // Gutter between two column frames, read from the page (8px live).
       const cols = [...new Set([...info.values()].map((c) => c.colRect.left))].sort((a, b) => a - b);
       let gap = 8;
@@ -306,20 +293,56 @@
         if (g > 0 && g < 40) { gap = g; break; }
       }
 
-      const first = [...info.values()][0];
-      let clip = { left: 0, top: 0, right: W, bottom: H };
-      if (first?.col.parentElement) {
-        const b = first.col.parentElement.getBoundingClientRect();
-        clip = { left: Math.max(0, b.left), top: Math.max(0, b.top), right: Math.min(W, b.right), bottom: Math.min(H, b.bottom) };
+      // Lanes: routes that share a gutter and overlap vertically stack.
+      const groups = new Map();
+      shown.forEach((s) => {
+        const toRight = s.dst.colRect.left > s.src.colRect.left;
+        const k = s.sides.kind === "same" ? `same|${s.dst.colRect.left}` : `gap|${Math.round(toRight ? s.dst.colRect.left : s.dst.colRect.right + gap)}`;
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(s);
+      });
+      for (const list of groups.values()) {
+        const lanes = GEO.lanesFor(list.map((s) => [s.srcY, s.dstY]));
+        list.forEach((s, i) => {
+          s.lane = lanes[i];
+          s.lanes = Math.max(...lanes) + 1;
+        });
       }
 
-      const rects = [...info.values()].map((c) => `<rect x="${c.rect.left}" y="${c.rect.top}" width="${c.rect.right - c.rect.left}" height="${c.rect.bottom - c.rect.top}" fill="black"></rect>`);
+      // Clip to the board: the union of the columns' parents (one row per
+      // group on a grouped board), inside the window.
+      let clip = null;
+      for (const parent of new Set([...info.values()].map((c) => c.col.parentElement).filter(Boolean))) {
+        const b = parent.getBoundingClientRect();
+        clip = clip
+          ? { left: Math.min(clip.left, b.left), top: Math.min(clip.top, b.top), right: Math.max(clip.right, b.right), bottom: Math.max(clip.bottom, b.bottom) }
+          : { left: b.left, top: b.top, right: b.right, bottom: b.bottom };
+      }
+      clip = clip
+        ? { left: Math.max(0, clip.left), top: Math.max(0, clip.top), right: Math.min(W, clip.right), bottom: Math.min(H, clip.bottom) }
+        : { left: 0, top: 0, right: W, bottom: H };
+
+      // Cards are cut out of the lines: every card box in a column, also the
+      // ones that are not linked issues (draft items, notes).
+      const cut = [...info.values()].map((c) => c.rect);
+      const known = new Set([...info.values()].map((c) => c.el));
+      for (const el of document.querySelectorAll(".board-view-column-card, [data-board-card-id]")) {
+        if (known.has(el) || el.parentElement?.closest(".board-view-column-card, [data-board-card-id]")) continue;
+        const col = el.closest(COLUMN_SELECTOR);
+        const r = el.getBoundingClientRect();
+        if (!col || r.width === 0 || r.height === 0) continue;
+        const vp = viewportOf(el, col);
+        const rect = { left: r.left, right: r.right, top: Math.max(r.top, vp.top), bottom: Math.min(r.bottom, vp.bottom) };
+        if (rect.bottom > rect.top) cut.push(rect);
+      }
+      const rects = cut.map((r) => `<rect x="${r.left}" y="${r.top}" width="${r.right - r.left}" height="${r.bottom - r.top}" fill="black"></rect>`);
       const body = shown.map((s) => {
         const { d, sides } = GEO.routeEdge({
           src: { rect: s.src.rect, col: s.src.colRect, y: s.srcY },
           dst: { rect: s.dst.rect, col: s.dst.colRect, y: s.dstY },
           gap,
           lane: s.lane,
+          lanes: s.lanes,
         });
         const reversed = sides.kind === "cross" && sides.from === "right";
         const cls = reversed ? " is-reversed" : "";

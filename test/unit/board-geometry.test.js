@@ -93,7 +93,7 @@ test("overlapping same-column brackets get distinct lanes", () => {
 test("adjacent-column route runs in the centre of the gap and crosses no card", () => {
   const src = { rect: card(0, 10, 90), col: col(0), y: 50 };
   const dst = { rect: card(1, 300, 380), col: col(1), y: 340 };
-  const r = G.routeEdge({ src, dst, lane: 1 });
+  const r = G.routeEdge({ src, dst });
   assert.equal(r.points[0].x, src.rect.right);
   assert.equal(r.points[3].x, dst.rect.left);
   assert.equal(r.points[1].x, (col(0).right + col(1).left) / 2);
@@ -111,7 +111,7 @@ test("a route to the left leaves on the left side and enters the right side", ()
 test("a far route runs in the gap next to the target column", () => {
   const src = { rect: card(0, 10, 90), col: col(0), y: 50 };
   const dst = { rect: card(3, 300, 380), col: col(3), y: 340 };
-  const r = G.routeEdge({ src, dst, lane: 1 });
+  const r = G.routeEdge({ src, dst });
   const gx = r.points[1].x;
   assert.equal(gx, col(3).left - 4);
   assert.ok(gx > col(2).right && gx < col(3).left, "inside the gap before the target column");
@@ -124,4 +124,16 @@ test("roundedPath drops collinear points and rounds real corners", () => {
   assert.match(d, /Q 20 0/);
   assert.equal((d.match(/Q/g) || []).length, 1);
   assert.equal(G.roundedPath([{ x: 0, y: 5 }, { x: 30, y: 5 }]), "M 0 5 L 30 5");
+});
+
+test("lanes that do not fit the padding or gap are spread evenly, never merged", () => {
+  const src = { rect: card(0, 10, 90), col: col(0), y: 50 };
+  const dst = { rect: card(0, 200, 280), col: col(0), y: 240 };
+  const same = [0, 1, 2, 3].map((lane) => G.routeEdge({ src, dst, lane, lanes: 4 }).points[1].x);
+  for (let i = 1; i < same.length; i++) assert.ok(same[i] - same[i - 1] >= 1.5, `same-column lanes ${same}`);
+  assert.ok(same[3] < col(0).right);
+  const d = { rect: card(1, 300, 380), col: col(1), y: 340 };
+  const gaps = [0, 1, 2, 3].map((lane) => G.routeEdge({ src, dst: d, lane, lanes: 4 }).points[1].x);
+  for (let i = 1; i < gaps.length; i++) assert.ok(gaps[i] - gaps[i - 1] >= 1.5, `gap lanes ${gaps}`);
+  assert.ok(gaps[0] > col(0).right && gaps[3] < col(1).left, "inside the gap");
 });

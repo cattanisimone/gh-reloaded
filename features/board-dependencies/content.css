@@ -65,12 +65,20 @@
   fill: var(--ghbd-red);
 }
 
-/* Fallbacks when GitHub's variables are absent: its dark palette. The red
-   moves to a shade that meets 3:1 against the dark card border. */
+/* GitHub's `--fgColor-danger` in dark mode (#f85149) is below 3:1 against
+   the dark card border, so the red is fixed to a shade that meets it. The
+   colour mode is read from GitHub's own attribute, and from the system when
+   it is "auto". */
+:root[data-color-mode="dark"] #ghbd-root {
+  --ghbd-grey: var(--fgColor-muted, #9198a1);
+  --ghbd-red: #ff7b72;
+  --ghbd-halo: var(--bgColor-muted, #151b23);
+}
 @media (prefers-color-scheme: dark) {
-  #ghbd-root {
+  :root:not([data-color-mode="light"]):not([data-color-mode="dark"]) #ghbd-root,
+  :root[data-color-mode="auto"] #ghbd-root {
     --ghbd-grey: var(--fgColor-muted, #9198a1);
-    --ghbd-red: var(--fgColor-danger, #ff7b72);
+    --ghbd-red: #ff7b72;
     --ghbd-halo: var(--bgColor-muted, #151b23);
   }
 }

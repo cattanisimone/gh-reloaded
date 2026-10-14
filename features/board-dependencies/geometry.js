@@ -98,13 +98,14 @@
   // Orthogonal route from the source port to the target port.
   //  src / dst: { rect (the card), col (its column frame), y (port y) }
   //  gap: width of the gutter between two column frames (8px live)
-  //  lane: 0, 1, 2... stacking position among overlapping routes
+  //  lane / lanes: stacking position among the `lanes` overlapping routes;
+  //  lanes that do not fit the padding or gap are spread evenly across it
   // Same column: out of the right side into the column's side padding,
   // vertical, back into the right side. Adjacent columns: the facing sides,
   // vertical run at the centre of the gap. Further apart: horizontal at the
   // source's y into the gap next to the target column, vertical there, then
   // into the target (the cards it passes are masked by the caller).
-  function routeEdge({ src, dst, gap = 8, lane = 0 }) {
+  function routeEdge({ src, dst, gap = 8, lane = 0, lanes = 1 }) {
     const s = sides(src.col, dst.col);
     const sx = s.from === "right" ? src.rect.right : src.rect.left;
     const tx = s.to === "right" ? dst.rect.right : dst.rect.left;
@@ -113,7 +114,10 @@
     let points;
     if (s.kind === "same") {
       const pad = Math.max(0, src.col.right - Math.max(src.rect.right, dst.rect.right));
-      const off = Math.max(2, Math.min(pad - 2, 3 + lane * LANE));
+      const base = lanes > 1 ? 2 : 3;
+      const room = Math.max(0, pad - 2 - base);
+      const step = lanes > 1 && (lanes - 1) * LANE > room ? room / (lanes - 1) : LANE;
+      const off = Math.max(2, Math.min(pad - 2, base + lane * step));
       const lx = Math.max(sx, tx) + off;
       points = [{ x: sx, y: sy }, { x: lx, y: sy }, { x: lx, y: ty }, { x: tx, y: ty }];
     } else {
@@ -121,7 +125,9 @@
       const between = toRight ? dst.col.left - src.col.right : src.col.left - dst.col.right;
       const adjacent = between <= gap * 2;
       const half = gap / 2 - 1;
-      const shift = Math.min(half, Math.max(-half, (lane - 1) * LANE));
+      const gapStep = lanes > 1 && (lanes - 1) * LANE > half * 2 ? (half * 2) / (lanes - 1) : LANE;
+      const mid = lanes > 1 ? (lanes - 1) / 2 : 0;
+      const shift = Math.min(half, Math.max(-half, (lane - mid) * gapStep));
       let gx;
       if (adjacent) gx = toRight ? (src.col.right + dst.col.left) / 2 : (src.col.left + dst.col.right) / 2;
       else gx = toRight ? dst.col.left - gap / 2 : dst.col.right + gap / 2;

@@ -18,14 +18,14 @@ const API = [
   { match: (p) => p === "/repos/acme/web/issues/12/dependencies/blocked_by", json: [dep(11, "closed")] },
 ];
 
-async function openBoard(context, page, { scheme } = {}) {
+async function openBoard(context, page, { scheme, transform, api = API, count = 4 } = {}) {
   await seedStorage(context, { ghbdEnabled: true });
-  await routeApi(context, API);
-  await routeGithub(context, "board-arrows.html");
+  await routeApi(context, api);
+  await routeGithub(context, "board-arrows.html", { transform });
   await page.setViewportSize({ width: 1500, height: 900 });
   if (scheme) await page.emulateMedia({ colorScheme: scheme });
   await page.goto(BOARD_URL);
-  await expect(page.locator("#ghbd-root g.ghbd-edge-group")).toHaveCount(4);
+  await expect(page.locator("#ghbd-root g.ghbd-edge-group")).toHaveCount(count);
 }
 
 const edge = (page, from, to) => page.locator(`#ghbd-root g.ghbd-edge-group[data-from="acme/web#${from}"][data-to="acme/web#${to}"]`);
@@ -128,7 +128,13 @@ const SURFACES = {
 };
 for (const scheme of ["light", "dark"]) {
   test(`arrow colours meet 3:1 against the card border, column and page (${scheme})`, async ({ context, page }) => {
-    await openBoard(context, page, { scheme });
+    // GitHub always defines its own variables; the dark danger red it ships
+    // (#f85149) is below 3:1 on the dark card border, so the fixture defines it.
+    const transform = (html) =>
+      html
+        .replace('data-color-mode="light"', `data-color-mode="${scheme}"`)
+        .replace("</style>", ":root { --fgColor-danger: " + (scheme === "dark" ? "#f85149" : "#d1242f") + "; --fgColor-muted: " + (scheme === "dark" ? "#9198a1" : "#59636e") + "; }</style>");
+    await openBoard(context, page, { scheme, transform });
     const strokes = await page.evaluate(() => ({
       grey: getComputedStyle(document.querySelector("g[data-from='acme/web#10'] path.ghbd-edge")).stroke,
       red: getComputedStyle(document.querySelector("g[data-from='acme/web#2'][data-to='acme/web#3'] path.ghbd-edge")).stroke,
@@ -193,4 +199,29 @@ test("anchors on the card box and sits under GitHub's overlays", async ({ contex
   expect(z).toBeLessThan(1000);
   const s = await sample(page, 2, 3);
   expect(Math.abs(s.start.x - s.rects[2].right)).toBeLessThan(1);
+});
+
+test("a route also passes behind cards that are not linked issues", async ({ context, page }) => {
+  // #3 becomes a draft item: no issue link, so it is not part of any lookup.
+  const transform = (html) => html.replace('<a href="/acme/web/issues/3">', "<a>");
+  await openBoard(context, page, { transform, count: 3 });
+  const masked = await page.evaluate(() => {
+    const c = document.querySelector('[data-board-card-id="3"]').getBoundingClientRect();
+    return [...document.querySelectorAll("#ghbd-root mask rect")].some((r) => r.getAttribute("fill") === "black" && Math.abs(+r.getAttribute("x") - c.left) < 1 && Math.abs(+r.getAttribute("y") - c.top) < 1);
+  });
+  expect(masked).toBe(true);
+});
+
+test("opposite-direction routes in the same gap do not share a lane", async ({ context, page }) => {
+  const api = [
+    { match: (p) => p === "/repos/acme/web/issues/2/dependencies/blocking", json: [dep(9, "open")] },
+    { match: (p) => p === "/repos/acme/web/issues/3/dependencies/blocking", json: [dep(8, "open")] },
+  ];
+  await openBoard(context, page, { api, count: 2 });
+  const xs = await page.evaluate(() => [...document.querySelectorAll("path.ghbd-edge")].map((p) => {
+    const m = p.getAttribute("d").match(/L ([\d.]+) [\d.]+ Q/);
+    return m ? +m[1] : null;
+  }));
+  expect(xs).toHaveLength(2);
+  expect(Math.abs(xs[0] - xs[1])).toBeGreaterThanOrEqual(2);
 });
