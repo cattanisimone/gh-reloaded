@@ -6,7 +6,10 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 0 8px;
+  /* No margin of our own: the top bar is a flex row with an 8px gap, which
+     already spaces us from the groups on either side exactly like the
+     native ones. A margin here would double it (16px). */
+  margin: 0;
 }
 
 #ghqc-root.is-floating {
@@ -25,16 +28,16 @@
   box-sizing: border-box;
   height: 32px;
   padding: 0 12px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(31, 35, 40, 0.15); /* Primer's border on a coloured button */
   border-radius: 6px; /* GitHub's own button shape — a rounded square, not a pill */
   color: #fff;
   font-weight: 500;
   font-size: 14px;
-  line-height: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  line-height: 1.5; /* 21px, like the native buttons */
+  font-family: inherit; /* GitHub's own UI font (Mona Sans) instead of a system stack */
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.1);
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04); /* the native buttons' resting shadow */
   transition: filter 0.1s;
 }
 

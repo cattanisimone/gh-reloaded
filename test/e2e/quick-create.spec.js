@@ -88,3 +88,39 @@ test("injects nothing when the feature is disabled", async ({ context, page }) =
   await page.waitForTimeout(1500);
   await expect(page.locator("#ghqc-root")).toHaveCount(0);
 });
+
+// The buttons must look like the native ones next to them: same height,
+// corner radius and border width, and the top bar's own gap as the only
+// spacing (an extra margin on the root doubles it).
+test("matches the native buttons' size, shape and spacing", async ({ context, page }) => {
+  await seedStorage(context, { quickCreateShortcuts: SHORTCUTS });
+  await routeGithub(context, "board.html");
+  await page.goto(BOARD_URL);
+
+  const geo = await page.evaluate(() => {
+    const root = document.getElementById("ghqc-root");
+    const btn = root.querySelector(".ghqc-btn");
+    const bs = getComputedStyle(btn);
+    const rs = getComputedStyle(root);
+    const gap = parseFloat(getComputedStyle(root.parentElement).columnGap) || 0;
+    const prev = root.previousElementSibling.getBoundingClientRect();
+    const next = root.nextElementSibling.getBoundingClientRect();
+    const r = root.getBoundingClientRect();
+    return {
+      height: btn.getBoundingClientRect().height,
+      radius: bs.borderTopLeftRadius,
+      border: bs.borderTopWidth,
+      margins: [rs.marginLeft, rs.marginRight],
+      gapBefore: Math.round(r.left - prev.right),
+      gapAfter: Math.round(next.left - r.right),
+      barGap: gap,
+    };
+  });
+  expect(geo.height).toBe(32);
+  expect(geo.radius).toBe("6px");
+  expect(geo.border).toBe("1px");
+  expect(geo.margins).toEqual(["0px", "0px"]);
+  expect(geo.gapBefore).toBe(geo.barGap);
+  expect(geo.gapAfter).toBe(geo.barGap);
+});
+
