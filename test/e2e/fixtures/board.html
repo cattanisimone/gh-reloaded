@@ -20,7 +20,8 @@
       [class*="ButtonGroup__"] button { height: 32px; }
       nav[aria-label="Select view"] { display: flex; align-items: center; padding: 4px 16px; border-bottom: 1px solid #d0d7de; }
       [role="tab"] { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; }
-      .ViewNavigationContainer { position: relative; display: flex; align-items: center; flex: 1; }
+      [class*="ViewNavigationContainer__"] { position: relative; display: block; }
+      [class*="tabsContainer__"] { display: inline-block; }
       .boardContainer { padding: 16px; }
       .board-view-column { display: inline-block; vertical-align: top; width: 280px; margin-right: 24px; }
       .board-view-column-card { display: block; width: 240px; min-height: 72px; margin: 8px 0; padding: 12px; border: 1px solid #d0d7de; border-radius: 6px; }
@@ -41,14 +42,22 @@
         <div class="ButtonGroup__Mn78Op"><button>Project details</button><button>⋯</button></div>
       </div>
 
-      <nav aria-label="Select view">
-        <div class="ViewNavigationContainer__GbjBrL view-navigation-module__ViewNavigationContainer--v1">
-          <div role="tab" aria-selected="true" class="selected">
-            <svg class="octicon octicon-project" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect width="3" height="10" x="1" y="3"></rect><rect width="3" height="7" x="6" y="3"></rect><rect width="3" height="13" x="11" y="3"></rect></svg>
-            <span>Board</span>
+      <!-- View-tabs bar, nested as on the live page: the container wraps the
+           tabs nav and the "view options" button, and carries only the
+           current CSS-module class (no view-navigation-module__ prefix). -->
+      <div class="ViewNavigationContainer__GbjBrL">
+        <div class="tabsContainer__UXpA4w">
+          <div class="viewTabNav__0-FGaK">
+            <nav class="tabNav__U5aH7j" aria-label="Select view">
+              <div role="tab" aria-selected="true" class="selected">
+                <svg class="octicon octicon-project" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect width="3" height="10" x="1" y="3"></rect><rect width="3" height="7" x="6" y="3"></rect><rect width="3" height="13" x="11" y="3"></rect></svg>
+                <span>Board</span>
+              </div>
+            </nav>
           </div>
         </div>
-      </nav>
+        <div class="viewOptionsMenuContainer__k-VYBM"><button type="button" aria-label="View options">⌄</button></div>
+      </div>
 
       <!-- Board body. Two cards in different columns (so their rects sit
            apart), each linking to an issue — card discovery is just "any

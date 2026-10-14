@@ -35,3 +35,41 @@ test("shows the switch unchecked and draws nothing while off (the default)", asy
   await page.waitForTimeout(1000);
   await expect(page.locator("#ghbd-root")).toHaveCount(0);
 });
+
+// #56: GitHub renamed the bar's class from
+// `view-navigation-module__ViewNavigationContainer--x` to
+// `ViewNavigationContainer__<hash>`, and the switch silently stopped
+// mounting. The fixture carries only the current name, and the switch must
+// land in that bar (the primary anchor), not anywhere else.
+test("mounts the switch inside the current ViewNavigationContainer__ bar", async ({ context, page }) => {
+  await routeApi(context, API);
+  await routeGithub(context, "board.html");
+  await page.goto(BOARD_URL);
+
+  await expect(page.locator('[class*="ViewNavigationContainer__"] > #ghbd-toggle')).toHaveCount(1);
+  await expect(page.locator("#ghbd-toggle")).toHaveCount(1);
+});
+
+test("still mounts the switch on the previous view-navigation-module__ naming", async ({ context, page }) => {
+  await routeApi(context, API);
+  await routeGithub(context, "board-legacy-classes.html");
+  await page.goto(BOARD_URL);
+
+  await expect(page.locator('[class*="view-navigation-module__ViewNavigationContainer"] > #ghbd-toggle')).toHaveCount(1);
+});
+
+test("re-mounts the switch after GitHub re-renders the view tabs bar", async ({ context, page }) => {
+  await routeApi(context, API);
+  await routeGithub(context, "board.html");
+  await page.goto(BOARD_URL);
+  await expect(page.locator("#ghbd-toggle")).toHaveCount(1);
+
+  // React replaces the bar with a fresh node that no longer holds our switch.
+  await page.evaluate(() => {
+    const bar = document.querySelector('[class*="ViewNavigationContainer__"]');
+    const fresh = bar.cloneNode(true);
+    fresh.querySelector("#ghbd-toggle").remove();
+    bar.replaceWith(fresh);
+  });
+  await expect(page.locator('[class*="ViewNavigationContainer__"] > #ghbd-toggle')).toHaveCount(1);
+});
