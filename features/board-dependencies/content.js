@@ -25,7 +25,9 @@
   // inline `left` offset above is relative to, so it's already a
   // positioning context) keeps the switch at the true end of the row
   // regardless of which tab is selected.
-  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="view-navigation-module__ViewNavigationContainer"]';
+  // Current `ViewNavigationContainer__<hash>` naming first, the previous
+  // `view-navigation-module__ViewNavigationContainer--x` one as a fallback.
+  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="ViewNavigationContainer__"], [class*="view-navigation-module__ViewNavigationContainer"]';
   const SELECTED_TAB_SELECTOR = 'nav[aria-label="Select view"] [role="tab"][aria-selected="true"], nav[aria-label="Select view"] [role="tab"].selected';
 
   function isProjectsPage() {

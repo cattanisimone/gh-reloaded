@@ -53,6 +53,7 @@
    guarantees OUR `right`/`top` below resolve against this row
    specifically, rather than against whichever further-up ancestor
    happens to be the nearest positioned one. */
+[class*="ViewNavigationContainer__"],
 [class*="view-navigation-module__ViewNavigationContainer"] {
   position: relative !important;
 }
