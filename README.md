@@ -84,9 +84,9 @@ On a GitHub Projects **Board** (kanban) view, draws an arrow directly between an
 
 ### Full-width board — [features/full-width-board](features/full-width-board)
 
-On a GitHub Projects **Board** (kanban) view, uses the full window width and makes every column flexible: columns grow into spare space, then shrink as needed (down to 140px each) so more of the board stays visible before horizontal scrolling is necessary. Boards with too many columns to fit at that minimum still scroll. On by default; switchable from Settings.
+On a GitHub Projects **Board** (kanban) view, uses the full window width and makes every column flexible: columns grow into spare space, then shrink as needed (down to 150px each) so more of the board stays visible before horizontal scrolling is necessary. Boards with too many columns to fit at that minimum still scroll. On narrow windows column titles stay on one line with a tooltip (the count badge gives way first), cards keep their content inside the border, swimlane headers end with the last column, and the board lines up with the filter bar. On by default; switchable from Settings.
 
-![Full-width board mockup: a kanban board using spare window space when available and shrinking columns when space is tight, delaying horizontal scrolling until the 140px-per-column minimum is reached](screenshots/full-width-board.svg)
+![Full-width board mockup: a kanban board using spare window space when available and shrinking columns when space is tight, delaying horizontal scrolling until the 150px-per-column minimum is reached](screenshots/full-width-board.svg)
 
 ### Standup mode — [features/standup-mode](features/standup-mode)
 
