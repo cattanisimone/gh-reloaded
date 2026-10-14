@@ -17,6 +17,7 @@ See AGENTS.md for the full conventions.
 
 - [ ] Every acceptance criterion in the issue is met (or the exceptions are noted below)
 - [ ] Tests pass, if the repository has them
+- [ ] Checked on the live github.com page, or noted as not verified (if the change injects into GitHub's markup)
 - [ ] `README.md`'s "Features" section updated (if a feature's behavior changed)
 - [ ] `screenshots/` mockup refreshed (if the change is visible)
 - [ ] `PRIVACY.md` updated (if stored data or requested permissions changed)
