@@ -35,10 +35,14 @@
 
   const SELECTED_TAB_SELECTOR =
     'nav[aria-label="Select view"] [role="tab"][aria-selected="true"], nav[aria-label="Select view"] [role="tab"].selected';
-  // Same board-only mounting anchor the other board features use — a
-  // stable part of every project page's chrome, matched by class prefix
-  // since the build-hash suffix churns across deploys.
-  const VIEW_NAV_CONTAINER_SELECTOR = '[class*="ViewNavigationContainer__"], [class*="view-navigation-module__ViewNavigationContainer"]';
+  // The filter row above the board (a flex region labelled "View filters"
+  // holding the filter box and GitHub's own "View" button), found by role
+  // and visible text, never by a CSS-module class. The entry button is
+  // mounted as a child of this row, left of board-dependencies' arrows
+  // button when that is present, else just left of the View button. If an
+  // anchor is missing nothing is mounted and the next scan retries.
+  const FILTER_ROW_SELECTOR = '[role="region"][aria-label="View filters"]';
+  const ARROWS_ID = "ghbd-toggle";
   const BOARD_CONTAINER_SELECTOR = '[class*="boardContainer__"], [class*="Board-module__boardContainer"]';
   // Board layout's real card box carries this exact, un-hashed class —
   // the same anchor board-dependencies keys on. Columns are its own
@@ -237,7 +241,7 @@
     return node;
   }
 
-  // ---- entry button (board-only, mounted in the view-tabs bar) ----
+  // ---- entry button (board-only, mounted in the filter row) ----
 
   function enterButtonHtml() {
     return `
@@ -247,19 +251,39 @@
       <span>Standup</span>`;
   }
 
+  // { row, view } — the filter row and its child that holds the "View"
+  // button — or null. Same small helper as board-dependencies', duplicated
+  // so each feature still ships on its own.
+  function findFilterRow() {
+    const row = document.querySelector(FILTER_ROW_SELECTOR);
+    if (!row) return null;
+    const view = Array.from(row.children).find((c) =>
+      Array.from(c.querySelectorAll("button")).some((b) => (b.textContent || "").trim() === "View")
+    );
+    return view ? { row, view } : null;
+  }
+
   function ensureEnterMounted() {
-    const existing = document.getElementById(ENTER_ID);
-    if (existing) return existing;
-    const container = document.querySelector(VIEW_NAV_CONTAINER_SELECTOR);
-    if (!container) return null;
-    const btn = document.createElement("button");
-    btn.id = ENTER_ID;
-    btn.type = "button";
-    btn.innerHTML = enterButtonHtml();
-    btn.title = "Standup mode — a compact board that highlights what needs attention (Esc to exit)";
-    btn.setAttribute("aria-label", "Enter standup mode");
-    btn.addEventListener("click", enter);
-    container.appendChild(btn);
+    const found = findFilterRow();
+    if (!found) {
+      removeEnterButton();
+      return null;
+    }
+    let btn = document.getElementById(ENTER_ID);
+    if (!btn) {
+      btn = document.createElement("button");
+      btn.id = ENTER_ID;
+      btn.type = "button";
+      btn.innerHTML = enterButtonHtml();
+      btn.title = "Standup mode — a compact board that highlights what needs attention (Esc to exit)";
+      btn.setAttribute("aria-label", "Enter standup mode");
+      btn.addEventListener("click", enter);
+    }
+    const arrows = document.getElementById(ARROWS_ID);
+    const anchor = arrows && arrows.parentElement === found.row ? arrows : found.view;
+    if (btn.parentElement !== found.row || btn.nextElementSibling !== anchor) {
+      found.row.insertBefore(btn, anchor);
+    }
     return btn;
   }
 
@@ -986,7 +1010,7 @@
       lastUrl = location.href;
       debouncedSync();
     } else if (!active && isProjectsPage() && isBoardLayout() && !document.getElementById(ENTER_ID)) {
-      // Same URL, but the view-nav bar re-rendered and dropped our button.
+      // Same URL, but the filter row re-rendered and dropped our button.
       sync();
     }
   }, 800);

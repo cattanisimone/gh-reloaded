@@ -20,7 +20,7 @@ test("draws a dependency arrow between two cards when enabled", async ({ context
   await routeGithub(context, "board.html");
   await page.goto(BOARD_URL);
 
-  await expect(page.locator("#ghbd-toggle")).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator("#ghbd-toggle")).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator("#ghbd-root path.ghbd-edge")).toHaveCount(1);
 });
 
@@ -30,46 +30,46 @@ test("shows the switch unchecked and draws nothing while off (the default)", asy
   await page.goto(BOARD_URL);
 
   // The switch is offered on a board view...
-  await expect(page.locator("#ghbd-toggle")).toHaveAttribute("aria-checked", "false");
+  await expect(page.locator("#ghbd-toggle")).toHaveAttribute("aria-pressed", "false");
   // ...but no overlay/arrows until it's turned on.
   await page.waitForTimeout(1000);
   await expect(page.locator("#ghbd-root")).toHaveCount(0);
 });
 
-// #56: GitHub renamed the bar's class from
-// `view-navigation-module__ViewNavigationContainer--x` to
-// `ViewNavigationContainer__<hash>`, and the switch silently stopped
-// mounting. The fixture carries only the current name, and the switch must
-// land in that bar (the primary anchor), not anywhere else.
-test("mounts the switch inside the current ViewNavigationContainer__ bar", async ({ context, page }) => {
+// #56 / #57: GitHub renamed the view-tabs bar's class, and the switch
+// silently stopped mounting; the control now lives in the filter row, which
+// is found by role and visible text, so no class naming matters. It must
+// land there (the primary anchor), not in the tabs bar.
+test("mounts the button in the View filters row, not in the view tabs bar", async ({ context, page }) => {
   await routeApi(context, API);
   await routeGithub(context, "board.html");
   await page.goto(BOARD_URL);
 
-  await expect(page.locator('[class*="ViewNavigationContainer__"] > #ghbd-toggle')).toHaveCount(1);
+  await expect(page.locator('[role="region"][aria-label="View filters"] > #ghbd-toggle')).toHaveCount(1);
   await expect(page.locator("#ghbd-toggle")).toHaveCount(1);
+  await expect(page.locator('[class*="ViewNavigationContainer__"] #ghbd-toggle')).toHaveCount(0);
 });
 
-test("still mounts the switch on the previous view-navigation-module__ naming", async ({ context, page }) => {
+test("still mounts the button on the previous view-navigation-module__ naming", async ({ context, page }) => {
   await routeApi(context, API);
   await routeGithub(context, "board-legacy-classes.html");
   await page.goto(BOARD_URL);
 
-  await expect(page.locator('[class*="view-navigation-module__ViewNavigationContainer"] > #ghbd-toggle')).toHaveCount(1);
+  await expect(page.locator('[role="region"][aria-label="View filters"] > #ghbd-toggle')).toHaveCount(1);
 });
 
-test("re-mounts the switch after GitHub re-renders the view tabs bar", async ({ context, page }) => {
+test("re-mounts the button after GitHub re-renders the filter row", async ({ context, page }) => {
   await routeApi(context, API);
   await routeGithub(context, "board.html");
   await page.goto(BOARD_URL);
   await expect(page.locator("#ghbd-toggle")).toHaveCount(1);
 
-  // React replaces the bar with a fresh node that no longer holds our switch.
+  // React replaces the row with a fresh node that no longer holds our button.
   await page.evaluate(() => {
-    const bar = document.querySelector('[class*="ViewNavigationContainer__"]');
-    const fresh = bar.cloneNode(true);
+    const row = document.querySelector('[role="region"][aria-label="View filters"]');
+    const fresh = row.cloneNode(true);
     fresh.querySelector("#ghbd-toggle").remove();
-    bar.replaceWith(fresh);
+    row.replaceWith(fresh);
   });
-  await expect(page.locator('[class*="ViewNavigationContainer__"] > #ghbd-toggle')).toHaveCount(1);
+  await expect(page.locator('[role="region"][aria-label="View filters"] > #ghbd-toggle')).toHaveCount(1);
 });

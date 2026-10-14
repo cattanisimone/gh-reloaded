@@ -83,72 +83,43 @@
   }
 }
 
-/* Mounted into the view tabs bar as a whole, then pinned to its right
-   edge. GitHub's own "view options" box inside that same bar tracks
-   the selected tab via an inline `left` offset, which only works
-   because the bar is (or at least behaves like) a positioning
-   context — forcing `position: relative` here explicitly is what
-   guarantees OUR `right`/`top` below resolve against this row
-   specifically, rather than against whichever further-up ancestor
-   happens to be the nearest positioned one. */
-[class*="ViewNavigationContainer__"],
-[class*="view-navigation-module__ViewNavigationContainer"] {
-  position: relative !important;
-}
-
+/* A native Primer icon button in the filter row, left of View (and of
+   Standup's button when both show): 32x32, same radius, border, fill and
+   states as GitHub's own buttons (measured on the live page), colours
+   from GitHub's theme variables with the measured light values as
+   fallback. No margin: the row's own gap spaces it. aria-pressed is the
+   on/off state: the selected fill and a blue icon. */
 #ghbd-toggle {
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  transform: translateY(-50%);
+  box-sizing: border-box;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  /* Dark gray always — this is the icon's own color, not tied to
-     on/off state, so it stays legible at a glance either way. */
-  color: #57606a;
-}
-
-#ghbd-toggle .ghbd-switch-track {
-  position: relative;
-  display: inline-block;
+  justify-content: center;
   width: 32px;
-  height: 18px;
-  border-radius: 999px;
-  background: #d0d7de;
-  transition: background 0.15s;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--button-default-borderColor-rest, #d1d9e0);
+  border-radius: 6px;
+  background: var(--button-default-bgColor-rest, #f6f8fa);
+  box-shadow: var(--button-default-shadow-resting, 0 1px 0 rgba(31, 35, 40, 0.04));
+  color: var(--fgColor-muted, #59636e);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 80ms cubic-bezier(0.33, 1, 0.68, 1);
 }
-#ghbd-toggle[aria-checked="true"] .ghbd-switch-track {
-  background: #bc4c00;
+#ghbd-toggle:hover {
+  background: var(--button-default-bgColor-hover, #eff2f5);
 }
-
-#ghbd-toggle .ghbd-switch-knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  transition: transform 0.15s;
+#ghbd-toggle:active {
+  background: var(--button-default-bgColor-active, #e6eaef);
+  box-shadow: none;
 }
-#ghbd-toggle[aria-checked="true"] .ghbd-switch-knob {
-  transform: translateX(14px);
+#ghbd-toggle[aria-pressed="true"] {
+  background: var(--button-default-bgColor-selected, #ddf4ff);
+  color: var(--fgColor-accent, #0969da);
 }
-
-@media (prefers-color-scheme: dark) {
-  #ghbd-toggle {
-    color: #8b949e;
-  }
-  #ghbd-toggle .ghbd-switch-track {
-    background: #30363d;
-  }
-  #ghbd-toggle[aria-checked="true"] .ghbd-switch-track {
-    background: #db6d28;
-  }
+#ghbd-toggle:focus-visible {
+  outline: 2px solid var(--focus-outlineColor, #0969da);
+  outline-offset: -2px;
 }
