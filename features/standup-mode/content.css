@@ -1,19 +1,10 @@
 /* features/standup-mode/content.css — the compact board and attention
    signals added while standup mode is active (body.ghsm-active), plus the
-   always-present entry button in the view-tabs bar. `!important` throughout the active
+   always-present entry button in the filter row. `!important` throughout the active
    rules because they fight a live React app's own CSS-module styles, not
    page-author styles we control. */
 
-/* ---- Entry button (board-only, in the view-tabs bar) ---- */
-
-/* The view-nav bar is already forced to position:relative by the
-   board-dependencies feature; declare it here too so the button still
-   anchors correctly on a board where that feature's stylesheet isn't
-   present. Harmless when both set it. */
-[class*="ViewNavigationContainer__"],
-[class*="view-navigation-module__ViewNavigationContainer"] {
-  position: relative;
-}
+/* ---- Entry button (board-only, in the filter row) ---- */
 
 /* A native Primer default button, in the filter row left of the arrows
    button / View: same height, radius, border, fill and states as GitHub's
