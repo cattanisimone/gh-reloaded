@@ -1,6 +1,6 @@
 // GitHub's Projects app dropped the file prefix from its CSS-module class
 // names (`Board-module__boardContainer__x` became `boardContainer__x`).
-// Quick-create, Full-width board and Standup mode must match the local name plus `__`,
+// Quick-create, Full-width board, Standup mode and Board dependency arrows must match the local name plus `__`,
 // which is present in both generations, never the `<file>-module__` prefix.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -9,7 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const files = ["quick-create/content.js", "full-width-board/content.js", "full-width-board/content.css", "standup-mode/content.js", "standup-mode/content.css"];
+const files = ["quick-create/content.js", "full-width-board/content.js", "full-width-board/content.css", "standup-mode/content.js", "standup-mode/content.css", "board-dependencies/content.js", "board-dependencies/content.css"];
 
 for (const f of files) {
   test(`${f} has no -module__ class selector`, () => {
