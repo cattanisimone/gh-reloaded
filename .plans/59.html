@@ -36,14 +36,14 @@
 
   <h2>What changes for users</h2>
   <ul>
-    <li>Column titles stay on <b>one line</b>, end in “…” when they do not fit, and show the full title in a tooltip. The count badge and the “…” menu keep their size.</li>
-    <li>Columns get a <b>200px minimum</b> (was 140px). Below that the board scrolls sideways, which is what GitHub does by default.</li>
-    <li>Card content (labels, title, avatar) <b>stays inside the card's border</b>: long labels end in “…” instead of spilling out.</li>
-    <li>With swimlanes, each <b>lane header spans the full scrollable width</b> and scrolls with its columns. The whole board keeps one horizontal scrollbar.</li>
-    <li>The board's <b>left and right edges line up with the filter bar and the view tabs</b>, with or without a vertical scrollbar.</li>
+    <li>Column titles stay on <b>one line</b>, end in “…” when they do not fit, and show the full title in a tooltip. The “…” menu never shrinks. When the title would get fewer than about 6 characters, the <b>count badge gives way first</b>: it is hidden and the count moves into the tooltip (“Waiting Review · 12”).</li>
+    <li>The minimum column width goes from 140px to <b>150px</b>, so columns still shrink before the board scrolls sideways, as the README promises. At 1100px a 6-column board still fits with no sideways scroll.</li>
+    <li>Card content stays <b>inside the card's border</b> at the minimum width: labels end in “…”, the title wraps between words, and the avatar is never clipped.</li>
+    <li>With swimlanes, the <b>lane headers end where the columns end</b> and scroll with them, using GitHub's own single board scroller. A fallback covers boards that scroll lane by lane (see below).</li>
+    <li>The board's <b>left and right edges line up with the filter bar and the view tabs</b>, also when the vertical scrollbar appears or disappears after load.</li>
   </ul>
 
-  <h2>Mockup · Board grouped by assignee, 800px window, 7 columns</h2>
+  <h2>Mockup · 6-column board grouped by assignee, 800px window</h2>
   <div class="scroll"><div class="pair">
     <div class="pane">
       <p class="cap">Before (today)</p>
@@ -51,25 +51,24 @@
         <div class="filter">Filter by keyword or by field</div>
         <div class="vp">
           <span class="edge" style="left:8px"></span><span class="edge" style="left:371px"></span>
-          <div style="margin-left:16px">
+          <div style="margin-left:11px">
             <div class="row">
-              <div class="col" style="width:50px"><div class="hd"><span class="t wrap">In Progr ess</span><span class="cnt">4</span></div></div>
-              <div class="col" style="width:50px"><div class="hd"><span class="t wrap">Waitin g Revie w</span><span class="cnt">2</span></div></div>
-              <div class="col" style="width:50px"><div class="hd"><span class="t wrap">Wait to Deplo y</span><span class="cnt">1</span></div></div>
-              <div class="col" style="width:50px"><div class="hd"><span class="t wrap">Done</span><span class="cnt">9</span></div></div>
-              <div class="col" style="width:50px"><div class="hd"><span class="t wrap">Back log</span><span class="cnt">7</span></div></div>
-              <div class="col" style="width:50px"><div class="hd"><span class="t wrap">Ready</span><span class="cnt">3</span></div></div>
-              <div class="col" style="width:50px"><div class="hd"><span class="t wrap">Block ed</span><span class="cnt">1</span></div></div>
+              <div class="col" style="width:66px"><div class="hd"><span class="t wrap">Back log</span><span class="cnt">7</span></div></div>
+              <div class="col" style="width:66px"><div class="hd"><span class="t wrap">Ready</span><span class="cnt">3</span></div></div>
+              <div class="col" style="width:66px"><div class="hd"><span class="t wrap">In Progr ess</span><span class="cnt">4</span></div></div>
+              <div class="col" style="width:66px"><div class="hd"><span class="t wrap">Waitin g Revie w</span><span class="cnt">12</span></div></div>
+              <div class="col" style="width:66px"><div class="hd"><span class="t wrap">Wait to Deplo y</span><span class="cnt">1</span></div></div>
+              <div class="col" style="width:66px"><div class="hd"><span class="t wrap">Done</span><span class="cnt">9</span></div></div>
             </div>
-            <div class="lane" style="width:300px">▾ alice <span class="cnt">5</span> <span class="bad">← ends here</span></div>
+            <div class="lane" style="width:340px">▾ alice <span class="cnt">5</span> <span class="bad">← ends here</span></div>
             <div class="row">
-              <div class="col" style="width:50px;overflow:visible"><div class="card" style="width:52px"><span class="av"></span> #12<br><span class="tok" style="max-width:none">frontend-redesign</span></div></div>
-              <div class="col" style="width:50px"></div><div class="col" style="width:50px"></div><div class="col" style="width:50px"></div><div class="col" style="width:50px"></div><div class="col" style="width:50px"></div><div class="col" style="width:50px"></div>
+              <div class="col" style="width:66px;overflow:visible"><div class="card" style="width:66px"><span class="av"></span> #12<br><span class="tok" style="max-width:none">frontend-redesign</span></div></div>
+              <div class="col" style="width:66px"></div><div class="col" style="width:66px"></div><div class="col" style="width:66px"></div><div class="col" style="width:66px"></div><div class="col" style="width:66px"></div>
             </div>
           </div>
         </div>
       </div>
-      <p class="note"><span class="bad">Red</span>: board edges (x8 / ~x752) vs filter bar (x16 / x784). Titles wrap mid-word, the label spills out of the card, and the lane header stops short.</p>
+      <p class="note"><span class="bad">Red</span>: board edges vs the filter bar. Titles wrap mid-word, the label spills out of the card, the lane header stops short.</p>
     </div>
     <div class="pane">
       <p class="cap">After</p>
@@ -77,31 +76,41 @@
         <div class="filter">Filter by keyword or by field</div>
         <div class="vp">
           <span class="edge g" style="left:8px"></span>
-          <div style="margin-left:8px;width:700px">
+          <div style="margin-left:8px;width:460px">
             <div class="row new">
-              <div class="col" style="width:96px"><div class="hd"><span class="t">In Progress</span><span class="cnt">4</span></div></div>
-              <div class="col" style="width:96px"><div class="hd"><span class="t" title="Waiting Review">Waiting Re…</span><span class="cnt">2</span></div></div>
-              <div class="col" style="width:96px"><div class="hd"><span class="t" title="Wait to Deploy">Wait to D…</span><span class="cnt">1</span></div></div>
-              <div class="col" style="width:96px"><div class="hd"><span class="t">Done</span><span class="cnt">9</span></div></div>
-              <div class="col" style="width:96px"></div><div class="col" style="width:96px"></div><div class="col" style="width:96px"></div>
+              <div class="col" style="width:71px"><div class="hd"><span class="t">Backlog</span></div></div>
+              <div class="col" style="width:71px"><div class="hd"><span class="t">Ready</span></div></div>
+              <div class="col" style="width:71px"><div class="hd"><span class="t" title="In Progress · 4">In Pro…</span></div></div>
+              <div class="col" style="width:71px"><div class="hd"><span class="t" title="Waiting Review · 12">Waitin…</span></div></div>
+              <div class="col" style="width:71px"><div class="hd"><span class="t">Wait t…</span></div></div>
+              <div class="col" style="width:71px"><div class="hd"><span class="t">Done</span></div></div>
             </div>
-            <div class="lane new" style="width:692px">▾ alice <span class="cnt">5</span> <span class="ok">spans every column →</span></div>
+            <div class="lane new" style="width:446px">▾ alice <span class="cnt">5</span> <span class="ok">spans every column →</span></div>
             <div class="row">
-              <div class="col" style="width:96px"><div class="card new"><span class="av"></span> #12<br><span class="tok">frontend-redesign</span></div></div>
-              <div class="col" style="width:96px"></div><div class="col" style="width:96px"></div><div class="col" style="width:96px"></div><div class="col" style="width:96px"></div><div class="col" style="width:96px"></div><div class="col" style="width:96px"></div>
+              <div class="col" style="width:71px"><div class="card new"><span class="av"></span> #12<br><span class="tok">frontend-redesign</span></div></div>
+              <div class="col" style="width:71px"></div><div class="col" style="width:71px"></div><div class="col" style="width:71px"></div><div class="col" style="width:71px"></div><div class="col" style="width:71px"></div>
             </div>
           </div>
         </div>
       </div>
-      <p class="note"><span class="ok">Green</span>: first column starts where the filter bar starts. 7 × 200px do not fit in 800px, so the board scrolls sideways as one block (titles, lane header and cards together). Dashed blue = changed.</p>
+      <p class="note"><span class="ok">Green</span>: the first column starts where the filter bar starts. At 150px, 4 columns and 90% of the 5th are visible; the board scrolls sideways as one block. Badges are hidden because the titles would get fewer than 6 characters. Dashed blue = changed.</p>
     </div>
   </div></div>
-  <p class="note">At 1500 and 1100px the columns grow to fill the width as today. Only the edges, the titles and the labels change there.</p>
 
-  <h2>Route and view matrix</h2>
+  <h2>Column widths and titles · 6 columns, 8px gap</h2>
+  <p class="note">Measured on the live header: the parts around the title take about <b>125px</b> (17px left inset, 16px colour dot + 8px gap, 8px gap + count badge 22–31px, 8px gap + 28px “…” menu for members, 9px right inset). Average glyph width about 9px. So the title gets <code>w − 125</code> px with the badge and <code>w − 86</code> px without it. The badge is hidden when the title would get less than 54px (6 characters), that is below about 179px. The script measures this on each column (a 3-digit count hides sooner) instead of using a constant.</p>
+  <div class="scroll"><table>
+    <tr><th>Window</th><th>Today (140px min, x24 edge)</th><th>200px min (previous plan)</th><th>This plan (150px min, x16 edge)</th><th>Titles that lose their full text (this plan)</th></tr>
+    <tr><td>1500px</td><td>235px · 6 visible · title room 110px</td><td>238px · 6 visible</td><td><b>238px · 6 visible</b> · badge shown · room 113px</td><td>Waiting Review, Wait to Deploy (≈126px each)</td></tr>
+    <tr><td>1100px</td><td>169px · 6 visible · room 44px, <span class="bad">wraps mid-word</span></td><td>200px · <span class="bad">5 visible, scrolls</span></td><td><b>171px · 6 visible, no scroll</b> · badge hidden · room 85px</td><td>In Progress, Waiting Review, Wait to Deploy</td></tr>
+    <tr><td>800px</td><td>140px · 5 visible, scrolls · room 15px, <span class="bad">wraps mid-word</span></td><td>200px · 3 visible, scrolls</td><td><b>150px · 4 + 90% of the 5th, scrolls</b> · badge hidden · room 64px</td><td>In Progress, Waiting Review, Wait to Deploy (Backlog just fits)</td></tr>
+  </table></div>
+  <p class="note">Board width = window − 32px (16px gutters, like the filter bar), with an overlay scrollbar. A classic 15px scrollbar takes 2.5px per column (1100px: 169px, still 6 visible). Backlog, Ready and Done keep their full title at every width.</p>
+
+<h2>Route and view matrix</h2>
   <table>
     <tr><th>View</th><th>What this change does</th></tr>
-    <tr><td>Board, no grouping</td><td>Title ellipsis, card fit, 200px minimum, edges aligned. There is no lane header.</td></tr>
+    <tr><td>Board, no grouping</td><td>Title ellipsis and badge give-way, card fit, 150px minimum, edges aligned. There is no lane header.</td></tr>
     <tr><td>Board with Group by (swimlanes)</td><td>All of the above, plus lane headers and the sticky column-header row sized to the content width.</td></tr>
     <tr><td>Board with slice-by panel open</td><td>Edges measured from where the board really sits (the existing <code>--ghfw-board-left</code>). The left gutter is measured from the view tabs.</td></tr>
     <tr><td>Board in Standup mode</td><td>Same rules. Standup keeps its own copy for when Full-width board is off (<code>--ghsm-board-left</code>), and that copy gets the same changes.</td></tr>
@@ -113,7 +122,7 @@
   <h3>What the live board looks like (probed anonymously on <code>orgs/github/projects/4247?groupedBy[columnId]=Labels</code>)</h3>
   <div class="scroll"><svg viewBox="0 0 1080 250" width="100%" role="img" aria-label="board DOM structure" font-size="12" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">
     <rect x="4" y="4" width="1072" height="240" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
-    <text x="16" y="24" fill="#1f2328">boardContainer__ › <tspan font-weight="700">boardView__ .horizontalGroup__</tspan>  (flex column, overflow:auto, padding 16px — the ONE scroller)</text>
+    <text x="16" y="24" fill="#1f2328">boardContainer__ › <tspan font-weight="700">boardView__ .horizontalGroup__</tspan>  (flex column, overflow:auto, padding 16px — GitHub’s single scroller)</text>
     <rect x="28" y="36" width="1036" height="60" rx="4" fill="#fff" stroke="#d1d9e0"/>
     <text x="40" y="54" fill="#1f2328">horizontalGroupHeader__ (sticky top) › horizontalGroupContainer__ › [data-board-column]</text>
     <text x="56" y="74" fill="#59636e">Heading__ › ColumnTitleWithWorkflowIndicator__ › <tspan fill="#d1242f">h2.Title__ › span (overflow-wrap:anywhere)</tspan> + AggregateLabels__ (count)</text>
@@ -133,24 +142,40 @@
       <rect x="10" y="20" width="190" height="60" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="22" y="44">content.js (scan, 800ms</text><text x="22" y="62">+ resize + SPA nav)</text>
       <rect x="250" y="10" width="260" height="80" rx="6" fill="#fff" stroke="#0969da" stroke-dasharray="4 3"/>
       <text x="262" y="32">measure: board left (existing)</text><text x="262" y="50">+ gutter = view-tabs left − board left</text><text x="262" y="68">+ scrollbar = offsetWidth − clientWidth</text>
-      <text x="262" y="84" font-size="11" fill="#59636e">tag truncated titles with title="…"</text>
+      <text x="262" y="84" font-size="11" fill="#59636e">per column: title room → hide badge, set title=“Name · count”</text>
       <rect x="560" y="20" width="290" height="60" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="572" y="44">CSS vars --ghfw-gutter,</text><text x="572" y="62">--ghfw-scrollbar → content.css</text>
       <line x1="200" y1="50" x2="248" y2="50" stroke="#59636e" marker-end="url(#a)"/><line x1="510" y1="50" x2="558" y2="50" stroke="#59636e" marker-end="url(#a)"/>
       <text x="10" y="120" font-size="12" fill="#59636e">CSS: container padding 0 · boardView padding: gutter / max(0, gutter − scrollbar) · lane area + header row: width max-content, min-width 100%</text>
-      <text x="10" y="140" font-size="12" fill="#59636e">titles: nowrap + ellipsis, min-width 0 up the flex chain · count + menu flex: none · tokens max-width 100% + ellipsis · columns min-width 200px</text>
+      <text x="10" y="140" font-size="12" fill="#59636e">titles: nowrap + ellipsis, min-width 0 up the flex chain · menu flex: none · badge hidden below 6ch of title · tokens max-width 100% + ellipsis · avatar flex: none · columns min-width 150px</text>
     </g>
   </svg></div>
+  <h3>One scroller, and the fallback</h3>
+  <p>Probed anonymously on the public board (grouped by Labels and by Assignees, 1100px): the only horizontal scroller is <code>boardView__</code> (scrollWidth 1464, clientWidth 1100). Lane headers are <code>position: sticky</code> and already span the content width (1424px) on GitHub's own layout; the column-header row is sticky at <code>top: 0</code>. The lane headers break only because the extension zeroes the lane area's inline <code>min-width</code>. So the plan <b>adds no scroller and moves nothing</b>: it only sizes the lane area and the header row to <code>max-content</code> (with <code>min-width: 100%</code>), and it never touches <code>overflow</code>, <code>position</code>, drop zones or <code>data-dnd-*</code> elements.</p>
+  <table>
+    <tr><th>Case</th><th>Detected by</th><th>What the extension does</th></tr>
+    <tr><td><b>Primary</b>: one board scroller (what the live probe shows)</td><td>no lane container scrolls on its own</td><td>Lane area and header row at <code>max-content</code>: lane headers end with the last column and scroll with it.</td></tr>
+    <tr><td><b>Fallback</b>: each lane scrolls on its own (the issue saw a scrollbar per lane; not reproduced anonymously, maybe on large or virtualised boards)</td><td>on each scan, a lane container with <code>overflow-x: auto|scroll</code> and <code>scrollWidth &gt; clientWidth</code> → <code>body.ghfw-lane-scroll</code></td><td>Keep GitHub's per-lane scrollers. Size each lane header to its lane's scroll width, and make the header's label sticky at the lane's left edge (<code>position: sticky; left: 0</code> on the inner content), so the name stays visible and the header ends where that lane's columns end. No scroll syncing between lanes.</td></tr>
+  </table>
+  <p>If drag and drop or the sticky row break in the primary mode during the live check in IMPLEMENT, the fallback CSS becomes the only mode, and the PR says so.</p>
+  <h3>Edges that stay aligned after load</h3>
+  <p>The scrollbar width (<code>offsetWidth − clientWidth</code> of <code>boardView__</code>) is measured on the 800ms scan, on <code>resize</code>, and by a <code>ResizeObserver</code> on <code>boardView__</code> and its first child. That catches a scrollbar that appears or disappears when a lane collapses or a filter changes, with no window resize. The right padding is <code>max(0, gutter − scrollbar)</code>, so the last column ends 16px from the window edge in both cases.</p>
+  <h3>Cards at 150px (card ≈ 132px wide)</h3>
+  <ul>
+    <li>Labels: <code>max-width: 100%</code>, one line, “…”; the label list wraps to more lines but never overflows.</li>
+    <li>Title: wraps between words; a single word longer than the card breaks (<code>overflow-wrap: anywhere</code>) instead of overflowing.</li>
+    <li>Avatar and the issue number row: <code>flex: none</code> on the avatar, <code>min-width: 0</code> on the text next to it, so the avatar is never clipped and the right border stays visible.</li>
+  </ul>
   <p>Anchors (no CSS-module prefix): <code>[class*="boardView__"]</code>, <code>[class*="horizontalGroupHeader__"]</code>, <code>[class*="horizontalGroupAreaContainer__"]</code>, <code>[class*="styledGroupHeaderWrapper__"]</code>, columns by <code>[data-board-column]</code> (attribute, not class), titles by the column's <code>h2</code> heading, cards by <code>.board-view-column-card</code> and <code>ul[aria-label="Fields"]</code>, the gutter by <code>nav[aria-label="Select view"]</code>. The old <code>Board-module__…</code> forms stay listed next to the current ones, as today. If the view tabs are missing, the gutter variable is not set and GitHub's own 16px padding applies: no other container is used as a fallback.</p>
 
   <h2>Changes by file</h2>
   <table>
     <tr><th>File</th><th>Change</th><th>Why</th></tr>
-    <tr><td><code>features/full-width-board/content.css</code></td><td>Drop the 8px container padding; gutter / scrollbar padding on boardView; <code>max-content</code> lane area and header row; title ellipsis; count/menu <code>flex:none</code>; card token fit; 200px column minimum.</td><td>The four symptoms of the issue.</td></tr>
-    <tr><td><code>features/full-width-board/content.js</code></td><td>Measure the gutter and the scrollbar width next to the existing left offset; set <code>title</code> on truncated column titles (only when GitHub set none).</td><td>Read the page's gutter from the environment instead of hardcoding it; tooltip for truncated titles.</td></tr>
+    <tr><td><code>features/full-width-board/content.css</code></td><td>Drop the 8px container padding; gutter / scrollbar padding on boardView; <code>max-content</code> lane area and header row; <code>ghfw-lane-scroll</code> fallback rules; title ellipsis; menu <code>flex:none</code>; <code>.ghfw-badge-hidden</code>; card fit; 150px column minimum.</td><td>The four symptoms of the issue.</td></tr>
+    <tr><td><code>features/full-width-board/content.js</code></td><td>Measure the gutter and the scrollbar (scan, resize, <code>ResizeObserver</code>); per column, measure the title room and hide the badge below 6 characters, with the full title and count in <code>title</code>; detect per-lane scrollers for the fallback.</td><td>Read the page's gutter from the environment instead of hardcoding it; tooltip for truncated titles.</td></tr>
     <tr><td><code>features/standup-mode/content.css</code>, <code>content.js</code></td><td>Mirror the same rules in its <code>:not(.ghfw-active)</code> copy (<code>--ghsm-*</code> variables).</td><td>Standup shares the layout; it must not regress or diverge.</td></tr>
     <tr><td><code>test/e2e/fixtures/board-swimlanes.html</code> (new)</td><td>Grouped board built from the probed markup: real class names with hashes, 7 columns with long titles, count + menu, cards with avatar and long labels, filter bar and view tabs, layout CSS that mirrors the live one (16px padding, sticky rows, inline min-width).</td><td>Geometry tests need a fixture whose layout behaves like the live page.</td></tr>
     <tr><td><code>test/e2e/full-width-board.spec.js</code>, <code>standup-mode.spec.js</code></td><td>Geometry tests (below).</td><td>Acceptance criteria.</td></tr>
-    <tr><td><code>README.md</code>, <code>features/full-width-board/README.md</code>, <code>screenshots/full-width-board.svg</code></td><td>200px minimum, ellipsis titles, lane alignment; refresh the mockup.</td><td>Visible layout changes.</td></tr>
+    <tr><td><code>README.md</code>, <code>features/full-width-board/README.md</code>, <code>screenshots/full-width-board.svg</code></td><td>150px minimum (was 140px), ellipsis titles and badge give-way, lane alignment; refresh the mockup.</td><td>Visible layout changes.</td></tr>
   </table>
   <p>No shared module (<code>lib/</code>, <code>background.js</code>, <code>options/</code>, <code>manifest.json</code>) is touched.</p>
 
@@ -160,25 +185,31 @@
   <h2>Test plan</h2>
   <table>
     <tr><th>Acceptance criterion</th><th>Test</th><th>Name (e2e, <code>board-swimlanes.html</code>, at 1500 / 1100 / 800px)</th></tr>
-    <tr><td>No title wraps mid-word</td><td>e2e</td><td><code>column titles stay on one line at &lt;w&gt;</code>: each <code>h2</code> height equals one line height; truncated ones carry <code>title</code></td></tr>
-    <tr><td>No card content clipped</td><td>e2e</td><td><code>card content stays inside its border at &lt;w&gt;</code>: every visible descendant's right ≤ card's right; avatar fully visible</td></tr>
+    <tr><td>No title wraps mid-word</td><td>e2e</td><td><code>column titles stay on one line at &lt;w&gt;</code>: each <code>h2</code> height equals one line height; truncated ones carry <code>title</code>; the “…” menu keeps 28px</td></tr>
+    <tr><td>Badge gives way before the title</td><td>e2e</td><td><code>count badge hides below 6 characters of title</code>: at 1500 badges visible; at 1100 and 800 hidden, each title ≥ 54px wide, the count is in <code>title</code>; a 3-digit count hides sooner; widening the window brings the badge back</td></tr>
+    <tr><td>No card content clipped</td><td>e2e</td><td><code>card content stays inside its border at &lt;w&gt;</code>, on a card with a real long title (“Migrate the notification preferences page to the new settings layout”) and two labels (“frontend-redesign”, “needs-design-review”): every visible descendant's right ≤ card's right, avatar width and height unchanged, labels end in “…”, title wraps</td></tr>
     <tr><td>Lane headers end where the columns end</td><td>e2e</td><td><code>lane headers span the columns at &lt;w&gt;</code>: header right = last column right (±1px), also after scrolling the board to its end; exactly one horizontal scroller</td></tr>
+    <tr><td>Fallback for per-lane scrollers</td><td>e2e</td><td><code>lane headers follow their lane when each lane scrolls</code>: fixture variant with a scroller per lane; <code>ghfw-lane-scroll</code> set, header right = that lane's last column, label stays visible after scrolling; and on the default fixture <code>ghfw-lane-scroll</code> is <b>not</b> set (the fallback cannot mask the primary path)</td></tr>
+    <tr><td>Drag and drop still works</td><td>e2e smoke</td><td><code>dragging a card across a scrolled board hits the right column</code>: scroll sideways, pointer down on a card, move to the 4th column; at every step <code>elementFromPoint</code> under the pointer is inside that column's drop zone (no sticky header or lane header covers it), and the fixture's pointer handler records the drop in that column. GitHub's real drag code needs a member login: maintainer check below.</td></tr>
     <tr><td>Left/right edges aligned with filter bar and tabs</td><td>e2e</td><td><code>board edges match the filter bar at &lt;w&gt;</code>, plus a variant with a forced classic scrollbar (<code>::-webkit-scrollbar</code> width 15px in the fixture)</td></tr>
-    <tr><td>Minimum width → horizontal scroll</td><td>e2e</td><td><code>columns keep a 200px minimum and the board scrolls</code> at 800px with 7 columns</td></tr>
+    <tr><td>Edges hold when the scrollbar comes and goes</td><td>e2e</td><td><code>board edges follow a scrollbar that appears after load</code>: classic scrollbar, short content (no scrollbar) → expand a lane until the board scrolls vertically → collapse it again; edges match the filter bar after each step, with no window resize</td></tr>
+    <tr><td>Minimum width → horizontal scroll</td><td>e2e</td><td><code>columns shrink to 150px before the board scrolls</code>: 6 columns fit at 1100px with no horizontal scroll; at 800px every column is 150px and the board scrolls</td></tr>
     <tr><td>Anchors without CSS-module prefixes</td><td>e2e + unit</td><td>Same geometry suite on the fixture rewritten to the old <code>Board-module__name--hash</code> naming; <code>module-classes.test.js</code> keeps guarding the CSS/JS; a test asserts the gutter comes from the view tabs on current markup</td></tr>
     <tr><td>Standup mode not regressed</td><td>e2e</td><td><code>standup board lines up with full-width off</code> and <code>with full-width on</code> (edges + titles at 800px); existing standup specs stay green</td></tr>
     <tr><td>Non-grouped board</td><td>e2e</td><td>Existing specs plus title and edge checks on <code>board.html</code></td></tr>
-    <tr><td>Checked live at the three widths</td><td>manual probe</td><td>Before/after numbers in the PR's <code>## Live check</code></td></tr>
+    <tr><td>Checked live at the three widths</td><td>manual probe</td><td>Before/after numbers in the PR's <code>## Live check</code>, on the public board grouped by Labels and by Assignees</td></tr>
     <tr><td>README + mockup</td><td>review</td><td>Diff of both files</td></tr>
   </table>
-  <p><b>Live check (done for this plan):</b> GitHub's public roadmap board opens anonymously, including with swimlanes (<code>?groupedBy[columnId]=Labels</code>). With the extension at 800px: columns start at x24 (filter bar and tabs at x16); with columns forced to their minimum, the lane header ends at x768 while the columns reach x1008; label tokens spill past a 162px card; titles wrap when columns shrink. A prototype of the CSS above, injected on the same page, gave columns, lane headers and the filter bar a common x16 edge, lane headers ending with the last column, single-line titles and one horizontal scroller. Not reproducible anonymously: “…” column menus (members only, 0px wide here) and a 7-column board with the issue's exact titles. The fixture covers both.</p>
+  <p><b>Live check (done for this plan):</b> GitHub's public roadmap board opens anonymously, including with swimlanes (<code>?groupedBy[columnId]=Labels</code>). With the extension at 800px: columns start at x24 (filter bar and tabs at x16); with columns forced to their minimum, the lane header ends at x768 while the columns reach x1008; label tokens spill past a 162px card; titles wrap when columns shrink. A prototype of the CSS above, injected on the same page, gave columns, lane headers and the filter bar a common x16 edge, lane headers ending with the last column, single-line titles and one horizontal scroller. Not reproducible anonymously: “…” column menus (members only, 0px wide here) and a 6-column board with the issue's exact titles. The fixture covers both.</p>
+  <p><b>Grouped by assignee:</b> <code>?groupedBy[columnId]=Assignees</code> opens anonymously, but this board has one lane, “No Assignees”, with no avatar and no Effort pill. The final probe runs there too, and the PR will say <b>Not verified on live github.com</b> for lane headers with an avatar, a name, a count and an “Effort” pill, and for GitHub's own drag and drop. The maintainer should look at: a board grouped by assignee at 800px (lane header ends with the last column, avatar and pill not clipped) and dragging a card into a column that is scrolled into view. The fixture's lane headers carry an avatar, a name, a count and an Effort pill, built from the measured structure (<code>groupHeaderContainer__ › IconButton + groupHeaderContent__ › SanitizedHtml__ + AggregateLabels__</code>).</p>
 
   <h2>Risks and open questions</h2>
   <ul>
-    <li>Minimum column width (default: <b>200px</b>, which fits ~12 characters of title next to the count and menu). 180px keeps more columns visible but truncates sooner.</li>
+    <li>Minimum column width (default: <b>150px</b>: 7 characters of title with the badge hidden, 4.9 columns at 800px). 160px gives 8 characters but only 4.6 columns at 800px.</li>
+    <li>At 1100px the badge is hidden on members' boards (2-digit counts). Option: show the “…” menu only on hover or focus to win 36px and keep the badge. Default: <b>no</b>, keep GitHub's always-visible menu.</li>
     <li>Headless Chromium uses overlay scrollbars, so the scrollbar case is only tested with a forced classic scrollbar in the fixture. Default: measure <code>offsetWidth − clientWidth</code> at runtime, not a constant.</li>
-    <li><code>width: max-content</code> on the lane area could fight GitHub's virtualised lane rendering. Default: keep <code>min-width:100%</code> so a narrow board still fills the width, and check the live page again in IMPLEMENT.</li>
-    <li>Setting <code>title</code> on React-owned headings. Default: only when GitHub set no title, and re-applied on each scan in case a re-render drops it.</li>
+    <li><code>width: max-content</code> on the lane area could fight GitHub's virtualised lane rendering. Default: keep <code>min-width: 100%</code>, and switch to the per-lane fallback for good if the live check shows a break.</li>
+    <li>Setting <code>title</code> and a class on React-owned headings. Default: only when GitHub set no title, re-applied on each scan in case a re-render drops it.</li>
   </ul>
 
   <h2>Out of scope</h2>
