@@ -745,3 +745,10 @@ test("exit puts the band offset and the lane scrollers back", async ({ context, 
   expect(await page.$$eval(BAND, (els) => els.map((e) => e.style.top))).toEqual(before);
   expect(await page.$$eval(".lane-scroll", (els) => els.map((e) => getComputedStyle(e).overflowX))).toEqual(["auto", "auto"]);
 });
+
+test("never flattens the board's own scroller, whatever its class is called", async ({ context, page }) => {
+  await presentLanes(context, page, 800, { fullWidth: false, transform: (h) => h.replaceAll("boardView__", "boardScroller__") });
+  const m = await page.evaluate(() => ({ lanes: [...document.querySelectorAll("[data-ghsm-lane]")].map((e) => e.className), wide: document.documentElement.scrollWidth - innerWidth }));
+  expect(m.lanes.some((c) => /boardScroller/.test(c))).toBe(false);
+  expect(m.wide).toBeLessThanOrEqual(0);
+});

@@ -748,11 +748,11 @@
   // is shorter the band is pushed down by the difference. While presenting
   // the offset is ours: the row's own sticky top plus its current height.
   // A lane that scrolls sideways on its own would be the band's sticky
-  // scroller (it never scrolls vertically), so it is flattened and the
+  // scroller (it never scrolls vertically), so it is flattened (only an
+  // ancestor that does not hold the header row: that is the board's scroller) and the
   // board's scroller moves every lane together. A missing row or band is
   // left alone and retried on the next pass.
   const BAND_SELECTOR = '[class*="styledGroupHeaderWrapper"]';
-  const BOARD_VIEW_SELECTOR = '[class*="boardView__"], [class*="Board-module__boardView"]';
   let rowObserver = null;
   let observedRow = null;
 
@@ -764,7 +764,7 @@
       if (getComputedStyle(band).position !== "sticky") continue;
       band.style.setProperty("--ghsm-sticky-top", `${top}px`);
       mark(band, "data-ghsm-sticky");
-      for (let node = band.parentElement; node && node !== board && !node.matches(BOARD_VIEW_SELECTOR); node = node.parentElement) {
+      for (let node = band.parentElement; node && node !== board && !node.contains(row); node = node.parentElement) {
         if (/(auto|scroll)/.test(getComputedStyle(node).overflowX)) mark(node, "data-ghsm-lane");
       }
     }
