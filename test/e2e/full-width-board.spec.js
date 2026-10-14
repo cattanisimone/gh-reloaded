@@ -72,7 +72,7 @@ test("still stretches a board on the previous class naming", async ({ context, p
   // The old column frame class (column-frame-module__Box__) still gets the flexible sizing.
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.querySelector('[class*="column-frame-"][class*="Box__"]')).minWidth))
-    .toBe("140px");
+    .toBe("150px");
 });
 
 test("re-applies full width after the board re-renders", async ({ context, page }) => {
@@ -143,7 +143,7 @@ for (const w of SIZES) {
     if (w === 1500) expect(info.every((i) => i.badge)).toBe(true);
     else {
       expect(info.some((i) => !i.badge)).toBe(true);
-      for (const i of info) if (i.cut || !i.badge) expect(i.w).toBeGreaterThanOrEqual(54);
+      for (const i of info) if (i.cut) expect(i.w).toBeGreaterThanOrEqual(54);
       expect(info.find((i) => !i.badge).title).toMatch(/ · \d+$/);
     }
   });

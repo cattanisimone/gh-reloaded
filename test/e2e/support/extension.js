@@ -34,6 +34,9 @@ export const test = base.extend({
     const context = await chromium.launchPersistentContext("", {
       channel: "chromium",
       headless: true,
+      // Playwright hides scrollbars by default; classic ones are what the
+      // layout specs need to measure (fixtures opt in with ::-webkit-scrollbar).
+      ignoreDefaultArgs: ["--hide-scrollbars"],
       args: [
         `--disable-extensions-except=${REPO_ROOT}`,
         `--load-extension=${REPO_ROOT}`,

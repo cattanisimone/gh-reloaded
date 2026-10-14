@@ -86,6 +86,129 @@
     }
   }
 
+
+  // ---- Narrow windows (#59) ----
+  const BOARD_VIEW_SELECTOR = '[class*="boardView__"], [class*="Board-module__boardView"]';
+  const LANE_AREA_SELECTOR = '[class*="horizontalGroupAreaContainer__"], [class*="Board-module__horizontalGroupAreaContainer"]';
+  const LANE_HEADER_SELECTOR = '[class*="styledGroupHeaderWrapper__"]';
+  const VIEW_TABS_SELECTOR = 'nav[aria-label="Select view"]';
+  const GUTTER_CLASS = "ghfw-gutter";
+  const LANE_SCROLL_CLASS = "ghfw-lane-scroll";
+  const BADGE_HIDDEN_CLASS = "ghfw-badge-hidden";
+  const TITLE_OWNED = "data-ghfw-title";
+  // A title with fewer than about six characters of room is not worth
+  // showing next to a count: the badge gives way first.
+  const MIN_TITLE_PX = 54;
+
+  // The board's first column lines up with the view tabs (and the filter
+  // bar above the board): read that gutter from the page instead of
+  // assuming GitHub's 16px, and the scrollbar width of the scroller
+  // (0 for an overlay scrollbar), since the scrollbar eats into the right
+  // padding. No view tabs, no gutter: GitHub's own padding stays.
+  function updateGutter() {
+    const container = document.querySelector('[class*="boardContainer__"], [class*="Board-module__boardContainer"]');
+    const tabs = document.querySelector(VIEW_TABS_SELECTOR);
+    const view = document.querySelector(BOARD_VIEW_SELECTOR);
+    const root = document.documentElement.style;
+    if (!container || !tabs || !view) {
+      document.body.classList.remove(GUTTER_CLASS);
+      return;
+    }
+    const gutter = tabs.getBoundingClientRect().left - container.getBoundingClientRect().left;
+    if (!(gutter >= 0 && gutter <= 64)) {
+      document.body.classList.remove(GUTTER_CLASS);
+      return;
+    }
+    root.setProperty("--ghfw-gutter", `${Math.round(gutter)}px`);
+    root.setProperty("--ghfw-scrollbar", `${view.offsetWidth - view.clientWidth}px`);
+    document.body.classList.add(GUTTER_CLASS);
+  }
+
+  // Titles of the column-header row (the frames that hold a heading but
+  // no card). Count badge hides when the title is cut and gets less than
+  // MIN_TITLE_PX; the tooltip then carries the full title and the count.
+  function updateColumnTitles() {
+    for (const h2 of document.querySelectorAll("[data-board-column] h2")) {
+      if (h2.closest(".board-view-column-card")) continue;
+      const badge = h2.parentElement?.querySelector('[class*="AggregateLabels__"]');
+      badge?.classList.remove(BADGE_HIDDEN_CLASS);
+      const cut = h2.scrollWidth > h2.clientWidth + 1;
+      let hidden = false;
+      if (badge && cut && h2.clientWidth < MIN_TITLE_PX) {
+        badge.classList.add(BADGE_HIDDEN_CLASS);
+        hidden = true;
+      }
+      const stillCut = hidden ? h2.scrollWidth > h2.clientWidth + 1 : cut;
+      const owned = h2.hasAttribute(TITLE_OWNED);
+      if (stillCut || hidden) {
+        if (owned || !h2.title) {
+          const name = h2.textContent.trim();
+          const count = badge?.textContent.trim();
+          h2.title = count ? `${name} · ${count}` : name;
+          h2.setAttribute(TITLE_OWNED, "");
+        }
+      } else if (owned) {
+        h2.removeAttribute("title");
+        h2.removeAttribute(TITLE_OWNED);
+      }
+    }
+  }
+
+  // Some boards scroll lane by lane instead of in the one board scroller:
+  // a lane (or a wrapper between the lane and the board) is its own
+  // horizontal scroller. Then the headers follow their own lane.
+  function updateLaneScrollMode() {
+    const view = document.querySelector(BOARD_VIEW_SELECTOR);
+    let perLane = false;
+    const widths = [];
+    for (const area of document.querySelectorAll(LANE_AREA_SELECTOR)) {
+      for (let n = area; n && n !== view; n = n.parentElement) {
+        const ox = getComputedStyle(n).overflowX;
+        if ((ox === "auto" || ox === "scroll") && n.scrollWidth > n.clientWidth + 1) {
+          perLane = true;
+          widths.push([area.querySelector(LANE_HEADER_SELECTOR), n.scrollWidth]);
+          break;
+        }
+      }
+    }
+    document.body.classList.toggle(LANE_SCROLL_CLASS, perLane);
+    for (const h of document.querySelectorAll(LANE_HEADER_SELECTOR)) h.style.removeProperty("--ghfw-lane-width");
+    for (const [h, w] of widths) h?.style.setProperty("--ghfw-lane-width", `${w}px`);
+  }
+
+  function updateLayout() {
+    updateGutter();
+    updateColumnTitles();
+    updateLaneScrollMode();
+  }
+
+  // A scrollbar can appear or disappear (a lane collapses, a filter
+  // changes) without any window resize: watch the scroller and its content.
+  let observedView = null;
+  const viewResizeObserver = new ResizeObserver(updateLayout);
+
+  function watchBoardView() {
+    const view = document.querySelector(BOARD_VIEW_SELECTOR);
+    if (view === observedView) return;
+    viewResizeObserver.disconnect();
+    observedView = view;
+    if (view) {
+      viewResizeObserver.observe(view);
+      if (view.firstElementChild) viewResizeObserver.observe(view.firstElementChild);
+    }
+  }
+
+  function clearLayout() {
+    viewResizeObserver.disconnect();
+    observedView = null;
+    document.body.classList.remove(GUTTER_CLASS, LANE_SCROLL_CLASS);
+    for (const e of document.querySelectorAll(`.${BADGE_HIDDEN_CLASS}`)) e.classList.remove(BADGE_HIDDEN_CLASS);
+    for (const e of document.querySelectorAll(`[${TITLE_OWNED}]`)) {
+      e.removeAttribute("title");
+      e.removeAttribute(TITLE_OWNED);
+    }
+  }
+
   async function sync() {
     const { [STORAGE_KEY]: enabled } = await chrome.storage.local.get(STORAGE_KEY);
     const shouldApply = enabled !== false && isProjectsPage() && isBoardLayout();
@@ -95,9 +218,14 @@
       tagAddColumnButton();
       watchSlicerPanel();
       updateBoardOffset();
-    } else if (observedPanel) {
-      panelResizeObserver.unobserve(observedPanel);
-      observedPanel = null;
+      watchBoardView();
+      updateLayout();
+    } else {
+      if (observedPanel) {
+        panelResizeObserver.unobserve(observedPanel);
+        observedPanel = null;
+      }
+      clearLayout();
     }
     // Anything that measured card/column positions before this class
     // flip (board-dependencies' arrows, for one) is now holding stale
@@ -141,11 +269,16 @@
       tagAddColumnButton();
       watchSlicerPanel();
       updateBoardOffset();
+      watchBoardView();
+      updateLayout();
     }
   }, 800);
 
   window.addEventListener("resize", () => {
-    if (document.body.classList.contains(BODY_CLASS)) updateBoardOffset();
+    if (document.body.classList.contains(BODY_CLASS)) {
+      updateBoardOffset();
+      updateLayout();
+    }
   });
 
   sync();
