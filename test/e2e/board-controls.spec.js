@@ -88,8 +88,9 @@ test("hover and pressed darken, keyboard focus draws the 2px blue ring at -2px",
     await page.mouse.down();
     await expect.poll(bg).toBe("rgb(230, 234, 239)");
     expect(await btn.evaluate((e) => getComputedStyle(e).boxShadow)).toBe("none");
-    await page.mouse.up();
+    // Release away from the button so the press is not a click (Standup would start presenting).
     await page.mouse.move(0, 0);
+    await page.mouse.up();
     await expect.poll(bg).toBe(rest);
   }
   await page.locator(`${ROW} input`).focus();
@@ -191,7 +192,7 @@ test("hides both controls while presenting and restores them on exit", async ({ 
 });
 
 test("mounts nothing anywhere when the filter row is missing", async ({ context, page }) => {
-  await open(context, page, { transform: (html) => html.replace('aria-label="View filters"', 'aria-label="Something else"') });
+  await open(context, page, { transform: (html) => html.replace(/aria-label="View filters"/g, 'aria-label="Something else"') });
   await page.waitForTimeout(1800);
   await expect(page.locator("#ghsm-enter, #ghbd-toggle")).toHaveCount(0);
 });
