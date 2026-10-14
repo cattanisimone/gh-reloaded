@@ -1,0 +1,348 @@
+<!--
+  Fixture: GitHub Projects v2 "Board" view grouped by a field (swimlanes), 6 columns.
+  Built from the markup of a public project board (probed anonymously, class
+  names with their hash suffixes, hashes replaced). Layout CSS mirrors what
+  GitHub serves: boardView is the single horizontal scroller (flex column,
+  overflow auto, 16px padding), the header row is sticky at the top, the lane
+  area and the columns row carry an inline min-width. Query switches:
+  ?classic gives the boardView a 15px classic scrollbar, ?lanes=scroll makes
+  each lane scroll on its own (the fallback case). See fixtures/README.md.
+-->
+<!doctype html>
+<html lang="en" data-color-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Board · acme</title>
+    <style>
+      body { font-family: -apple-system, "Segoe UI", sans-serif; font-size: 14px; margin: 0; }
+      nav[aria-label="Select view"] { display: flex; align-items: center; padding: 4px 16px; border-bottom: 1px solid #d0d7de; }
+      [role="tab"] { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; }
+      .filterBar { margin: 8px 16px; height: 32px; border: 1px solid #d0d7de; border-radius: 6px; box-sizing: border-box; }
+      .boardContainer__xD7rX8 { height: 480px; position: relative; }
+      .boardView__a1b2c3 { display: flex; flex-direction: column; overflow: auto; padding: 16px; box-sizing: border-box; height: 100%; width: 100%; }
+      .boardView__a1b2c3 > * { flex: none; }
+      .horizontalGroupHeader__m1n2o3 { position: sticky; top: 0; z-index: 3; background: #fff; display: block; }
+      .horizontalGroupContainer__j7k8l9, .horizontalGroupHeader__m1n2o3 > .horizontalGroupContainer__j7k8l9 { display: flex; gap: 8px; }
+      .ColumnFrame__d4e5f6 { flex: 0 0 350px; width: 350px; box-sizing: border-box; background: #f6f8fa; border-radius: 6px; }
+      .Heading__m4n5o6 { display: flex; align-items: center; padding: 8px 8px 8px 16px; }
+      .ColumnTitleWithWorkflowIndicator__p7q8r9 { display: flex; }
+      .Box__s1t2u3 { display: flex; align-items: center; gap: 8px; }
+      .ColorDecoratorMain__v4w5x6 { width: 16px; height: 16px; border-radius: 50%; background: #1a7f37; flex: none; }
+      .Title__y7z8a9 { margin: 0; font-size: 14px; font-weight: 600; line-height: 20px; }
+      .SanitizedHtml__b1c2d3 { overflow-wrap: anywhere; }
+      .AggregateLabels__e4f5g6 { background: #818b981f; border-radius: 2em; padding: 0 6px; font-size: 12px; line-height: 18px; }
+      .ColumnActions__k1l2m3 { margin-left: auto; width: 28px; }
+      .ColumnActions__k1l2m3 button { width: 28px; height: 28px; }
+      .prc-VisuallyHidden-VisuallyHidden-Q0qSB { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .column-drop-zone { min-height: 60px; padding: 8px; }
+      .horizontalGroupAreaContainer__u1v2w3 { display: block; }
+      .styledGroupHeaderWrapper__x4y5z6 { position: sticky; top: 52px; z-index: 2; background: #fff; border-bottom: 1px solid #d0d7de; margin-bottom: 8px; }
+      .groupHeaderContainer__a7b8c9 { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
+      .groupHeaderContent__g4h5i6 { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+      .effort-pill { border: 1px solid #d0d7de; border-radius: 2em; padding: 0 8px; font-weight: 400; }
+      .CardBaseWithSash__q7r8s9 { display: block; background: #fff; border: 1px solid #d0d7de; border-radius: 6px; padding: 8px; margin-bottom: 8px; box-sizing: border-box; }
+      .Header__f4g5h6 .Box_2__i7j8k9 { display: flex; align-items: center; gap: 4px; }
+      .avatar { border-radius: 50%; }
+      .Box_2__l1m2n3 { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 4px 0 0; padding: 0; }
+      .prc-Token-TokenBase-te5-F { display: inline-flex; align-items: center; height: 20px; border: 1px solid #0969da; border-radius: 2em; padding: 0 8px; background: #ddf4ff; white-space: nowrap; font: inherit; font-size: 12px; }
+      .dnd-marker { display: none; }
+    </style>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const q = location.search;
+        const s = document.createElement("style");
+        if (q.includes("classic")) s.textContent += ".boardView__a1b2c3::-webkit-scrollbar{width:15px;height:15px}.boardView__a1b2c3::-webkit-scrollbar-thumb{background:#999}";
+        if (q.includes("lanes=scroll")) s.textContent += ".lane-scroll{overflow-x:auto}";
+        document.head.append(s);
+        // Pointer drag smoke: records the column drop zone under the pointer on release.
+        document.addEventListener("pointerup", (e) => {
+          const z = document.elementFromPoint(e.clientX, e.clientY)?.closest(".column-drop-zone");
+          if (z) z.setAttribute("data-dropped", "yes");
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <main>
+      <nav aria-label="Select view" class="tabNav__U5aH7j">
+        <div role="tab" aria-selected="true" class="selected">
+          <svg class="octicon octicon-project" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect width="3" height="10" x="1" y="3"></rect><rect width="3" height="7" x="6" y="3"></rect><rect width="3" height="13" x="11" y="3"></rect></svg>
+          <span>Board</span>
+        </div>
+      </nav>
+      <div class="filterBar" role="search"></div>
+      <div class="boardContainer__xD7rX8">
+        <div class="boardView__a1b2c3 horizontalGroup__d4e5f6" data-dnd-drop-id="board" data-dnd-drop-type="board">
+          <div class="horizontalGroupHeader__m1n2o3">
+            <div class="horizontalGroupContainer__j7k8l9" style="min-width: 2140px">
+          <div class="Box__a1b2c3 only ColumnFrame__d4e5f6" data-dnd-drag-id="c0" data-dnd-drag-type="column" data-board-column-has-outline="" data-board-column="Backlog">
+            <div class="Box_1__g7h8i9">
+              <div class="Container__j1k2l3">
+                <div class="Heading__m4n5o6">
+                  <div class="ColumnTitleWithWorkflowIndicator__p7q8r9">
+                    <div class="Box__s1t2u3">
+                      <div class="ColorDecoratorMain__v4w5x6"></div>
+                      <h2 class="Title__y7z8a9"><span class="SanitizedHtml__b1c2d3 prc-Text-Text-9mHv3">Backlog</span></h2>
+                      <span class="AggregateLabels__e4f5g6 default__h7i8j9 prc-CounterLabel-CounterLabel-X-kRU">7</span>
+                      <span class="prc-VisuallyHidden-VisuallyHidden-Q0qSB">7 items</span>
+                    </div>
+                  </div>
+                  <div class="ColumnActions__k1l2m3"><button type="button" aria-label="Column menu">…</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column"></div>
+          </div>
+          <div class="Box__a1b2c3 only ColumnFrame__d4e5f6" data-dnd-drag-id="c1" data-dnd-drag-type="column" data-board-column-has-outline="" data-board-column="Ready">
+            <div class="Box_1__g7h8i9">
+              <div class="Container__j1k2l3">
+                <div class="Heading__m4n5o6">
+                  <div class="ColumnTitleWithWorkflowIndicator__p7q8r9">
+                    <div class="Box__s1t2u3">
+                      <div class="ColorDecoratorMain__v4w5x6"></div>
+                      <h2 class="Title__y7z8a9"><span class="SanitizedHtml__b1c2d3 prc-Text-Text-9mHv3">Ready</span></h2>
+                      <span class="AggregateLabels__e4f5g6 default__h7i8j9 prc-CounterLabel-CounterLabel-X-kRU">3</span>
+                      <span class="prc-VisuallyHidden-VisuallyHidden-Q0qSB">3 items</span>
+                    </div>
+                  </div>
+                  <div class="ColumnActions__k1l2m3"><button type="button" aria-label="Column menu">…</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column"></div>
+          </div>
+          <div class="Box__a1b2c3 only ColumnFrame__d4e5f6" data-dnd-drag-id="c2" data-dnd-drag-type="column" data-board-column-has-outline="" data-board-column="In Progress">
+            <div class="Box_1__g7h8i9">
+              <div class="Container__j1k2l3">
+                <div class="Heading__m4n5o6">
+                  <div class="ColumnTitleWithWorkflowIndicator__p7q8r9">
+                    <div class="Box__s1t2u3">
+                      <div class="ColorDecoratorMain__v4w5x6"></div>
+                      <h2 class="Title__y7z8a9"><span class="SanitizedHtml__b1c2d3 prc-Text-Text-9mHv3">In Progress</span></h2>
+                      <span class="AggregateLabels__e4f5g6 default__h7i8j9 prc-CounterLabel-CounterLabel-X-kRU">4</span>
+                      <span class="prc-VisuallyHidden-VisuallyHidden-Q0qSB">4 items</span>
+                    </div>
+                  </div>
+                  <div class="ColumnActions__k1l2m3"><button type="button" aria-label="Column menu">…</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column"></div>
+          </div>
+          <div class="Box__a1b2c3 only ColumnFrame__d4e5f6" data-dnd-drag-id="c3" data-dnd-drag-type="column" data-board-column-has-outline="" data-board-column="Waiting Review">
+            <div class="Box_1__g7h8i9">
+              <div class="Container__j1k2l3">
+                <div class="Heading__m4n5o6">
+                  <div class="ColumnTitleWithWorkflowIndicator__p7q8r9">
+                    <div class="Box__s1t2u3">
+                      <div class="ColorDecoratorMain__v4w5x6"></div>
+                      <h2 class="Title__y7z8a9"><span class="SanitizedHtml__b1c2d3 prc-Text-Text-9mHv3">Waiting Review</span></h2>
+                      <span class="AggregateLabels__e4f5g6 default__h7i8j9 prc-CounterLabel-CounterLabel-X-kRU">12</span>
+                      <span class="prc-VisuallyHidden-VisuallyHidden-Q0qSB">12 items</span>
+                    </div>
+                  </div>
+                  <div class="ColumnActions__k1l2m3"><button type="button" aria-label="Column menu">…</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column"></div>
+          </div>
+          <div class="Box__a1b2c3 only ColumnFrame__d4e5f6" data-dnd-drag-id="c4" data-dnd-drag-type="column" data-board-column-has-outline="" data-board-column="Wait to Deploy">
+            <div class="Box_1__g7h8i9">
+              <div class="Container__j1k2l3">
+                <div class="Heading__m4n5o6">
+                  <div class="ColumnTitleWithWorkflowIndicator__p7q8r9">
+                    <div class="Box__s1t2u3">
+                      <div class="ColorDecoratorMain__v4w5x6"></div>
+                      <h2 class="Title__y7z8a9"><span class="SanitizedHtml__b1c2d3 prc-Text-Text-9mHv3">Wait to Deploy</span></h2>
+                      <span class="AggregateLabels__e4f5g6 default__h7i8j9 prc-CounterLabel-CounterLabel-X-kRU">1</span>
+                      <span class="prc-VisuallyHidden-VisuallyHidden-Q0qSB">1 items</span>
+                    </div>
+                  </div>
+                  <div class="ColumnActions__k1l2m3"><button type="button" aria-label="Column menu">…</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column"></div>
+          </div>
+          <div class="Box__a1b2c3 only ColumnFrame__d4e5f6" data-dnd-drag-id="c5" data-dnd-drag-type="column" data-board-column-has-outline="" data-board-column="Done">
+            <div class="Box_1__g7h8i9">
+              <div class="Container__j1k2l3">
+                <div class="Heading__m4n5o6">
+                  <div class="ColumnTitleWithWorkflowIndicator__p7q8r9">
+                    <div class="Box__s1t2u3">
+                      <div class="ColorDecoratorMain__v4w5x6"></div>
+                      <h2 class="Title__y7z8a9"><span class="SanitizedHtml__b1c2d3 prc-Text-Text-9mHv3">Done</span></h2>
+                      <span class="AggregateLabels__e4f5g6 default__h7i8j9 prc-CounterLabel-CounterLabel-X-kRU">9</span>
+                      <span class="prc-VisuallyHidden-VisuallyHidden-Q0qSB">9 items</span>
+                    </div>
+                  </div>
+                  <div class="ColumnActions__k1l2m3"><button type="button" aria-label="Column menu">…</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column"></div>
+          </div>
+            </div>
+          </div>
+      <div class="lane-scroll">
+      <div class="horizontalGroupAreaContainer__u1v2w3" style="min-width: 2140px">
+        <div class="styledGroupHeaderWrapper__x4y5z6 board sticky">
+          <div class="board groupHeaderContainer__a7b8c9">
+            <button class="prc-Button-ButtonBase-9n-Xk IconButton__d1e2f3" aria-label="Collapse group"><svg class="octicon octicon-chevron-down" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"></path></svg></button>
+            <div class="groupHeaderContent__g4h5i6"><img class="avatar" width="20" height="20" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="><span class="SanitizedHtml__b1c2d3">alice</span><span class="AggregateLabels__e4f5g6">5</span><span class="effort-pill">Effort 8</span></div>
+            <button class="prc-Button-ButtonBase-9n-Xk IconButton__d1e2f3" aria-label="Group menu">⋯</button>
+          </div>
+        </div>
+        <div class="lane-body">
+        <div class="horizontalGroupContainer__j7k8l9" data-board-horizontal-group="" style="min-width: 2140px">
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l1c0" data-board-column-has-outline="" data-board-column="Backlog">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+              <div class="CardBaseWithSash__q7r8s9 dragDisabled__t1u2v3 board-view-column-card CardBase__w4x5y6" data-board-card-id="11" role="button" aria-labelledby="card-11">
+                <div class="Box__z7a8b9">
+                  <div class="Box_1__c1d2e3">
+                    <div class="Header__f4g5h6"><div class="Box_2__i7j8k9"><span class="avatar-stack"><img class="avatar" width="20" height="20" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="></span><span class="issue-number">#11</span></div></div>
+                    <a class="prc-Link-Link-9ZwDx" role="link" id="card-11" href="/acme/web/issues/11"><h3 class="d-inline f5 text-normal">Migrate the notification preferences page to the new settings layout</h3></a>
+                  </div>
+                  <ul class="Box_2__l1m2n3" aria-label="Fields">
+                    <li class="cardLabel__o4p5q6"><button class="prc-Token-TokenBase-te5-F prc-Token-IssueLabel-2IazM IssueLabelToken__r7s8t9" aria-label="frontend-redesign"><span class="prc-Token-TokenTextContainer-QXBAZ">frontend-redesign</span></button></li>
+                    <li class="cardLabel__o4p5q6"><button class="prc-Token-TokenBase-te5-F prc-Token-IssueLabel-2IazM IssueLabelToken__r7s8t9" aria-label="needs-design-review"><span class="prc-Token-TokenTextContainer-QXBAZ">needs-design-review</span></button></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l1c1" data-board-column-has-outline="" data-board-column="Ready">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+            </div>
+          </div>
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l1c2" data-board-column-has-outline="" data-board-column="In Progress">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+              <div class="CardBaseWithSash__q7r8s9 dragDisabled__t1u2v3 board-view-column-card CardBase__w4x5y6" data-board-card-id="12" role="button" aria-labelledby="card-12">
+                <div class="Box__z7a8b9">
+                  <div class="Box_1__c1d2e3">
+                    <div class="Header__f4g5h6"><div class="Box_2__i7j8k9"><span class="avatar-stack"><img class="avatar" width="20" height="20" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="></span><span class="issue-number">#12</span></div></div>
+                    <a class="prc-Link-Link-9ZwDx" role="link" id="card-12" href="/acme/web/issues/12"><h3 class="d-inline f5 text-normal">Short title</h3></a>
+                  </div>
+                  <ul class="Box_2__l1m2n3" aria-label="Fields">
+                    <li class="cardLabel__o4p5q6"><button class="prc-Token-TokenBase-te5-F prc-Token-IssueLabel-2IazM IssueLabelToken__r7s8t9" aria-label="bug"><span class="prc-Token-TokenTextContainer-QXBAZ">bug</span></button></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l1c3" data-board-column-has-outline="" data-board-column="Waiting Review">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+            </div>
+          </div>
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l1c4" data-board-column-has-outline="" data-board-column="Wait to Deploy">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+            </div>
+          </div>
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l1c5" data-board-column-has-outline="" data-board-column="Done">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+              <div class="CardBaseWithSash__q7r8s9 dragDisabled__t1u2v3 board-view-column-card CardBase__w4x5y6" data-board-card-id="13" role="button" aria-labelledby="card-13">
+                <div class="Box__z7a8b9">
+                  <div class="Box_1__c1d2e3">
+                    <div class="Header__f4g5h6"><div class="Box_2__i7j8k9"><span class="avatar-stack"><img class="avatar" width="20" height="20" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="></span><span class="issue-number">#13</span></div></div>
+                    <a class="prc-Link-Link-9ZwDx" role="link" id="card-13" href="/acme/web/issues/13"><h3 class="d-inline f5 text-normal">Another card</h3></a>
+                  </div>
+                  <ul class="Box_2__l1m2n3" aria-label="Fields">
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+      </div>
+      <div class="lane-scroll">
+      <div class="horizontalGroupAreaContainer__u1v2w3" style="min-width: 2140px">
+        <div class="styledGroupHeaderWrapper__x4y5z6 board sticky">
+          <div class="board groupHeaderContainer__a7b8c9">
+            <button class="prc-Button-ButtonBase-9n-Xk IconButton__d1e2f3" aria-label="Collapse group"><svg class="octicon octicon-chevron-down" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"></path></svg></button>
+            <div class="groupHeaderContent__g4h5i6"><img class="avatar" width="20" height="20" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="><span class="SanitizedHtml__b1c2d3">bob</span><span class="AggregateLabels__e4f5g6">3</span><span class="effort-pill">Effort 8</span></div>
+            <button class="prc-Button-ButtonBase-9n-Xk IconButton__d1e2f3" aria-label="Group menu">⋯</button>
+          </div>
+        </div>
+        <div class="lane-body">
+        <div class="horizontalGroupContainer__j7k8l9" data-board-horizontal-group="" style="min-width: 2140px">
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l2c0" data-board-column-has-outline="" data-board-column="Backlog">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+              <div class="CardBaseWithSash__q7r8s9 dragDisabled__t1u2v3 board-view-column-card CardBase__w4x5y6" data-board-card-id="21" role="button" aria-labelledby="card-21">
+                <div class="Box__z7a8b9">
+                  <div class="Box_1__c1d2e3">
+                    <div class="Header__f4g5h6"><div class="Box_2__i7j8k9"><span class="avatar-stack"><img class="avatar" width="20" height="20" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="></span><span class="issue-number">#21</span></div></div>
+                    <a class="prc-Link-Link-9ZwDx" role="link" id="card-21" href="/acme/web/issues/21"><h3 class="d-inline f5 text-normal">Migrate the notification preferences page to the new settings layout</h3></a>
+                  </div>
+                  <ul class="Box_2__l1m2n3" aria-label="Fields">
+                    <li class="cardLabel__o4p5q6"><button class="prc-Token-TokenBase-te5-F prc-Token-IssueLabel-2IazM IssueLabelToken__r7s8t9" aria-label="frontend-redesign"><span class="prc-Token-TokenTextContainer-QXBAZ">frontend-redesign</span></button></li>
+                    <li class="cardLabel__o4p5q6"><button class="prc-Token-TokenBase-te5-F prc-Token-IssueLabel-2IazM IssueLabelToken__r7s8t9" aria-label="needs-design-review"><span class="prc-Token-TokenTextContainer-QXBAZ">needs-design-review</span></button></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l2c1" data-board-column-has-outline="" data-board-column="Ready">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+            </div>
+          </div>
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l2c2" data-board-column-has-outline="" data-board-column="In Progress">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+              <div class="CardBaseWithSash__q7r8s9 dragDisabled__t1u2v3 board-view-column-card CardBase__w4x5y6" data-board-card-id="22" role="button" aria-labelledby="card-22">
+                <div class="Box__z7a8b9">
+                  <div class="Box_1__c1d2e3">
+                    <div class="Header__f4g5h6"><div class="Box_2__i7j8k9"><span class="avatar-stack"><img class="avatar" width="20" height="20" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="></span><span class="issue-number">#22</span></div></div>
+                    <a class="prc-Link-Link-9ZwDx" role="link" id="card-22" href="/acme/web/issues/22"><h3 class="d-inline f5 text-normal">Short title</h3></a>
+                  </div>
+                  <ul class="Box_2__l1m2n3" aria-label="Fields">
+                    <li class="cardLabel__o4p5q6"><button class="prc-Token-TokenBase-te5-F prc-Token-IssueLabel-2IazM IssueLabelToken__r7s8t9" aria-label="bug"><span class="prc-Token-TokenTextContainer-QXBAZ">bug</span></button></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l2c3" data-board-column-has-outline="" data-board-column="Waiting Review">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+            </div>
+          </div>
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l2c4" data-board-column-has-outline="" data-board-column="Wait to Deploy">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+            </div>
+          </div>
+          <div class="Box__a1b2c3 hidden ColumnFrame__d4e5f6" data-dnd-drag-id="l2c5" data-board-column-has-outline="" data-board-column="Done">
+            <div class="Box_1__g7h8i9"></div>
+            <div class="column-drop-zone Box_4__n4o5p6" data-dnd-drop-type="column">
+              <div class="CardBaseWithSash__q7r8s9 dragDisabled__t1u2v3 board-view-column-card CardBase__w4x5y6" data-board-card-id="23" role="button" aria-labelledby="card-23">
+                <div class="Box__z7a8b9">
+                  <div class="Box_1__c1d2e3">
+                    <div class="Header__f4g5h6"><div class="Box_2__i7j8k9"><span class="avatar-stack"><img class="avatar" width="20" height="20" alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="></span><span class="issue-number">#23</span></div></div>
+                    <a class="prc-Link-Link-9ZwDx" role="link" id="card-23" href="/acme/web/issues/23"><h3 class="d-inline f5 text-normal">Another card</h3></a>
+                  </div>
+                  <ul class="Box_2__l1m2n3" aria-label="Fields">
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+      </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
