@@ -580,3 +580,28 @@ test("offers no entry button on a Table view", async ({ context, page }) => {
   await page.evaluate(() => history.pushState({}, "", "/orgs/acme/projects/7/views/3"));
   await expect(page.locator("#ghsm-enter")).toHaveCount(0);
 });
+
+// #59: with Full-width board off, Standup keeps its own copy of the layout
+// rules; on a narrow swimlane board its titles, lane headers and cards must
+// hold the same way.
+test("standup's own board layout keeps titles, lane headers and cards in line at 800px", async ({ context, page }) => {
+  await seedStorage(context, { ghfwEnabled: false });
+  await routeGithub(context, "board-swimlanes.html");
+  await page.setViewportSize({ width: 800, height: 900 });
+  await page.goto(`${BOARD_URL}?groupedBy%5BcolumnId%5D=Assignees`);
+  await page.locator("#ghsm-enter").click();
+  await expect(page.locator("body.ghsm-active:not(.ghfw-active)")).toHaveCount(1);
+  const m = await page.evaluate(() => {
+    const row = '[class*="horizontalGroupHeader__"] [data-board-column]';
+    const h2 = [...document.querySelectorAll(`${row} h2`)].map((e) => e.getBoundingClientRect().height);
+    const last = document.querySelector('[class*="horizontalGroupAreaContainer__"] [data-board-column]:last-child').getBoundingClientRect().right;
+    const lanes = [...document.querySelectorAll('[class*="styledGroupHeaderWrapper__"]')].map((e) => e.getBoundingClientRect().right);
+    const card = document.querySelector(".board-view-column-card").getBoundingClientRect();
+    const spill = [...document.querySelector(".board-view-column-card").querySelectorAll("*")].filter((e) => e.getBoundingClientRect().right > card.right + 0.5).length;
+    return { h2, last, lanes, spill, min: document.querySelector(row).getBoundingClientRect().width };
+  });
+  for (const h of m.h2) expect(h).toBeLessThanOrEqual(21);
+  for (const r of m.lanes) expect(Math.abs(r - m.last)).toBeLessThanOrEqual(1);
+  expect(m.spill).toBe(0);
+  expect(m.min).toBe(150);
+});

@@ -146,28 +146,98 @@ body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardContainer"] {
   max-width: calc(100vw - var(--ghsm-board-left, 0px)) !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
-  padding-left: 8px !important;
-  padding-right: 8px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
   box-sizing: border-box !important;
 }
 body.ghsm-active:not(.ghfw-active) [class*="boardView__"],
-body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardView"],
-body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupAreaContainer__"],
-body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupAreaContainer"],
-body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupContainer__"],
-body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupContainer"] {
+body.ghsm-active:not(.ghfw-active) [class*="Board-module__boardView"] {
   min-width: 0 !important;
   width: 100% !important;
 }
+/* Rows sized to their columns (at least the scroller's width), so lane
+   headers and the header row end with the last column. */
+body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupAreaContainer__"],
+body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupAreaContainer"],
+body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupContainer__"],
+body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupContainer"],
 body.ghsm-active:not(.ghfw-active) [class*="horizontalGroupHeader__"],
 body.ghsm-active:not(.ghfw-active) [class*="Board-module__horizontalGroupHeader"] {
-  min-width: 0 !important;
+  min-width: 100% !important;
+  width: max-content !important;
 }
 body.ghsm-active:not(.ghfw-active) [class*="ColumnFrame__"],
 body.ghsm-active:not(.ghfw-active) [class*="column-frame-"][class*="Box__"] {
   flex: 1 1 0 !important;
   width: 0 !important;
-  min-width: 140px !important;
+  min-width: 150px !important;
+}
+
+/* Titles on one line with an ellipsis, the menu never shrinks, cards keep
+   their content inside the border. Same rules as Full-width board. */
+body.ghsm-active:not(.ghfw-active) [data-board-column] [class*="Container__"],
+body.ghsm-active:not(.ghfw-active) [data-board-column] [class*="Heading__"],
+body.ghsm-active:not(.ghfw-active) [data-board-column] [class*="ColumnTitleWithWorkflowIndicator__"],
+body.ghsm-active:not(.ghfw-active) [data-board-column] :has(> h2) {
+  min-width: 0 !important;
+}
+body.ghsm-active:not(.ghfw-active) [data-board-column] [class*="ColumnActions__"] {
+  flex: none !important;
+}
+body.ghsm-active:not(.ghfw-active) [data-board-column] h2 {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+body.ghsm-active:not(.ghfw-active) [data-board-column] h2 > * {
+  overflow-wrap: normal !important;
+  white-space: nowrap !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"],
+body.ghsm-active:not(.ghfw-active) .board-view-column-card a {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card h3 {
+  overflow-wrap: anywhere !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card img {
+  flex: none !important;
+}
+
+/* Card top row (repo and number text, then the avatars): the text gives
+   way first and ends in "…", the avatar box never shrinks or leaves the
+   card, with one avatar or several. */
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"] {
+  width: 100% !important;
+  overflow: hidden !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"] > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"] > * > :not(:has(img)) {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"] :has(> img),
+body.ghsm-active:not(.ghfw-active) .board-view-column-card [class*="Header__"] :has(img):not(:has(> :not(:has(img)))) {
+  flex: none !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card ul[aria-label] li,
+body.ghsm-active:not(.ghfw-active) .board-view-column-card ul[aria-label] li button {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+body.ghsm-active:not(.ghfw-active) .board-view-column-card ul[aria-label] li button > * {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 /* ---- Presentation bar ---- */

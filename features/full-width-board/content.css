@@ -17,8 +17,23 @@ body.ghfw-active [class*="Board-module__boardContainer"] {
   max-width: calc(100vw - var(--ghfw-board-left, 0px)) !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
-  padding-left: 8px !important;
-  padding-right: 8px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* The board's own scroller (boardView) already carries GitHub's 16px
+   padding, which lines the first column up with the filter bar and the
+   view tabs. The container itself adds none. content.js reads the real
+   gutter from the view tabs and the scrollbar width of the scroller, and
+   sets .ghfw-gutter on <body> only when it has both; without it GitHub's
+   own padding stays. A classic scrollbar sits outside the padding box, so
+   the right padding gives up its width to keep the last column the same
+   distance from the window edge with or without a scrollbar. */
+body.ghfw-active.ghfw-gutter [class*="boardView__"],
+body.ghfw-active.ghfw-gutter [class*="Board-module__boardView"] {
+  padding-left: var(--ghfw-gutter) !important;
+  padding-right: max(0px, calc(var(--ghfw-gutter) - var(--ghfw-scrollbar, 0px))) !important;
   box-sizing: border-box !important;
 }
 
@@ -35,31 +50,47 @@ body.ghfw-active [class*="Board-module__boardContainer"] {
    flex-grow below have real extra space to fill instead of sitting
    at its bare minimum. */
 body.ghfw-active [class*="boardView__"],
-body.ghfw-active [class*="Board-module__boardView"],
-body.ghfw-active [class*="horizontalGroupAreaContainer__"],
-body.ghfw-active [class*="Board-module__horizontalGroupAreaContainer"],
-body.ghfw-active [class*="horizontalGroupContainer__"],
-body.ghfw-active [class*="Board-module__horizontalGroupContainer"] {
+body.ghfw-active [class*="Board-module__boardView"] {
   min-width: 0 !important;
   width: 100% !important;
 }
 
-/* Deliberately NOT forced to width:100% like the others above: the
-   "+" (add column) button sits as this element's own sibling within
-   the board's header row, and a hard 100% here claims the whole row
-   for the header, leaving the button squeezed or knocked out of
-   place. Left to size itself naturally, its inner
-   horizontalGroupContainer (covered above) still expands to fill it. */
+/* The rows inside the single board scroller are sized to the width of
+   their columns (at least the scroller's width), so the lane headers
+   and the column-header row end where the last column ends and scroll
+   with it, instead of stopping at the window's width. */
+body.ghfw-active [class*="horizontalGroupAreaContainer__"],
+body.ghfw-active [class*="Board-module__horizontalGroupAreaContainer"],
+body.ghfw-active [class*="horizontalGroupContainer__"],
+body.ghfw-active [class*="Board-module__horizontalGroupContainer"],
 body.ghfw-active [class*="horizontalGroupHeader__"],
 body.ghfw-active [class*="Board-module__horizontalGroupHeader"] {
+  min-width: 100% !important;
+  width: max-content !important;
+}
+
+/* Boards where each lane scrolls on its own (detected by content.js):
+   keep GitHub's per-lane scrollers, size each lane header to its lane's
+   scroll width (--ghfw-lane-width) and keep the header's label at the
+   lane's left edge while the lane scrolls. */
+body.ghfw-active.ghfw-lane-scroll [class*="horizontalGroupAreaContainer__"],
+body.ghfw-active.ghfw-lane-scroll [class*="Board-module__horizontalGroupAreaContainer"] {
   min-width: 0 !important;
+  width: 100% !important;
+}
+body.ghfw-active.ghfw-lane-scroll [class*="styledGroupHeaderWrapper__"] {
+  width: var(--ghfw-lane-width, 100%) !important;
+}
+body.ghfw-active.ghfw-lane-scroll [class*="styledGroupHeaderWrapper__"] > [class*="groupHeaderContainer__"] {
+  position: sticky !important;
+  left: 0 !important;
 }
 
 body.ghfw-active [class*="ColumnFrame__"],
 body.ghfw-active [class*="column-frame-"][class*="Box__"] {
   flex: 1 1 0 !important;
   width: 0 !important;
-  min-width: 140px !important;
+  min-width: 150px !important;
 }
 
 /* The "+" (add column) button itself (tagged .ghfw-add-column by
@@ -69,4 +100,95 @@ body.ghfw-active [class*="column-frame-"][class*="Box__"] {
    ghfw-active so it comes back the moment this feature is turned off. */
 body.ghfw-active .ghfw-add-column {
   display: none !important;
+}
+
+/* Column titles: one line, "…" when they do not fit (content.js puts the
+   full title and count in the tooltip), the "…" menu never shrinks, and
+   when the title would get fewer than ~6 characters content.js hides the
+   count badge (.ghfw-badge-hidden). min-width: 0 up the flex chain is what
+   lets the title shrink at all. */
+body.ghfw-active [data-board-column] [class*="Container__"],
+body.ghfw-active [data-board-column] [class*="Heading__"],
+body.ghfw-active [data-board-column] [class*="ColumnTitleWithWorkflowIndicator__"],
+body.ghfw-active [data-board-column] :has(> h2) {
+  min-width: 0 !important;
+}
+body.ghfw-active [data-board-column] [class*="Heading__"] {
+  flex: 1 1 auto !important;
+}
+body.ghfw-active [data-board-column] [class*="ColumnActions__"] {
+  flex: none !important;
+}
+body.ghfw-active [data-board-column] h2 {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+body.ghfw-active [data-board-column] h2 > * {
+  overflow-wrap: normal !important;
+  white-space: nowrap !important;
+}
+body.ghfw-active [data-board-column] h2 ~ [class*="AggregateLabels__"] {
+  flex: none !important;
+}
+body.ghfw-active [data-board-column] .ghfw-badge-hidden {
+  display: none !important;
+}
+
+/* Cards at the minimum column width: labels end in "…" instead of
+   spilling out, the title wraps (and breaks a word longer than the
+   card), the avatar keeps its size. */
+body.ghfw-active .board-view-column-card {
+  min-width: 0 !important;
+}
+body.ghfw-active .board-view-column-card [class*="Header__"],
+body.ghfw-active .board-view-column-card a {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+body.ghfw-active .board-view-column-card h3 {
+  overflow-wrap: anywhere !important;
+  min-width: 0 !important;
+}
+body.ghfw-active .board-view-column-card img,
+body.ghfw-active .board-view-column-card svg {
+  flex: none !important;
+}
+body.ghfw-active .board-view-column-card ul[aria-label] li {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+body.ghfw-active .board-view-column-card ul[aria-label] li button {
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+body.ghfw-active .board-view-column-card ul[aria-label] li button > * {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Card top row (repo and number text, then the avatars): the text gives
+   way first and ends in "…", the avatar box never shrinks or leaves the
+   card, with one avatar or several. */
+body.ghfw-active .board-view-column-card [class*="Header__"] {
+  width: 100% !important;
+  overflow: hidden !important;
+}
+body.ghfw-active .board-view-column-card [class*="Header__"] > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+body.ghfw-active .board-view-column-card [class*="Header__"] > * > :not(:has(img)) {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+body.ghfw-active .board-view-column-card [class*="Header__"] :has(> img),
+body.ghfw-active .board-view-column-card [class*="Header__"] :has(img):not(:has(> :not(:has(img)))) {
+  flex: none !important;
 }
