@@ -10,21 +10,21 @@ Every metric is computed on the rendered edge paths (each curve flattened to a p
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | current | pass | 1246 | 0 | 348.3 | 37.9 | 156.4 | 4480 | 1455 |
 | custom | pass | 0 | 0 | 66.5 | 4.5 | 0.0 | 4480 | 1617 |
-| dagre | pass | 0 | 0 | 84.3 | 0.0 | 281.1 | 4491 | 1971 |
-| d3-dag | pass | 0 | 0 | 81.3 | 19.5 | 163.6 | 4555 | 1663 |
+| dagre | pass | 2297 | 0 | 84.3 | 0.0 | 281.1 | 4491 | 1971 |
+| d3-dag | pass | 3891 | 50 | 81.3 | 19.5 | 163.6 | 4555 | 1663 |
 | elk | pass | 0 | 0 | 72.2 | 0.0 | 270.1 | 4588 | 1770 |
-| graphviz | pass | 314 | 0 | 49.9 | 0.1 | 209.9 | 4491 | 1754 |
+| graphviz | pass | 486 | 0 | 49.9 | 0.1 | 209.9 | 4491 | 1754 |
 
 ## Stability after removing one card, and latency
 
 | engine | order inversions | cards that changed column | p95 ms at the largest dense fixture of the run (80, or 40 in quick mode) | shipped size KB (as a plain script) |
 |---|---:|---:|---:|---:|
 | current | 2.16 | 3.11 | 0.4 | 0 (in the repo) |
-| custom | 0.00 | 3.11 | 12.9 | 27 |
-| dagre | 11.03 | 6.48 | 66.5 | 277 |
-| d3-dag | 43.71 | 6.49 | 208.2 | 140 |
-| elk | 127.04 | 12.63 | 47.7 | 1572 |
-| graphviz | 40.66 | 6.46 | 9.9 | 796 |
+| custom | 0.00 | 3.11 | 13.2 | 27 |
+| dagre | 11.03 | 6.48 | 55.0 | 277 |
+| d3-dag | 43.71 | 6.49 | 208.5 | 140 |
+| elk | 127.04 | 12.63 | 42.7 | 1572 |
+| graphviz | 40.66 | 6.46 | 10.0 | 796 |
 
 Stability: the custom engine is given the previous order, as the extension does; the others lay out cold, as they would on every refresh.
 
@@ -32,11 +32,11 @@ Stability: the custom engine is given the previous order, as the extension does;
 
 | size | current | custom | dagre | d3-dag | elk | graphviz |
 |---:|---:|---:|---:|---:|---:|---:|
-| 8 | 0.0 / 0.0 | 0.3 / 0.3 | 1.8 / 2.7 | 0.6 / 1.6 | 5.4 / 11.1 | 0.2 / 0.3 |
-| 20 | 0.1 / 0.2 | 1.3 / 2.3 | 8.1 / 9.9 | 7.8 / 8.6 | 13.4 / 16.5 | 0.8 / 1.0 |
-| 40 | 0.1 / 0.2 | 6.6 / 12.1 | 29.4 / 51.9 | 54.1 / 65.8 | 33.3 / 42.1 | 4.3 / 4.7 |
-| 80 | 0.3 / 0.4 | 12.1 / 12.9 | 47.4 / 66.5 | 199.0 / 208.2 | 42.3 / 47.7 | 8.7 / 9.9 |
-| 150 | 0.6 / 1.3 | 31.0 / 34.6 | 135.2 / 159.7 | 2722.5 / 2903.3 | 120.0 / 147.9 | 32.1 / 33.5 |
+| 8 | 0.0 / 0.0 | 0.3 / 0.4 | 2.0 / 2.7 | 0.6 / 1.0 | 4.9 / 6.4 | 0.2 / 0.3 |
+| 20 | 0.1 / 0.1 | 1.3 / 2.1 | 8.5 / 9.3 | 8.1 / 8.6 | 12.9 / 14.7 | 0.9 / 1.0 |
+| 40 | 0.1 / 0.2 | 6.3 / 7.1 | 29.3 / 33.1 | 58.8 / 70.4 | 32.1 / 34.3 | 4.3 / 4.5 |
+| 80 | 0.3 / 0.4 | 12.4 / 13.2 | 47.4 / 55.0 | 201.7 / 208.5 | 42.0 / 42.7 | 9.0 / 10.0 |
+| 150 | 0.6 / 1.3 | 31.5 / 33.8 | 132.8 / 150.4 | 2696.5 / 2816.6 | 107.8 / 138.6 | 31.5 / 32.6 |
 
 ## Samples
 
