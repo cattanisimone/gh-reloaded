@@ -41,7 +41,7 @@ function tokenHint(token) {
 }
 
 function secretPlaceholder(token) {
-  return token ? "Paste a new token to replace it" : "github_pat_…";
+  return token ? "Paste a new token to replace it" : "github_pat_… or ghp_…";
 }
 
 function secretFieldHtml(t) {

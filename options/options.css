@@ -552,6 +552,21 @@ a:focus-visible {
   background: var(--input);
   overflow: hidden;
 }
+.permission-box + .permission-box {
+  margin-top: 12px;
+}
+.permission-head {
+  padding: 10px 13px;
+  border-bottom: 1px solid var(--divider);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.permission-head small {
+  margin-left: 4px;
+  color: var(--faint);
+  font-weight: 400;
+}
 .permission-row {
   display: flex;
   align-items: center;
@@ -574,6 +589,12 @@ a:focus-visible {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
+}
+.permission-row code {
+  font: 0.8rem var(--mono);
+}
+.inline-link + .inline-link {
+  margin-left: 16px;
 }
 .inline-link {
   display: inline-block;

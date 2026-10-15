@@ -31,7 +31,11 @@ Most features work on public repositories without a token. A token adds private 
 
 ### Create a GitHub token
 
-Go to [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new) (a **fine-grained** token, not classic) and set:
+Pick one of two supported token types: **A** (recommended) for most setups, **B** when your Projects are owned by a personal account.
+
+#### A. Fine-grained token (recommended)
+
+Go to [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new) and set:
 
 - **Resource owner** → the account or organization that owns the repositories (a token has exactly one resource owner).
 - **Repository access** → *Only select repositories* → pick the repo(s) you want this on.
@@ -48,14 +52,26 @@ Click **Generate token** and copy it immediately — GitHub shows it exactly onc
 
 Two GitHub limitations to know about:
 
-- **Organization** permissions only appear when the resource owner is an organization. A fine-grained token cannot read Projects owned by a personal account: the features that depend on them degrade (no Status, Standup signals or project memberships) while the rest keeps working. A classic token with the `read:project` scope can read them, but only use it for public repositories: reading private ones with a classic token needs the broad `repo` scope, which this extension never asks for.
+- **Organization** permissions only appear when the resource owner is an organization. A fine-grained token cannot read Projects owned by a personal account: for those, use a classic token (B). Without it the features that depend on them degrade (no Status, Standup signals or project memberships) while the rest keeps working.
 - A fine-grained token has one resource owner, so work across several owners (organizations or personal accounts) needs one token per owner, see [Connect it](#connect-it).
 
-If the organization requires approval for fine-grained tokens, the token you create may show as *pending* until an organization owner approves it, and requests to that organization's data can come back empty or `404` until then, since GitHub doesn't otherwise reveal that the resource exists. If the organization has disabled fine-grained personal access tokens altogether, it does not appear in the **Resource owner** list and you cannot create a token for it: ask an organization owner to allow fine-grained tokens, or to enable another way of access. **Configure SSO** at [github.com/settings/tokens](https://github.com/settings/tokens) only applies to classic tokens.
+If the organization requires approval for fine-grained tokens, the token you create may show as *pending* until an organization owner approves it, and requests to that organization's data can come back empty or `404` until then, since GitHub doesn't otherwise reveal that the resource exists. If the organization has disabled fine-grained personal access tokens altogether, it does not appear in the **Resource owner** list and you cannot create a token for it: ask an organization owner to allow fine-grained tokens, or use a classic token.
+
+#### B. Classic token (Projects owned by a personal account)
+
+Use this when the Projects you want to read belong to your personal account, which fine-grained tokens cannot read. Go to [github.com/settings/tokens/new?scopes=read:project,public_repo&description=GH%20Reloaded](https://github.com/settings/tokens/new?scopes=read:project,public_repo&description=GH%20Reloaded) and tick:
+
+- `read:project` — read access to Projects v2.
+- `public_repo` — GitHub's GraphQL API requires it for the issue and status data the Projects features read. The extension only reads, but the scope itself is broad: GitHub defines it as read and write access to code, commit statuses, repository projects, collaborators and deployments of every public repository your account can reach.
+- `repo` — instead of `public_repo`, only if you also need private repositories (issues, sub-issues, dependencies, HTML preview). Tick it yourself on the same page: it is broad, it also grants write access to every repository your account can reach.
+
+The extension only reads, but a leaked classic token could do more than a fine-grained one, so prefer A whenever it covers your setup, and leave `repo` off unless you need private data. One classic token covers every owner you can reach, so you do not need one per owner.
+
+If an organization enforces SSO, open [github.com/settings/tokens](https://github.com/settings/tokens) and use **Configure SSO** next to the token to authorize it for that organization; otherwise GitHub answers with empty results or `404`.
 
 ### Connect it
 
-Back in the extension's Settings page, under **GitHub tokens**: paste the token into **Default token**, **Save tokens**, then **Test** — it should report the GitHub username the token authenticates as.
+Back in the extension's Settings page, under **GitHub tokens**: paste the token (`github_pat_…` or `ghp_…`) into **Default token**, **Save tokens**, then **Test** — it should report the GitHub username the token authenticates as.
 
 Working across several repository owners — organizations or personal accounts — that need their own token? **Add owner token** for each, with that owner's login (e.g. `acme`; a pasted `https://github.com/acme` works too). A request always uses the token of the repository's owner, falling back to the default token — never by trying every saved token in turn; with no default set, owners without a token of their own are read anonymously. Saved tokens are never shown again in full, only by their last 4 characters.
 
