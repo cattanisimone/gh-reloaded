@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #69 Options as a compact settings UI</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa;--or:#d15716}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px} h3{font-size:14px;margin:14px 0 6px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{overflow-wrap:anywhere;background:var(--soft);padding:1px 4px;border-radius:4px;font-size:13px} .scroll{overflow-x:auto}
+  .new{outline:2px dashed var(--accent);outline-offset:2px}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media (max-width:640px){.pair{grid-template-columns:1fr}}
+  .cap{font-size:12px;color:var(--muted);margin:4px 0 0}
+  /* --- mockup: "before" --- */
+  .old{background:#070a0f;color:#f0f4f8;border-radius:8px;padding:12px;font-size:11px;min-height:250px}
+  .old .nav{display:flex;justify-content:space-between;color:#bdc7d5} .old .hero{padding:26px 0 18px;position:relative}
+  .old .hero:before{content:"";position:absolute;inset:0 30% 0 0;background:radial-gradient(ellipse,rgba(242,125,53,.25),transparent 66%)}
+  .old h4{font-size:30px;margin:0;position:relative} .old h4 span{color:#f27d35} .old .lede{color:#97a3b2;position:relative;max-width:260px}
+  .old .k{color:#f27d35;font-family:ui-monospace,monospace;font-size:9px;margin-top:10px} .old .h{font-size:16px;font-weight:700}
+  /* --- mockup: "after" app shell, themed --- */
+  .app{--s:#fff;--b:#f6f8fa;--t:#1f2328;--m:#59636e;--l:#d1d9e0;--sel:#fdf0e8;--o:#d15716;--link:#0969da;
+       display:grid;grid-template-columns:110px 1fr;border:1px solid var(--l);border-radius:8px;overflow:hidden;font-size:11px;color:var(--t);background:var(--b);min-height:250px}
+  .app.dark{--s:#0d1117;--b:#0b0f14;--t:#e6edf3;--m:#9198a1;--l:#262c36;--sel:#2a1f17;--o:#f0883e;--link:#58a6ff}
+  .side{background:var(--s);border-right:1px solid var(--l);padding:8px 6px;display:flex;flex-direction:column;gap:2px}
+  .brand{font-weight:700;display:flex;gap:5px;align-items:center;margin-bottom:6px} .logo{width:16px;height:16px;border-radius:4px;background:var(--o);color:#fff;font-size:10px;display:grid;place-items:center}
+  .item{padding:4px 6px;border-radius:5px;color:var(--m)} .item.on{background:var(--sel);color:var(--t);font-weight:600;box-shadow:inset 2px 0 var(--o)}
+  .side .foot{margin-top:auto;color:var(--m);font-size:9px}
+  .content{padding:8px 10px;min-width:0} .crumb{color:var(--m);font-size:10px;border-bottom:1px solid var(--l);padding-bottom:5px;display:flex;justify-content:space-between}
+  .ttl{font-size:15px;font-weight:700;margin:8px 0 6px}
+  .panel{background:var(--s);border:1px solid var(--l);border-radius:6px}
+  .row{display:flex;align-items:center;gap:6px;padding:5px 8px;border-top:1px solid var(--l)} .row:first-child{border-top:0}
+  .row .tx{flex:1;min-width:0} .row b{display:block;font-size:11px} .row small{color:var(--m);font-size:9.5px}
+  .cfg{color:var(--link);font-weight:600;font-size:10px;white-space:nowrap} .badge{font-size:8.5px;color:var(--o);border:1px solid var(--o);border-radius:9px;padding:0 4px}
+  .sw{width:22px;height:12px;border-radius:6px;background:var(--o);position:relative;flex:none} .sw:after{content:"";position:absolute;right:2px;top:2px;width:8px;height:8px;border-radius:50%;background:#fff}
+  .sw.off{background:var(--l)} .sw.off:after{right:auto;left:2px}
+  .grp{margin-bottom:6px} .grp h5{margin:0;padding:6px 8px;font-size:12px;box-shadow:inset 2px 0 var(--o)} .inp{border:1px solid var(--l);border-radius:5px;padding:2px 6px;background:var(--b);min-width:40px;color:var(--t)}
+  .btn{border:1px solid var(--l);border-radius:5px;padding:2px 6px;background:var(--b);font-weight:600;font-size:10px}
+  .phone{width:200px;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:11px;background:#f6f8fa}
+  .phone .top{background:#fff;padding:6px 8px;border-bottom:1px solid var(--line);font-weight:700}
+  .phone .tabs{display:flex;gap:4px;padding:6px 8px;background:#fff;border-bottom:1px solid var(--line);overflow:hidden}
+  .phone .tabs span{padding:2px 6px;border-radius:5px;color:var(--muted);white-space:nowrap} .phone .tabs span.on{background:#fdf0e8;color:var(--fg);font-weight:600}
+  .phone .panel{margin:8px;--l:#d1d9e0;--m:#59636e;--o:#d15716;--link:#0969da;--s:#fff}
+</style></head><body><main>
+
+<h1><a href="https://github.com/cattanisimone/gh-reloaded/issues/69">#69</a> · Redesign Options as a compact, consistent settings UI</h1>
+<p class="meta">Size: <b>normal</b> (new layout, all of <code>options/</code> touched) · Goal: turn the landing-page-style Settings into a compact settings app, and move Standup's tuning from Features to Advanced, without touching a single stored key.</p>
+
+<h2>What changes for users</h2>
+<ul>
+  <li>No hero, glows or marketing copy: a slim header, a left sidebar (Features · GitHub tokens · Quick-create · Advanced) and one section shown at a time.</li>
+  <li>Features is a dense list of toggles. <b>Configure →</b> appears only on Quick-create, Standup mode and My Issues, and jumps to their settings.</li>
+  <li>Standup's <i>Stale after</i> and <i>Review-like statuses</i> move to <b>Advanced › Standup mode</b>, next to <b>Advanced › My Issues by project</b>.</li>
+  <li>Light and dark each use one family of surfaces (sidebar and content match) and follow the OS. Orange is used only for the active item, switches and focus.</li>
+  <li>Every saved setting, token and shortcut keeps working: same storage keys, same defaults, same save behaviour.</li>
+</ul>
+
+<h2>Mockup</h2>
+<p class="cap">Dashed outline = new or moved. The issue's PNG mockups are the visual reference; these boxes show structure and density.</p>
+<div class="pair">
+  <div><div class="old">
+    <div class="nav"><b>GH Reloaded</b><span>Features · Tokens · Shortcuts · Advanced · Website ↗</span></div>
+    <div class="hero"><h4>Settings<span>.</span></h4><p class="lede">Choose which features run on github.com, connect the GitHub tokens they read with…</p></div>
+    <div class="k">01 / FEATURES</div><div class="h">Choose what runs.</div>
+    <p style="color:#97a3b2">Switch any feature off entirely…</p>
+  </div><p class="cap">Before: the first toggle sits below the fold of a laptop screen.</p></div>
+  <div><div class="app">
+    <div class="side new"><div class="brand"><span class="logo">G</span>GH Reloaded</div>
+      <div class="item on">Features</div><div class="item">GitHub tokens</div><div class="item">Quick-create</div><div class="item">Advanced</div>
+      <div class="foot">v0.x · Website ↗</div></div>
+    <div class="content"><div class="crumb"><span>Settings / Features</span><span>Help ↗</span></div>
+      <div class="ttl">Features</div>
+      <div class="panel">
+        <div class="row"><div class="tx"><b>Dependency graph</b><small>Blockers and the critical path</small></div><span class="sw"></span></div>
+        <div class="row"><div class="tx"><b>Quick-create button</b><small>New-issue buttons on boards</small></div><span class="cfg new">Configure →</span><span class="sw"></span></div>
+        <div class="row"><div class="tx"><b>Board dependency arrows</b><small>Arrows between cards</small></div><span class="badge">Experimental</span><span class="sw off"></span></div>
+        <div class="row"><div class="tx"><b>Standup mode</b><small>Compact board with signals</small></div><span class="cfg new">Configure →</span><span class="sw"></span></div>
+        <div class="row"><div class="tx"><b>My Issues by project</b><small>Project tiles</small></div><span class="cfg new">Configure →</span><span class="sw"></span></div>
+      </div></div>
+  </div><p class="cap">After, light: Features (Full-width board and HTML preview rows omitted here).</p></div>
+</div>
+<div class="pair" style="margin-top:12px">
+  <div><div class="app dark">
+    <div class="side"><div class="brand"><span class="logo">G</span>GH Reloaded</div>
+      <div class="item">Features</div><div class="item">GitHub tokens</div><div class="item">Quick-create</div><div class="item on">Advanced</div>
+      <div class="foot">v0.x · Website ↗</div></div>
+    <div class="content"><div class="crumb"><span>Settings / Advanced</span><span>Help ↗</span></div>
+      <div class="ttl">Advanced</div>
+      <div class="panel grp new"><h5>Standup mode</h5>
+        <div class="row"><div class="tx"><b>Stale after</b><small>days in a review-like column</small></div><span class="inp">3</span> days</div>
+        <div class="row"><div class="tx"><b>Review-like statuses</b><small>comma-separated prefixes</small></div><span class="inp">review, qa, test…</span></div></div>
+      <div class="panel grp"><h5>My Issues by project</h5>
+        <div class="row"><div class="tx"><b>Tile width</b><small>280–2000 px</small></div><span class="inp">630</span><span class="inp">no limit</span></div>
+        <div class="row"><div class="tx"><small>Changes apply straight away.</small></div><span class="btn">Reset to defaults</span></div></div>
+    </div>
+  </div><p class="cap">After, dark: Advanced. The sidebar and the panels are both dark (no black/white mix).</p></div>
+  <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
+    <div class="phone"><div class="top">GH Reloaded · Settings</div>
+      <div class="tabs new"><span class="on">Features</span><span>Tokens</span><span>Quick-create</span><span>Adv…</span></div>
+      <div class="panel"><div class="row"><div class="tx"><b>Standup mode</b><small>Compact board</small></div><span class="sw"></span></div>
+      <div class="row" style="justify-content:flex-end"><span class="cfg">Configure →</span></div></div></div>
+    <p class="cap" style="flex:1;min-width:140px">Below 720px the sidebar becomes a row of tabs that scrolls on its own, and the Configure link wraps under its row. The page never scrolls sideways.</p>
+  </div>
+</div>
+
+<h3>Navigation map</h3>
+<div class="scroll"><table>
+  <tr><th>URL hash</th><th>Shows</th><th>Focus moves to</th><th>Reached from</th></tr>
+  <tr><td><i>(none)</i>, <code>#features</code>, unknown</td><td>Features</td><td>panel heading</td><td>sidebar, first open (<code>openOptionsPage()</code>)</td></tr>
+  <tr><td><code>#tokens-section</code></td><td>GitHub tokens</td><td>panel heading</td><td>sidebar</td></tr>
+  <tr><td><code>#shortcuts-section</code></td><td>Quick-create</td><td>panel heading</td><td>sidebar, Quick-create <b>Configure</b></td></tr>
+  <tr><td><code>#advanced-section</code></td><td>Advanced</td><td>panel heading</td><td>sidebar</td></tr>
+  <tr><td><code>#advanced-standup</code></td><td>Advanced, scrolled to Standup</td><td>Standup group heading</td><td>Standup <b>Configure</b></td></tr>
+  <tr><td><code>#advanced-my-issues</code></td><td>Advanced, scrolled to My Issues</td><td>My Issues group heading</td><td>My Issues <b>Configure</b></td></tr>
+</table></div>
+<p class="cap">The existing section ids stay as hashes, so old bookmarks keep working. Links are real <code>&lt;a href="#…"&gt;</code>, so Enter, middle-click, back and forward work natively. Hidden panels are only hidden, not re-rendered, so unsaved token or shortcut edits survive a switch to another section.</p>
+
+<h2>How it works</h2>
+<div class="scroll"><svg viewBox="0 0 860 170" width="100%" role="img" aria-label="hash routing: link click or back/forward changes location.hash, router shows one panel and focuses its heading; controls read and write chrome.storage.local unchanged">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+  <g font-size="13" font-family="-apple-system,Segoe UI,sans-serif" fill="#1f2328">
+    <rect x="10" y="20" width="170" height="54" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="22" y="42">Sidebar link / Configure</text><text x="22" y="62" fill="#59636e">or Back / Forward</text>
+    <rect x="230" y="20" width="150" height="54" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="244" y="42">location.hash</text><text x="244" y="62" fill="#59636e">hashchange event</text>
+    <rect x="430" y="12" width="200" height="70" rx="6" fill="#ddf4ff" stroke="#0969da"/><text x="444" y="34" font-weight="600">route(hash) — new</text><text x="444" y="52" fill="#59636e">hide others, show 1 panel</text><text x="444" y="70" fill="#59636e">aria-current · focus heading</text>
+    <rect x="680" y="20" width="170" height="54" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="694" y="42">Visible panel</text><text x="694" y="62" fill="#59636e">+ group scrolled in</text>
+    <path d="M180 47H226M380 47H426M630 47H676" stroke="#59636e" stroke-width="1.5" marker-end="url(#a)"/>
+    <rect x="230" y="110" width="400" height="48" rx="6" fill="#fff" stroke="#d1d9e0" stroke-dasharray="4 3"/><text x="244" y="132">Switches · inputs · token and shortcut editors (logic unchanged)</text><text x="244" y="150" fill="#59636e">same ids, same handlers, same keys</text>
+    <rect x="680" y="110" width="170" height="48" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="694" y="132">chrome.storage.local</text><text x="694" y="150" fill="#59636e">keys untouched</text>
+    <path d="M630 134H676" stroke="#59636e" stroke-width="1.5" marker-end="url(#a)"/>
+  </g></svg></div>
+
+<h2>Changes by file</h2>
+<div class="scroll"><table>
+  <tr><th>File</th><th>Change</th><th>Why</th></tr>
+  <tr><td><code>options/options.html</code> <i>shared</i></td><td>App shell (header, <code>&lt;nav&gt;</code> sidebar, one <code>&lt;section&gt;</code> per panel), compact feature rows, three Configure links, Standup fields moved to <code>#advanced-standup</code>, My Issues group <code>#advanced-my-issues</code>. All input, switch and button ids kept. Help copy shortened; token permission boxes and both create-token links kept.</td><td>New information architecture; the ids are what <code>options.js</code> and the tests bind to.</td></tr>
+  <tr><td><code>options/options.css</code> <i>shared</i></td><td>Rewritten: light tokens on <code>:root</code>, dark under <code>prefers-color-scheme: dark</code>, system UI font, no gradients or glows, reusable <code>.panel / .row / .group / .field</code>, visible <code>:focus-visible</code> rings, breakpoint at 720px.</td><td>Compact, coherent themes, responsive.</td></tr>
+  <tr><td><code>options/options.js</code> <i>shared</i></td><td>Add a small hash router (about 30 lines: <code>route()</code> on load and on <code>hashchange</code>). Token, shortcut, toggle, Standup and tile logic unchanged.</td><td>One panel at a time, deep links, back and forward.</td></tr>
+  <tr><td><code>AGENTS.md</code></td><td>New section "Options / settings UX" with the six rules from the issue.</td><td>Acceptance criterion; the rules guide future changes.</td></tr>
+  <tr><td><code>screenshots/options-redesign/*.png</code></td><td>Bring in the four mockups from <code>docs/69-options-mockups</code>.</td><td>The issue asks for them if adopted.</td></tr>
+  <tr><td><code>README.md</code></td><td>Standup paragraph: "set in Settings → Advanced". Layout line for <code>options/</code>.</td><td>Keep the docs in sync.</td></tr>
+  <tr><td><code>test/e2e/options-*.spec.js</code></td><td>New layout, navigation, theme, responsive and regression specs; adjust the two existing ones to the new markup.</td><td>Test plan below.</td></tr>
+</table></div>
+
+<h2>Data, permissions, privacy</h2>
+<p>None. No new key, no migration, no permission. Keys read and written as today: <code>gh*Enabled</code> toggles, <code>ghsmStaleDays</code>, <code>ghsmReviewKeywords</code>, <code>ghmiTileMin</code>, <code>ghmiTileMax</code>, the token records plus <code>defaultTokenId</code>, and the shortcuts. Turning a feature off still writes only its <code>…Enabled</code> key. <code>PRIVACY.md</code> stays as it is.</p>
+
+<h2>Test plan</h2>
+<div class="scroll"><table>
+  <tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
+  <tr><td>Features has the toggles and only the relevant Configure links; no Standup inputs</td><td>e2e</td><td><code>options-layout</code> › "Features lists 7 switches and Configure only for Quick-create, Standup, My Issues"</td></tr>
+  <tr><td>Advanced › Standup loads, saves and clears with the same keys and defaults</td><td>e2e</td><td><code>options-advanced</code> › "Standup fields live in Advanced and save, validate and clear"</td></tr>
+  <tr><td>Advanced › My Issues keeps validation and Reset</td><td>e2e (existing, kept)</td><td><code>options-advanced</code> › the two tile-width tests, plus "both tile fields are inside #advanced-my-issues"</td></tr>
+  <tr><td>Configure targets its group (click, keyboard, direct URL, back and forward); no duplicate toggles</td><td>e2e</td><td><code>options-navigation</code> › "Configure opens the group and focuses it", "Enter on a focused Configure", "deep link #advanced-standup", "back returns to Features, forward to Advanced", "old hashes still open their section"; the layout spec counts exactly one <code>role=switch</code> per feature.</td></tr>
+  <tr><td>No preferences reset or migrated</td><td>e2e</td><td><code>options-advanced</code> › "turning Standup and My Issues off keeps their saved values, still editable"; <code>options-layout</code> › "seeded keys load into the new controls unchanged"</td></tr>
+  <tr><td>Tokens and Quick-create unchanged in behaviour</td><td>e2e</td><td><code>options-tokens</code> (existing 3, locators updated) + "default and owner token save round-trip, last 4 shown"; <code>options-shortcuts</code> › "add, save and reload a shortcut"</td></tr>
+  <tr><td>Light and dark each coherent</td><td>e2e (<code>emulateMedia</code>)</td><td><code>options-theme</code> › for each scheme, the sidebar, header and panel backgrounds are all light or all dark (by luminance), body text contrast ≥ 4.5, no <code>background-image</code> gradient; switching the scheme on an open page re-themes everything</td></tr>
+  <tr><td>Dense, no horizontal scroll or clipping on desktop and mobile</td><td>e2e</td><td><code>options-responsive</code> › at 1280, 820 and 375 px on every panel: <code>scrollWidth ≤ innerWidth</code>, every switch, input and button inside the viewport, nav reachable; at 1280 the first feature row is above 260px</td></tr>
+  <tr><td>Labels, focus order, focus rings, switch semantics, feedback</td><td>e2e</td><td><code>options-a11y</code> › every input has an accessible name; Space toggles a switch and updates <code>aria-checked</code>; Tab order goes sidebar → panel; <code>:focus-visible</code> outline is not <code>none</code> on links, buttons, switches and inputs; status lines keep <code>role=status</code></td></tr>
+  <tr><td><code>AGENTS.md</code> records the rules</td><td>unit</td><td><code>test/unit/agents-md.test.js</code> › the "Options / settings UX" heading exists and names the Features/Advanced split</td></tr>
+  <tr><td><code>npm test</code> green; new specs stable</td><td>run</td><td><code>npm test</code>, plus <code>--repeat-each=3</code> on the new specs</td></tr>
+</table></div>
+<p><b>Anchors and fixtures:</b> not applicable. The page is the extension's own <code>options.html</code>, loaded from the repo; no GitHub markup is read and no fixture is needed.</p>
+<p><b>Live check:</b> none on github.com is needed, since the change does not inject into GitHub. Instead I will screenshot the real Options page in Chromium before and after, in light and dark, at 1280 and 375 px, and attach the screenshots to the PR.</p>
+
+<h2>Risks and open questions</h2>
+<ul>
+  <li><b>One panel at a time, or one scrolling page with a sticky sidebar?</b> The mockup's breadcrumb points to panels. <i>Default: panels via the hash, as in the navigation map.</i></li>
+  <li><b>Mockup PNGs</b> show a fictional "v0.11" and some details that will differ in the final page. <i>Default: bring them in as the issue asks, and say in the PR where the implementation differs.</i></li>
+  <li><b>Default theme</b> goes from dark-first to the OS setting with light as the base. Dark-OS users see no change. <i>Default: as the issue says.</i></li>
+  <li><b>Shorter help copy:</b> I will trim the Tokens prose, but the permission boxes, SSO note and privacy note keep their substance (<code>token-docs.test.js</code> checks them). <i>Default: shorten the prose, keep every fact.</i></li>
+  <li><b>"Help &amp; support"</b> in the mockup: <i>Default: one header link to the repository's Issues page; Website and Repository links move to the sidebar footer.</i></li>
+</ul>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Any github.com-side feature behaviour, new token types, a redesign of token permissions, or the public website.</li>
+  <li>New settings, storage migrations, or a manual theme switch.</li>
+</ul>
+</main></body></html>
