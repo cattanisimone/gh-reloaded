@@ -55,7 +55,9 @@ export function markCritical(nodes, edges) {
 export function makeGraph(kind, size, seed = 1) {
   const r = rng(seed * 7919 + size);
   const edges = [];
+  // Every kind but "cycle" is a DAG: edges always point from a lower id to a higher one.
   const add = (from, to) => {
+    if (kind !== "cycle" && from > to) [from, to] = [to, from];
     if (from !== to && !edges.some((e) => e.from === from && e.to === to)) edges.push({ from, to });
   };
   let nodes = mkNodes(size);

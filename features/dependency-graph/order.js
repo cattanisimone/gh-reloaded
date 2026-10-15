@@ -151,24 +151,35 @@
     return { left, right };
   }
 
-  // Swaps neighbours in a column while that lowers the crossings of its two
-  // adjacent hop sets.
-  function transpose(cols, hops, c) {
-    let improved = true;
-    let any = false;
-    const local = () => {
-      const pos = positionsOf([cols[c - 1] || [], cols[c], cols[c + 1] || []]);
-      return (c > 0 ? crossingsBetween(hops[c - 1], pos) : 0) + (c < hops.length ? crossingsBetween(hops[c], pos) : 0);
+  // Swaps neighbours in a column while that lowers the crossings they take part
+  // in. `pos` (item -> index in its column) is kept up to date as items swap.
+  function transpose(cols, left, right, pos, c) {
+    const col = cols[c];
+    // Crossings between the edges of `u` (above) and `v` (below) on both sides.
+    const cross = (u, v) => {
+      let n = 0;
+      for (const side of [left, right]) {
+        const us = side.get(u);
+        const vs = side.get(v);
+        if (!us || !vs) continue;
+        for (const a of us) for (const b of vs) if (pos.get(a) > pos.get(b)) n++;
+      }
+      return n;
     };
+    let any = false;
+    let improved = true;
     while (improved) {
       improved = false;
-      for (let i = 0; i + 1 < cols[c].length; i++) {
-        const before = local();
-        [cols[c][i], cols[c][i + 1]] = [cols[c][i + 1], cols[c][i]];
-        if (local() < before) {
-          improved = true;
-          any = true;
-        } else [cols[c][i], cols[c][i + 1]] = [cols[c][i + 1], cols[c][i]];
+      for (let i = 0; i + 1 < col.length; i++) {
+        const u = col[i];
+        const v = col[i + 1];
+        if (cross(v, u) < cross(u, v)) {
+          col[i] = v;
+          col[i + 1] = u;
+          pos.set(v, i);
+          pos.set(u, i + 1);
+          improved = any = true;
+        }
       }
     }
     return any;
@@ -231,7 +242,8 @@
     for (let iter = 0; iter < 24 && bestCost > 0 && stale < 4; iter++) {
       if (iter % 2 === 0) for (let c = 1; c < order.length; c++) order[c] = sortByMedian(order[c], left, positionsOf(order));
       else for (let c = order.length - 2; c >= 0; c--) order[c] = sortByMedian(order[c], right, positionsOf(order));
-      for (let c = 0; c < order.length; c++) transpose(order, hops, c);
+      const pos = positionsOf(order);
+      for (let c = 0; c < order.length; c++) transpose(order, left, right, pos, c);
       const cost = totalCrossings(order, hops);
       if (cost < bestCost) {
         bestCost = cost;
