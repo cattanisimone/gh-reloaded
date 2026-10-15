@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.12.0...v0.13.0) (2026-10-15)
+
+
+### Features
+
+* redesign Options as a compact settings UI ([#70](https://github.com/cattanisimone/gh-reloaded/issues/70)) ([c2090d3](https://github.com/cattanisimone/gh-reloaded/commit/c2090d3cf0a0b8453ff865b83a344d5f31418149))
+
 ## [0.12.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.11.2...v0.12.0) (2026-10-14)
 
 
