@@ -62,3 +62,14 @@ test("graph-bench: chosen engine is at least as good as current on crossings and
   // 50 ms is the plan's target; the unit suite may run on a busy shared runner.
   assert.ok(percentile(ms, 95) < 250, `p95 ${percentile(ms, 95)} ms`);
 });
+
+test("graph-bench: a sparse segment crossing a card counts as a card hit", () => {
+  const graph = {
+    nodes: [{ id: "a" }, { id: "b" }, { id: "c" }],
+    edges: [{ from: "a", to: "b" }],
+  };
+  const positions = new Map([["a", { x: 0, y: 0 }], ["b", { x: 600, y: 0 }], ["c", { x: 300, y: 0 }]]);
+  const routes = new Map([["a\u0000b", { points: [{ x: 100, y: 20 }, { x: 500, y: 20 }] }]]);
+  const s = score(graph, { positions, routes, width: 900, height: 100 }, { NODE_W: 200, NODE_H: 60, COL_GAP: 100 });
+  assert.equal(s.edgeCardHits, 1);
+});

@@ -36,6 +36,27 @@ export function flattenPath(d, steps = 14) {
   return pts;
 }
 
+function pointInBox(p, b) {
+  return p.x > b.x0 && p.x < b.x1 && p.y > b.y0 && p.y < b.y1;
+}
+
+// True when the segment a-b passes through the open interior of the box
+// (Liang-Barsky clipping), not only when an endpoint lies inside it.
+function segmentCrossesBox(a, b, box) {
+  let t0 = 0, t1 = 1;
+  const dx = b.x - a.x, dy = b.y - a.y;
+  for (const [p, q] of [[-dx, a.x - box.x0], [dx, box.x1 - a.x], [-dy, a.y - box.y0], [dy, box.y1 - a.y]]) {
+    if (p === 0) {
+      if (q <= 0) return false;
+    } else {
+      const t = q / p;
+      if (p < 0) { if (t > t1) return false; if (t > t0) t0 = t; }
+      else { if (t < t0) return false; if (t < t1) t1 = t; }
+    }
+  }
+  return t1 - t0 > 1e-9 || pointInBox({ x: a.x + t0 * dx, y: a.y + t0 * dy }, box);
+}
+
 function segIntersect(a, b, c, d) {
   const o = (p, q, r) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
   const d1 = o(a, b, c), d2 = o(a, b, d), d3 = o(c, d, a), d4 = o(c, d, b);
@@ -102,7 +123,8 @@ export function score(graph, result, dims) {
   for (const { e, r } of list) {
     const hit = boxes.some((c) => {
       if (c.id === e.from || c.id === e.to) return false;
-      return r.points.some((p) => p.x > c.x + 1 && p.x < c.x + dims.NODE_W - 1 && p.y > c.y + 1 && p.y < c.y + dims.NODE_H - 1);
+      const box = { x0: c.x + 1, x1: c.x + dims.NODE_W - 1, y0: c.y + 1, y1: c.y + dims.NODE_H - 1 };
+      return r.points.some((p, i) => (i === 0 ? pointInBox(p, box) : segmentCrossesBox(r.points[i - 1], p, box)));
     });
     if (hit) (r.back ? backHits++ : edgeCardHits++);
   }
