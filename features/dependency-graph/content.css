@@ -297,6 +297,9 @@
   stroke-dasharray: 4 3;
   opacity: 0.75;
 }
+.ghdg-scope .ghdg-edge.is-cycle {
+  stroke-dasharray: 2 3;
+}
 .ghdg-scope .ghdg-edge.is-critical {
   stroke: var(--ghdg-critical);
   stroke-width: 2.5;

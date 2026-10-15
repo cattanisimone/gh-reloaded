@@ -266,20 +266,6 @@
       </div>`;
   }
 
-  function edgePathD(x1, y1, x2, y2) {
-    const dx = Math.max(40, (x2 - x1) / 2);
-    return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
-  }
-
-  // A straight/S-curve between two adjacent columns is fine, but across 2+
-  // columns it can cut right across an unrelated card sitting in one of
-  // the columns in between. Route those as a "hump" over the top instead
-  // — attaches to the top-center of both nodes and arcs up into the clear
-  // band layout.js reserves above row 0, staying clear of every column.
-  function arcOverPathD(x1, y1, x2, y2, clearY) {
-    return `M ${x1} ${y1} C ${x1} ${clearY}, ${x2} ${clearY}, ${x2} ${y2}`;
-  }
-
   // Fades everything outside the selected card's lineage (itself, all of its
   // upstream and all of its downstream) and rings the selected card. Reads
   // the graph back from the DOM it was rendered into (cards and edges carry
@@ -308,17 +294,16 @@
     }
   }
 
-  function renderGraph(body, graph, theme, align, dims, large, selectedId) {
+  function renderGraph(body, graph, theme, align, dims, large, selectedId, seed) {
     const { nodes, edges } = graph;
     body.innerHTML = "";
 
     if (!nodes.length) {
       body.innerHTML = '<div class="ghdg-status">No sub-issues found.</div>';
-      return;
+      return null;
     }
 
-    const { positions, width, height } = window.GHDG_LAYOUT.layout(nodes, edges, align, dims);
-    const { NODE_W: nodeW, NODE_H: nodeH, COL_GAP: colGap, ARC_CLEAR_Y: clearY } = dims;
+    const { positions, width, height, routes, order } = window.GHDG_LAYOUT.layout(nodes, edges, align, dims, seed);
     const externalIds = new Set(nodes.filter((n) => n.external).map((n) => n.id));
 
     const scroll = document.createElement("div");
@@ -346,25 +331,28 @@
       </defs>`;
 
     for (const e of edges) {
-      const from = positions.get(e.from);
-      const to = positions.get(e.to);
-      if (!from || !to) continue;
+      // Routes are keyed by the ids as strings; an edge whose end is not a
+      // card (or a repeated edge) has none or shares one.
+      const route = routes.get(`${e.from}\u0000${e.to}`);
+      if (!route) continue;
       const isExternal = externalIds.has(e.from) || externalIds.has(e.to);
-      const colsApart = Math.round((to.x - from.x) / (nodeW + colGap));
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute(
-        "d",
-        colsApart >= 2
-          ? arcOverPathD(from.x + nodeW / 2, from.y, to.x + nodeW / 2, to.y, clearY)
-          : edgePathD(from.x + nodeW, from.y + nodeH / 2, to.x, to.y + nodeH / 2)
-      );
+      path.setAttribute("d", route.d);
       path.setAttribute(
         "class",
-        "ghdg-edge" + (isExternal ? " is-external" : "") + (e.critical ? " is-critical" : "")
+        "ghdg-edge" +
+          (isExternal ? " is-external" : "") +
+          (e.critical ? " is-critical" : "") +
+          (route.back ? " is-cycle" : "")
       );
       path.dataset.from = String(e.from);
       path.dataset.to = String(e.to);
       path.setAttribute("marker-end", e.critical ? "url(#ghdg-arrow-critical)" : "url(#ghdg-arrow)");
+      if (route.back) {
+        const tip = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        tip.textContent = "cycle";
+        path.appendChild(tip);
+      }
       svg.appendChild(path);
     }
     stage.appendChild(svg);
@@ -384,6 +372,7 @@
     scroll.appendChild(stage);
     body.appendChild(scroll);
     applyHighlight(body, selectedId);
+    return order;
   }
 
   // "full": everything. "open": drop external nodes that aren't actually
@@ -639,11 +628,16 @@
       for (const c of allOf(".ghdg-transitive-check")) c.checked = hideTransitive;
     }
 
+    // The card order of the last layout, kept in memory only. It seeds the
+    // next layout, so a refresh that adds or drops a card leaves the others
+    // where they were, and the full-screen view shows the embedded order.
+    let lastOrder = null;
+
     function renderInto(bodyEl, titleEl, dims, large) {
       const g = applyTransitiveMode(applyDependencyMode(currentGraph, depMode), hideTransitive);
       // A selection only survives while its card is still on screen.
       if (selectedId != null && !g.nodes.some((n) => String(n.id) === selectedId)) selectedId = null;
-      renderGraph(bodyEl, g, theme, alignMode, dims, large, selectedId);
+      lastOrder = renderGraph(bodyEl, g, theme, alignMode, dims, large, selectedId, lastOrder) || lastOrder;
       if (titleEl) titleEl.textContent = headerTitleText(currentGraph);
       return g;
     }
