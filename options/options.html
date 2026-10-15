@@ -3,124 +3,107 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>GH Reloaded — Settings</title>
     <link rel="icon" type="image/svg+xml" href="../icons/icon.svg" />
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <header class="container nav">
-      <span class="brand"><img class="mark" src="../icons/icon.svg" width="34" height="34" alt="" />GH Reloaded</span>
-      <nav class="nav-links" aria-label="Settings sections">
-        <a href="#features">Features</a>
-        <a href="#tokens-section">Tokens</a>
-        <a href="#shortcuts-section">Shortcuts</a>
-        <a href="#advanced-section">Advanced</a>
-        <a class="btn btn-secondary btn-sm" href="https://gh-reloaded.simone3-cattani.chatgpt.site/" target="_blank" rel="noopener">Website <span aria-hidden="true">↗</span></a>
-      </nav>
-    </header>
-
-    <main class="container">
-      <section class="hero">
-        <div class="eyebrow"><span class="dot"></span>Chrome extension · <span data-version></span></div>
-        <h1>Settings<span>.</span></h1>
-        <p class="lede">
-          Choose which features run on github.com, connect the GitHub tokens they read with,
-          and set up your quick-create shortcuts. Everything is stored in this browser only.
-        </p>
-      </section>
-
-      <section class="section" id="features">
-        <div class="section-intro">
-          <div class="kicker">01 / Features</div>
-          <h2>Choose what runs.</h2>
-          <p>
-            Switch any feature off entirely — it stops running on github.com right away.
-            Experimental ones are still maturing and may change as GitHub's own UI does.
-          </p>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand"><img class="mark" src="../icons/icon.svg" width="28" height="28" alt="" /><span>GH Reloaded</span></div>
+        <nav class="nav" aria-label="Settings sections">
+          <a href="#features" data-panel="features">Features</a>
+          <a href="#tokens-section" data-panel="tokens-section">GitHub tokens</a>
+          <a href="#shortcuts-section" data-panel="shortcuts-section">Quick-create</a>
+          <a href="#advanced-section" data-panel="advanced-section">Advanced</a>
+        </nav>
+        <div class="side-foot">
+          <span data-version></span> · <a href="https://gh-reloaded.simone3-cattani.chatgpt.site/" target="_blank" rel="noopener">Website <span aria-hidden="true">↗</span></a>
         </div>
-        <div class="section-body">
-          <div class="card feature-list">
-            <div class="feature-row">
-              <div class="feature-text">
-                <span class="feature-title">Dependency graph</span>
-                <span class="feature-desc">A left-to-right graph below an issue's sub-issues, with blockers and the critical path highlighted.</span>
-              </div>
-              <button id="feature-ghdg" type="button" role="switch" aria-checked="false" aria-label="Dependency graph" class="switch">
-                <span class="switch-track"><span class="switch-knob"></span></span>
-              </button>
+      </aside>
+
+      <main class="content">
+        <section class="panel-view" id="features" aria-labelledby="features-title">
+          <h1 id="features-title" tabindex="-1">Features</h1>
+          <p class="lead">Switch a feature off and it stops running on github.com right away. Changes are saved automatically.</p>
+          <div class="card list">
+          <div class="row">
+            <div class="row-text">
+              <span class="row-title">Dependency graph</span>
+              <span class="row-desc">Blockers and the critical path, below an issue's sub-issues.</span>
             </div>
-            <div class="feature-row">
-              <div class="feature-text">
-                <span class="feature-title">Quick-create button</span>
-                <span class="feature-desc">Buttons on Projects boards that open a new-issue form — set them up under Shortcuts below.</span>
-              </div>
-              <button id="feature-quick-create" type="button" role="switch" aria-checked="false" aria-label="Quick-create button" class="switch">
-                <span class="switch-track"><span class="switch-knob"></span></span>
-              </button>
-            </div>
-            <div class="feature-row">
-              <div class="feature-text">
-                <span class="feature-title">Board dependency arrows <span class="badge">Experimental</span></span>
-                <span class="feature-desc">Arrows between dependent cards on a Board view, red when a blocker is behind. Also switchable next to the view tabs.</span>
-              </div>
-              <button id="feature-ghbd" type="button" role="switch" aria-checked="false" aria-label="Board dependency arrows" class="switch">
-                <span class="switch-track"><span class="switch-knob"></span></span>
-              </button>
-            </div>
-            <div class="feature-row">
-              <div class="feature-text">
-                <span class="feature-title">Full-width board</span>
-                <span class="feature-desc">Stretches Board views to the full window, shrinking columns down to 140px before scrolling.</span>
-              </div>
-              <button id="feature-ghfw" type="button" role="switch" aria-checked="false" aria-label="Full-width board" class="switch">
-                <span class="switch-track"><span class="switch-knob"></span></span>
-              </button>
-            </div>
-            <div class="feature-row">
-              <div class="feature-text">
-                <span class="feature-title">Standup mode</span>
-                <span class="feature-desc">A "Standup" button on Board views that turns the board into a compact presentation and flags what needs attention: stale reviews, orphan blocks, critical paths at risk, bottlenecks.</span>
-              </div>
-              <button id="feature-ghsm" type="button" role="switch" aria-checked="false" aria-label="Standup mode" class="switch">
-                <span class="switch-track"><span class="switch-knob"></span></span>
-              </button>
-            </div>
-            <div class="feature-row feature-row-fields">
-              <div class="feature-text">
-                <span class="feature-title">Standup mode signals</span>
-                <span class="feature-desc">How long a card may sit in a review-like column before it is flagged, and which column names count as review-like (comma-separated, matched at the start of a word).</span>
-              </div>
-              <div class="feature-fields">
-                <label>Stale after (days)<input id="ghsm-stale-days" type="number" min="1" max="60" step="1" placeholder="3"></label>
-                <label>Review-like statuses<input id="ghsm-review-keywords" type="text" placeholder="review, qa, test, deploy, release"></label>
-              </div>
-            </div>
-            <div class="feature-row">
-              <div class="feature-text">
-                <span class="feature-title">HTML preview <span class="badge">Experimental</span></span>
-                <span class="feature-desc">Renders .html files from PR diffs and file pages, sandboxed away from your GitHub session.</span>
-              </div>
-              <button id="feature-ghhp" type="button" role="switch" aria-checked="false" aria-label="HTML preview" class="switch">
-                <span class="switch-track"><span class="switch-knob"></span></span>
-              </button>
-            </div>
-            <div class="feature-row">
-              <div class="feature-text">
-                <span class="feature-title">My Issues by project</span>
-                <span class="feature-desc">A "Group by project" view on your My Issues dashboard, organized as Project tiles by each project's real status columns, with a collapsible sidebar.</span>
-              </div>
-              <button id="feature-ghmi" type="button" role="switch" aria-checked="false" aria-label="My Issues by project" class="switch">
-                <span class="switch-track"><span class="switch-knob"></span></span>
-              </button>
-            </div>
+            
+            <button id="feature-ghdg" type="button" role="switch" aria-checked="false" aria-label="Dependency graph" class="switch">
+              <span class="switch-track"><span class="switch-knob"></span></span>
+            </button>
           </div>
-        </div>
-      </section>
+          <div class="row">
+            <div class="row-text">
+              <span class="row-title">Quick-create button</span>
+              <span class="row-desc">New-issue buttons on Projects boards.</span>
+            </div>
+            <a class="cfg" href="#shortcuts-section">Configure <span aria-hidden="true">→</span></a>
+            <button id="feature-quick-create" type="button" role="switch" aria-checked="false" aria-label="Quick-create button" class="switch">
+              <span class="switch-track"><span class="switch-knob"></span></span>
+            </button>
+          </div>
+          <div class="row">
+            <div class="row-text">
+              <span class="row-title">Board dependency arrows <span class="badge">Experimental</span></span>
+              <span class="row-desc">Arrows between dependent cards, red when a blocker is behind.</span>
+            </div>
+            
+            <button id="feature-ghbd" type="button" role="switch" aria-checked="false" aria-label="Board dependency arrows" class="switch">
+              <span class="switch-track"><span class="switch-knob"></span></span>
+            </button>
+          </div>
+          <div class="row">
+            <div class="row-text">
+              <span class="row-title">Full-width board</span>
+              <span class="row-desc">Stretches Board views to the full window.</span>
+            </div>
+            
+            <button id="feature-ghfw" type="button" role="switch" aria-checked="false" aria-label="Full-width board" class="switch">
+              <span class="switch-track"><span class="switch-knob"></span></span>
+            </button>
+          </div>
+          <div class="row">
+            <div class="row-text">
+              <span class="row-title">Standup mode</span>
+              <span class="row-desc">A compact board with attention signals.</span>
+            </div>
+            <a class="cfg" href="#advanced-standup">Configure <span aria-hidden="true">→</span></a>
+            <button id="feature-ghsm" type="button" role="switch" aria-checked="false" aria-label="Standup mode" class="switch">
+              <span class="switch-track"><span class="switch-knob"></span></span>
+            </button>
+          </div>
+          <div class="row">
+            <div class="row-text">
+              <span class="row-title">HTML preview <span class="badge">Experimental</span></span>
+              <span class="row-desc">Renders .html files from PRs and file pages, sandboxed.</span>
+            </div>
+            
+            <button id="feature-ghhp" type="button" role="switch" aria-checked="false" aria-label="HTML preview" class="switch">
+              <span class="switch-track"><span class="switch-knob"></span></span>
+            </button>
+          </div>
+          <div class="row">
+            <div class="row-text">
+              <span class="row-title">My Issues by project</span>
+              <span class="row-desc">A "Group by project" view on your My Issues dashboard.</span>
+            </div>
+            <a class="cfg" href="#advanced-my-issues">Configure <span aria-hidden="true">→</span></a>
+            <button id="feature-ghmi" type="button" role="switch" aria-checked="false" aria-label="My Issues by project" class="switch">
+              <span class="switch-track"><span class="switch-knob"></span></span>
+            </button>
+          </div>
+          </div>
+        </section>
 
-      <section class="section" id="tokens-section">
-        <div class="section-intro">
-          <div class="kicker">02 / GitHub tokens</div>
-          <h2>Connect GitHub.</h2>
+        <section class="panel-view" id="tokens-section" aria-labelledby="tokens-title" hidden>
+          <h1 id="tokens-title" tabindex="-1">GitHub tokens</h1>
+          <div class="section-intro">
           <p>
             The default token covers every repository owner. Add an owner token for an
             organization or account that needs its own credential — a different
@@ -146,7 +129,6 @@
             <span>Tokens stay in this browser's extension storage and are only sent to api.github.com. Once saved, only their last 4 characters are shown.</span>
           </div>
         </div>
-        <div class="section-body">
           <div id="tokens">
             <div id="token-default"></div>
             <div class="list-head">Owner tokens</div>
@@ -162,20 +144,11 @@
             Organization enforces SSO? For a classic token, open <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">GitHub token settings ↗</a>
             and choose Configure SSO; a fine-grained token is approved by the organization instead. Without it GitHub answers with empty results or a 404 for that organization.
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="section" id="shortcuts-section">
-        <div class="section-intro">
-          <div class="kicker">03 / Quick-create</div>
-          <h2>One click to the right form.</h2>
-          <p>
-            Buttons added to Projects board views, each opening a new-issue form in the
-            repository you choose — handy when work is filed somewhere other than the
-            board's own repo. Scope one to a single board, or leave it on all of them.
-          </p>
-        </div>
-        <div class="section-body">
+        <section class="panel-view" id="shortcuts-section" aria-labelledby="shortcuts-title" hidden>
+          <h1 id="shortcuts-title" tabindex="-1">Quick-create</h1>
+          <p class="lead">Buttons added to Projects board views, each opening a new-issue form in the repository you choose. Scope one to a single board, or leave it on all of them.</p>
           <div id="shortcuts" class="card-list" data-empty="No shortcuts yet — nothing is preset, add your own."></div>
           <div class="actions">
             <button id="add-shortcut" type="button" class="btn btn-secondary">+ Add shortcut</button>
@@ -183,45 +156,58 @@
             <p id="shortcuts-status" class="status" role="status"></p>
             <button id="save-shortcuts" type="button" class="btn btn-primary">Save shortcuts</button>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="section" id="advanced-section">
-        <div class="section-intro">
-          <div class="kicker">04 / Advanced</div>
-          <h2>Fine-tune the layout.</h2>
-          <p>
-            My Issues shows Projects as tiles and adds a column only while every tile keeps
-            room to read its issue titles. Set your own limits here; leave a field empty to keep the default.
-          </p>
-        </div>
-        <div class="section-body">
-          <div class="feature-row feature-row-fields">
-            <div class="feature-text">
-              <span class="feature-title">My Issues tile width</span>
-              <span class="feature-desc">Between 280 and 2000 px. The default minimum is 630 px and there is no maximum. A maximum below the minimum is ignored. Changes apply to open pages straight away.</span>
-            </div>
-            <div class="feature-fields">
-              <label>Minimum (px)<input id="ghmi-tile-min" type="number" min="280" max="2000" step="1" placeholder="630"></label>
-              <label>Maximum (px)<input id="ghmi-tile-max" type="number" min="280" max="2000" step="1" placeholder="no limit"></label>
+        <section class="panel-view" id="advanced-section" aria-labelledby="advanced-title" hidden>
+          <h1 id="advanced-title" tabindex="-1">Advanced</h1>
+          <p class="lead">Fine-tuning for individual features. Values stay saved when a feature is switched off. Changes apply straight away; leave a field empty to keep the default.</p>
+
+          <div class="group" id="advanced-standup">
+            <h2 id="advanced-standup-title" tabindex="-1">Standup mode</h2>
+            <div class="card list">
+              <div class="row">
+                <div class="row-text">
+                  <label class="row-title" for="ghsm-stale-days">Stale after (days)</label>
+                  <span class="row-desc">How long a card may sit in a review-like column before it is flagged. Default 3.</span>
+                </div>
+                <input id="ghsm-stale-days" class="narrow" type="number" min="1" max="60" step="1" placeholder="3">
+              </div>
+              <div class="row">
+                <div class="row-text">
+                  <label class="row-title" for="ghsm-review-keywords">Review-like statuses</label>
+                  <span class="row-desc">Comma-separated column names, matched at the start of a word. Default review, qa, test, deploy, release.</span>
+                </div>
+                <input id="ghsm-review-keywords" class="wide" type="text" placeholder="review, qa, test, deploy, release">
+              </div>
             </div>
           </div>
-          <div class="actions">
-            <span class="spacer"></span>
-            <button id="ghmi-tile-reset" type="button" class="btn btn-secondary">Reset to defaults</button>
-          </div>
-        </div>
-      </section>
-    </main>
 
-    <footer class="container footer">
-      <span>GH Reloaded <span data-version></span> · Open source under the MIT License</span>
-      <div class="footer-links">
-        <a href="https://gh-reloaded.simone3-cattani.chatgpt.site/" target="_blank" rel="noopener">Website</a>
-        <a href="https://github.com/cattanisimone/gh-reloaded" target="_blank" rel="noopener">Repository</a>
-        <a href="https://github.com/cattanisimone/gh-reloaded/issues" target="_blank" rel="noopener">Report an issue</a>
-      </div>
-    </footer>
+          <div class="group" id="advanced-my-issues">
+            <h2 id="advanced-my-issues-title" tabindex="-1">My Issues by project</h2>
+            <div class="card list">
+              <div class="row">
+                <div class="row-text">
+                  <label class="row-title" for="ghmi-tile-min">Tile minimum width (px)</label>
+                  <span class="row-desc">Between 280 and 2000. Default 630.</span>
+                </div>
+                <input id="ghmi-tile-min" class="narrow" type="number" min="280" max="2000" step="1" placeholder="630">
+              </div>
+              <div class="row">
+                <div class="row-text">
+                  <label class="row-title" for="ghmi-tile-max">Tile maximum width (px)</label>
+                  <span class="row-desc">Between 280 and 2000, no limit by default. A maximum below the minimum is ignored.</span>
+                </div>
+                <input id="ghmi-tile-max" class="narrow" type="number" min="280" max="2000" step="1" placeholder="no limit">
+              </div>
+            </div>
+            <div class="actions">
+              <span class="spacer"></span>
+              <button id="ghmi-tile-reset" type="button" class="btn btn-secondary">Reset to defaults</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
 
     <script type="module" src="options.js"></script>
   </body>
