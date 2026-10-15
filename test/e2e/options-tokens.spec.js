@@ -25,7 +25,7 @@ test("the token box documents fine-grained and classic tokens", async ({ context
   const link = intro.getByRole("link", { name: /Create a classic token/ });
   const href = new URL((await link.getAttribute("href")));
   expect(href.origin + href.pathname).toBe("https://github.com/settings/tokens/new");
-  expect(href.searchParams.get("scopes")).toBe("repo,read:project");
+  expect(href.searchParams.get("scopes")).toBe("read:project");
 
   await expect(intro).not.toContainText(/not classic/i);
 });

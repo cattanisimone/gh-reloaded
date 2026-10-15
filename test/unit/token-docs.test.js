@@ -16,10 +16,10 @@ test("README documents a fine-grained and a classic path", () => {
   }
 });
 
-test("classic scopes are repo and read:project in README and Settings", () => {
+test("classic link preselects only read:project; repo is documented as optional in README and Settings", () => {
   assert.ok(readme.includes("`repo`") && readme.includes("`read:project`"));
-  assert.ok(readme.includes("scopes=repo,read:project"));
-  assert.ok(html.includes("scopes=repo,read:project"));
+  assert.ok(readme.includes("scopes=read:project"));
+  assert.ok(html.includes("scopes=read:project"));
   assert.ok(html.includes("Create a classic token"));
 });
 
