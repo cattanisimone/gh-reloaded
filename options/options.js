@@ -473,7 +473,8 @@ const PANELS = Array.from(document.querySelectorAll(".panel-view"));
 const NAV_LINKS = Array.from(document.querySelectorAll(".nav a[data-panel]"));
 
 function route() {
-  const id = decodeURIComponent(location.hash.slice(1));
+  let id = location.hash.slice(1);
+  try { id = decodeURIComponent(id); } catch { id = ""; }
   const target = id ? document.getElementById(id) : null;
   const panel = (target && target.closest(".panel-view")) || PANELS[0];
   PANELS.forEach((p) => { p.hidden = p !== panel; });
@@ -481,6 +482,8 @@ function route() {
     if (a.dataset.panel === panel.id) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   });
+  const active = NAV_LINKS.find((a) => a.dataset.panel === panel.id);
+  if (active) active.scrollIntoView({ block: "nearest", inline: "nearest" });
   const focusEl = target && target !== panel ? target.querySelector("h2, h1") || target : panel.querySelector("h1");
   focusEl.scrollIntoView({ block: "start" });
   focusEl.focus({ preventScroll: true });

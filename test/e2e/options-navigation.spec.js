@@ -59,3 +59,22 @@ test("unsaved edits survive a switch to another section", async ({ context, page
   await page.locator('.nav a[href="#tokens-section"]').click();
   await expect(input).toHaveValue("ghp_unsaved1234");
 });
+
+test("a malformed hash falls back to Features", async ({ context, page }) => {
+  await openOptions(context, page, "#%E0");
+  await expect.poll(() => visiblePanels(page)).toEqual(["features"]);
+  await expect(page.locator('.nav a[aria-current="page"]')).toHaveText("Features");
+});
+
+test("at phone width the focused heading clears the tab bar and the active tab is visible", async ({ context, page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await openOptions(context, page, "#advanced-my-issues");
+  const m = await page.evaluate(() => {
+    const h = document.querySelector("#advanced-my-issues h2").getBoundingClientRect();
+    const bar = document.querySelector(".sidebar").getBoundingClientRect();
+    const nav = document.querySelector(".nav").getBoundingClientRect();
+    const a = document.querySelector('.nav a[aria-current="page"]').getBoundingClientRect();
+    return { clear: h.top >= bar.bottom - 0.5, tabVisible: a.left >= nav.left - 0.5 && a.right <= nav.right + 0.5 };
+  });
+  expect(m).toEqual({ clear: true, tabVisible: true });
+});

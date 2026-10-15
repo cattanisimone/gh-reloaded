@@ -49,3 +49,21 @@ test("the first feature row is above the fold on a laptop screen", async ({ cont
   const box = await page.locator("#features .row").first().boundingBox();
   expect(box.y).toBeLessThan(260);
 });
+
+test("Repository and Report an issue links are present", async ({ context, page }) => {
+  await openOptions(context, page);
+  await expect(page.locator(".page-foot a")).toHaveText(["Repository", "Report an issue"]);
+});
+
+test("switch off state keeps 3:1 contrast against the card", async ({ context, page }) => {
+  for (const scheme of ["light", "dark"]) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await openOptions(context, page);
+    const c = await page.locator("#feature-ghbd .switch-track").evaluate((t) => {
+      const lum = (s) => { const [r, g, b] = s.match(/[\d.]+/g).slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+      const a = lum(getComputedStyle(t).backgroundColor), b = lum(getComputedStyle(t.closest(".card")).backgroundColor);
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    });
+    expect(c, scheme).toBeGreaterThanOrEqual(3);
+  }
+});
