@@ -462,3 +462,35 @@ async function loadTileWidths() {
   tileMaxInput.value = ghmiTileMax ?? "";
 }
 loadTileWidths();
+
+// --- Navigation ---
+// One panel at a time, chosen by the URL hash so links, Configure shortcuts,
+// back/forward and old bookmarks all work natively. Hidden panels are only
+// hidden (never re-rendered), so unsaved token or shortcut edits survive a
+// switch. A hash naming a group inside a panel shows that panel and moves
+// focus to the group's heading.
+const PANELS = Array.from(document.querySelectorAll(".panel-view"));
+const NAV_LINKS = Array.from(document.querySelectorAll(".nav a[data-panel]"));
+
+function route() {
+  let id = location.hash.slice(1);
+  try { id = decodeURIComponent(id); } catch { id = ""; }
+  const target = id ? document.getElementById(id) : null;
+  const panel = (target && target.closest(".panel-view")) || PANELS[0];
+  PANELS.forEach((p) => { p.hidden = p !== panel; });
+  NAV_LINKS.forEach((a) => {
+    if (a.dataset.panel === panel.id) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+  const active = NAV_LINKS.find((a) => a.dataset.panel === panel.id);
+  if (active) active.scrollIntoView({ block: "nearest", inline: "nearest" });
+  const focusEl = target && target !== panel ? target.querySelector("h2, h1") || target : panel.querySelector("h1");
+  focusEl.scrollIntoView({ block: "start" });
+  focusEl.focus({ preventScroll: true });
+}
+
+window.addEventListener("hashchange", route);
+route();
+// The browser's own fragment handling can run after this module and take the
+// focus back, so claim it again once the page has finished loading.
+if (document.readyState !== "complete") window.addEventListener("load", route, { once: true });

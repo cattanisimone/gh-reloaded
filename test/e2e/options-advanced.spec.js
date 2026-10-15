@@ -1,11 +1,11 @@
-// E2E: the Advanced section of the Settings page (My Issues tile width).
+// E2E: the Advanced section of the Settings page (Standup signals, My Issues tile width).
 // Empty or invalid input clears the setting; Reset to defaults clears both.
 import { test, expect, backgroundWorker } from "./support/extension.js";
 
-async function openOptions(context, page) {
+async function openOptions(context, page, hash = "#advanced-section") {
   const worker = await backgroundWorker(context);
   const id = new URL(worker.url()).host;
-  await page.goto(`chrome-extension://${id}/options/options.html`);
+  await page.goto(`chrome-extension://${id}/options/options.html${hash}`);
   return worker;
 }
 
@@ -51,4 +51,44 @@ test("Reset to defaults clears both fields and both keys", async ({ context, pag
   await expect(page.locator("#ghmi-tile-min")).toHaveValue("");
   await expect(page.locator("#ghmi-tile-max")).toHaveValue("");
   await expect.poll(() => stored(worker)).toEqual({});
+});
+
+const storedStandup = (worker) => worker.evaluate(() => chrome.storage.local.get(["ghsmStaleDays", "ghsmReviewKeywords"]));
+
+test("Standup fields live in Advanced and save, validate and clear", async ({ context, page }) => {
+  const worker = await openOptions(context, page);
+  const days = page.locator("#advanced-standup #ghsm-stale-days");
+  const words = page.locator("#advanced-standup #ghsm-review-keywords");
+  await expect(days).toHaveValue("");
+  await expect(days).toHaveAttribute("placeholder", "3");
+  await expect(words).toHaveAttribute("placeholder", "review, qa, test, deploy, release");
+
+  await days.fill("4.7");
+  await days.dispatchEvent("change");
+  await words.fill("  qa, uat ");
+  await words.dispatchEvent("change");
+  await expect.poll(() => storedStandup(worker)).toEqual({ ghsmStaleDays: 4, ghsmReviewKeywords: "qa, uat" });
+  await expect(days).toHaveValue("4");
+
+  await days.fill("0");
+  await days.dispatchEvent("change");
+  await words.fill("");
+  await words.dispatchEvent("change");
+  await expect.poll(() => storedStandup(worker)).toEqual({});
+  await expect(days).toHaveValue("");
+});
+
+test("turning Standup and My Issues off keeps their saved values, still editable", async ({ context, page }) => {
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => chrome.storage.local.set({ ghsmStaleDays: 6, ghsmReviewKeywords: "qa", ghmiTileMin: 700 }));
+  await openOptions(context, page, "#features");
+  await page.locator("#feature-ghsm").click();
+  await page.locator("#feature-ghmi").click();
+  await expect(page.locator("#feature-ghsm")).toHaveAttribute("aria-checked", "false");
+  const all = await worker.evaluate(() => chrome.storage.local.get(null));
+  expect(all).toMatchObject({ ghsmEnabled: false, ghmiEnabled: false, ghsmStaleDays: 6, ghsmReviewKeywords: "qa", ghmiTileMin: 700 });
+  await page.locator('.nav a[href="#advanced-section"]').click();
+  await expect(page.locator("#ghsm-stale-days")).toBeEnabled();
+  await expect(page.locator("#ghsm-stale-days")).toHaveValue("6");
+  await expect(page.locator("#ghmi-tile-min")).toHaveValue("700");
 });

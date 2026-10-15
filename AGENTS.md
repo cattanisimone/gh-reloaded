@@ -62,6 +62,16 @@ The Chrome Web Store caps the manifest `description` at 132 characters and the `
 - **Make injected UI look native by measuring it.** Compare your control with the closest native one (same kind of button, same row) on the live page: height, radius, border, padding, line height, shadow, font and the hover, pressed and keyboard-focus states. A medium Primer button is 32px high with a 6px radius, a 1px border and `0 12px` padding; a coloured button darkens on hover (never brightens) and shows a 2px `#0969da` focus ring at offset -2px. Inherit the font, and add no margin to something in a flex row: the parent's `gap` already spaces it and a margin doubles it. Assert size, radius and the gaps before and after in an e2e test against a fixture whose layout mirrors the live one.
 - **Sweep for the same defect.** When you fix a selector or layout break, search the repository for the same pattern (`grep -rn "module__" features/`) and fix the other occurrences in the same pull request when they are small, or list them under "Follow-ups".
 
+## Options / settings UX
+
+The Settings page (`options/`) is an application settings UI: a compact app shell, not the product's marketing website and not a clone of GitHub's own settings.
+
+- **Structure**: a sidebar (tabs below 720px) with Features, GitHub tokens, Quick-create and Advanced, one panel shown at a time and chosen by the URL hash. Features hosts one on/off switch per feature, with a **Configure** link only where the feature has tunable settings; the switch exists once, there. Advanced groups tuning by feature (Standup mode, My Issues by project); add a group only when another feature gets advanced settings. Tokens and Quick-create stay top-level tasks.
+- **Storage**: keep every existing storage key, default and automatic-persistence behaviour unless a separate, explicit migration is planned. Switching a feature off never clears its saved preferences, and its Advanced fields stay editable.
+- **Look**: light and dark each use one family of surfaces (sidebar, header and panels all light or all dark), following `prefers-color-scheme`. A restrained orange accent for the active item, switches and focus only; no hero, glow or gradient; system UI font for controls. Compact density, no horizontal scroll, visible focus rings, accessible labels and native keyboard operation.
+- **Tests**: when a settings control changes, update the `test/e2e/options-*.spec.js` specs, and make the source of defaults and help text clear.
+- **Public text**: issues and pull requests are self-contained. Do not reference or link to private planning tools, private discussions, unpublished design attachments or confidential screenshots; mockups use fictional data.
+
 ## Keep docs in sync with features
 
 When a feature is added or its behavior changes, in the **same pass** (not as a follow-up):

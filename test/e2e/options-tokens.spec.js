@@ -4,7 +4,7 @@ import { test, expect, backgroundWorker } from "./support/extension.js";
 async function openOptions(context, page) {
   const worker = await backgroundWorker(context);
   const id = new URL(worker.url()).host;
-  await page.goto(`chrome-extension://${id}/options/options.html`);
+  await page.goto(`chrome-extension://${id}/options/options.html#tokens-section`);
 }
 
 test("the token box documents fine-grained and classic tokens", async ({ context, page }) => {
@@ -45,4 +45,19 @@ test("the classic box looks like the fine-grained box", async ({ context, page }
 test("the token placeholder does not imply a token type", async ({ context, page }) => {
   await openOptions(context, page);
   await expect(page.locator("#token-default input").first()).toHaveAttribute("placeholder", "github_pat_… or ghp_…");
+});
+
+test("default and owner token save round-trip, last 4 shown", async ({ context, page }) => {
+  await openOptions(context, page);
+  await page.locator("#token-default .tok-secret").fill("ghp_defaultAAAA");
+  await page.locator("#add-token").click();
+  await page.locator(".tok-name").fill("Work");
+  await page.locator(".tok-owner").fill("@acme-org");
+  await page.locator("#token-list .tok-secret").fill("ghp_ownerBBBB");
+  await page.locator("#save-tokens").click();
+  await expect(page.locator("#tokens-status")).toHaveText("Saved 2 tokens.");
+  await page.reload();
+  await expect(page.locator("#token-default .tok-hint")).toHaveText("Saved · ends in …AAAA");
+  await expect(page.locator("#token-list .tok-hint")).toHaveText("Saved · ends in …BBBB");
+  await expect(page.locator("#token-list .tok-owner")).toHaveValue("acme-org");
 });
