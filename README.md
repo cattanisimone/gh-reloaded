@@ -59,10 +59,11 @@ If the organization requires approval for fine-grained tokens, the token you cre
 
 #### B. Classic token (Projects owned by a personal account)
 
-Use this when the Projects you want to read belong to your personal account, which fine-grained tokens cannot read. Go to [github.com/settings/tokens/new?scopes=read:project&description=GH%20Reloaded](https://github.com/settings/tokens/new?scopes=read:project&description=GH%20Reloaded) and tick:
+Use this when the Projects you want to read belong to your personal account, which fine-grained tokens cannot read. Go to [github.com/settings/tokens/new?scopes=read:project,public_repo&description=GH%20Reloaded](https://github.com/settings/tokens/new?scopes=read:project,public_repo&description=GH%20Reloaded) and tick:
 
-- `read:project` — read access to Projects v2. Enough when the repositories are public.
-- `repo` — only if you also need private repositories (issues, sub-issues, dependencies, HTML preview). Tick it yourself on the same page: it is broad, it also grants write access to every repository your account can reach.
+- `read:project` — read access to Projects v2.
+- `public_repo` — read access to public repositories: GitHub's GraphQL API requires it for the issue and status data the Projects features read.
+- `repo` — instead of `public_repo`, only if you also need private repositories (issues, sub-issues, dependencies, HTML preview). Tick it yourself on the same page: it is broad, it also grants write access to every repository your account can reach.
 
 The extension only reads, but a leaked classic token could do more than a fine-grained one, so prefer A whenever it covers your setup, and leave `repo` off unless you need private data. One classic token covers every owner you can reach, so you do not need one per owner.
 
