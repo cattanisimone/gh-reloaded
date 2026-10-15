@@ -1,0 +1,8976 @@
+{
+ "quick": false,
+ "sizes": [
+  8,
+  20,
+  40,
+  80,
+  150
+ ],
+ "seeds": [
+  1,
+  2,
+  3,
+  4,
+  5
+ ],
+ "runs": 30,
+ "summary": [
+  {
+   "engine": "current",
+   "shippedKB": 0,
+   "gateLeftToRight": true,
+   "gateAllDrawn": true,
+   "gateNoCardOverlap": true,
+   "edgeCardHitsTotal": 1246,
+   "backEdgeHitsTotal": 0,
+   "crossingsMean": 348.265,
+   "overlapsMean": 37.86,
+   "critDeviationMean": 156.37477247792182,
+   "widthMean": 4480.14,
+   "heightMean": 1455.48,
+   "inversionsMean": 2.15625,
+   "movedMean": 3.1125,
+   "p95At80": 1.359874999994645
+  },
+  {
+   "engine": "custom",
+   "shippedKB": 28,
+   "gateLeftToRight": true,
+   "gateAllDrawn": true,
+   "gateNoCardOverlap": true,
+   "edgeCardHitsTotal": 0,
+   "backEdgeHitsTotal": 0,
+   "crossingsMean": 66.495,
+   "overlapsMean": 4.49,
+   "critDeviationMean": 0.0016608123249306408,
+   "widthMean": 4480.14,
+   "heightMean": 1616.68,
+   "inversionsMean": 0,
+   "movedMean": 3.1125,
+   "p95At80": 13.667000000015832
+  },
+  {
+   "engine": "dagre",
+   "shippedKB": 277,
+   "gateLeftToRight": true,
+   "gateAllDrawn": true,
+   "gateNoCardOverlap": true,
+   "edgeCardHitsTotal": 2297,
+   "backEdgeHitsTotal": 0,
+   "crossingsMean": 84.335,
+   "overlapsMean": 0,
+   "critDeviationMean": 281.14504618685305,
+   "widthMean": 4490.84,
+   "heightMean": 1971.215,
+   "inversionsMean": 11.03125,
+   "movedMean": 6.48125,
+   "p95At80": 75.0269580000022
+  },
+  {
+   "engine": "d3-dag",
+   "shippedKB": 140,
+   "gateLeftToRight": true,
+   "gateAllDrawn": true,
+   "gateNoCardOverlap": true,
+   "edgeCardHitsTotal": 3891,
+   "backEdgeHitsTotal": 50,
+   "crossingsMean": 81.255,
+   "overlapsMean": 19.455,
+   "critDeviationMean": 163.6200839556781,
+   "widthMean": 4554.84,
+   "heightMean": 1663.15,
+   "inversionsMean": 43.7125,
+   "movedMean": 6.49375,
+   "p95At80": 240.3181250000198
+  },
+  {
+   "engine": "elk",
+   "shippedKB": 1572,
+   "gateLeftToRight": true,
+   "gateAllDrawn": true,
+   "gateNoCardOverlap": true,
+   "edgeCardHitsTotal": 0,
+   "backEdgeHitsTotal": 0,
+   "crossingsMean": 72.23,
+   "overlapsMean": 0,
+   "critDeviationMean": 270.1060104399034,
+   "widthMean": 4587.83,
+   "heightMean": 1770.2,
+   "inversionsMean": 127.0375,
+   "movedMean": 12.63125,
+   "p95At80": 99.22654199998942
+  },
+  {
+   "engine": "graphviz",
+   "shippedKB": 796,
+   "gateLeftToRight": true,
+   "gateAllDrawn": true,
+   "gateNoCardOverlap": true,
+   "edgeCardHitsTotal": 486,
+   "backEdgeHitsTotal": 0,
+   "crossingsMean": 49.94,
+   "overlapsMean": 0.085,
+   "critDeviationMean": 209.94755185595045,
+   "widthMean": 4490.84,
+   "heightMean": 1754.495,
+   "inversionsMean": 40.65625,
+   "movedMean": 6.4625,
+   "p95At80": 9.96737500000745
+  }
+ ],
+ "timing": [
+  {
+   "engine": "current",
+   "size": 8,
+   "runs": 30,
+   "median": 0.022250000009080395,
+   "p95": 0.027624999987892807
+  },
+  {
+   "engine": "custom",
+   "size": 8,
+   "runs": 30,
+   "median": 0.3232080000161659,
+   "p95": 0.6687079999828711
+  },
+  {
+   "engine": "dagre",
+   "size": 8,
+   "runs": 30,
+   "median": 2.1714999999967404,
+   "p95": 3.4645420000015292
+  },
+  {
+   "engine": "d3-dag",
+   "size": 8,
+   "runs": 30,
+   "median": 0.5637909999932162,
+   "p95": 1.4547910000255797
+  },
+  {
+   "engine": "elk",
+   "size": 8,
+   "runs": 30,
+   "median": 4.695832999976119,
+   "p95": 6.241958000027807
+  },
+  {
+   "engine": "graphviz",
+   "size": 8,
+   "runs": 30,
+   "median": 0.24154199997428805,
+   "p95": 0.27250000002095476
+  },
+  {
+   "engine": "current",
+   "size": 20,
+   "runs": 30,
+   "median": 0.06304199999431148,
+   "p95": 0.08537499999511056
+  },
+  {
+   "engine": "custom",
+   "size": 20,
+   "runs": 30,
+   "median": 1.313166000007186,
+   "p95": 2.1421250000130385
+  },
+  {
+   "engine": "dagre",
+   "size": 20,
+   "runs": 30,
+   "median": 8.503999999986263,
+   "p95": 19.603207999985898
+  },
+  {
+   "engine": "d3-dag",
+   "size": 20,
+   "runs": 30,
+   "median": 7.924083999998402,
+   "p95": 8.473415999993449
+  },
+  {
+   "engine": "elk",
+   "size": 20,
+   "runs": 30,
+   "median": 13.158499999990454,
+   "p95": 15.683208000002196
+  },
+  {
+   "engine": "graphviz",
+   "size": 20,
+   "runs": 30,
+   "median": 0.8575410000048578,
+   "p95": 0.9096250000002328
+  },
+  {
+   "engine": "current",
+   "size": 40,
+   "runs": 30,
+   "median": 0.12408300000242889,
+   "p95": 0.20533299999078736
+  },
+  {
+   "engine": "custom",
+   "size": 40,
+   "runs": 30,
+   "median": 6.485874999983935,
+   "p95": 6.967499999998836
+  },
+  {
+   "engine": "dagre",
+   "size": 40,
+   "runs": 30,
+   "median": 29.534416999988025,
+   "p95": 33.871458999987226
+  },
+  {
+   "engine": "d3-dag",
+   "size": 40,
+   "runs": 30,
+   "median": 57.073457999998936,
+   "p95": 68.8940419999999
+  },
+  {
+   "engine": "elk",
+   "size": 40,
+   "runs": 30,
+   "median": 32.970999999990454,
+   "p95": 35.52662500002771
+  },
+  {
+   "engine": "graphviz",
+   "size": 40,
+   "runs": 30,
+   "median": 4.335250000003725,
+   "p95": 4.860791999992216
+  },
+  {
+   "engine": "current",
+   "size": 80,
+   "runs": 30,
+   "median": 0.45016699997358955,
+   "p95": 1.359874999994645
+  },
+  {
+   "engine": "custom",
+   "size": 80,
+   "runs": 30,
+   "median": 12.833540999999968,
+   "p95": 13.667000000015832
+  },
+  {
+   "engine": "dagre",
+   "size": 80,
+   "runs": 30,
+   "median": 49.095790999999736,
+   "p95": 75.0269580000022
+  },
+  {
+   "engine": "d3-dag",
+   "size": 80,
+   "runs": 30,
+   "median": 201.55520800000522,
+   "p95": 240.3181250000198
+  },
+  {
+   "engine": "elk",
+   "size": 80,
+   "runs": 10,
+   "median": 49.81883299999754,
+   "p95": 99.22654199998942
+  },
+  {
+   "engine": "graphviz",
+   "size": 80,
+   "runs": 10,
+   "median": 9.084166000015102,
+   "p95": 9.96737500000745
+  },
+  {
+   "engine": "current",
+   "size": 150,
+   "runs": 30,
+   "median": 0.5739579999935813,
+   "p95": 1.1618749999906868
+  },
+  {
+   "engine": "custom",
+   "size": 150,
+   "runs": 30,
+   "median": 30.994249999988824,
+   "p95": 32.685791999974754
+  },
+  {
+   "engine": "dagre",
+   "size": 150,
+   "runs": 30,
+   "median": 136.42504199998803,
+   "p95": 153.38337499997579
+  },
+  {
+   "engine": "d3-dag",
+   "size": 150,
+   "runs": 30,
+   "median": 2693.2370850000007,
+   "p95": 2768.1640849999967
+  },
+  {
+   "engine": "elk",
+   "size": 150,
+   "runs": 10,
+   "median": 108.62987499998417,
+   "p95": 167.09899999998743
+  },
+  {
+   "engine": "graphviz",
+   "size": 150,
+   "runs": 10,
+   "median": 31.64137500000652,
+   "p95": 32.66545800000313
+  }
+ ],
+ "stability": [
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "chain",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "chain",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "chain",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "chain",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "chain",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "chain",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 2,
+   "inversions": 5,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 3,
+   "inversions": 12,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 4,
+   "inversions": 1,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 4,
+   "inversions": 1,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 5,
+   "inversions": 8,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 1,
+   "inversions": 7,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 2,
+   "inversions": 1,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 2,
+   "inversions": 32,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 3,
+   "inversions": 2,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 3,
+   "inversions": 14,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 4,
+   "inversions": 1,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 4,
+   "inversions": 7,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 5,
+   "inversions": 4,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 1,
+   "inversions": 2,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 1,
+   "inversions": 109,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 2,
+   "inversions": 1,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 2,
+   "inversions": 84,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 3,
+   "inversions": 1,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 3,
+   "inversions": 81,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 4,
+   "inversions": 138,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 5,
+   "inversions": 43,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 2,
+   "inversions": 3,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 2,
+   "inversions": 100,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 3,
+   "inversions": 3,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 3,
+   "inversions": 244,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 4,
+   "inversions": 163,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 5,
+   "inversions": 1,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 5,
+   "inversions": 56,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "diamond",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 1,
+   "inversions": 1,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 1,
+   "inversions": 10,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 1,
+   "inversions": 31,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 2,
+   "inversions": 16,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 3,
+   "inversions": 1,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 3,
+   "inversions": 7,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 3,
+   "inversions": 25,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 4,
+   "inversions": 1,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 4,
+   "inversions": 38,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 4,
+   "inversions": 30,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 1,
+   "inversions": 268,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 2,
+   "inversions": 3,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 2,
+   "inversions": 33,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 2,
+   "inversions": 153,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 3,
+   "inversions": 1,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 3,
+   "inversions": 17,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 3,
+   "inversions": 238,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 4,
+   "inversions": 292,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 5,
+   "inversions": 2,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 5,
+   "inversions": 14,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 5,
+   "inversions": 263,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 1,
+   "inversions": 1,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 1,
+   "inversions": 26,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 1,
+   "inversions": 470,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 2,
+   "inversions": 4,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 2,
+   "inversions": 72,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 2,
+   "inversions": 341,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 3,
+   "inversions": 1,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 3,
+   "inversions": 1,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 3,
+   "inversions": 365,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 4,
+   "inversions": 4,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 4,
+   "inversions": 43,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 4,
+   "inversions": 359,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 5,
+   "inversions": 3,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 5,
+   "inversions": 7,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 5,
+   "inversions": 478,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 1,
+   "inversions": 2,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 1,
+   "inversions": 38,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 1,
+   "inversions": 593,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 2,
+   "inversions": 10,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 2,
+   "inversions": 1750,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 3,
+   "inversions": 2,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 3,
+   "inversions": 52,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 3,
+   "inversions": 1833,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 4,
+   "inversions": 11,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 4,
+   "inversions": 1650,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 5,
+   "inversions": 10,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 5,
+   "inversions": 28,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 5,
+   "inversions": 903,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanout",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 7,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 7,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 1,
+   "inversions": 3,
+   "moved": 9,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 1,
+   "inversions": 1,
+   "moved": 9,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 1,
+   "inversions": 5,
+   "moved": 13,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 1,
+   "inversions": 9,
+   "moved": 9,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 2,
+   "inversions": 7,
+   "moved": 3,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 2,
+   "inversions": 3,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 3,
+   "inversions": 22,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 3,
+   "inversions": 9,
+   "moved": 4,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 3,
+   "inversions": 3,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 4,
+   "inversions": 1,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 4,
+   "inversions": 2,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 4,
+   "inversions": 23,
+   "moved": 4,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 4,
+   "inversions": 24,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 5,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 14,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 5,
+   "inversions": 7,
+   "moved": 14,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 5,
+   "inversions": 8,
+   "moved": 12,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 20,
+   "seed": 5,
+   "inversions": 17,
+   "moved": 14,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 1,
+   "inversions": 4,
+   "moved": 11,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 11,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 1,
+   "inversions": 13,
+   "moved": 18,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 1,
+   "inversions": 39,
+   "moved": 18,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 1,
+   "inversions": 14,
+   "moved": 38,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 1,
+   "inversions": 39,
+   "moved": 18,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 2,
+   "inversions": 2,
+   "moved": 9,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 9,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 2,
+   "inversions": 17,
+   "moved": 15,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 2,
+   "inversions": 12,
+   "moved": 15,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 2,
+   "inversions": 27,
+   "moved": 36,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 2,
+   "inversions": 28,
+   "moved": 15,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 15,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 15,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 3,
+   "inversions": 34,
+   "moved": 15,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 3,
+   "inversions": 39,
+   "moved": 15,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 3,
+   "inversions": 6,
+   "moved": 30,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 3,
+   "inversions": 16,
+   "moved": 15,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 4,
+   "inversions": 16,
+   "moved": 6,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 6,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 4,
+   "inversions": 23,
+   "moved": 23,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 4,
+   "inversions": 56,
+   "moved": 23,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 4,
+   "inversions": 27,
+   "moved": 34,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 4,
+   "inversions": 44,
+   "moved": 23,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 5,
+   "inversions": 8,
+   "moved": 7,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 7,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 5,
+   "inversions": 25,
+   "moved": 22,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 5,
+   "inversions": 26,
+   "moved": 22,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 5,
+   "inversions": 15,
+   "moved": 37,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 40,
+   "seed": 5,
+   "inversions": 21,
+   "moved": 22,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 1,
+   "inversions": 2,
+   "moved": 27,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 27,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 1,
+   "inversions": 154,
+   "moved": 44,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 1,
+   "inversions": 196,
+   "moved": 44,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 1,
+   "inversions": 63,
+   "moved": 70,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 1,
+   "inversions": 170,
+   "moved": 44,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 2,
+   "inversions": 1,
+   "moved": 25,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 25,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 2,
+   "inversions": 54,
+   "moved": 61,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 2,
+   "inversions": 253,
+   "moved": 61,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 2,
+   "inversions": 73,
+   "moved": 68,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 2,
+   "inversions": 160,
+   "moved": 61,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 30,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 30,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 3,
+   "inversions": 30,
+   "moved": 33,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 3,
+   "inversions": 212,
+   "moved": 33,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 3,
+   "inversions": 113,
+   "moved": 77,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 3,
+   "inversions": 251,
+   "moved": 33,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 26,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 26,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 4,
+   "inversions": 110,
+   "moved": 69,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 4,
+   "inversions": 92,
+   "moved": 69,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 4,
+   "inversions": 77,
+   "moved": 65,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 4,
+   "inversions": 153,
+   "moved": 69,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 36,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 36,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 5,
+   "inversions": 140,
+   "moved": 67,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 5,
+   "inversions": 62,
+   "moved": 67,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 5,
+   "inversions": 72,
+   "moved": 74,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 80,
+   "seed": 5,
+   "inversions": 120,
+   "moved": 67,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 1,
+   "inversions": 9,
+   "moved": 56,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 56,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 1,
+   "inversions": 227,
+   "moved": 118,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 1,
+   "inversions": 274,
+   "moved": 118,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 1,
+   "inversions": 138,
+   "moved": 147,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 1,
+   "inversions": 503,
+   "moved": 118,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 2,
+   "inversions": 17,
+   "moved": 55,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 55,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 2,
+   "inversions": 160,
+   "moved": 111,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 2,
+   "inversions": 221,
+   "moved": 111,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 2,
+   "inversions": 136,
+   "moved": 147,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 2,
+   "inversions": 625,
+   "moved": 111,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 3,
+   "inversions": 60,
+   "moved": 46,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 46,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 3,
+   "inversions": 254,
+   "moved": 134,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 3,
+   "inversions": 450,
+   "moved": 134,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 3,
+   "inversions": 185,
+   "moved": 140,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 3,
+   "inversions": 949,
+   "moved": 134,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 4,
+   "inversions": 21,
+   "moved": 56,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 56,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 4,
+   "inversions": 190,
+   "moved": 133,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 4,
+   "inversions": 651,
+   "moved": 133,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 4,
+   "inversions": 167,
+   "moved": 134,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 4,
+   "inversions": 755,
+   "moved": 133,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 5,
+   "inversions": 2,
+   "moved": 55,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 55,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 5,
+   "inversions": 199,
+   "moved": 122,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 5,
+   "inversions": 849,
+   "moved": 122,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 5,
+   "inversions": 254,
+   "moved": 126,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "fanin",
+   "size": 150,
+   "seed": 5,
+   "inversions": 348,
+   "moved": 122,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 20,
+   "seed": 1,
+   "inversions": 1,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 20,
+   "seed": 1,
+   "inversions": 10,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 20,
+   "seed": 1,
+   "inversions": 23,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 20,
+   "seed": 1,
+   "inversions": 1,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 20,
+   "seed": 2,
+   "inversions": 15,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 2,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 2,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 20,
+   "seed": 3,
+   "inversions": 6,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 20,
+   "seed": 3,
+   "inversions": 6,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 20,
+   "seed": 3,
+   "inversions": 2,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 20,
+   "seed": 4,
+   "inversions": 7,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 20,
+   "seed": 5,
+   "inversions": 2,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 1,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 20,
+   "seed": 5,
+   "inversions": 1,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 20,
+   "seed": 5,
+   "inversions": 6,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 20,
+   "seed": 5,
+   "inversions": 23,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 20,
+   "seed": 5,
+   "inversions": 2,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 2,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 40,
+   "seed": 1,
+   "inversions": 50,
+   "moved": 1,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 40,
+   "seed": 1,
+   "inversions": 40,
+   "moved": 1,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 40,
+   "seed": 1,
+   "inversions": 13,
+   "moved": 1,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 40,
+   "seed": 2,
+   "inversions": 2,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 40,
+   "seed": 2,
+   "inversions": 31,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 40,
+   "seed": 2,
+   "inversions": 130,
+   "moved": 7,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 40,
+   "seed": 2,
+   "inversions": 4,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 40,
+   "seed": 3,
+   "inversions": 28,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 40,
+   "seed": 4,
+   "inversions": 2,
+   "moved": 3,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 3,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 40,
+   "seed": 4,
+   "inversions": 1,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 40,
+   "seed": 4,
+   "inversions": 11,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 40,
+   "seed": 4,
+   "inversions": 53,
+   "moved": 10,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 40,
+   "seed": 4,
+   "inversions": 70,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 40,
+   "seed": 5,
+   "inversions": 1,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 40,
+   "seed": 5,
+   "inversions": 13,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 40,
+   "seed": 5,
+   "inversions": 6,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 40,
+   "seed": 5,
+   "inversions": 37,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 40,
+   "seed": 5,
+   "inversions": 4,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 80,
+   "seed": 1,
+   "inversions": 1,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 80,
+   "seed": 1,
+   "inversions": 2,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 80,
+   "seed": 1,
+   "inversions": 115,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 80,
+   "seed": 1,
+   "inversions": 253,
+   "moved": 20,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 80,
+   "seed": 1,
+   "inversions": 95,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 1,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 1,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 80,
+   "seed": 2,
+   "inversions": 4,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 80,
+   "seed": 2,
+   "inversions": 22,
+   "moved": 6,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 80,
+   "seed": 2,
+   "inversions": 257,
+   "moved": 29,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 80,
+   "seed": 2,
+   "inversions": 104,
+   "moved": 6,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 80,
+   "seed": 3,
+   "inversions": 5,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 80,
+   "seed": 3,
+   "inversions": 234,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 80,
+   "seed": 3,
+   "inversions": 59,
+   "moved": 10,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 80,
+   "seed": 3,
+   "inversions": 7,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 80,
+   "seed": 4,
+   "inversions": 5,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 80,
+   "seed": 4,
+   "inversions": 8,
+   "moved": 6,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 80,
+   "seed": 4,
+   "inversions": 30,
+   "moved": 2,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 80,
+   "seed": 4,
+   "inversions": 141,
+   "moved": 35,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 80,
+   "seed": 4,
+   "inversions": 117,
+   "moved": 1,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 80,
+   "seed": 5,
+   "inversions": 1,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 80,
+   "seed": 5,
+   "inversions": 3,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 80,
+   "seed": 5,
+   "inversions": 79,
+   "moved": 5,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 80,
+   "seed": 5,
+   "inversions": 154,
+   "moved": 19,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 80,
+   "seed": 5,
+   "inversions": 15,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 150,
+   "seed": 1,
+   "inversions": 1,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 150,
+   "seed": 1,
+   "inversions": 1,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 150,
+   "seed": 1,
+   "inversions": 262,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 150,
+   "seed": 1,
+   "inversions": 365,
+   "moved": 144,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 150,
+   "seed": 1,
+   "inversions": 182,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 150,
+   "seed": 2,
+   "inversions": 3,
+   "moved": 2,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 2,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 150,
+   "seed": 2,
+   "inversions": 5,
+   "moved": 2,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 150,
+   "seed": 2,
+   "inversions": 842,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 150,
+   "seed": 2,
+   "inversions": 659,
+   "moved": 26,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 150,
+   "seed": 2,
+   "inversions": 838,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 150,
+   "seed": 3,
+   "inversions": 4,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 150,
+   "seed": 3,
+   "inversions": 10,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 150,
+   "seed": 3,
+   "inversions": 367,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 150,
+   "seed": 3,
+   "inversions": 228,
+   "moved": 112,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 150,
+   "seed": 3,
+   "inversions": 174,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 150,
+   "seed": 4,
+   "inversions": 6,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 150,
+   "seed": 4,
+   "inversions": 5,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 150,
+   "seed": 4,
+   "inversions": 82,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 150,
+   "seed": 4,
+   "inversions": 226,
+   "moved": 59,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 150,
+   "seed": 4,
+   "inversions": 336,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "dense",
+   "size": 150,
+   "seed": 5,
+   "inversions": 8,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "dense",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "dense",
+   "size": 150,
+   "seed": 5,
+   "inversions": 3,
+   "moved": 1,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "dense",
+   "size": 150,
+   "seed": 5,
+   "inversions": 1017,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "dense",
+   "size": 150,
+   "seed": 5,
+   "inversions": 494,
+   "moved": 76,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "dense",
+   "size": 150,
+   "seed": 5,
+   "inversions": 296,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "longspan",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 20,
+   "seed": 1,
+   "inversions": 4,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 4,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 3,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 20,
+   "seed": 4,
+   "inversions": 1,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 20,
+   "seed": 5,
+   "inversions": 2,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 3,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 19,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 40,
+   "seed": 2,
+   "inversions": 2,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 40,
+   "seed": 3,
+   "inversions": 9,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 40,
+   "seed": 4,
+   "inversions": 1,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 8,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 40,
+   "seed": 5,
+   "inversions": 1,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 10,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 80,
+   "seed": 2,
+   "inversions": 3,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 5,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 80,
+   "seed": 3,
+   "inversions": 2,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 13,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 80,
+   "seed": 4,
+   "inversions": 7,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 150,
+   "seed": 1,
+   "inversions": 9,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 9,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 150,
+   "seed": 2,
+   "inversions": 6,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 21,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 150,
+   "seed": 3,
+   "inversions": 10,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 18,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 150,
+   "seed": 4,
+   "inversions": 1,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 79,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "islands",
+   "size": 150,
+   "seed": 5,
+   "inversions": 7,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "islands",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "islands",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "islands",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "islands",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 19,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "islands",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 20,
+   "seed": 1,
+   "inversions": 9,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 20,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 20,
+   "seed": 2,
+   "inversions": 1,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 20,
+   "seed": 2,
+   "inversions": 1,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 20,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 20,
+   "seed": 3,
+   "inversions": 2,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 20,
+   "seed": 3,
+   "inversions": 9,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 20,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 20,
+   "seed": 4,
+   "inversions": 7,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 20,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 20,
+   "seed": 5,
+   "inversions": 19,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 20,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 19
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 40,
+   "seed": 1,
+   "inversions": 2,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 40,
+   "seed": 1,
+   "inversions": 23,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 40,
+   "seed": 1,
+   "inversions": 4,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 40,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 40,
+   "seed": 2,
+   "inversions": 1,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 40,
+   "seed": 2,
+   "inversions": 16,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 40,
+   "seed": 2,
+   "inversions": 73,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 40,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 40,
+   "seed": 3,
+   "inversions": 1,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 40,
+   "seed": 3,
+   "inversions": 74,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 40,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 40,
+   "seed": 4,
+   "inversions": 2,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 40,
+   "seed": 4,
+   "inversions": 47,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 40,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 40,
+   "seed": 5,
+   "inversions": 3,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 40,
+   "seed": 5,
+   "inversions": 1,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 40,
+   "seed": 5,
+   "inversions": 76,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 40,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 39
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 80,
+   "seed": 1,
+   "inversions": 3,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 80,
+   "seed": 1,
+   "inversions": 108,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 80,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 80,
+   "seed": 2,
+   "inversions": 201,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 80,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 80,
+   "seed": 3,
+   "inversions": 3,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 80,
+   "seed": 3,
+   "inversions": 2,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 80,
+   "seed": 3,
+   "inversions": 162,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 80,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 80,
+   "seed": 4,
+   "inversions": 3,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 80,
+   "seed": 4,
+   "inversions": 199,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 80,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 80,
+   "seed": 5,
+   "inversions": 1,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 80,
+   "seed": 5,
+   "inversions": 219,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 80,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 79
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 150,
+   "seed": 1,
+   "inversions": 7,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 150,
+   "seed": 1,
+   "inversions": 1,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 150,
+   "seed": 1,
+   "inversions": 811,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 150,
+   "seed": 1,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 150,
+   "seed": 2,
+   "inversions": 3,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 150,
+   "seed": 2,
+   "inversions": 825,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 150,
+   "seed": 2,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 150,
+   "seed": 3,
+   "inversions": 2,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 150,
+   "seed": 3,
+   "inversions": 171,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 150,
+   "seed": 3,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 150,
+   "seed": 4,
+   "inversions": 7,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 150,
+   "seed": 4,
+   "inversions": 603,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 150,
+   "seed": 4,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "current",
+   "kind": "external",
+   "size": 150,
+   "seed": 5,
+   "inversions": 6,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "custom",
+   "kind": "external",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "dagre",
+   "kind": "external",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "d3-dag",
+   "kind": "external",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "elk",
+   "kind": "external",
+   "size": 150,
+   "seed": 5,
+   "inversions": 914,
+   "moved": 0,
+   "common": 149
+  },
+  {
+   "engine": "graphviz",
+   "kind": "external",
+   "size": 150,
+   "seed": 5,
+   "inversions": 0,
+   "moved": 0,
+   "common": 149
+  }
+ ]
+}

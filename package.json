@@ -2,15 +2,20 @@
   "name": "gh-reloaded-tests",
   "version": "0.0.0",
   "private": true,
-  "description": "Dev-only test harness for the GH Reloaded extension. Not part of the published extension — the release workflow zips an explicit path list (manifest.json, background.js, background, features, icons, lib, options) that excludes this file and everything under test/.",
+  "description": "Dev-only test harness for the GH Reloaded extension. Not part of the published extension \u2014 the release workflow zips an explicit path list (manifest.json, background.js, background, features, icons, lib, options) that excludes this file and everything under test/.",
   "type": "module",
   "scripts": {
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "node --test test/unit/*.test.js",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "bench:graph": "node bench/dependency-graph/run.js"
   },
   "devDependencies": {
+    "@hpcc-js/wasm-graphviz": "^1.29.2",
     "@playwright/test": "^1.63.0",
+    "d3-dag": "^1.2.2",
+    "dagre": "^0.8.5",
+    "elkjs": "^0.12.0",
     "release-please": "~17.6.0"
   }
 }

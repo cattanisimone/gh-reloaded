@@ -41,6 +41,8 @@
   <path d="M448,372 C484,372 484,212 520,212" fill="none" stroke="#6e7681" stroke-width="1.5" marker-end="url(#arrow)"/>
   <path d="M688,212 L760,260" fill="none" stroke="#db6d28" stroke-width="2.5" marker-end="url(#arrow-crit)"/>
   <path d="M688,372 C724,372 724,292 760,292" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.2" marker-end="url(#arrow)"/>
+  <!-- an edge that skips a column runs in its own lane between the cards, never through one -->
+  <path d="M448,388 C484,388 484,306 520,306 L688,306 C724,306 724,308 760,308" fill="none" stroke="#6e7681" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <!-- N1: external, dimmed, dashed -->
   <g>
@@ -121,5 +123,7 @@
     <text x="1010" y="343">selected card</text>
     <text x="990" y="362" font-size="10">click a card to focus its</text>
     <text x="990" y="376" font-size="10">upstream and downstream</text>
+    <text x="990" y="396" font-size="10">long edges use their own lane</text>
+    <text x="990" y="410" font-size="10">between cards</text>
   </g>
 </svg>
