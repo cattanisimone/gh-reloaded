@@ -246,6 +246,7 @@
       colX,
       nodeW: NODE_W,
       nodeH: NODE_H,
+      gap: COL_GAP,
       chains: layers.chains,
       edges: graph.edges,
       back: graph.backEdges,

@@ -37,6 +37,54 @@
     const out = new Map(ids.map((id) => [id, []]));
     for (const e of all) out.get(e.from).push(e);
 
+    // Strongly connected components (Tarjan, iterative). A back edge is chosen
+    // inside one component by a DFS from its smallest id, so adding a card
+    // outside a cycle never changes which of its edges is the back edge.
+    const index = new Map();
+    const low = new Map();
+    const comp = new Map();
+    const onStack = new Set();
+    const tstack = [];
+    let counter = 0;
+    let comps = 0;
+    for (const root of ids) {
+      if (index.has(root)) continue;
+      const work = [{ id: root, i: 0 }];
+      index.set(root, counter);
+      low.set(root, counter++);
+      tstack.push(root);
+      onStack.add(root);
+      while (work.length) {
+        const top = work[work.length - 1];
+        const list = out.get(top.id);
+        if (top.i < list.length) {
+          const to = list[top.i++].to;
+          if (!index.has(to)) {
+            index.set(to, counter);
+            low.set(to, counter++);
+            tstack.push(to);
+            onStack.add(to);
+            work.push({ id: to, i: 0 });
+          } else if (onStack.has(to)) low.set(top.id, Math.min(low.get(top.id), index.get(to)));
+        } else {
+          work.pop();
+          if (work.length) {
+            const parent = work[work.length - 1].id;
+            low.set(parent, Math.min(low.get(parent), low.get(top.id)));
+          }
+          if (low.get(top.id) === index.get(top.id)) {
+            let w;
+            do {
+              w = tstack.pop();
+              onStack.delete(w);
+              comp.set(w, comps);
+            } while (w !== top.id);
+            comps++;
+          }
+        }
+      }
+    }
+
     const state = new Map(); // 1 = on the stack, 2 = done
     const backEdges = new Set();
     for (const root of ids) {
@@ -45,16 +93,16 @@
       state.set(root, 1);
       while (stack.length) {
         const top = stack[stack.length - 1];
-        const list = out.get(top.id);
+        const list = out.get(top.id).filter((e) => comp.get(e.to) === comp.get(top.id));
         if (top.i >= list.length) {
           state.set(top.id, 2);
           stack.pop();
           continue;
         }
         const e = list[top.i++];
-        const s = state.get(e.to);
-        if (s === 1) backEdges.add(e.key);
-        else if (!s) {
+        const st = state.get(e.to);
+        if (st === 1) backEdges.add(e.key);
+        else if (!st) {
           state.set(e.to, 1);
           stack.push({ id: e.to, i: 0 });
         }
@@ -205,21 +253,32 @@
         col.filter((id) => prevIdx.has(id)).sort((a, b) => prevIdx.get(a) - prevIdx.get(b) || cmpId(a, b))
       );
       const fresh = cols.map((col) => col.filter((id) => !prevIdx.has(id)).sort(cmpId));
-      const onlyPlaced = () => hops.map((hop) => hop.filter((h) => placedHas(h.from) && placedHas(h.to)));
       const placedSet = new Set(placed.flat());
-      const placedHas = (id) => placedSet.has(id);
       for (let c = 0; c < cols.length; c++) {
         for (const id of fresh[c]) {
+          placedSet.add(id);
+          // Only the crossings the new item takes part in change with its slot:
+          // its own edges against the other placed edges of the two hop sets.
+          // `side` says which end of a hop sits in this column.
+          const sets = [];
+          if (c > 0) sets.push({ hop: hops[c - 1], mine: "to", other: "from" });
+          if (c < hops.length) sets.push({ hop: hops[c], mine: "from", other: "to" });
+          const usable = sets.map((x) => ({ ...x, hop: x.hop.filter((h) => placedSet.has(h.from) && placedSet.has(h.to)) }));
+          const pos = positionsOf(placed);
           let best = placed[c].length;
           let bestCost = Infinity;
-          placedSet.add(id);
-          const hs = onlyPlaced();
           for (let at = 0; at <= placed[c].length; at++) {
-            const trial = placed[c].slice();
-            trial.splice(at, 0, id);
-            const next = placed.slice();
-            next[c] = trial;
-            const cost = totalCrossings(next, hs);
+            let cost = 0;
+            for (const { hop, mine, other } of usable) {
+              for (const h of hop) {
+                if (h[mine] !== id) continue;
+                for (const o of hop) {
+                  if (o[mine] === id) continue;
+                  const here = pos.get(o[mine]) >= at ? 1 : -1; // is the other item below (+1) or above the slot
+                  if (here * (pos.get(h[other]) - pos.get(o[other])) > 0) cost++;
+                }
+              }
+            }
             if (cost < bestCost) {
               bestCost = cost;
               best = at;

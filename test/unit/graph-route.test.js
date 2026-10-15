@@ -35,11 +35,10 @@ function hitsBox(seg, p) {
 }
 
 test("route: a long edge passes no card", () => {
-  for (const kind of KINDS.filter((k) => k !== "cycle")) {
+  for (const kind of KINDS) {
     const g = makeGraph(kind, 40, 8);
     const res = layout(g.nodes, g.edges, "right", D);
     for (const [k, route] of res.routes) {
-      if (route.back) continue;
       for (const n of g.nodes) {
         const [from, to] = k.split("\u0000");
         if (String(n.id) === from || String(n.id) === to) continue;
@@ -112,4 +111,15 @@ test("route: a back edge is drawn below the cards inside the stage", () => {
   const bottom = Math.max(...[...res.positions.values()].map((p) => p.y + D.NODE_H));
   assert.ok(Math.max(...back.points.map((p) => p.y)) > bottom);
   assert.ok(Math.max(...back.points.map((p) => p.y)) <= res.height);
+});
+
+test("route: a back edge passes no card either", () => {
+  // 2 -> 1 closes a cycle while 3, 4 and 5 stand in the columns it crosses.
+  const g = { nodes: nodes(1, 2, 3, 4, 5), edges: [edge(1, 2), edge(2, 1), edge(3, 4), edge(5, 4), edge(3, 2)] };
+  const res = layout(g.nodes, g.edges, "right", D);
+  const back = [...res.routes.values()].find((r) => r.back);
+  assert.ok(back);
+  for (const n of g.nodes) {
+    for (const s of segments(back)) assert.ok(!hitsBox(s, res.positions.get(n.id)), `back edge crosses card ${n.id}`);
+  }
 });

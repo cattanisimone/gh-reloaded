@@ -156,3 +156,21 @@ test("order: self loops and unknown endpoints are ignored without throwing", () 
   assert.equal(res.positions.size, 2);
   assert.ok(res.routes.has("1\u00002"));
 });
+
+test("order: adding a card outside a cycle keeps which edge is the back edge", () => {
+  const first = analyze(nodes(5, 7, 9), [edge(5, 7), edge(7, 5), edge(7, 9)]);
+  const second = analyze(nodes(3, 5, 7, 9), [edge(5, 7), edge(7, 5), edge(7, 9), edge(3, 7)]);
+  assert.deepEqual([...first.backEdges], [...second.backEdges]);
+  const res1 = layout(nodes(5, 7, 9), [edge(5, 7), edge(7, 5), edge(7, 9)], "right", EMBEDDED_DIMS);
+  const res2 = layout(nodes(3, 5, 7, 9), [edge(5, 7), edge(7, 5), edge(7, 9), edge(3, 7)], "right", EMBEDDED_DIMS, res1.order);
+  assert.equal(res1.positions.get(5).x, res2.positions.get(5).x);
+});
+
+test("layout: a seeded layout of a large graph stays fast", () => {
+  const g = makeGraph("dense", 150, 1);
+  const first = layout(g.nodes, g.edges, "right", EMBEDDED_DIMS);
+  const t = performance.now();
+  layout(g.nodes, g.edges, "right", EMBEDDED_DIMS, first.order);
+  const ms = performance.now() - t;
+  assert.ok(ms < 400, `seeded layout took ${ms} ms`);
+});

@@ -153,3 +153,15 @@ test("the alignment dropdown still changes the columns", async ({ context, page 
   const left = columns((await geometry(root)).cards);
   expect(left).not.toEqual(right);
 });
+
+test("toggling alignment and back restores the same layout", async ({ context, page }) => {
+  await routeApi(context, api(KIDS, DEPS));
+  await routeGithub(context, "issue.html");
+  await page.goto("https://github.com/acme/web/issues/1");
+  const root = page.locator("#ghdg-root");
+  await expect(root.locator(".ghdg-node")).toHaveCount(6);
+  const first = (await geometry(root)).cards;
+  await root.locator(".ghdg-align-select").first().selectOption("left");
+  await root.locator(".ghdg-align-select").first().selectOption("right");
+  expect((await geometry(root)).cards).toEqual(first);
+});

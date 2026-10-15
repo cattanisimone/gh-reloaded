@@ -23,7 +23,7 @@
   // of a column, `chains`: Map edge key -> dummy ids, `edges`: all edges
   // ({ key, from, to }), `back`: Set of back edge keys, `bottom`: y below
   // which the back-edge lanes start.
-  function buildRoutes({ items, colX, nodeW, nodeH, chains, edges, back, bottom }) {
+  function buildRoutes({ items, colX, nodeW, nodeH, gap, chains, edges, back, bottom }) {
     const centre = (id) => items.get(id).y + items.get(id).h / 2;
     const outs = new Map(); // card -> [{ edge, next }]
     const ins = new Map(); // card -> [{ edge, prev }]
@@ -75,22 +75,29 @@
       routes.set(e.key, { d, points: pts, lanes, back: false });
     }
 
-    // Back edges: out of the bottom of the source, along a lane under every
-    // card, into the bottom of the target. Drawn behind the cards.
+    // Back edges: out of the right side of the source low on the card, down the
+    // gap beside its column (no card stands there), along a lane under every
+    // card, up the gap in front of the target's column and into its left side.
+    // Drawn behind the cards.
     const backEdges = edges.filter((e) => back.has(e.key));
     backEdges.forEach((e, i) => {
       const a = items.get(e.from);
       const b = items.get(e.to);
       const ly = bottom + 8 + i * BACK_LANE;
-      const x1 = colX(a.col) + nodeW / 2 + ((i % 3) - 1) * 10;
-      const x2 = colX(b.col) + nodeW / 2 + ((i % 3) - 1) * 10;
+      const stagger = ((i % 3) - 1) * 6;
+      const gx1 = colX(a.col) + nodeW + gap / 2 + stagger;
+      const gx2 = colX(b.col) - gap / 2 + stagger;
+      const y1 = a.y + nodeH - PORT_PAD + ((i % 3) - 1) * 3;
+      const y2 = b.y + nodeH - PORT_PAD + ((i % 3) - 1) * 3;
       const pts = [
-        { x: x1, y: a.y + nodeH },
-        { x: x1, y: ly },
-        { x: x2, y: ly },
-        { x: x2, y: b.y + nodeH },
+        { x: colX(a.col) + nodeW, y: y1 },
+        { x: gx1, y: y1 },
+        { x: gx1, y: ly },
+        { x: gx2, y: ly },
+        { x: gx2, y: y2 },
+        { x: colX(b.col), y: y2 },
       ];
-      routes.set(e.key, { d: `M ${x1} ${pts[0].y} V ${ly} H ${x2} V ${pts[3].y}`, points: pts, lanes: [], back: true });
+      routes.set(e.key, { d: "M " + pts.map((p) => `${p.x} ${p.y}`).join(" L "), points: pts, lanes: [], back: true });
     });
     return routes;
   }

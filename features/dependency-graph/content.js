@@ -628,16 +628,18 @@
       for (const c of allOf(".ghdg-transitive-check")) c.checked = hideTransitive;
     }
 
-    // The card order of the last layout, kept in memory only. It seeds the
-    // next layout, so a refresh that adds or drops a card leaves the others
+    // The card order of the last layout of each view, kept in memory only. It
+    // seeds the next layout of that same view, so a refresh that adds or drops a card leaves the others
     // where they were, and the full-screen view shows the embedded order.
-    let lastOrder = null;
+    const lastOrders = new Map(); // one per view: alignment, external mode, transitive
 
     function renderInto(bodyEl, titleEl, dims, large) {
       const g = applyTransitiveMode(applyDependencyMode(currentGraph, depMode), hideTransitive);
       // A selection only survives while its card is still on screen.
       if (selectedId != null && !g.nodes.some((n) => String(n.id) === selectedId)) selectedId = null;
-      lastOrder = renderGraph(bodyEl, g, theme, alignMode, dims, large, selectedId, lastOrder) || lastOrder;
+      const view = `${alignMode}|${depMode}|${hideTransitive}`;
+      const order = renderGraph(bodyEl, g, theme, alignMode, dims, large, selectedId, lastOrders.get(view) || null);
+      if (order) lastOrders.set(view, order);
       if (titleEl) titleEl.textContent = headerTitleText(currentGraph);
       return g;
     }
