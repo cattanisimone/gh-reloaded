@@ -2,7 +2,7 @@
 import { test, expect } from "./support/extension.js";
 import { openOptions, PANELS } from "./support/options.js";
 
-for (const width of [1280, 820, 375]) {
+for (const width of [1280, 900, 820, 760, 375]) {
   test(`every panel fits at ${width}px`, async ({ context, page }) => {
     await page.setViewportSize({ width, height: 800 });
     const worker = await openOptions(context, page);
@@ -29,3 +29,16 @@ for (const width of [1280, 820, 375]) {
     await expect(page.locator('.nav a[href="#advanced-section"]')).toBeAttached();
   });
 }
+
+test("a long unbroken status does not scroll the page just above the tab breakpoint", async ({ context, page }) => {
+  await page.setViewportSize({ width: 760, height: 800 });
+  await openOptions(context, page);
+  await page.evaluate(() => { location.hash = "tokens-section"; });
+  const scroll = await page.evaluate(() => {
+    const s = document.querySelector(".panel-view:not([hidden]) .status");
+    s.className = "status error";
+    s.textContent = "Token cannot access " + "a".repeat(120);
+    return document.documentElement.scrollWidth - document.documentElement.clientWidth;
+  });
+  expect(scroll).toBe(0);
+});

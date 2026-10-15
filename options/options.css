@@ -229,9 +229,9 @@ input.tok-secret { font-family: var(--mono); font-size: 13px; }
   cursor: pointer;
 }
 .link-btn.danger:hover { color: var(--bad); }
-.actions { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0; }
 .actions .spacer { flex: 1; }
-.status { margin: 0; font-size: 13px; color: var(--muted); }
+.status { margin: 0; min-width: 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 .status:empty { display: none; }
 .status.ok { color: var(--ok); }
 .status.error { color: var(--bad); }
