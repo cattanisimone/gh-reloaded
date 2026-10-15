@@ -19,6 +19,28 @@
     return top + PORT_PAD + ((i + 0.5) * band) / count;
   }
 
+  // Assigns a port y to every entry of a sorted list. A critical edge takes the
+  // centre of the side (the middle of an odd number of slots), so the critical
+  // path stays on one row where the card has other edges.
+  function assignPorts(list, it, ports) {
+    const crit = list.findIndex((o) => o.edge.critical);
+    if (crit < 0 || list.length === 1) {
+      list.forEach((o, i) => ports.set(o.edge.key, portY(it.y, it.h, i, list.length)));
+      return;
+    }
+    const slots = list.length % 2 ? list.length : list.length + 1;
+    const mid = (slots - 1) / 2;
+    const others = list.filter((_, i) => i !== crit);
+    // others above the critical edge keep slots before the middle, the rest after
+    const above = Math.min(crit, mid);
+    others.forEach((o, i) => {
+      let slot = i < above ? i : i - above + mid + 1;
+      if (slot >= slots) slot = slots - 1 - (others.length - 1 - i);
+      ports.set(o.edge.key, portY(it.y, it.h, slot, slots));
+    });
+    ports.set(list[crit].edge.key, portY(it.y, it.h, mid, slots));
+  }
+
   // `items`: Map id -> { col, y, h } for cards and dummies, `x(col)` the left x
   // of a column, `chains`: Map edge key -> dummy ids, `edges`: all edges
   // ({ key, from, to }), `back`: Set of back edge keys, `bottom`: y below
@@ -39,12 +61,12 @@
     for (const [id, list] of outs) {
       list.sort((a, b) => centre(a.next) - centre(b.next) || cmp(a.edge.key, b.edge.key));
       const it = items.get(id);
-      list.forEach((o, i) => outPort.set(o.edge.key, portY(it.y, it.h, i, list.length)));
+      assignPorts(list, it, outPort);
     }
     for (const [id, list] of ins) {
       list.sort((a, b) => centre(a.prev) - centre(b.prev) || cmp(a.edge.key, b.edge.key));
       const it = items.get(id);
-      list.forEach((o, i) => inPort.set(o.edge.key, portY(it.y, it.h, i, list.length)));
+      assignPorts(list, it, inPort);
     }
 
     const routes = new Map();

@@ -19,11 +19,11 @@ Every metric is computed on the rendered edge paths (each curve flattened to a p
 
 | engine | order inversions | cards that changed column | p95 ms at the largest dense fixture of the run (80, or 40 in quick mode) | shipped size KB (as a plain script) |
 |---|---:|---:|---:|---:|
-| current | 2.16 | 3.11 | 0.4 | 0 (in the repo) |
-| custom | 0.00 | 3.11 | 13.2 | 27 |
-| dagre | 11.03 | 6.48 | 55.0 | 277 |
-| d3-dag | 43.71 | 6.49 | 208.5 | 140 |
-| elk | 127.04 | 12.63 | 42.7 | 1572 |
+| current | 2.16 | 3.11 | 1.4 | 0 (in the repo) |
+| custom | 0.00 | 3.11 | 13.7 | 28 |
+| dagre | 11.03 | 6.48 | 75.0 | 277 |
+| d3-dag | 43.71 | 6.49 | 240.3 | 140 |
+| elk | 127.04 | 12.63 | 99.2 | 1572 |
 | graphviz | 40.66 | 6.46 | 10.0 | 796 |
 
 Stability: the custom engine is given the previous order, as the extension does; the others lay out cold, as they would on every refresh.
@@ -32,11 +32,11 @@ Stability: the custom engine is given the previous order, as the extension does;
 
 | size | current | custom | dagre | d3-dag | elk | graphviz |
 |---:|---:|---:|---:|---:|---:|---:|
-| 8 | 0.0 / 0.0 | 0.3 / 0.4 | 2.0 / 2.7 | 0.6 / 1.0 | 4.9 / 6.4 | 0.2 / 0.3 |
-| 20 | 0.1 / 0.1 | 1.3 / 2.1 | 8.5 / 9.3 | 8.1 / 8.6 | 12.9 / 14.7 | 0.9 / 1.0 |
-| 40 | 0.1 / 0.2 | 6.3 / 7.1 | 29.3 / 33.1 | 58.8 / 70.4 | 32.1 / 34.3 | 4.3 / 4.5 |
-| 80 | 0.3 / 0.4 | 12.4 / 13.2 | 47.4 / 55.0 | 201.7 / 208.5 | 42.0 / 42.7 | 9.0 / 10.0 |
-| 150 | 0.6 / 1.3 | 31.5 / 33.8 | 132.8 / 150.4 | 2696.5 / 2816.6 | 107.8 / 138.6 | 31.5 / 32.6 |
+| 8 | 0.0 / 0.0 | 0.3 / 0.7 | 2.2 / 3.5 | 0.6 / 1.5 | 4.7 / 6.2 | 0.2 / 0.3 |
+| 20 | 0.1 / 0.1 | 1.3 / 2.1 | 8.5 / 19.6 | 7.9 / 8.5 | 13.2 / 15.7 | 0.9 / 0.9 |
+| 40 | 0.1 / 0.2 | 6.5 / 7.0 | 29.5 / 33.9 | 57.1 / 68.9 | 33.0 / 35.5 | 4.3 / 4.9 |
+| 80 | 0.5 / 1.4 | 12.8 / 13.7 | 49.1 / 75.0 | 201.6 / 240.3 | 49.8 / 99.2 | 9.1 / 10.0 |
+| 150 | 0.6 / 1.2 | 31.0 / 32.7 | 136.4 / 153.4 | 2693.2 / 2768.2 | 108.6 / 167.1 | 31.6 / 32.7 |
 
 ## Samples
 

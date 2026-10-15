@@ -123,3 +123,13 @@ test("route: a back edge passes no card either", () => {
     for (const s of segments(back)) assert.ok(!hitsBox(s, res.positions.get(n.id)), `back edge crosses card ${n.id}`);
   }
 });
+
+test("route: a critical chain keeps one y at every port when its cards have other edges", () => {
+  const edges = [edge(1, 2, { critical: true }), edge(2, 3, { critical: true }), edge(1, 4), edge(1, 5), edge(6, 2), edge(2, 7)];
+  const res = layout(nodes(1, 2, 3, 4, 5, 6, 7), edges, "right", D);
+  for (const key of ["1\0" + "2", "2\0" + "3"]) {
+    const pts = res.routes.get(key).points;
+    assert.equal(pts[0].y, res.positions.get(Number(key[0])).y + D.NODE_H / 2, `${key} leaves from the centre`);
+    assert.equal(pts[pts.length - 1].y, res.positions.get(Number(key[2])).y + D.NODE_H / 2, `${key} arrives at the centre`);
+  }
+});

@@ -174,3 +174,11 @@ test("layout: a seeded layout of a large graph stays fast", () => {
   const ms = performance.now() - t;
   assert.ok(ms < 400, `seeded layout took ${ms} ms`);
 });
+
+test("layout: an isolated new card does not move the existing rows of its column", () => {
+  const edges = [edge(1, 4), edge(2, 4), edge(3, 4)];
+  const first = layout(nodes(1, 2, 3, 4), edges, "right", EMBEDDED_DIMS);
+  const second = layout(nodes(1, 2, 3, 4, 5), [...edges, edge(5, 4)], "right", EMBEDDED_DIMS, first.order);
+  // the fan-in target may re-centre; the existing sources must keep their rows
+  for (const id of [1, 2, 3]) assert.equal(second.positions.get(id).y, first.positions.get(id).y, `card ${id}`);
+});

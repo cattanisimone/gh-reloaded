@@ -279,7 +279,8 @@
                 }
               }
             }
-            if (cost < bestCost) {
+            // ties keep the later slot: the card lands below, existing rows do not move
+            if (cost <= bestCost) {
               bestCost = cost;
               best = at;
             }
