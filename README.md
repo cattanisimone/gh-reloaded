@@ -23,36 +23,51 @@ A Chrome extension that injects small, focused UI enhancements into github.com, 
 
 It's a collection of independent features, not a single-purpose tool: each one lives in its own folder under `features/` and can be added, removed, or shipped on its own. GitHub covers the fundamentals well; this is for the gaps that are easier to fill from the outside than to wait on.
 
-## Install (unpacked, for now)
+## Install
 
-This isn't on the Chrome Web Store yet.
+Install **GH Reloaded** from the [Chrome Web Store](https://chromewebstore.google.com/detail/gh-reloaded/nflpdflhgpnhlahgajbgbpbblniggpba), then open **Settings**: click the extension's toolbar icon, or from `chrome://extensions` → the extension's card → **Details** → **Extension options**.
 
-### 1. Load the extension
+Most features work on public repositories without a token. A token adds private repositories, Projects v2 data and higher rate limits.
+
+### Create a GitHub token
+
+Go to [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new) (a **fine-grained** token, not classic) and set:
+
+- **Resource owner** → the account or organization that owns the repositories (a token has exactly one resource owner).
+- **Repository access** → *Only select repositories* → pick the repo(s) you want this on.
+- **Permissions**, all **Read-only**, everything else stays at *No access*:
+
+| Scope | Permission | Used for |
+| --- | --- | --- |
+| Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues |
+| Repository | **Contents** | **HTML preview** of files in private repos (public repos work without a token) |
+| Repository | **Metadata** | added by GitHub automatically |
+| Organization | **Projects** | Projects v2 Status, Standup mode, My Issues project memberships |
+
+Click **Generate token** and copy it immediately — GitHub shows it exactly once.
+
+Two GitHub limitations to know about:
+
+- **Organization** permissions only appear when the resource owner is an organization. A fine-grained token cannot read Projects owned by a personal account: the features that depend on them degrade (no Status, Standup signals or project memberships) while the rest keeps working. A classic token with the `read:project` scope can read them, but only use it for public repositories: reading private ones with a classic token needs the broad `repo` scope, which this extension never asks for.
+- A fine-grained token has one resource owner, so work across several owners (organizations or personal accounts) needs one token per owner, see [Connect it](#connect-it).
+
+If the organization enforces SSO or restricts personal access tokens, a fine-grained token is authorized for the organization when you create it; it may show as *pending* until an organization owner approves it, and requests to that organization's data can come back empty or `404` until then, since GitHub doesn't otherwise reveal that the resource exists. **Configure SSO** at [github.com/settings/tokens](https://github.com/settings/tokens) only applies to classic tokens.
+
+### Connect it
+
+Back in the extension's Settings page, under **GitHub tokens**: paste the token into **Default token**, **Save tokens**, then **Test** — it should report the GitHub username the token authenticates as.
+
+Working across several repository owners — organizations or personal accounts — that need their own token? **Add owner token** for each, with that owner's login (e.g. `acme`; a pasted `https://github.com/acme` works too). A request always uses the token of the repository's owner, falling back to the default token — never by trying every saved token in turn; with no default set, owners without a token of their own are read anonymously. Saved tokens are never shown again in full, only by their last 4 characters.
+
+### Install unpacked (development and manual testing)
+
+To run the code from this repository instead of the Store version:
 
 1. Clone this repo.
 2. Open `chrome://extensions`, enable **Developer mode** (top-right toggle).
 3. Click **Load unpacked** → select the repo folder.
-4. Open **Settings**: click the extension's toolbar icon, or from `chrome://extensions` → the extension's card → **Details** → **Extension options**.
+4. Open **Settings** as above and connect a token.
 
-### 2. Create a GitHub token
-
-Go to [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new) (a **fine-grained** token, not classic) and set:
-
-- **Repository access** → *Only select repositories* → pick the repo(s) you want this on.
-- **Permissions** → **Repository permissions** → set these to **Read-only**:
-  - **Issues** — sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort)
-  - **Projects** — Projects v2 Status
-  - **Contents** — reading HTML files for the **HTML preview** feature; only needed for private repos, public ones work without a token
-- Everything else stays at *No access*.
-- Click **Generate token** and copy it immediately — GitHub shows it exactly once.
-
-If the repo belongs to an organization with SSO enforced (or with a policy restricting personal access tokens), one more step: go to [github.com/settings/tokens](https://github.com/settings/tokens), find the new token, and click **Configure SSO** / **Authorize** next to the org's name. Without this, requests to that org's data can silently come back empty or `404`, since GitHub doesn't otherwise reveal that the resource exists.
-
-### 3. Connect it
-
-Back in the extension's Settings page, under **GitHub tokens**: paste the token into **Default token**, **Save tokens**, then **Test** — it should report the GitHub username the token authenticates as.
-
-Working across several repository owners — organizations or personal accounts — that need their own token (a different fine-grained token, or one authorized for an organization's SSO)? **Add owner token** for each, with that owner's login (a pasted `https://github.com/<owner>` works too). A request always uses the token of the repository's owner, falling back to the default token — never by trying every saved token in turn; with no default set, owners without a token of their own are read anonymously. Saved tokens are never shown again in full, only by their last 4 characters.
 
 ## Features
 
@@ -98,7 +113,7 @@ On a GitHub Projects **Board** (kanban) view, adds a **Standup** button to the f
 - **Bottleneck** — a column holding a disproportionate share of the open cards, or whose oldest card is far older than the rest, is outlined.
 - **Priority and age** — each card shows its Priority as a chip (high and critical priorities tint the card) and how long it has been in its current column (read from whichever Project field the board uses for its columns, not only Status).
 
-The stale threshold and the review-like keywords are set in Settings. The signals read Projects v2 data through the GitHub API, so they need a token with **Issues** and **Projects** read access; without one (or without Projects access) the board still gets the space reclaim, a priority chip and a "Blocked" label read from the card, and the API-backed badges are simply absent. The bar says which of these happened: only a refusal from GitHub (HTTP 401/403, or a "Resource not accessible" error) is reported as a token that may lack Projects access; any other failure shows "Board signals could not be loaded" with the detail in the tooltip and the browser console, and a board that is still rendering shows the loading note. When GitHub returns an error for only some of the cards (an archived or inaccessible repository, say), the rest of the board still gets its signals and the bar says some cards could not be read. Draft items have no issue to look up, so they only get those card-read signals and count toward the column shares. The signals are re-read about every 75 seconds while the tab is visible, so edits made in place show up; if some cards cannot be read (for example a token without access to one owner, or a project whose fields that token cannot see), or some dependencies cannot be verified, the bar says so and the bottleneck and critical-path signals (or just the critical path, for dependencies) are turned off rather than computed from partial data. When a project and an issue belong to different owners, each is read with its own owner's token. On a board that uses Group by, columns are positioned by their heading across all horizontal sections. Exit with the **Exit** button or `Esc`. It's read-only and local to the tab — it never mutates issues, Project fields, or card order, and doesn't survive a reload. On by default; switchable from Settings.
+The stale threshold and the review-like keywords are set in Settings. The signals read Projects v2 data through the GitHub API, so they need a token with the read access listed under [Install](#install); without one (or without Projects access) the board still gets the space reclaim, a priority chip and a "Blocked" label read from the card, and the API-backed badges are simply absent. The bar says which of these happened: only a refusal from GitHub (HTTP 401/403, or a "Resource not accessible" error) is reported as a token that may lack Projects access; any other failure shows "Board signals could not be loaded" with the detail in the tooltip and the browser console, and a board that is still rendering shows the loading note. When GitHub returns an error for only some of the cards (an archived or inaccessible repository, say), the rest of the board still gets its signals and the bar says some cards could not be read. Draft items have no issue to look up, so they only get those card-read signals and count toward the column shares. The signals are re-read about every 75 seconds while the tab is visible, so edits made in place show up; if some cards cannot be read (for example a token without access to one owner, or a project whose fields that token cannot see), or some dependencies cannot be verified, the bar says so and the bottleneck and critical-path signals (or just the critical path, for dependencies) are turned off rather than computed from partial data. When a project and an issue belong to different owners, each is read with its own owner's token. On a board that uses Group by, columns are positioned by their heading across all horizontal sections. Exit with the **Exit** button or `Esc`. It's read-only and local to the tab — it never mutates issues, Project fields, or card order, and doesn't survive a reload. On by default; switchable from Settings.
 
 ![Standup mode mockup: a kanban board under a slim bar with summary chips for stale reviews, orphan blocks, critical path at risk and bottlenecks, with flagged cards tinted and carrying badges and an outlined bottleneck column](screenshots/standup-mode.svg)
 
@@ -127,7 +142,7 @@ On GitHub's own **My Issues** dashboard (`github.com/issues`), adds a `List | Gr
 - Inside a tile, issues are listed per Status in the Project's **real option order** — no invented global columns, no special handling of any Status name. The first **5** issues of each Status are shown, then a **Show N more** button expands the rest in place. A row is `state icon · title · issue type · #number · time since update`, most recently updated first. The number sits in a small gray chip whose tooltip carries the full `owner/repo#number`; the repo name joins the chip (`repo#number`) only when two issues of the same tile share a number from different repos. The **issue type** (an organization feature) shows as a chip tinted with the type's own color, collapsing to a colored dot in a narrow tile, and is simply absent for issues without a type or when GitHub does not offer the field.
 - An issue in several Projects shows in each tile with the status it has **in that Project**, and is counted once in the toolbar summary (`34 issues in 3 projects`). One assigned to none falls into an explicit **No Project** tile, and one in a Project with no status into **No Status**.
 - A **collapsible sidebar**: the dashboard's left sidebar (Assigned to me, Created by me, Mentioning me, Recently updated, Views) collapses to a 48px icon rail (centered icons, a highlighted active item, the toggle at its top), collapsed by default, in List and grouped view alike; the choice is remembered. It is found by the visible text of its navigation items; if they can't be found, no toggle is added and the page is left untouched.
-- Read-only: it only links out to issues, and never changes an issue or a Project item. Needs a token with **Projects: Read-only** (plus repository read for private repos) to see project memberships; without it, issues still list under "No Project". Loading, empty, missing-token, and API-error states are shown explicitly, and a result set larger than the fetch cap is labelled "Showing the first N of M issues" rather than presented as complete.
+- Read-only: it only links out to issues, and never changes an issue or a Project item. Needs a token with the read access listed under [Install](#install) to see project memberships; without it, issues still list under "No Project". Loading, empty, missing-token, and API-error states are shown explicitly, and a result set larger than the fetch cap is labelled "Showing the first N of M issues" rather than presented as complete.
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
