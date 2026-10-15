@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.13.0...v0.14.0) (2026-10-15)
+
+
+### Features
+
+* improve dependency graph layout and edge routing ([#73](https://github.com/cattanisimone/gh-reloaded/issues/73)) ([bd75be6](https://github.com/cattanisimone/gh-reloaded/commit/bd75be695dfa7020a38043d0d894689a851d19ee))
+
 ## [0.13.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.12.0...v0.13.0) (2026-10-15)
 
 
