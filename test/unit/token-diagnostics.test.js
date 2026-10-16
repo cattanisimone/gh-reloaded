@@ -247,3 +247,17 @@ test("runDiagnostics: a rate-limited authentication stops the remaining requests
   assert.equal(res[0].status, STATUS.TEMPORARY);
   assert.deepEqual(res.slice(1).map((r) => r.status), Array(res.length - 1).fill(STATUS.NOT_CHECKED));
 });
+
+test("runDiagnostics: a rate limit on any check stops the queued requests", async () => {
+  const log = [];
+  const fetch = fakeFetch(async (url) => {
+    if (url.endsWith("/user")) return { body: { login: "u" } };
+    if (url.includes("/repos/acme/app") && !url.includes("/contents/")) return { status: 429, body: { message: "slow down" } };
+    await new Promise((r) => setTimeout(r, 20));
+    return { body: {} };
+  }, log);
+  const res = await runDiagnostics(FINE, { repo: "acme/app", project: "github.com/orgs/acme/projects/3", file: "a.html" }, { fetch });
+  assert.equal(log.length, 3);
+  assert.equal(res.at(-1).status, STATUS.NOT_CHECKED);
+  assert.match(res.at(-1).reason, /rate-limiting/);
+});

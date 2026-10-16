@@ -358,18 +358,25 @@ export async function runDiagnostics(token, rawTargets, { signal, fetch = global
 
   finish(0, await send(checks[0], token, opts));
   const authDenied = results[0].status === STATUS.DENIED;
-  const authLimited = results[0].status === STATUS.TEMPORARY && /limit/i.test(results[0].reason);
+  const isLimited = (r) => r.status === STATUS.TEMPORARY && /limit/i.test(r.reason);
+  const LIMITED_REASON = "Skipped: GitHub is rate-limiting this token. Wait for the limit to reset.";
+  let limited = isLimited(results[0]);
   const queue = [];
   for (let i = 1; i < checks.length; i++) {
     if (checks[i].skip) skip(i, checks[i].skip);
     else if (authDenied) skip(i, "Skipped: the token itself was rejected.");
-    else if (authLimited) skip(i, "Skipped: GitHub is rate-limiting this token. Wait for the limit to reset.");
+    else if (limited) skip(i, LIMITED_REASON);
     else queue.push(i);
   }
   const worker = async () => {
     while (queue.length) {
       const i = queue.shift();
+      if (limited) {
+        skip(i, LIMITED_REASON);
+        continue;
+      }
       finish(i, await send(checks[i], token, opts));
+      if (isLimited(results[i])) limited = true;
     }
   };
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, queue.length) }, worker));
