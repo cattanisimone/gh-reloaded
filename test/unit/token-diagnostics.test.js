@@ -198,7 +198,7 @@ test("runDiagnostics: a private file is read by status only", async () => {
   let cancelled = false;
   const fetch = async (url) => {
     if (url.includes("/contents/")) {
-      return { status: 200, headers: new Headers(), body: { cancel: async () => { cancelled = true; } }, json: async () => { throw new Error("must not read"); } };
+      return { status: 200, ok: true, headers: new Headers(), body: { cancel: async () => { cancelled = true; } }, json: async () => { throw new Error("must not read"); } };
     }
     return new Response(JSON.stringify(url.endsWith("/user") ? { login: "u" } : []), { status: 200 });
   };
@@ -223,4 +223,27 @@ test("classify: org project, GraphQL FORBIDDEN 'not accessible by personal acces
   );
   assert.equal(r.status, STATUS.DENIED);
   assert.match(r.remedy.text, /Organization → Projects/);
+});
+
+test("classify: a secondary rate limit is recognised from the message alone", () => {
+  assert.equal(c({ status: 403, headers: {}, message: "You have exceeded a secondary rate limit. Please wait a few minutes." }).status, STATUS.TEMPORARY);
+});
+
+test("runDiagnostics: a failed private-file request has its error body parsed", async () => {
+  const fetch = async (url) => {
+    if (url.includes("/contents/")) return new Response(JSON.stringify({ message: "Resource not accessible by personal access token" }), { status: 403 });
+    return new Response(JSON.stringify(url.endsWith("/user") ? { login: "u" } : []), { status: 200 });
+  };
+  const res = await runDiagnostics(FINE, { repo: "a/b", file: "p.txt" }, { fetch });
+  assert.equal(res[3].status, STATUS.DENIED);
+  assert.match(res[3].remedy.text, /Contents: read/);
+});
+
+test("runDiagnostics: a rate-limited authentication stops the remaining requests", async () => {
+  const log = [];
+  const fetch = fakeFetch(async () => ({ status: 429, body: { message: "slow down" } }), log);
+  const res = await runDiagnostics(FINE, { repo: "a/b", file: "p.txt" }, { fetch });
+  assert.equal(log.length, 1);
+  assert.equal(res[0].status, STATUS.TEMPORARY);
+  assert.deepEqual(res.slice(1).map((r) => r.status), Array(res.length - 1).fill(STATUS.NOT_CHECKED));
 });

@@ -14,7 +14,7 @@ Stored locally via the browser's `chrome.storage.local` (never synced, never sen
 
 **Verify access** (Settings → GitHub tokens) sends the token of the card you use to `api.github.com`, only when you click **Run checks**, for the repository, issue, project and file you name; the answers are shown on that page and nothing is stored.
 
-None of this leaves your browser except the token itself, which is sent — over HTTPS, directly — only to `api.github.com`, only when a feature you've enabled needs to read issue, sub-issue, dependency, or Projects data. GitHub's own [privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement) covers what GitHub does with that request.
+None of this leaves your browser except the token itself, which is sent — over HTTPS, directly — only to `api.github.com`, only when a feature you've enabled needs to read issue, sub-issue, dependency, or Projects data, or when you click **Run checks** in Verify access. GitHub's own [privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement) covers what GitHub does with that request.
 
 ## What it reads from GitHub pages
 

@@ -188,7 +188,7 @@ export function classify(result, ctx) {
   }
   if (status >= 500) return out(STATUS.TEMPORARY, `GitHub answered HTTP ${status}. Try again later.`);
 
-  const limited = ((status === 403 || status === 429) && (headers["x-ratelimit-remaining"] === "0" || headers["retry-after"] !== undefined || status === 429)) || errors.includes("RATE_LIMITED");
+  const limited = ((status === 403 || status === 429) && (headers["x-ratelimit-remaining"] === "0" || headers["retry-after"] !== undefined || status === 429 || /secondary rate limit|rate limit exceeded|abuse detection/i.test(message))) || errors.includes("RATE_LIMITED");
   if (limited) {
     return out(STATUS.TEMPORARY, rateLimitReason(headers, now), { text: "Wait for the limit to reset, then run the checks again.", href: DOCS.rateLimit });
   }
@@ -287,8 +287,8 @@ async function send(check, token, { signal, fetch, timeoutMs }) {
       cache: "no-store",
     });
     const result = { status: res.status, headers: lower(res.headers) };
-    if (check.kind === "file") {
-      // Only the status matters: never read the file.
+    if (check.kind === "file" && res.ok) {
+      // Only the status matters: never read the file content.
       try { await res.body?.cancel(); } catch { /* nothing to cancel */ }
       return result;
     }
@@ -358,10 +358,12 @@ export async function runDiagnostics(token, rawTargets, { signal, fetch = global
 
   finish(0, await send(checks[0], token, opts));
   const authDenied = results[0].status === STATUS.DENIED;
+  const authLimited = results[0].status === STATUS.TEMPORARY && /limit/i.test(results[0].reason);
   const queue = [];
   for (let i = 1; i < checks.length; i++) {
     if (checks[i].skip) skip(i, checks[i].skip);
     else if (authDenied) skip(i, "Skipped: the token itself was rejected.");
+    else if (authLimited) skip(i, "Skipped: GitHub is rate-limiting this token. Wait for the limit to reset.");
     else queue.push(i);
   }
   const worker = async () => {
