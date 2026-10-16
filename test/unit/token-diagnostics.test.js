@@ -210,3 +210,17 @@ test("runDiagnostics: a private file is read by status only", async () => {
 test("summarize counts only what was checked", () => {
   assert.equal(summarize([{ status: STATUS.AVAILABLE }, { status: STATUS.AVAILABLE }, { status: STATUS.NOT_VERIFIED }, { status: STATUS.NOT_CHECKED }]), "3 checked: 2 available, 1 not verified.");
 });
+
+test("parseTargets rejects dot-only repository segments", () => {
+  assert.equal(parseTargets({ repo: "../user" }).ok, false);
+  assert.equal(parseTargets({ repo: "acme/.." }).ok, false);
+});
+
+test("classify: org project, GraphQL FORBIDDEN 'not accessible by personal access token' -> denied with the Projects remedy", () => {
+  const r = classify(
+    { status: 200, headers: {}, errors: ["FORBIDDEN"], projectNull: true, partial: true, message: "Resource not accessible by personal access token" },
+    { kind: "project", token: FINE, project: { kind: "orgs", owner: "acme", number: 3 } },
+  );
+  assert.equal(r.status, STATUS.DENIED);
+  assert.match(r.remedy.text, /Organization → Projects/);
+});

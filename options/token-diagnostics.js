@@ -57,7 +57,7 @@ export function scrub(text, token) {
 function parseRepo(value) {
   const v = String(value || "").trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\/+$/, "").replace(/\.git$/, "");
   const [owner, name, ...rest] = v.split("/");
-  if (!owner || !name || rest.length || !NAME.test(owner) || !NAME.test(name)) return null;
+  if (!owner || !name || rest.length || !NAME.test(owner) || !NAME.test(name) || /^\.+$/.test(owner) || /^\.+$/.test(name)) return null;
   return { owner, name };
 }
 
@@ -213,6 +213,9 @@ export function classify(result, ctx) {
     if (errors.includes("INSUFFICIENT_SCOPES")) {
       return withProjectRemedy(out(STATUS.DENIED, "GitHub says the token lacks the scope or permission to read Projects.", permissionRemedy("project", type, headers, project)));
     }
+    if (/resource not accessible by personal access token/i.test(message)) {
+      return withProjectRemedy(out(STATUS.DENIED, "GitHub says the token lacks access to this resource.", permissionRemedy("project", type, headers, project)));
+    }
     if (errors.length || result.partial || result.projectNull) {
       return withProjectRemedy(out(STATUS.NOT_VERIFIED, "GitHub returned no project: it may not exist, or this token may not see it.", ambiguousRemedy()));
     }
@@ -304,6 +307,8 @@ async function send(check, token, { signal, fetch, timeoutMs }) {
       result.projectNull = !node || !node.projectV2;
       result.partial = Array.isArray(body?.errors) && body.errors.length > 0 && !!data;
       if (Array.isArray(body?.errors) && !result.errors.length) result.errors = ["UNKNOWN"];
+      // Matched by classify(), never displayed.
+      if (Array.isArray(body?.errors)) result.message = body.errors.map((e) => String(e?.message || "")).join(" ");
     }
     return result;
   } catch (err) {
