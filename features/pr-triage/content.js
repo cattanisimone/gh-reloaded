@@ -190,10 +190,11 @@
       el = document.createElement("span");
       row.meta.append(el);
     }
-    if (el.dataset.ghprt !== result.placement || el.textContent !== result.label || el.title !== result.title) {
+    const shownText = result.placement === "yours" ? `Your turn · ${result.label}` : result.label;
+    if (el.dataset.ghprt !== result.placement || el.textContent !== shownText || el.title !== result.title) {
       el.className = `ghprt-label ghprt-${result.placement}`;
       el.dataset.ghprt = result.placement;
-      el.textContent = result.placement === "yours" ? `Your turn · ${result.label}` : result.label;
+      el.textContent = shownText;
       el.title = result.title;
     }
     row.li.dataset.ghprtPlacement = result.placement;
