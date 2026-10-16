@@ -278,3 +278,8 @@ test("every file the manifest references ships in the release zip", () => {
   assert.equal(statSync("options").isFile(), false);
   assert.deepEqual(referencedPaths({ action: { default_popup: "p.html" }, options_page: "o.html" }).sort(), ["o.html", "p.html"]);
 });
+
+test("permissions are pinned: a new one must be a deliberate change to this test", () => {
+  assert.deepEqual(manifest.permissions, ["storage"]);
+  assert.deepEqual(manifest.host_permissions, ["https://api.github.com/*"]);
+});
