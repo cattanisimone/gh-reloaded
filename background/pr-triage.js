@@ -27,7 +27,7 @@ const FIELDS = `
   reviewRequests(first: 30) {
     nodes { requestedReviewer { __typename ... on User { login } ... on Team { slug organization { login } } } }
   }
-  latestOpinionatedReviews(first: 30) {
+  latestOpinionatedReviews(first: 30, writersOnly: true) {
     nodes { author { login } state submittedAt commit { oid } }
   }
   commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
@@ -92,6 +92,13 @@ export async function handleMessage({ owner, repo, numbers } = {}) {
     } catch (e) {
       if (e.graphqlErrors?.some((g) => g.type === "RATE_LIMITED")) e.rateLimited = true;
       throw e;
+    }
+    // A repository the token cannot see comes back as 200 with a null
+    // repository: that is a refusal, not 25 unreadable pull requests.
+    if (data && data.repository == null) {
+      const err = new Error("GitHub could not read this repository with the token");
+      err.status = 403;
+      throw err;
     }
     for (const n of batch) facts[n] = normalize(data?.repository?.[`p${n}`]);
   });

@@ -350,7 +350,10 @@ test("native look: label, bar buttons, and the row's metadata line is not resize
   expect(l.h).toBe(20);
   expect(l.r).toBeGreaterThanOrEqual(10);
   expect(l.b).toBe("1px");
-  expect(l.m).toBe("0px");
+  expect(l.m).toBe("4px");
+  // Same spacing as the native items: 4px from the previous item, not flush.
+  const gap = await label(page, 412).evaluate((el) => Math.round(el.getBoundingClientRect().left - el.previousElementSibling.getBoundingClientRect().right));
+  expect(gap).toBe(4);
   const btn = await page.locator('#ghprt-bar [data-jump="yours"]').evaluate((el) => {
     const s = getComputedStyle(el);
     return { h: Math.round(el.getBoundingClientRect().height), r: s.borderTopLeftRadius, b: s.borderTopWidth, f: s.fontFamily };
@@ -358,4 +361,19 @@ test("native look: label, bar buttons, and the row's metadata line is not resize
   expect(btn).toMatchObject({ h: 28, r: "6px", b: "1px" });
   const bodyFont = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
   expect(btn.f).toBe(bodyFont);
+});
+
+test("a token that cannot see the repository is explained in the bar, not as unavailable rows", async ({ context, page }) => {
+  await setup(context, page, {
+    handlers: [{ match: (p) => p === "/graphql", json: { data: { repository: null }, errors: [{ type: "NOT_FOUND", message: "Could not resolve to a Repository" }] } }],
+  });
+  await expect(page.locator("#ghprt-bar")).toContainText("Pull requests: Read");
+  await expect(page.locator("[data-ghprt]")).toHaveCount(0);
+});
+
+test("a token mapped only to another owner is reported as missing, not as lacking permission", async ({ context, page }) => {
+  const bodies = [];
+  await setup(context, page, { tokens: { githubTokens: [{ id: "o", name: "o", token: "x", owner: "other-org" }] }, bodies });
+  await expect(page.locator("#ghprt-bar")).toContainText("needs a GitHub token for this repository owner");
+  expect(bodies).toHaveLength(0);
 });

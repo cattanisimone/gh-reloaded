@@ -69,7 +69,7 @@
   function statusFromError(res) {
     const msg = String(res?.error || "");
     if (res?.status === 429 || /rate limit/i.test(msg)) return "rate";
-    if (res && res.hasToken === false) return "notoken";
+    if (res && (res.hasToken === false || /No GitHub token/.test(msg))) return "notoken";
     if (res?.status === 401 || res?.status === 403) return "denied";
     return "error";
   }
@@ -109,7 +109,7 @@
   // --- rendering ----------------------------------------------------------
 
   const BAR_NOTES = {
-    notoken: "Triage needs a GitHub token with Pull requests: Read (Settings → GitHub tokens).",
+    notoken: "Triage needs a GitHub token for this repository owner, with Pull requests: Read (Settings → GitHub tokens).",
     denied: "Triage could not read this repository with your token. It needs Pull requests: Read.",
     rate: "GitHub rate limit, retrying later.",
   };

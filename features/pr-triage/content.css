@@ -116,6 +116,7 @@ html[data-color-mode="dark"] .ghprt-label {
 .ghprt-label {
   box-sizing: border-box;
   display: inline-flex;
+  margin-left: 4px; /* the metadata line has no gap: each native item spaces itself */
   align-items: center;
   height: 20px;
   padding: 0 7px;
