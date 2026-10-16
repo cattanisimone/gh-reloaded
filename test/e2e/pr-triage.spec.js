@@ -225,6 +225,18 @@ test("no token: the bar says what is needed, rows get no labels, nothing is requ
   await expect(page.locator("a[data-testid=listitem-title-link]")).toHaveCount(6);
 });
 
+test("a static page rescans when the cached facts expire", async ({ context, page }) => {
+  // Real time: the content script and the background each keep a 60 s cache
+  // that no page clock reaches.
+  test.setTimeout(120_000);
+  const bodies = [];
+  await setup(context, page, { bodies });
+  await expect(page.locator("[data-ghprt]")).toHaveCount(6);
+  expect(bodies).toHaveLength(1);
+  await expect.poll(() => bodies.length, { timeout: 75_000 }).toBe(2);
+  await expect(page.locator("[data-ghprt]")).toHaveCount(6);
+});
+
 test("a refused request (403) is explained in the bar, no guessing on the rows", async ({ context, page }) => {
   await setup(context, page, { handlers: [{ match: (p) => p === "/graphql", status: 403, json: { message: "Resource not accessible" } }] });
   await expect(page.locator("#ghprt-bar")).toContainText("Pull requests: Read");

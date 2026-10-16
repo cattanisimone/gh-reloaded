@@ -93,8 +93,9 @@
       entry.until = Date.now() + TTL_MS;
     }
     schedule();
-    // Nothing else wakes a static page when the back-off ends.
-    if (entry.status !== "ready") setTimeout(schedule, TTL_MS + 50);
+    // Nothing else wakes a static page when the back-off ends or the cached
+    // facts expire, so a rescan is scheduled for that moment.
+    setTimeout(schedule, TTL_MS + 50);
   }
 
   function wanted(entry, rows) {
