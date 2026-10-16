@@ -44,6 +44,7 @@ Go to [github.com/settings/personal-access-tokens/new](https://github.com/settin
 | Scope | Permission | Used for |
 | --- | --- | --- |
 | Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues |
+| Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage |
 | Repository | **Contents** | **HTML preview** of files in private repos (public repos work without a token) |
 | Repository | **Metadata** | added by GitHub automatically |
 | Organization | **Projects** | Projects v2 Status, Standup mode, My Issues project memberships |
@@ -161,6 +162,16 @@ On GitHub's own **My Issues** dashboard (`github.com/issues`), adds a `List | Gr
 - An issue in several Projects shows in each tile with the status it has **in that Project**, and is counted once in the toolbar summary (`34 issues in 3 projects`). One assigned to none falls into an explicit **No Project** tile, and one in a Project with no status into **No Status**.
 - A **collapsible sidebar**: the dashboard's left sidebar (Assigned to me, Created by me, Mentioning me, Recently updated, Views) collapses to a 48px icon rail (centered icons, a highlighted active item, the toggle at its top), collapsed by default, in List and grouped view alike; the choice is remembered. It is found by the visible text of its navigation items; if they can't be found, no toggle is added and the page is left untouched.
 - Read-only: it only links out to issues, and never changes an issue or a Project item. Needs a token with the read access listed under [Install](#install) to see project memberships; without it, issues still list under "No Project". Loading, empty, missing-token, and API-error states are shown explicitly, and a result set larger than the fetch cap is labelled "Showing the first N of M issues" rather than presented as complete.
+
+### PR triage — [features/pr-triage](features/pr-triage)
+
+On a repository's own **Pull requests** page (`github.com/<owner>/<repo>/pulls`), adds one small label to each open row saying whose move it is, and a one-line **On this page** bar with counts that jump to the matching rows. GitHub's list, search, filters, sorting, pagination and links are untouched: no row is hidden, moved or duplicated. On by default; **Hide triage** on the page, or the switch in Settings → Features, removes everything it added.
+
+![PR triage mockup: a repository's Pull requests page with an "On this page" bar (2 your turn, 2 waiting on others, 1 unavailable, Hide triage) and open rows each carrying one label such as "Your turn · Review requested", "Waiting on author" or "Team review requested"](screenshots/pr-triage.svg)
+
+- A PR gets at most one placement, the **author role first**. As author: `Your turn` when a reviewer's latest review requests changes and they were not asked again, when the checks fail, or when the branch conflicts; `Waiting on review` (naming reviewers and teams) or `Waiting on checks` otherwise. As reviewer: `Your turn · Review requested` when you are asked (also after your own earlier "changes requested"); `Waiting on author` after you requested changes, with a note when there are new commits since (commits alone never make it your turn). A team request alone shows a neutral `Team review requested` (membership is not checked and it is counted in neither group). Approved, green, or a draft with no blocker: no label. There is no "ready to merge" and no unread status, ever.
+- Review facts come from one batched GraphQL query per page of visible PR numbers (25 per query, two in flight, cached for 60 seconds), with the token mapped to the repository owner or the default one. The native list never waits for it: the bar says `Loading review data…` first. Without a token, with a refusal or a rate limit, the bar says what is missing and the rows get no guessed label; a single PR that cannot be read says `Triage unavailable`. Needs a token with **Pull requests: Read** (and read access to commit statuses or checks for the checks rollup).
+- Only open and draft rows of the repository's list are triaged; the closed and merged tabs and the global `github.com/pulls` page are left alone. Rows are found through `data-testid` hooks and ARIA labels, never CSS-module classes; if an anchor is missing, nothing is rendered until the next scan.
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
