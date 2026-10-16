@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #75 Token access diagnostics</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--warn:#9a6700;--bg:#fff;--soft:#f6f8fa;--org:#c2410c}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  h3{font-size:14px;margin:14px 0 6px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:13px;overflow-wrap:anywhere} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto}
+  /* mockup */
+  .mock{display:flex;gap:16px;flex-wrap:wrap}
+  .card{flex:1 1 380px;min-width:0;border:1px solid var(--line);border-radius:8px;background:#fff;padding:12px 14px;font-size:13px}
+  .card-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);font-weight:600}
+  .rm{color:var(--muted);font-weight:400}
+  .lbl{display:flex;justify-content:space-between;margin:8px 0 4px;font-weight:600}
+  .lbl span{font-weight:400;color:var(--muted)}
+  .irow{display:flex;gap:8px;flex-wrap:wrap}
+  .in{flex:1 1 160px;border:1px solid var(--line);border-radius:6px;padding:5px 8px;background:#f6f8fa;color:var(--muted);font-family:ui-monospace,Menlo,monospace;font-size:12px;min-width:0}
+  .btn{border:1px solid var(--line);border-radius:6px;padding:5px 12px;background:#eef1f4;font-weight:500;white-space:nowrap}
+  .btn.p{background:var(--org);color:#fff;border-color:transparent}
+  .ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)} .mut{color:var(--muted)}
+  .diag{margin-top:10px;border:1px solid var(--line);border-radius:6px;background:var(--soft);padding:10px}
+  .diag-h{display:flex;justify-content:space-between;align-items:center;font-weight:600;gap:8px;flex-wrap:wrap}
+  .tag{font-size:11px;border:1px solid var(--warn);color:var(--warn);border-radius:10px;padding:0 6px;font-weight:600}
+  .tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin:8px 0}
+  .tgrid .in{background:#fff}
+  .res{border-top:1px solid var(--line);padding:6px 0;display:flex;gap:8px;justify-content:space-between;align-items:flex-start}
+  .res b{display:block} .res small{color:var(--muted);display:block}
+  .pill{font-size:11px;font-weight:600;border-radius:10px;padding:1px 8px;white-space:nowrap;border:1px solid}
+  .pill.av{color:var(--ok);border-color:var(--ok)} .pill.dn{color:var(--bad);border-color:var(--bad)} .pill.nv{color:var(--warn);border-color:var(--warn)} .pill.nc{color:var(--muted);border-color:var(--muted)} .pill.te{color:#8250df;border-color:#8250df}
+  .fine{font-size:12px;color:var(--muted);margin-top:6px}
+  .cap{font-size:12px;color:var(--muted);margin:4px 0 0}
+  .dark .card{background:#151b23;border-color:#2f3742;color:#e6edf3}
+  .dark .diag{background:#0d1117;border-color:#2f3742} .dark .res{border-color:#2f3742}
+  .dark .in{background:#0d1117;border-color:#2f3742;color:#9198a1} .dark .tgrid .in{background:#151b23}
+  .dark .btn{background:#212830;border-color:#2f3742;color:#e6edf3} .dark .btn.p{background:#f0883e;color:#1b1004}
+  .dark .ok,.dark .pill.av{color:#3fb950;border-color:#3fb950} .dark .pill.nv,.dark .tag{color:#d29922;border-color:#d29922} .dark .pill.dn{color:#ff7b72;border-color:#ff7b72}
+  .dark .mut,.dark .res small,.dark .card-head,.dark .fine{color:#9198a1}
+</style></head><body><main>
+  <h1>#75 · Per-token access diagnostics in Settings</h1>
+  <p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/75">cattanisimone/gh-reloaded#75</a> · Size: <b>normal</b> · Goal: each token card can check, on request, what <i>that</i> token can read on resources the user names, and say only what the API response proves.</p>
+
+  <h2>What changes for users</h2>
+  <ul>
+    <li>Every token card (default and owner) gets a <b>Verify access</b> button next to <b>Test</b>. It opens a results panel inside that card, not a new page.</li>
+    <li>The panel asks for targets: a repository (required), and optionally an issue number, a Projects v2 URL and a private file. An owner card pre-fills the repository field with <code>&lt;owner&gt;/</code>. Nothing is probed until the user clicks <b>Run checks</b>.</li>
+    <li>Each capability gets one of five statuses: <b>Available</b>, <b>Access denied</b> (only when the response proves it), <b>Not verified</b>, <b>Not checked</b>, <b>Temporary error</b>. Each comes with the resource, the time, a one-line reason and, where it fits, a fix with a link to GitHub's docs.</li>
+    <li><b>Test</b> still checks authentication only. Its success message now adds “Feature access not checked”, so it no longer reads as “all permissions granted”.</li>
+    <li>An edited, unsaved token is verified as typed and labelled <b>Unsaved token</b>. Editing the token or a target clears the old results.</li>
+  </ul>
+
+  <h2>Mockup</h2>
+  <p class="cap">Light: an owner card after a run. Dark: the default card before a run (empty targets, unsaved edit). Dashed outlines mark the new parts. Fictional data.</p>
+  <div class="mock">
+    <div class="card">
+      <div class="card-head"><span>OWNER TOKEN</span><span class="rm">Remove</span></div>
+      <div class="lbl">Owner login</div><div class="in">acme-labs</div>
+      <div class="lbl">Token <span>Saved · ends in …7D52</span></div>
+      <div class="irow"><div class="in">Paste a new token to replace it</div><span class="btn">Test</span><span class="btn new">Verify access</span></div>
+      <div class="diag new" role="region" aria-label="Access diagnostics">
+        <div class="diag-h"><span>Access diagnostics</span><span class="mut" style="font-weight:400;font-size:12px">Checked 14:32 · saved token …7D52</span></div>
+        <div class="tgrid"><div class="in">acme-labs/dashboard</div><div class="in">Issue # 12</div><div class="in">github.com/orgs/acme-labs/projects/3</div><div class="in">Private file (optional)</div></div>
+        <div class="irow" style="justify-content:flex-end"><span class="btn p">Run checks</span></div>
+        <div class="res" style="margin-top:6px"><div><b>Authentication</b><small>sample-user · fine-grained token</small></div><span class="pill av">Available</span></div>
+        <div class="res"><div><b>Repository &amp; issues</b><small>acme-labs/dashboard, issue #12 read</small></div><span class="pill av">Available</span></div>
+        <div class="res"><div><b>Projects v2</b><small>acme-labs project 3: GitHub returned no project. It may not exist, or the token may lack <i>Organization → Projects: read</i>. <a href="#">Fine-grained permissions ↗</a></small></div><span class="pill nv">Not verified</span></div>
+        <div class="res"><div><b>Private contents</b><small>No private file given</small></div><span class="pill nc">Not checked</span></div>
+        <p class="fine">Results stay on this page only. A resource the token cannot see does not prove a missing permission.</p>
+      </div>
+    </div>
+    <div class="card dark">
+      <div class="card-head"><span>● DEFAULT TOKEN</span><span class="rm">Remove</span></div>
+      <div class="lbl">Token <span>Saved · ends in …4A91</span></div>
+      <div class="irow"><div class="in">••••••••••••••••</div><span class="btn">Test</span><span class="btn new">Verify access</span></div>
+      <div class="diag new">
+        <div class="diag-h"><span>Access diagnostics</span><span class="tag">Unsaved token</span></div>
+        <div class="tgrid"><div class="in">owner/repo (required)</div><div class="in">Issue # (optional)</div><div class="in">Project URL (optional)</div><div class="in">Private file (optional)</div></div>
+        <div class="irow" style="justify-content:flex-end"><span class="btn p">Run checks</span></div>
+        <p class="fine">Name a repository to check. The default token is checked on that owner only: it does not prove access to other owners.</p>
+      </div>
+    </div>
+  </div>
+  <p class="cap">Below 720px the target grid stacks to one column and the status pill wraps under the text. While running, the button reads “Checking…” and is disabled; results are announced through a single <code>role="status"</code> summary (“3 checked: 2 available, 1 not verified”).</p>
+  <h3>Other states covered</h3>
+  <table>
+    <tr><th>State</th><th>What the card shows</th></tr>
+    <tr><td>No token in the card</td><td>“Paste a token first.” (same as Test), no request</td></tr>
+    <tr><td>No repository given</td><td>Field marked invalid, “Name a repository to check”, no request</td></tr>
+    <tr><td>401 on authentication</td><td>Authentication <b>Access denied</b> (“invalid, expired or revoked”), the other checks <b>Not checked</b> (they would fail for the same reason)</td></tr>
+    <tr><td>Token edited, or target changed, after a run</td><td>Results cleared, “Token changed: run the checks again”; a run in flight is aborted</td></tr>
+  </table>
+
+  <h2>How it works</h2>
+  <div class="scroll"><svg viewBox="0 0 860 190" width="100%" style="min-width:600px" role="img" aria-label="Verify access flow: card, diagnostics module, api.github.com, classifier, results panel">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+    <g font-size="13" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" fill="#1f2328">
+      <rect x="10" y="40" width="150" height="70" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+      <text x="85" y="66" text-anchor="middle" font-weight="600">Token card</text><text x="85" y="84" text-anchor="middle" font-size="11" fill="#59636e">card's own token +</text><text x="85" y="98" text-anchor="middle" font-size="11" fill="#59636e">targets (in memory)</text>
+      <rect x="210" y="30" width="190" height="90" rx="6" fill="#ddf4ff" stroke="#0969da"/>
+      <text x="305" y="56" text-anchor="middle" font-weight="600">token-diagnostics.js</text><text x="305" y="76" text-anchor="middle" font-size="11" fill="#59636e">≤ 4 requests, 2 at a time</text><text x="305" y="92" text-anchor="middle" font-size="11" fill="#59636e">10 s timeout each, abortable</text><text x="305" y="108" text-anchor="middle" font-size="11" fill="#59636e">no cache, no retry, GET only*</text>
+      <rect x="450" y="30" width="170" height="90" rx="6" fill="#fff" stroke="#d1d9e0"/>
+      <text x="535" y="54" text-anchor="middle" font-weight="600">api.github.com</text><text x="535" y="74" text-anchor="middle" font-size="11" font-family="ui-monospace,Menlo,monospace">GET /user</text><text x="535" y="89" text-anchor="middle" font-size="11" font-family="ui-monospace,Menlo,monospace">GET /repos/o/r[/issues/n]</text><text x="535" y="104" text-anchor="middle" font-size="11" font-family="ui-monospace,Menlo,monospace">POST /graphql · GET contents</text>
+      <rect x="670" y="30" width="180" height="90" rx="6" fill="#dafbe1" stroke="#1a7f37"/>
+      <text x="760" y="56" text-anchor="middle" font-weight="600">classify() (pure)</text><text x="760" y="76" text-anchor="middle" font-size="11" fill="#59636e">status + headers + GraphQL</text><text x="760" y="92" text-anchor="middle" font-size="11" fill="#59636e">error type → status, reason,</text><text x="760" y="108" text-anchor="middle" font-size="11" fill="#59636e">remedy (no body kept)</text>
+      <path d="M160 75H205" stroke="#59636e" marker-end="url(#a)"/><path d="M400 75H445" stroke="#59636e" marker-end="url(#a)"/><path d="M620 75H665" stroke="#59636e" marker-end="url(#a)"/>
+      <path d="M760 120V160H85V115" stroke="#59636e" fill="none" marker-end="url(#a)"/>
+      <text x="420" y="178" text-anchor="middle" font-size="11" fill="#59636e">rendered in the card's results panel (textContent only); thrown away when the token or a target changes</text>
+      <text x="305" y="18" text-anchor="middle" font-size="11" fill="#59636e">* GraphQL is a POST carrying a read-only query</text>
+    </g>
+  </svg></div>
+  <p>The options page already calls <code>api.github.com</code> directly for <b>Test</b>. Diagnostics do the same, on purpose not through <code>ghFetch</code>/<code>ghGraphQL</code>: those resolve a token by owner, read the response cache and would fall back to the default token. Here the card's token is passed explicitly, and a failure is never retried with another credential.</p>
+
+  <h3>Classification (the core rule set, unit-tested)</h3>
+  <table>
+    <tr><th>Evidence</th><th>Status</th><th>Reason / remedy shown</th></tr>
+    <tr><td>2xx (GraphQL: non-null <code>projectV2</code>)</td><td class="ok">Available</td><td>That resource only; never “every repo of the owner”</td></tr>
+    <tr><td>401</td><td class="bad">Access denied</td><td>Invalid, expired or revoked; create or regenerate the token</td></tr>
+    <tr><td>403 + <code>X-GitHub-SSO: required</code></td><td class="bad">Access denied</td><td>SSO authorization needed for this organization; link from the header when it is a github.com URL, else docs</td></tr>
+    <tr><td>403/429 + <code>X-RateLimit-Remaining: 0</code> or <code>Retry-After</code>, or GraphQL <code>RATE_LIMITED</code></td><td style="color:#8250df">Temporary error</td><td>Rate limit or secondary limit, with reset time from <code>X-RateLimit-Reset</code></td></tr>
+    <tr><td>403 whose message is GitHub's “Resource not accessible by personal access token”, or GraphQL <code>INSUFFICIENT_SCOPES</code></td><td class="bad">Access denied</td><td>Fine-grained: repository selection / Issues, Contents, Projects permission. Classic: missing scope, listing <code>X-Accepted-OAuth-Scopes</code> vs <code>X-OAuth-Scopes</code></td></tr>
+    <tr><td>403 naming an organization policy (fine-grained token not approved, lifetime or classic-token restriction)</td><td class="bad">Access denied</td><td>Organization approval / policy; link to the docs</td></tr>
+    <tr><td>Any other 403, any 404, GraphQL <code>NOT_FOUND</code> or null project, partial data (<code>data</code> + <code>errors</code>)</td><td class="warn">Not verified</td><td>“Not found or not visible to this token”, with the possible causes listed, none asserted</td></tr>
+    <tr><td>5xx, network error, timeout, unparseable body</td><td style="color:#8250df">Temporary error</td><td>Try again later; HTTP status shown when there is one</td></tr>
+    <tr><td>Target not given, or skipped after a 401</td><td class="mut">Not checked</td><td>What to supply to check it</td></tr>
+  </table>
+  <p class="cap">Token type (fine-grained <code>github_pat_</code> or classic <code>ghp_</code>) is read from the prefix only to choose which remedy wording to show, never to state a configuration. Rendered text is built only from the status code, those headers, GraphQL error <code>type</code> and our own wording; GitHub's message strings are matched, not displayed.</p>
+
+  <h2>Changes by file</h2>
+  <table>
+    <tr><th>File</th><th>Change</th><th>Why</th></tr>
+    <tr><td><code>options/token-diagnostics.js</code> (new)</td><td>ES module: <code>parseTargets()</code>, <code>buildChecks()</code>, <code>classify()</code>, <code>runDiagnostics(token, targets, {signal, fetch})</code> with concurrency 2 and per-request timeout</td><td>Bounded, read-only flow kept apart from token CRUD; pure parts unit-testable</td></tr>
+    <tr><td><code>options/options.js</code> ⚠ shared</td><td>Verify access button and panel in <code>secretFieldHtml</code>; click/input handlers; abort and clear on token or target change; Test message wording</td><td>Token cards already live here</td></tr>
+    <tr><td><code>options/options.css</code> ⚠ shared</td><td>Panel, target grid, result rows, status pills, light/dark tokens, &lt;720px stack</td><td>Reuse existing <code>--ok</code>, <code>--bad</code>, <code>--line</code> tokens</td></tr>
+    <tr><td><code>options/options.html</code></td><td>Probably none (cards are rendered from JS)</td><td>—</td></tr>
+    <tr><td><code>test/unit/token-diagnostics.test.js</code> (new)</td><td>Classifier and target parsing</td><td>See test plan</td></tr>
+    <tr><td><code>test/e2e/options-token-diagnostics.spec.js</code> (new)</td><td>Panel flows with <code>api.github.com</code> mocked per test</td><td>See test plan</td></tr>
+    <tr><td><code>test/e2e/options-tokens.spec.js</code></td><td>Test button message wording</td><td>AC 2</td></tr>
+    <tr><td><code>README.md</code></td><td>GitHub tokens section: Verify access and what each status means</td><td>Features is the source of truth</td></tr>
+    <tr><td><code>screenshots/token-access-diagnostics/{light,dark}.svg</code></td><td>Taken from the issue's mockup branch and updated to the shipped UI (PNGs left out)</td><td>Docs rule</td></tr>
+    <tr><td><code>PRIVACY.md</code></td><td>One sentence: diagnostics send the card's token to api.github.com on request; nothing is stored</td><td>Same host and permissions, but users should know</td></tr>
+  </table>
+
+  <h2>Data, permissions, privacy</h2>
+  <ul>
+    <li>No new permission: <code>host_permissions</code> already covers <code>https://api.github.com/*</code>. No new storage key; targets and results live in page memory only and disappear on reload.</li>
+    <li>Requests are user-triggered, at most 4 per run, all reads. Private file: only the HTTP status is used; the body is cancelled unread.</li>
+    <li>No token, Authorization header, response body or file content is rendered, logged or saved. A guard strips any occurrence of the token from rendered strings anyway (unit-tested).</li>
+  </ul>
+
+  <h2>Test plan</h2>
+  <table>
+    <tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
+    <tr><td>Verify access in every card, inline panel, no new nav page</td><td>e2e</td><td><code>verify access sits beside Test on default and owner cards</code>; asserts the nav still has 4 entries</td></tr>
+    <tr><td>Test stays authentication-only, no “all permissions” message</td><td>e2e</td><td><code>test reports authentication only</code> (options-tokens.spec)</td></tr>
+    <tr><td>Checks cover auth, repo/issue, Projects v2 when given; private file only with a target</td><td>unit + e2e</td><td><code>buildChecks skips absent targets</code>; <code>runs only the checks with targets</code> (asserts the requested URLs)</td></tr>
+    <tr><td>Resource, time, evidence-based status and remedy per result</td><td>e2e</td><td><code>each result names its target, time and remedy</code></td></tr>
+    <tr><td>Ambiguous 403/404, empty GraphQL, missing targets are inconclusive / not checked</td><td>unit</td><td><code>classify: 404 / bare 403 / null project / partial data → not verified</code>; <code>missing target → not checked</code></td></tr>
+    <tr><td>Status matrix: success, 401, 403 (SSO, fine-grained, scopes), 404, rate limit (403 and 429), GraphQL partial, network, timeout, 5xx</td><td>unit (one case each) + e2e (success, 401, rate limit, network)</td><td><code>classify table</code>; <code>verify shows …</code> per case</td></tr>
+    <tr><td>Only this card's credential, unsaved edit used and labelled; storage untouched</td><td>e2e</td><td><code>verifies the unsaved value and labels it</code>; <code>two owner cards send their own tokens</code> (asserts the Authorization header per request); <code>storage is unchanged after a run</code></td></tr>
+    <tr><td>Credential change invalidates results</td><td>e2e</td><td><code>editing the token clears results and aborts the run</code></td></tr>
+    <tr><td>Never automatic; bounded; read-only</td><td>e2e + unit</td><td><code>no api request on page load</code>; <code>double click starts one run</code>; <code>at most 4 requests, GET or GraphQL query only</code></td></tr>
+    <tr><td>No secrets or payloads in UI, logs, storage</td><td>unit + e2e</td><td><code>rendered text never contains the token</code> (a mocked message echoing the token); console spy; storage diff</td></tr>
+    <tr><td>Responsive, light/dark, keyboard, ARIA, expandable</td><td>e2e</td><td><code>panel at 400px has no horizontal scroll</code>; <code>dark scheme uses dark surfaces</code>; <code>keyboard: Enter opens, Tab reaches Run checks, aria-expanded toggles, status announced</code></td></tr>
+    <tr><td>Native look</td><td>e2e</td><td><code>Verify access matches Test</code>: same height, radius, border, padding; row gap unchanged</td></tr>
+    <tr><td>Docs and mockups</td><td>manual + existing <code>token-docs.test.js</code></td><td>README, PRIVACY, two SVGs</td></tr>
+  </table>
+  <p><b>Anchors:</b> none on github.com. The change lives on the extension's own Settings page, so the CSS-module and fallback rules of section 3b do not apply; no github.com fixtures are added.</p>
+  <p><b>Live check:</b> there is no github.com page to probe with <code>gh-reloaded-live-dom</code>. Instead I sent anonymous calls to <code>api.github.com</code> to check the response shapes the classifier depends on: a bad token gets <code>401</code>, a missing repository gets <code>404</code> “Not Found”, an anonymous GraphQL call gets a <code>403</code> that is really a rate limit (the reason the 403 rule reads headers first), and <code>X-GitHub-SSO</code>, <code>X-OAuth-Scopes</code>, <code>X-Accepted-OAuth-Scopes</code>, <code>X-RateLimit-*</code> and <code>Retry-After</code> are all in <code>Access-Control-Expose-Headers</code>, so the page can read them. <b>Not verified on live github.com:</b> the SSO, fine-grained-denied and organization-policy 403s need a real organization and token. The maintainer should run Verify access once against an SSO organization and once against a repository left out of a fine-grained token's selection.</p>
+
+  <h2>Risks and open questions</h2>
+  <ul>
+    <li><b>Do targets persist across reloads?</b> Re-typing them is tedious. (Default: no, memory only, as the issue prefers. A later change could save targets, never results.)</li>
+    <li><b>Projects target format.</b> (Default: paste the project URL, <code>github.com/orgs/&lt;o&gt;/projects/&lt;n&gt;</code> or <code>/users/&lt;u&gt;/…</code>; the URL says whether to query <code>organization</code> or <code>user</code>, so no guessing and no second query.)</li>
+    <li><b>Issues check without an issue number.</b> (Default: <code>GET /repos/o/r/issues?per_page=1</code>; it confirms the issues list is readable, and the result says so. An issue number makes it a specific read.)</li>
+    <li><b>GitHub's 403 wording changes.</b> The message matches that upgrade a 403 to “Access denied” are small and tested; an unknown 403 falls back to “Not verified”, the safe side.</li>
+    <li><b>Org approval pending vs not found.</b> GitHub often answers 404 for both; that stays “Not verified” and lists approval as one possible cause.</li>
+  </ul>
+
+  <h2>Out of scope</h2>
+  <ul><li>Background or automatic checks, enumerating orgs/repos/projects, per-feature telemetry, writes to GitHub, token creation or permission changes, a standalone diagnostics page, persisting results.</li></ul>
+</main></body></html>
