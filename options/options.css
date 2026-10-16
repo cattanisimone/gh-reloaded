@@ -277,6 +277,7 @@ input.tok-secret { font-family: var(--mono); font-size: 13px; }
 .field-hint { color: var(--faint); font-weight: 400; }
 .input-row { display: flex; gap: 8px; }
 .input-row input { flex: 1 1 auto; }
+.input-row .btn { flex: none; }
 
 .sc-icons {
   display: inline-flex;
@@ -396,6 +397,28 @@ h1, .group h2 { scroll-margin-top: 12px; }
   .field-grid, .field-grid.wide-second { grid-template-columns: minmax(0, 1fr); }
   .actions { flex-wrap: wrap; }
 }
+
+/* --- Access diagnostics (inside a token card) --- */
+.diag { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.diag-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.diag-tag { font-size: 12px; color: var(--muted); }
+.diag-tag.is-unsaved { padding: 0 8px; border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-weight: 600; }
+.diag-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.diag-in[aria-invalid] { border-color: var(--bad); }
+.field-error { font-size: 12px; color: var(--bad); }
+.diag-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.diag-meta, .diag-note { margin: 0; font-size: 12px; color: var(--muted); }
+.diag-results { display: grid; margin: 0; padding: 0; list-style: none; }
+.diag-result { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+.diag-result > div { display: grid; min-width: 0; gap: 2px; }
+.diag-resource, .diag-reason { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.diag-pill { flex: none; padding: 0 8px; border: 1px solid currentColor; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.diag-pill.is-available { color: var(--ok); }
+.diag-pill.is-denied { color: var(--bad); }
+.diag-pill.is-not-verified, .diag-pill.is-temporary { color: var(--warn, #9a6700); }
+.diag-pill.is-not-checked { color: var(--muted); }
+@media (prefers-color-scheme: dark) { .diag-pill.is-not-verified, .diag-pill.is-temporary { color: #d29922; } }
+@media (max-width: 719px) { .diag-result { flex-direction: column; } }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
