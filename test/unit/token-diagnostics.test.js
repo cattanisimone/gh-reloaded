@@ -11,6 +11,7 @@ const c = (result, kind = "repo", extra = {}) => classify(result, { kind, token:
 test("tokenType reads the prefix only", () => {
   assert.equal(tokenType(FINE), "fine-grained");
   assert.equal(tokenType(CLASSIC), "classic");
+  for (const p of ["gho_", "ghu_", "ghs_", "ghr_"]) assert.equal(tokenType(`${p}abc123`), "unknown");
   assert.equal(tokenType("xyz"), "unknown");
 });
 

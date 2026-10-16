@@ -41,7 +41,7 @@ const DOCS = {
 // token is configured.
 export function tokenType(token) {
   if (/^github_pat_/.test(token || "")) return "fine-grained";
-  if (/^gh[pousr]_/.test(token || "")) return "classic";
+  if (/^ghp_/.test(token || "")) return "classic";
   return "unknown";
 }
 
