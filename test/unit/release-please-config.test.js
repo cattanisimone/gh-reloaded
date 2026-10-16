@@ -121,6 +121,15 @@ test("a Release-As footer inside a squashed multi-commit body is honoured", asyn
   assert.equal((await releasePullRequestFrom(latestRelease014, squashed)).version.toString(), "1.0.0");
 });
 
+// GitHub appends `---------` and Co-authored-by trailers to a squash body; release-please
+// reads footers only from the last block, so the request is lost unless they are deleted.
+test("a Co-authored-by trailer after the footer loses the request, so the merge dialog must drop it", async () => {
+  const body = "chore: prepare the 1.0.0 release (#81)\n\n* chore: request the 1.0.0 release\n\nRelease-As: 1.0.0";
+  const trailer = "\n\n---------\n\nCo-authored-by: Someone <noreply@example.com>";
+  assert.equal((await releasePullRequestFrom(latestRelease014, body)).version.toString(), "1.0.0");
+  assert.equal((await releasePullRequestFrom(latestRelease014, "feat: add a thing", body + trailer)).version.toString(), "0.15.0");
+});
+
 test("SemVer resumes after 1.0.0 without any override", async () => {
   const latest100 = {
     tag: { name: "v1.0.0", version: Version.parse("1.0.0"), sha: "0".repeat(40) },

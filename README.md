@@ -200,7 +200,7 @@ Versioning and releases are automated with [Release Please](https://github.com/g
 
 The flow:
 
-1. PR titles are [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, …), enforced on every PR by [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml). PRs are squash-merged with the PR title as the commit title and the PR's commit messages as the body, so each PR becomes one conventional commit on `main`.
+1. PR titles are [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, …), enforced on every PR by [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml). PRs are squash-merged with the commit messages as the body (a single-commit PR takes its commit subject as the title, so keep it equal to the PR title), so each PR becomes one conventional commit on `main`.
 2. On each push to `main`, Release Please reads those commits and keeps a single **release PR** open that bumps `manifest.json` and `.release-please-manifest.json` and updates `CHANGELOG.md`. A `feat` bumps the minor version, a `fix` or `perf` the patch version, and a breaking change (`!`) the major version, or the minor while below 1.0. Other types (`refactor`, `test`, `docs`, `ci`, `chore`, `build`, `style`, `revert`) make no release on their own. See [Picking the PR type](AGENTS.md#picking-the-pr-type).
 3. Merging that release PR creates the `vX.Y.Z` tag and the GitHub Release, then the publish job packages the extension, uploads it to the Chrome Web Store (if the store secrets below are configured), and attaches `gh-reloaded-<version>.zip` to the release.
 
@@ -208,13 +208,13 @@ The zip bundles `manifest.json`, `background.js`, `background/`, `features/`, `i
 
 ### Requesting a milestone version
 
-To jump to a specific version (for example the first stable `1.0.0`), end the last commit message of a pull request with a `Release-As: 1.0.0` footer and keep that line when squash-merging. Release Please then rewrites its open release PR to that version. The footer only counts for the commits since the last release, so nothing has to be removed afterwards and normal SemVer resumes. Never fake a `feat!:` to force a major version. The human release announcement for a milestone lives in [`docs/releases/`](docs/releases), ready to paste above the generated notes; `CHANGELOG.md` stays generated.
+To jump to a specific version (for example the first stable `1.0.0`), end the last commit message of a pull request with a `Release-As: 1.0.0` footer and keep that line when squash-merging. Release Please reads footers only from the last block of the message, and GitHub appends `---------` and `Co-authored-by:` lines after the commit messages: delete them in the merge dialog so `Release-As: 1.0.0` is the last line. Release Please then rewrites its open release PR to that version. The footer only counts for the commits since the last release, so nothing has to be removed afterwards and normal SemVer resumes. Never fake a `feat!:` to force a major version. The human release announcement for a milestone lives in [`docs/releases/`](docs/releases), ready to paste above the generated notes; `CHANGELOG.md` stays generated.
 
 ### Repository settings (one-time, admin)
 
 Release Please needs two repo settings that a workflow file can't set itself:
 
-- **Settings → General → Pull Requests**: allow only **squash merging**, with the default commit message set to **Default to pull request title** and the body to **Commit messages**, so a `Release-As:` footer reaches `main`.
+- **Settings → General → Pull Requests**: allow only **squash merging**, with the default commit message set to **Default to pull request title and commit details**, so the commit messages (and a `Release-As:` footer) reach `main`.
 - **Settings → Actions → General → Workflow permissions**: enable **Allow GitHub Actions to create and approve pull requests** — without it the bot can't open the release PR.
 - **Settings → Branches → branch protection for `main`**: if a `Require Version Bump / check-version` required status check was added under the old manual-bump flow, remove it. This PR deletes that workflow, so the check can never report again and would otherwise block every PR — including the bot's release PR — forever.
 
