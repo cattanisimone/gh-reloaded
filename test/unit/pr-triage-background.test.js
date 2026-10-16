@@ -123,8 +123,9 @@ test("handleMessage rejects an owner or repo that is not a plain name", async ()
   await assert.rejects(() => handleMessage({ owner: "a/b", repo: "web", numbers: [1] }), /repository/);
 });
 
-test("buildQuery asks for writers' reviews only, like GitHub's review decision", () => {
-  assert.match(buildQuery([1]), /latestOpinionatedReviews\(first: 30, writersOnly: true\)/);
+test("buildQuery asks for every opinionated review, including read-only reviewers", () => {
+  assert.match(buildQuery([1]), /latestOpinionatedReviews\(first: 30\)/);
+  assert.doesNotMatch(buildQuery([1]), /writersOnly/);
 });
 
 test("handleMessage treats a null repository as a refusal", async () => {

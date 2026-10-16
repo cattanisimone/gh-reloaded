@@ -27,7 +27,7 @@ const FIELDS = `
   reviewRequests(first: 30) {
     nodes { requestedReviewer { __typename ... on User { login } ... on Team { slug organization { login } } } }
   }
-  latestOpinionatedReviews(first: 30, writersOnly: true) {
+  latestOpinionatedReviews(first: 30) {
     nodes { author { login } state submittedAt commit { oid } }
   }
   commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }

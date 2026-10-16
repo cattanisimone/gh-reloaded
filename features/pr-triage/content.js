@@ -93,6 +93,8 @@
       entry.until = Date.now() + TTL_MS;
     }
     schedule();
+    // Nothing else wakes a static page when the back-off ends.
+    if (entry.status !== "ready") setTimeout(schedule, TTL_MS + 50);
   }
 
   function wanted(entry, rows) {
