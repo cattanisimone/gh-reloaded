@@ -164,6 +164,24 @@ On GitHub's own **My Issues** dashboard (`github.com/issues`), adds a `List | Gr
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
+## Known limitations
+
+- **GitHub's markup changes.** The extension injects into github.com's own pages and anchors on visible text, roles and ARIA attributes rather than class names, but a GitHub redesign can still hide a control until the extension is updated. When an anchor is not found, the feature shows nothing instead of a broken layout.
+- **Personal-account Projects need a classic token.** Fine-grained tokens cannot read Projects v2 owned by a personal account; see [Create a GitHub token](#create-a-github-token).
+- **One fine-grained token per owner.** Work across several organizations or accounts needs one token per resource owner.
+- **Organizations may restrict tokens.** Approval requirements, SSO authorization or disabled fine-grained tokens make requests come back empty or `404`; **Verify access** in Settings tells which capability is affected.
+- **Rate limits.** Without a token, GitHub's anonymous rate limit applies and data may show a temporary error.
+- **HTML preview is experimental** and runs the file's own scripts in an isolated sandbox page with no access to your GitHub session.
+- **Chrome only.** It is a Manifest V3 extension for Chrome and Chromium browsers; the page may need a reload after installing or updating the extension.
+
+## Troubleshooting
+
+- **A feature does not appear.** Check it is switched on under **Settings → Features**, then reload the GitHub tab. After an extension update, reload open GitHub tabs too.
+- **"Missing token" or empty data.** Add a token under **GitHub tokens** and run **Test**; private repositories and Projects need one.
+- **Data for one organization is missing.** Add an owner token for that owner, authorize it for SSO if required, then run **Verify access** on its card.
+- **No Status, Standup signals or project memberships.** The token lacks Projects access: use the organization **Projects** permission, or a classic token with `read:project` for personal-account Projects.
+- **A page GitHub redesigned.** The feature stays hidden rather than breaking the page; please open an issue with the page URL.
+
 ## Project layout
 
 ```
@@ -182,17 +200,21 @@ Versioning and releases are automated with [Release Please](https://github.com/g
 
 The flow:
 
-1. PR titles are [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, …), enforced on every PR by [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml). PRs are squash-merged with the title as the commit message, so each PR becomes one conventional commit on `main`.
-2. On each push to `main`, Release Please reads those commits and keeps a single **release PR** open that bumps `manifest.json` (and the `version.txt` it maintains) and updates `CHANGELOG.md`. A `feat` bumps the minor version, a `fix` or `perf` the patch version, and a breaking change (`!`) the major version, or the minor while below 1.0. Other types (`refactor`, `test`, `docs`, `ci`, `chore`, `build`, `style`, `revert`) make no release on their own. See [Picking the PR type](AGENTS.md#picking-the-pr-type).
+1. PR titles are [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, …), enforced on every PR by [`.github/workflows/pr-title.yml`](.github/workflows/pr-title.yml). PRs are squash-merged with the commit messages as the body (a single-commit PR takes its commit subject as the title, so keep it equal to the PR title), so each PR becomes one conventional commit on `main`.
+2. On each push to `main`, Release Please reads those commits and keeps a single **release PR** open that bumps `manifest.json` and `.release-please-manifest.json` and updates `CHANGELOG.md`. A `feat` bumps the minor version, a `fix` or `perf` the patch version, and a breaking change (`!`) the major version, or the minor while below 1.0. Other types (`refactor`, `test`, `docs`, `ci`, `chore`, `build`, `style`, `revert`) make no release on their own. See [Picking the PR type](AGENTS.md#picking-the-pr-type).
 3. Merging that release PR creates the `vX.Y.Z` tag and the GitHub Release, then the publish job packages the extension, uploads it to the Chrome Web Store (if the store secrets below are configured), and attaches `gh-reloaded-<version>.zip` to the release.
 
-The zip bundles `manifest.json`, `background.js`, `background/`, `features/`, `icons/`, `lib/`, and `options/` — the same explicit path list as before, so neither `version.txt` nor the test harness ships.
+The zip bundles `manifest.json`, `background.js`, `background/`, `features/`, `icons/`, `lib/`, and `options/` — the same explicit path list as before, so the test harness and `docs/` do not ship.
+
+### Requesting a milestone version
+
+To jump to a specific version (for example the first stable `1.0.0`), end the last commit message of a pull request with a `Release-As: 1.0.0` footer and keep that line when squash-merging. Release Please reads footers only from the last block of the message, and GitHub appends `---------` and `Co-authored-by:` lines after the commit messages: delete them in the merge dialog so `Release-As: 1.0.0` is the last line. Release Please then rewrites its open release PR to that version. The footer only counts for the commits since the last release, so nothing has to be removed afterwards and normal SemVer resumes. Never fake a `feat!:` to force a major version. The human release announcement for a milestone lives in [`docs/releases/`](docs/releases), ready to paste above the generated notes; `CHANGELOG.md` stays generated.
 
 ### Repository settings (one-time, admin)
 
 Release Please needs two repo settings that a workflow file can't set itself:
 
-- **Settings → General → Pull Requests**: allow only **squash merging**, with the default commit message set to **Pull request title**.
+- **Settings → General → Pull Requests**: allow only **squash merging**, with the default commit message set to **Default to pull request title and commit details**, so the commit messages (and a `Release-As:` footer) reach `main`.
 - **Settings → Actions → General → Workflow permissions**: enable **Allow GitHub Actions to create and approve pull requests** — without it the bot can't open the release PR.
 - **Settings → Branches → branch protection for `main`**: if a `Require Version Bump / check-version` required status check was added under the old manual-bump flow, remove it. This PR deletes that workflow, so the check can never report again and would otherwise block every PR — including the bot's release PR — forever.
 
