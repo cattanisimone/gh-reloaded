@@ -173,7 +173,9 @@ export function classify(result, ctx) {
   const userProjectRemedy = {
     text: type === "classic"
       ? "Projects owned by a personal account need the read:project scope on a classic token (project also works; read:project is the read-only one). Add it to this token."
-      : "Projects owned by a personal account cannot be read by a fine-grained token. Use a classic token with the read:project scope (project also works; read:project is the read-only one).",
+      : type === "fine-grained"
+        ? "Projects owned by a personal account cannot be read by a fine-grained token. Use a classic token with the read:project scope (project also works; read:project is the read-only one)."
+        : "Projects owned by a personal account need access to the read:project scope. If this token cannot grant it, use a classic token with the read:project scope (project also works; read:project is the read-only one).",
     href: DOCS.classic,
   };
   const withProjectRemedy = (r) => (userProject && (r.status === STATUS.DENIED || r.status === STATUS.NOT_VERIFIED) ? { ...r, remedy: userProjectRemedy } : r);

@@ -262,3 +262,9 @@ test("runDiagnostics: a rate limit on any check stops the queued requests", asyn
   assert.equal(res.at(-1).status, STATUS.NOT_CHECKED);
   assert.match(res.at(-1).reason, /rate-limiting/);
 });
+
+test("classify: user-owned project with an OAuth or app token stays token-neutral", () => {
+  const r = classify({ status: 200, projectNull: true, errors: [] }, { kind: "project", token: "gho_abc123", project: usr });
+  assert.match(r.remedy.text, /read:project/);
+  assert.doesNotMatch(r.remedy.text, /fine-grained/);
+});
