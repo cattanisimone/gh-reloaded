@@ -94,7 +94,7 @@ test("turning Standup and My Issues off keeps their saved values, still editable
 });
 
 test("PR triage switch defaults on, has no Configure link, and persists", async ({ context, page }) => {
-  const worker = await openOptions(context, page);
+  const worker = await openOptions(context, page, "#features");
   const sw = page.locator("#feature-ghprt");
   await expect(sw).toHaveAttribute("aria-checked", "true");
   await expect(page.locator(".row", { has: sw }).locator("a.cfg")).toHaveCount(0);
