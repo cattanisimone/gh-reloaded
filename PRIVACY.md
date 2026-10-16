@@ -12,6 +12,8 @@ Stored locally via the browser's `chrome.storage.local` (never synced, never sen
 - **Standup mode thresholds** — how many days a card may sit in a review-like column before it is flagged, and the status keywords that count as review-like.
 - **UI preferences** — small display choices: the dependency graph's column alignment, how much external context to show, whether transitive dependencies are hidden and the automatic-refresh interval, whether the My Issues dashboard shows the native list or the grouped-by-project view (`ghmiView`), whether its left sidebar is collapsed to an icon rail (`ghmiSidebar`), whether the My Issues feature is switched on (`ghmiEnabled`), and the optional minimum and maximum width of its Project tiles (`ghmiTileMin`, `ghmiTileMax`). Which Project tiles are collapsed is kept in memory only and never stored.
 
+**Verify access** (Settings → GitHub tokens) sends the token of the card you use to `api.github.com`, only when you click **Run checks**, for the repository, issue, project and file you name; the answers are shown on that page and nothing is stored.
+
 None of this leaves your browser except the token itself, which is sent — over HTTPS, directly — only to `api.github.com`, only when a feature you've enabled needs to read issue, sub-issue, dependency, or Projects data. GitHub's own [privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement) covers what GitHub does with that request.
 
 ## What it reads from GitHub pages
