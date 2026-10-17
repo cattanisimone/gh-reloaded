@@ -92,3 +92,13 @@ test("turning Standup and My Issues off keeps their saved values, still editable
   await expect(page.locator("#ghsm-stale-days")).toHaveValue("6");
   await expect(page.locator("#ghmi-tile-min")).toHaveValue("700");
 });
+
+test("PR triage switch defaults on, has no Configure link, and persists", async ({ context, page }) => {
+  const worker = await openOptions(context, page, "#features");
+  const sw = page.locator("#feature-ghprt");
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator(".row", { has: sw }).locator("a.cfg")).toHaveCount(0);
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "false");
+  expect(await worker.evaluate(() => chrome.storage.local.get("ghprtEnabled"))).toEqual({ ghprtEnabled: false });
+});

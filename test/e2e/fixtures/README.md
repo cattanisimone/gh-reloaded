@@ -18,6 +18,7 @@ These are the saved GitHub pages the end-to-end tests run against. Serving them 
 | `pr-files-lazy.html` | A "Files changed" page whose file path is not yet resolvable | html-preview #16 regression |
 | `my-issues.html` | The "My Issues" dashboard (`github.com/issues`) | my-issues (group by project, collapsible sidebar) |
 | `my-issues-no-nav.html` | The same dashboard with its sidebar items labelled differently | my-issues (no sidebar toggle when the nav items are not found) |
+| `repo-pulls.html` | A repository's **Pull requests** list (React list view) with six rows of fictional data (acme/web, signed in as mira), class names as served today (`Name__hash`) | pr-triage (labels, count bar, route and state handling) |
 
 ## Capture date and how these were produced
 

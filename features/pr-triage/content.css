@@ -1,0 +1,147 @@
+/* PR triage — the "On this page" bar and the per-row labels on a
+   repository's Pull requests page. Primer light values by default, dark
+   under GitHub's data-color-mode (or the OS preference when it is "auto"). */
+
+.ghprt-bar,
+.ghprt-label {
+  --ghprt-fg: #1f2328;
+  --ghprt-muted: #59636e;
+  --ghprt-border: #d1d9e0;
+  --ghprt-subtle: #f6f8fa;
+  --ghprt-accent-fg: #0969da;
+  --ghprt-accent-bg: #ddf4ff;
+  --ghprt-accent-border: rgba(84, 174, 255, 0.4);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-color-mode="light"]) .ghprt-bar,
+  html:not([data-color-mode="light"]) .ghprt-label {
+    --ghprt-fg: #f0f6fc;
+    --ghprt-muted: #9198a1;
+    --ghprt-border: #3d444d;
+    --ghprt-subtle: #151b23;
+    --ghprt-accent-fg: #4493f8;
+    --ghprt-accent-bg: rgba(56, 139, 253, 0.1);
+    --ghprt-accent-border: rgba(56, 139, 253, 0.4);
+  }
+}
+
+html[data-color-mode="dark"] .ghprt-bar,
+html[data-color-mode="dark"] .ghprt-label {
+  --ghprt-fg: #f0f6fc;
+  --ghprt-muted: #9198a1;
+  --ghprt-border: #3d444d;
+  --ghprt-subtle: #151b23;
+  --ghprt-accent-fg: #4493f8;
+  --ghprt-accent-bg: rgba(56, 139, 253, 0.1);
+  --ghprt-accent-border: rgba(56, 139, 253, 0.4);
+}
+
+.ghprt-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ghprt-fg);
+  background: var(--ghprt-subtle);
+  border: 1px solid var(--ghprt-border);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.ghprt-title {
+  font-weight: 600;
+}
+
+.ghprt-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ghprt-note {
+  color: var(--ghprt-muted);
+}
+
+.ghprt-count,
+.ghprt-hide {
+  font: inherit;
+  font-weight: 500;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ghprt-count {
+  color: var(--ghprt-accent-fg);
+  background: var(--ghprt-accent-bg);
+  border: 1px solid var(--ghprt-accent-border);
+}
+
+.ghprt-hide {
+  margin-left: auto;
+  color: var(--ghprt-muted);
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.ghprt-count:hover,
+.ghprt-hide:hover {
+  filter: brightness(0.95);
+}
+
+.ghprt-hide:hover {
+  color: var(--ghprt-fg);
+  text-decoration: underline;
+}
+
+.ghprt-count:active,
+.ghprt-hide:active {
+  filter: brightness(0.89);
+}
+
+.ghprt-count:focus-visible,
+.ghprt-hide:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: -2px;
+}
+
+.ghprt-label {
+  box-sizing: border-box;
+  display: inline-flex;
+  margin-left: 4px; /* the metadata line has no gap: each native item spaces itself */
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ghprt-muted);
+  background: transparent;
+  border: 1px solid var(--ghprt-border);
+  border-radius: 2em;
+}
+
+.ghprt-label.ghprt-yours {
+  color: var(--ghprt-accent-fg);
+  background: var(--ghprt-accent-bg);
+  border-color: var(--ghprt-accent-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghprt-count,
+  .ghprt-hide {
+    transition: none;
+  }
+}

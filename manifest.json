@@ -118,6 +118,19 @@
         "features/my-issues/content.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://github.com/*/*"
+      ],
+      "js": [
+        "features/pr-triage/classify.js",
+        "features/pr-triage/content.js"
+      ],
+      "css": [
+        "features/pr-triage/content.css"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "sandbox": {

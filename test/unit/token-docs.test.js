@@ -35,3 +35,7 @@ test("no source claims classic tokens are unsupported", () => {
 test("the token placeholder is type-neutral", () => {
   assert.ok(js.includes("github_pat_… or ghp_…"));
 });
+
+test("Settings lists the Pull requests permission that PR triage needs", () => {
+  assert.match(html, /<span>Pull requests\b/);
+});
