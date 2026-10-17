@@ -62,7 +62,7 @@
   // plus a request status. Statuses other than "ready" back off for TTL_MS.
   const store = new Map();
   function entryFor(key) {
-    if (!store.has(key)) store.set(key, { facts: new Map(), inflight: new Set(), status: "ready", until: 0 });
+    if (!store.has(key)) store.set(key, { facts: new Map(), inflight: new Set(), status: "ready", until: 0, generation: 0 });
     return store.get(key);
   }
 
@@ -76,6 +76,7 @@
 
   async function fetchFacts(page, numbers) {
     const entry = entryFor(page.key);
+    const generation = ++entry.generation;
     numbers.forEach((n) => entry.inflight.add(n));
     let res;
     try {
@@ -85,10 +86,15 @@
     }
     numbers.forEach((n) => entry.inflight.delete(n));
     if (res && res.ok && res.facts) {
-      entry.status = "ready";
-      entry.until = 0;
+      if (generation === entry.generation) {
+        entry.status = "ready";
+        entry.until = 0;
+      }
       for (const n of numbers) entry.facts.set(n, { at: Date.now(), value: res.facts[n] || { ok: false } });
-    } else {
+    } else if (generation === entry.generation) {
+      // A filter/page change can start a newer fetch before this one ends.
+      // Older results may fill their own cache, but must not change the
+      // current request's status or back-off period.
       entry.status = statusFromError(res);
       entry.until = Date.now() + TTL_MS;
     }

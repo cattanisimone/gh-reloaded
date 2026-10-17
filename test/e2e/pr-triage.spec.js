@@ -61,6 +61,47 @@ async function setup(context, page, { storage = {}, tokens = TOKENS, handlers, f
 const row = (page, n) => page.locator("li", { has: page.locator(`a[href$="/pull/${n}"]`) });
 const label = (page, n) => row(page, n).locator("[data-ghprt]");
 
+for (const status of [403, 429]) {
+  test(`a stale ${status} response cannot hide newer page results`, async ({ context, page }) => {
+    let releaseFirst;
+    const firstGate = new Promise((resolve) => { releaseFirst = resolve; });
+    let firstStarted;
+    const started = new Promise((resolve) => { firstStarted = resolve; });
+    let firstFinished;
+    const finished = new Promise((resolve) => { firstFinished = resolve; });
+    await setup(context, page, { go: false });
+    await context.route("https://api.github.com/graphql", async (route) => {
+      const body = JSON.parse(route.request().postData() || "{}");
+      if (body.query.includes("p412:")) {
+        firstStarted();
+        await firstGate;
+        await route.fulfill({ status, contentType: "application/json", body: JSON.stringify({ message: status === 429 ? "API rate limit exceeded" : "Access denied" }) });
+        firstFinished();
+      } else {
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { repository: { p501: pr("lee", { reviewRequests: { nodes: [user("mira")] } }) } } }) });
+      }
+    });
+    await page.goto(URL);
+    await started;
+    await page.evaluate(() => {
+      const first = document.querySelector('a[href$="/pull/412"]').closest("li");
+      for (const li of [...first.parentElement.children]) if (li !== first) li.remove();
+      first.querySelector('a[data-testid="listitem-title-link"]').setAttribute("href", "/acme/web/pull/501");
+      history.pushState({}, "", "?page=2");
+      dispatchEvent(new PopStateEvent("popstate"));
+    });
+    await expect(label(page, 501)).toHaveText("Your turn · Review requested");
+    releaseFirst();
+    await finished;
+    // Observe the settled UI across multiple scans after the stale response.
+    for (let i = 0; i < 5; i++) {
+      await page.waitForTimeout(150);
+      await expect(label(page, 501)).toHaveText("Your turn · Review requested");
+      await expect(page.locator('#ghprt-bar [data-jump="yours"]')).toHaveText("1 your turn");
+    }
+  });
+}
+
 test("labels each role on the native rows, rows and links unchanged", async ({ context, page }) => {
   await setup(context, page);
   await expect(label(page, 412)).toHaveText("Your turn · Review requested");
