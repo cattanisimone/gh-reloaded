@@ -278,3 +278,19 @@ test("every file the manifest references ships in the release zip", () => {
   assert.equal(statSync("options").isFile(), false);
   assert.deepEqual(referencedPaths({ action: { default_popup: "p.html" }, options_page: "o.html" }).sort(), ["o.html", "p.html"]);
 });
+
+test("permissions are pinned: a new one must be a deliberate change to this test", () => {
+  assert.deepEqual(manifest.permissions, ["storage"]);
+  assert.deepEqual(manifest.host_permissions, ["https://api.github.com/*"]);
+});
+
+test("site access is pinned too: content scripts and web-accessible resources stay on github.com", () => {
+  const matches = [
+    ...(manifest.content_scripts ?? []).flatMap((c) => c.matches ?? []),
+    ...(manifest.web_accessible_resources ?? []).flatMap((r) => r.matches ?? []),
+  ];
+  assert.ok(matches.length > 0);
+  for (const m of matches) assert.match(m, /^https:\/\/github\.com\//, m);
+  assert.equal(manifest.optional_permissions, undefined);
+  assert.equal(manifest.optional_host_permissions, undefined);
+});
