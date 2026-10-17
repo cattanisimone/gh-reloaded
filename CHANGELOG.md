@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.14.0...v1.0.0) (2026-10-17)
+
+
+### Features
+
+* verify each token's access from its Settings card ([#76](https://github.com/cattanisimone/gh-reloaded/issues/76)) ([80970c8](https://github.com/cattanisimone/gh-reloaded/commit/80970c878679e957d17cbc2a9443beabcffc369c))
+
+
+### Miscellaneous
+
+* request the 1.0.0 milestone release ([1daaf61](https://github.com/cattanisimone/gh-reloaded/commit/1daaf61376e014b06d0c1b3b2e8360d668cc1a5a))
+
 ## [0.14.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.13.0...v0.14.0) (2026-10-15)
 
 
