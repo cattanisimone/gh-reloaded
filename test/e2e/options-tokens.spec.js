@@ -14,7 +14,7 @@ test("the token box documents fine-grained and classic tokens", async ({ context
   await expect(boxes).toHaveCount(2);
 
   const fine = boxes.nth(0);
-  await expect(fine.locator(".permission-row")).toHaveCount(3);
+  await expect(fine.locator(".permission-row")).toHaveCount(4);
   await expect(fine).toContainText("Fine-grained");
   await expect(intro.getByRole("link", { name: /Create a fine-grained token/ }))
     .toHaveAttribute("href", "https://github.com/settings/personal-access-tokens/new");
