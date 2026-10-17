@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.0.0...v1.1.0) (2026-10-17)
+
+
+### Features
+
+* add personal PR triage to repository pull request lists ([#82](https://github.com/cattanisimone/gh-reloaded/issues/82)) ([e1686c6](https://github.com/cattanisimone/gh-reloaded/commit/e1686c69b3493c0bd9ee0551320a391c1c3a95f4))
+
 ## [1.0.0](https://github.com/cattanisimone/gh-reloaded/compare/v0.14.0...v1.0.0) (2026-10-17)
 
 
