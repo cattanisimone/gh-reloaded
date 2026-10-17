@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #79 Release v1.0.0</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--warn:#9a6700;--bg:#fff;--soft:#f6f8fa}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{overflow-wrap:anywhere;border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;word-break:break-word} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .scroll{overflow-x:auto} .ok{color:var(--ok);font-weight:600} .bad{color:var(--bad);font-weight:600} .warn{color:var(--warn);font-weight:600}
+</style></head><body><main>
+  <h1><a href="https://github.com/cattanisimone/gh-reloaded/issues/79">#79</a> · Release GH Reloaded v1.0.0</h1>
+  <p class="meta">Size: normal (docs only, but release-sequencing matters) · Goal: get the already-corrected 1.0.0 request shipped and record honestly what is verified and what is still the maintainer's.</p>
+
+  <h2>Where things stand (2026-10-17)</h2>
+  <table>
+    <tr><th>Item</th><th>State</th></tr>
+    <tr><td>Release request on <code>main</code></td><td class="ok">Fixed: <code>1daaf61 chore: request the 1.0.0 milestone release</code> ends with <code>Release-As: 1.0.0</code> as its last line. No history rewrite, no manual bump.</td></tr>
+    <tr><td>Release PR #77</td><td class="ok">Rewritten in place to <code>chore(main): release 1.0.0</code>: <code>manifest.json</code> and <code>.release-please-manifest.json</code> → 1.0.0, CHANGELOG section 1.0.0. Only release PR open, no parallel 0.15.0.</td></tr>
+    <tr><td>Readiness docs (#81)</td><td class="ok">README limitations/troubleshooting/milestone section, <code>docs/releases/1.0.0.md</code> announcement, permission pin tests: merged.</td></tr>
+    <tr><td>Version override</td><td class="ok">None in config (footer only, applies to commits since v0.14.0); a unit test asserts no <code>release-as</code> key.</td></tr>
+    <tr><td>Published release</td><td class="bad">Still v0.14.0. No v1.0.0 tag, ZIP or store rollout yet.</td></tr>
+    <tr><td>Signed-in smoke test, store listing, website</td><td class="warn">Not done: outside what an anonymous agent can reach.</td></tr>
+  </table>
+
+  <h2>What changes for users</h2>
+  <ul>
+    <li>Nothing in the extension: no code, permission or storage change in this pull request.</li>
+    <li>A release record, <code>docs/releases/1.0.0-verification.md</code>, says which checks passed on the exact candidate and which remain open, so "released" is never claimed from a green CI or a skipped publish job.</li>
+  </ul>
+
+  <h2>Release sequence</h2>
+  <div class="scroll"><svg viewBox="0 0 860 170" width="100%" style="min-width:640px" role="img" aria-label="release sequence">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+    <g font-size="13" font-family="-apple-system,Segoe UI,Arial,sans-serif" text-anchor="middle">
+      <rect x="5" y="20" width="150" height="56" rx="6" fill="#dafbe1" stroke="#1a7f37"/><text x="80" y="44">1daaf61 Release-As</text><text x="80" y="62" fill="#59636e">done</text>
+      <rect x="180" y="20" width="150" height="56" rx="6" fill="#dafbe1" stroke="#1a7f37"/><text x="255" y="44">#77 → 1.0.0</text><text x="255" y="62" fill="#59636e">done</text>
+      <rect x="355" y="20" width="150" height="56" rx="6" fill="#ddf4ff" stroke="#0969da"/><text x="430" y="44">Candidate checks</text><text x="430" y="62" fill="#59636e">agent, this PR</text>
+      <rect x="530" y="20" width="150" height="56" rx="6" fill="#fff8c5" stroke="#9a6700"/><text x="605" y="44">Merge #77</text><text x="605" y="62" fill="#59636e">maintainer</text>
+      <rect x="705" y="20" width="150" height="56" rx="6" fill="#fff8c5" stroke="#9a6700"/><text x="780" y="44">Tag, ZIP, store</text><text x="780" y="62" fill="#59636e">release.yml</text>
+      <path d="M155 48H178M330 48H353M505 48H528M680 48H703" stroke="#59636e" marker-end="url(#a)"/>
+      <rect x="530" y="104" width="325" height="56" rx="6" fill="#fff8c5" stroke="#9a6700"/><text x="692" y="128">Verify listing live, website, announce</text><text x="692" y="146" fill="#59636e">maintainer → then merge this PR, close #79</text>
+      <path d="M780 76V102" stroke="#59636e" marker-end="url(#a)"/>
+    </g>
+  </svg></div>
+  <p class="meta">Nothing is merged to <code>main</code> between the candidate checks and #77, so the commit that is tested is the commit that is tagged. This PR stays unmerged until v1.0.0 is out (a <code>docs:</code> commit after the tag opens no release PR).</p>
+
+  <h2>Changes by file</h2>
+  <table>
+    <tr><th>File</th><th>Change</th><th>Why</th></tr>
+    <tr><td><code>docs/releases/1.0.0-verification.md</code> (new)</td><td>Candidate SHA (#77 head on <code>1daaf61</code>), <code>npm test</code> counts, ZIP size and file list, permission diff vs v0.14.0, smoke checklist with a status per row (verified / anonymous only / maintainer), post-release checks (tag, ZIP from tagged commit, store listing live, website).</td><td>Acceptance criteria ask for a recorded scope, smoke list and honest gaps.</td></tr>
+    <tr><td><code>README.md</code> Releasing</td><td>One line linking the verification record next to the announcement.</td><td>Findable for the next milestone.</td></tr>
+  </table>
+  <p>No change to <code>manifest.json</code>, <code>CHANGELOG.md</code>, <code>release-please-config.json</code> or workflows.</p>
+
+  <h2>Data, permissions, privacy</h2><p>None. The record restates that permissions are unchanged since 0.14.0 (<code>storage</code>, <code>https://api.github.com/*</code>, content scripts on <code>https://github.com/*</code>); only the manifest <code>description</code> changed.</p>
+
+  <h2>Test plan</h2>
+  <table>
+    <tr><th>Acceptance criterion</th><th>Check</th><th>Owner / status</th></tr>
+    <tr><td>RC scope recorded</td><td>Record lists the shipped features and the deferred ones (#78 → 1.1.0)</td><td>Agent</td></tr>
+    <tr><td><code>npm test</code> passes on the candidate</td><td>Full suite on #77 head, results in the record</td><td>Agent (running now)</td></tr>
+    <tr><td>Real-GitHub smoke checklist</td><td>Anonymous Playwright probe of public pages (HTML preview blob, issue with dependency graph, public board); signed-in rows (My Issues, private repos, org Projects, Quick-create, Verify access, update from 0.14.0 install) listed as open</td><td>Agent (anonymous) + maintainer</td></tr>
+    <tr><td>No permission, credential, remote-code or privacy regression</td><td>Manifest diff vs v0.14.0; existing <code>manifest.test.js</code> permission pins; grep shipped paths for remote <code>&lt;script&gt;</code>, <code>eval</code>, <code>new Function</code></td><td>Agent</td></tr>
+    <tr><td>Docs, changelog, announcement accurate</td><td>Re-read README Features, PRIVACY, <code>docs/releases/1.0.0.md</code> against the candidate; CHANGELOG left generated</td><td>Agent; store listing and website: maintainer</td></tr>
+    <tr><td>#77 sequenced, no parallel release PR</td><td><code>gh pr list</code>: one release PR, titled 1.0.0</td><td class="ok">Verified</td></tr>
+    <tr><td>1.0.0 release PR merged, versions 1.0.0</td><td>#77 diff already shows both files at 1.0.0</td><td>Maintainer merges</td></tr>
+    <tr><td>v1.0.0 release with ZIP from the tag</td><td><code>gh release view v1.0.0</code>; rebuild ZIP from the tag with the <code>release.yml</code> path list and compare file list</td><td>Maintainer (agent can check on a rework)</td></tr>
+    <tr><td>Store rolled out 1.0.0</td><td>Listing shows 1.0.0 after review; if blocked, record the blocker and keep #79 open</td><td>Maintainer</td></tr>
+    <tr><td>No override left</td><td>Existing unit test (no <code>release-as</code> key)</td><td class="ok">Verified</td></tr>
+    <tr><td>Website and communications</td><td>Outside the repo</td><td>Maintainer</td></tr>
+  </table>
+  <p><b>Live check:</b> anonymous probe of public github.com pages with the candidate loaded unpacked, as #81 did; signed-in and private scenarios cannot be opened anonymously and are listed under "Not verified on live github.com".</p>
+
+  <h2>Risks and open questions</h2>
+  <ul>
+    <li>Merging anything else into <code>main</code> before #77 changes the candidate (and a <code>feat</code>/<code>fix</code> would ride into 1.0.0). Default: merge #77 next, this PR only after the release.</li>
+    <li>The generated 1.0.0 notes show a <b>Miscellaneous</b> line for the <code>chore</code> Release-As commit although <code>chore</code> is hidden. Accurate and generated. Default: leave it; the human announcement goes above it in the GitHub Release.</li>
+    <li>CI does not run on #77 (bot <code>GITHUB_TOKEN</code>). Default: the local run on its head is the evidence, recorded in the file.</li>
+    <li>Record in the repo or only on the issue? Default: in the repo, reusable as the template for later milestones; a summary is also copied to the PR body.</li>
+    <li>Store review can take days. Default: #79 stays open with the blocker written down, as the issue asks.</li>
+  </ul>
+
+  <h2>Out of scope</h2>
+  <ul><li>Any feature work (#78 and others → 1.1.0), merging #77, tagging, store submission, website edits, repository merge settings.</li></ul>
+</main></body></html>
