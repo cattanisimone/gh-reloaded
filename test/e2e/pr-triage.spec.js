@@ -456,7 +456,10 @@ test("without the title-link anchor nothing is rendered, and it comes back when 
 
 test("without the timestamp anchor a row gets no label in another container", async ({ context, page }) => {
   await setup(context, page, { transform: (h) => h.replace(/data-testid="timestamp-container"/g, 'data-x="gone"') });
-  await page.waitForTimeout(1000);
+  const panel = page.getByRole("region", { name: "My PR triage" });
+  await expect(panel.locator('[data-group="yours"]')).toContainText("#412 · Review requested");
+  await expect(panel.locator(".ghprt-link")).toHaveCount(4);
+  await expect(panel).not.toContainText("Nothing needs your action");
   await expect(page.locator("[data-ghprt]")).toHaveCount(0);
 });
 

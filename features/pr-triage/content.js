@@ -300,7 +300,7 @@
     const failed = entry.status !== "ready" && BAR_NOTES[entry.status] ? BAR_NOTES[entry.status] : "";
     const items = [];
     for (const row of rows) {
-      const result = row.meta ? labelFor(me, entry, row) : null;
+      const result = labelFor(me, entry, row);
       // Rows only get a label with an answer for them; the panel's note
       // covers a failure of the whole request.
       const shown = failed ? null : result;
