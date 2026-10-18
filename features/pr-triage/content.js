@@ -1,8 +1,7 @@
 // features/pr-triage/content.js — on a repository's own Pull requests page
 // (github.com/<owner>/<repo>/pulls), adds PR triage next to GitHub's native
-// list: one small label on each open row saying whose move it is ("Your
-// turn · Review requested", "Waiting on author", ...) and a one-line "On
-// this page" bar whose buttons jump to the matching rows.
+// list: a compact two-group personal panel plus contextual row labels.
+// Panel shortcuts summarize only the currently loaded native rows.
 //
 // Nothing native is hidden, moved or duplicated, and the list never waits
 // for the extension: rows are read from the page, the review facts come
@@ -142,12 +141,35 @@
     bar = document.createElement("div");
     bar.id = BAR_ID;
     bar.className = "ghprt-bar";
-    bar.setAttribute("role", "group");
-    bar.setAttribute("aria-label", "PR triage");
+    bar.setAttribute("role", "region");
+    bar.setAttribute("aria-label", "My PR triage");
     bar.innerHTML =
+      '<div class="ghprt-header"><h2>My PR triage</h2>' +
       '<span class="ghprt-title">On this page</span>' +
       '<span class="ghprt-summary" aria-live="polite"></span>' +
-      '<button type="button" class="ghprt-hide">Hide triage</button>';
+      '<button type="button" class="ghprt-collapse" aria-expanded="true" aria-controls="ghprt-groups">Collapse panel</button>' +
+      '<button type="button" class="ghprt-hide">Hide triage</button></div>' +
+      '<div class="ghprt-groups" id="ghprt-groups"></div>';
+    const groups = bar.querySelector(".ghprt-groups");
+    for (const [placement, title] of [["yours", "Needs my action"], ["waiting", "Waiting on others"]]) {
+      const group = document.createElement("section");
+      group.className = "ghprt-group";
+      group.dataset.group = placement;
+      group.setAttribute("aria-labelledby", `ghprt-heading-${placement}`);
+      group.innerHTML = `<h3 id="ghprt-heading-${placement}">${title} <span class="ghprt-total"></span></h3>` +
+        `<div class="ghprt-entries" role="list" aria-label="${title}"></div>` +
+        '<p class="ghprt-empty"></p>' +
+        '<button type="button" class="ghprt-more" hidden></button>';
+      group.querySelector(".ghprt-more").addEventListener("click", () => {
+        panelState.expanded[placement] = !panelState.expanded[placement];
+        schedule();
+      });
+      groups.append(group);
+    }
+    bar.querySelector(".ghprt-collapse").addEventListener("click", () => {
+      panelState.collapsed = !panelState.collapsed;
+      schedule();
+    });
     bar.querySelector(".ghprt-hide").addEventListener("click", () => {
       try {
         chrome.storage.local.set({ [STORAGE_ENABLED]: false });
@@ -156,6 +178,66 @@
     });
     list.before(bar);
     return bar;
+  }
+
+  // Temporary state only; a new query/repository starts a fresh view.
+  const panelState = { page: "", collapsed: false, expanded: {} };
+  const PREVIEW_LIMIT = 5;
+
+  function renderGroups(bar, entries, entry, counts, loading) {
+    const key = location.pathname + location.search;
+    if (panelState.page !== key) {
+      panelState.page = key;
+      panelState.collapsed = false;
+      panelState.expanded = {};
+    }
+    const groups = bar.querySelector(".ghprt-groups");
+    groups.hidden = panelState.collapsed;
+    const toggle = bar.querySelector(".ghprt-collapse");
+    const expanded = String(!panelState.collapsed);
+    if (toggle.getAttribute("aria-expanded") !== expanded) {
+      toggle.setAttribute("aria-expanded", expanded);
+      toggle.textContent = panelState.collapsed ? "Expand panel" : "Collapse panel";
+    }
+    for (const placement of ["yours", "waiting"]) {
+      const group = bar.querySelector(`[data-group="${placement}"]`);
+      const items = entries.filter((item) => item.result.placement === placement);
+      const total = group.querySelector(".ghprt-total");
+      const number = String(items.length);
+      if (total.textContent !== number) total.textContent = number;
+      const shown = panelState.expanded[placement] ? items : items.slice(0, PREVIEW_LIMIT);
+      const signature = JSON.stringify(shown.map(({ row, result }) => [row.number, row.link.getAttribute("href"), row.link.textContent, result.label, result.title]));
+      const list = group.querySelector(".ghprt-entries");
+      if (list.dataset.key !== signature) {
+        list.dataset.key = signature;
+        list.replaceChildren(...shown.map(({ row, result }) => {
+          const item = document.createElement("div");
+          item.className = "ghprt-entry";
+          item.setAttribute("role", "listitem");
+          const link = document.createElement("a");
+          link.className = "ghprt-link";
+          link.href = row.link.href;
+          link.textContent = row.link.textContent.trim();
+          const reason = document.createElement("span");
+          reason.className = "ghprt-reason";
+          reason.textContent = `#${row.number} · ${result.label}`;
+          reason.title = result.title;
+          item.append(link, reason);
+          return item;
+        }));
+      }
+      const empty = group.querySelector(".ghprt-empty");
+      const note = BAR_NOTES[entry.status] || (entry.status === "error" && "Review data unavailable.") ||
+        (loading && "Loading review data…") || (counts.unavailable && "Some PRs are unavailable; no confirmed entries in this group.") ||
+        (placement === "yours" ? "No confirmed action for you on this page." : "No confirmed waiting PRs on this page.");
+      if (empty.textContent !== note) empty.textContent = note;
+      empty.hidden = items.length > 0;
+      const more = group.querySelector(".ghprt-more");
+      more.hidden = items.length <= PREVIEW_LIMIT;
+      const moreText = panelState.expanded[placement] ? "Show fewer" : `Show ${items.length - PREVIEW_LIMIT} more`;
+      if (more.textContent !== moreText) more.textContent = moreText;
+      more.setAttribute("aria-expanded", String(!!panelState.expanded[placement]));
+    }
   }
 
   function jumpButton(placement, count, text) {
@@ -212,6 +294,7 @@
     const entry = entryFor(page.key);
     const bar = ensureBar(list);
     const placements = [];
+    const entries = [];
     for (const row of rows) {
       const result = row.meta ? labelFor(me, entry, row) : null;
       // Rows only get a label with an answer for them; the bar's note covers
@@ -220,9 +303,12 @@
       if (row.meta) applyLabel(row, shown);
       if (!shown) row.li.removeAttribute("data-ghprt-placement");
       placements.push(shown ? shown.placement : null);
+      if (shown) entries.push({ row, result: shown });
     }
     const loading = rows.some((r) => r.triaged && !entry.facts.has(r.number)) && entry.status === "ready";
-    renderBar(bar, entry, C.summarize(placements), loading);
+    const counts = C.summarize(placements);
+    renderBar(bar, entry, counts, loading);
+    renderGroups(bar, entries, entry, counts, loading);
   }
 
   // Count buttons move focus to the next matching row's title link, cycling.

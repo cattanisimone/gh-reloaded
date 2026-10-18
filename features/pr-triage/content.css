@@ -1,4 +1,4 @@
-/* PR triage — the "On this page" bar and the per-row labels on a
+/* PR triage — the two-group personal panel and contextual row labels on a
    repository's Pull requests page. Primer light values by default, dark
    under GitHub's data-color-mode (or the OS preference when it is "auto"). */
 
@@ -38,18 +38,136 @@ html[data-color-mode="dark"] .ghprt-label {
 }
 
 .ghprt-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  font-size: 12px;
-  line-height: 18px;
   color: var(--ghprt-fg);
   background: var(--ghprt-subtle);
   border: 1px solid var(--ghprt-border);
   border-radius: 6px;
   margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.ghprt-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  min-width: 0;
+}
+
+.ghprt-header h2 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.ghprt-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 12px 12px;
+}
+
+.ghprt-groups[hidden],
+.ghprt-more[hidden],
+.ghprt-empty[hidden] {
+  display: none;
+}
+
+.ghprt-group {
+  min-width: 0;
+  border: 1px solid var(--ghprt-border);
+  border-radius: 6px;
+}
+
+.ghprt-group h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  border-bottom: 1px solid var(--ghprt-border);
+}
+
+.ghprt-total {
+  padding: 0 6px;
+  border-radius: 12px;
+  color: var(--ghprt-accent-fg);
+  background: var(--ghprt-accent-bg);
+  font-size: 12px;
+}
+
+.ghprt-entry {
+  padding: 10px 12px;
+}
+
+.ghprt-entry + .ghprt-entry {
+  border-top: 1px solid var(--ghprt-border);
+}
+
+.ghprt-link {
+  display: block;
+  color: var(--ghprt-accent-fg);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.ghprt-reason {
+  display: block;
+  margin-top: 4px;
+  color: var(--ghprt-muted);
+  overflow-wrap: anywhere;
+}
+
+.ghprt-empty {
+  margin: 0;
+  padding: 12px;
+  color: var(--ghprt-muted);
+}
+
+.ghprt-collapse,
+.ghprt-more {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--ghprt-border);
+  border-radius: 6px;
+  color: var(--ghprt-fg);
+  background: var(--ghprt-subtle);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ghprt-more {
+  margin: 0 12px 10px;
+}
+
+.ghprt-collapse:hover,
+.ghprt-more:hover {
+  filter: brightness(0.95);
+}
+
+.ghprt-collapse:focus-visible,
+.ghprt-more:focus-visible,
+.ghprt-link:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: -2px;
+}
+
+@media (max-width: 640px) {
+  .ghprt-groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ghprt-summary {
+    flex-basis: 100%;
+  }
 }
 
 .ghprt-title {

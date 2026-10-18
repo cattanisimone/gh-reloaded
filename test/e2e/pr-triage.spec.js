@@ -84,7 +84,7 @@ for (const status of [403, 429]) {
     await page.goto(URL);
     await started;
     await page.evaluate(() => {
-      const first = document.querySelector('a[href$="/pull/412"]').closest("li");
+      const first = document.querySelector('a[data-testid="listitem-title-link"][href$="/pull/412"]').closest("li");
       for (const li of [...first.parentElement.children]) if (li !== first) li.remove();
       first.querySelector('a[data-testid="listitem-title-link"]').setAttribute("href", "/acme/web/pull/501");
       history.pushState({}, "", "?page=2");
@@ -140,6 +140,115 @@ test("the bar counts what is on this page and each count jumps to its rows", asy
   await expect(row(page, 412).locator("a[data-testid=listitem-title-link]")).toBeFocused();
 });
 
+test("selected panel layout groups compact PR links and reasons above the unchanged native list", async ({ context, page }) => {
+  await setup(context, page);
+  const panel = page.getByRole("region", { name: "My PR triage" });
+  const yours = panel.locator('[data-group="yours"]');
+  const waiting = panel.locator('[data-group="waiting"]');
+  await expect(yours.getByRole("heading")).toHaveText("Needs my action 2");
+  await expect(waiting.getByRole("heading")).toHaveText("Waiting on others 2");
+  expect(await yours.locator("a").evaluateAll((links) => links.map((a) => a.getAttribute("href")))).toEqual([
+    "https://github.com/acme/web/pull/412", "https://github.com/acme/web/pull/409",
+  ]);
+  await expect(yours).toContainText("#412 · Review requested");
+  await expect(yours).toContainText("#409 · Changes requested by sam");
+  await expect(waiting).toContainText("#405 · Waiting on review");
+  await expect(waiting).toContainText("#401 · Waiting on author");
+  await expect(panel.locator(".ghprt-link")).toHaveCount(4);
+  await expect(page.locator("#ghprt-bar + ul > li")).toHaveCount(6);
+  const boxes = await panel.locator(".ghprt-group").evaluateAll((groups) => groups.map((g) => g.getBoundingClientRect().toJSON()));
+  expect(boxes[0].y).toBe(boxes[1].y);
+  expect(boxes[0].right).toBeLessThan(boxes[1].left);
+});
+
+test("collapse keeps counts and keyboard focus, and expansion does not refetch or change storage", async ({ context, page }) => {
+  const bodies = [];
+  await setup(context, page, { bodies });
+  await expect(page.locator(".ghprt-link")).toHaveCount(4);
+  const worker = context.serviceWorkers()[0];
+  const before = await worker.evaluate(() => chrome.storage.local.get(null));
+  const collapse = page.getByRole("button", { name: "Collapse panel" });
+  await collapse.focus();
+  await page.keyboard.press("Enter");
+  const expand = page.getByRole("button", { name: "Expand panel" });
+  await expect(expand).toBeFocused();
+  await expect(expand).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator(".ghprt-groups")).toBeHidden();
+  await expect(page.locator('#ghprt-bar [data-jump="yours"]')).toHaveText("2 your turn");
+  await page.keyboard.press("Space");
+  await expect(page.locator(".ghprt-groups")).toBeVisible();
+  expect(bodies).toHaveLength(1);
+  expect(await worker.evaluate(() => chrome.storage.local.get(null))).toEqual(before);
+});
+
+test("show more expands only the current-page shortcuts and leaves native rows untouched", async ({ context, page }) => {
+  const bodies = [];
+  const data = { ...DATA };
+  for (let n = 501; n <= 507; n++) data[n] = pr("mira", { reviewRequests: { nodes: [user("lee")] } });
+  await setup(context, page, { handlers: [graphqlHandler(bodies, { data })] });
+  await expect(page.locator(".ghprt-link")).toHaveCount(4);
+  await page.evaluate(() => {
+    const ul = document.querySelector("ul");
+    const source = ul.firstElementChild;
+    for (let n = 501; n <= 507; n++) {
+      const item = source.cloneNode(true);
+      const link = item.querySelector('a[data-testid="listitem-title-link"]');
+      link.href = `/acme/web/pull/${n}`;
+      link.textContent = `Additional PR ${n}`;
+      item.querySelector("[data-ghprt]")?.remove();
+      ul.append(item);
+    }
+  });
+  const group = page.locator('[data-group="waiting"]');
+  await expect(group.locator(".ghprt-total")).toHaveText("9");
+  await expect(group.locator("a")).toHaveCount(5);
+  const requests = bodies.length;
+  await group.getByRole("button", { name: "Show 4 more" }).click();
+  await expect(group.locator("a")).toHaveCount(9);
+  await expect(group.getByRole("button", { name: "Show fewer" })).toBeFocused();
+  await group.getByRole("button", { name: "Show fewer" }).click();
+  await expect(group.locator("a")).toHaveCount(5);
+  await expect(page.locator('a[data-testid="listitem-title-link"]')).toHaveCount(13);
+  expect(bodies).toHaveLength(requests);
+});
+
+test("panel updates titles and removes filtered entries without duplicate links", async ({ context, page }) => {
+  await setup(context, page);
+  await expect(page.locator(".ghprt-link")).toHaveCount(4);
+  await page.evaluate(() => {
+    document.querySelector('a[data-testid="listitem-title-link"][href$="/pull/412"]').textContent = "Renamed native title";
+    document.querySelector('a[data-testid="listitem-title-link"][href$="/pull/409"]').closest("li").remove();
+  });
+  const group = page.locator('[data-group="yours"]');
+  await expect(group.getByRole("link")).toHaveText("Renamed native title");
+  await expect(group.locator(".ghprt-total")).toHaveText("1");
+  await expect(page.locator(".ghprt-link")).toHaveCount(3);
+});
+
+test("unavailable data is not described as a verified empty panel", async ({ context, page }) => {
+  await setup(context, page, { handlers: [graphqlHandler([], { data: {} })] });
+  const panel = page.locator("#ghprt-bar");
+  await expect(panel).toContainText("6 unavailable");
+  await expect(panel.locator(".ghprt-empty").first()).toContainText("Some PRs are unavailable");
+  await expect(panel).not.toContainText("No confirmed action");
+  await expect(panel.locator(".ghprt-link")).toHaveCount(0);
+});
+
+test("400px panel stacks groups and wraps long titles while preserving native access", async ({ context, page }) => {
+  await page.setViewportSize({ width: 400, height: 900 });
+  await setup(context, page);
+  await expect(page.locator(".ghprt-link")).toHaveCount(4);
+  await page.evaluate(() => {
+    document.querySelector('a[data-testid="listitem-title-link"]').textContent = "A".repeat(160);
+  });
+  await expect(page.locator(".ghprt-link").first()).toHaveText("A".repeat(160));
+  const boxes = await page.locator(".ghprt-group").evaluateAll((groups) => groups.map((g) => g.getBoundingClientRect().toJSON()));
+  expect(boxes[0].bottom).toBeLessThan(boxes[1].top);
+  const fits = await page.locator("#ghprt-bar").evaluate((el) => el.scrollWidth <= el.clientWidth);
+  expect(fits).toBe(true);
+  await expect(page.locator('a[data-testid="listitem-title-link"]')).toHaveCount(6);
+});
+
 test("keyboard: Tab reaches the count buttons and Enter moves focus to the row", async ({ context, page }) => {
   await setup(context, page);
   const yours = page.locator('#ghprt-bar [data-jump="yours"]');
@@ -193,7 +302,7 @@ test("a filter change rescans: labels follow the new rows, counts are recomputed
   await setup(context, page, { bodies });
   await expect(page.locator('#ghprt-bar [data-jump="yours"]')).toHaveText("2 your turn");
   await page.evaluate(() => {
-    for (const n of [409, 405, 401, 398, 390]) document.querySelector(`a[href$="/pull/${n}"]`).closest("li").remove();
+    for (const n of [409, 405, 401, 398, 390]) document.querySelector(`a[data-testid="listitem-title-link"][href$="/pull/${n}"]`).closest("li").remove();
   });
   await expect(page.locator('#ghprt-bar [data-jump="yours"]')).toHaveText("1 your turn");
   await expect(page.locator('#ghprt-bar [data-jump="waiting"]')).toHaveCount(0);
