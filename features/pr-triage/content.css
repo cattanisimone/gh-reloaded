@@ -42,7 +42,7 @@ html[data-color-mode="dark"] .ghprt-label {
   background: var(--ghprt-subtle);
   border: 1px solid var(--ghprt-border);
   border-radius: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   font-size: 12px;
   line-height: 18px;
 }
@@ -134,8 +134,8 @@ html[data-color-mode="dark"] .ghprt-label {
 
 .ghprt-collapse,
 .ghprt-more {
-  height: 32px;
-  padding: 0 12px;
+  height: 28px;
+  padding: 0 8px;
   border: 1px solid var(--ghprt-border);
   border-radius: 6px;
   color: var(--ghprt-fg);
@@ -187,48 +187,59 @@ html[data-color-mode="dark"] .ghprt-label {
   color: var(--ghprt-muted);
 }
 
-.ghprt-count,
 .ghprt-hide {
   font: inherit;
   font-weight: 500;
   height: 28px;
-  padding: 0 10px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.ghprt-count {
-  color: var(--ghprt-accent-fg);
-  background: var(--ghprt-accent-bg);
-  border: 1px solid var(--ghprt-accent-border);
-}
-
-.ghprt-hide {
+  padding: 0 8px;
   margin-left: auto;
   color: var(--ghprt-muted);
   background: transparent;
   border: 1px solid transparent;
-}
-
-.ghprt-count:hover,
-.ghprt-hide:hover {
-  filter: brightness(0.95);
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .ghprt-hide:hover {
   color: var(--ghprt-fg);
   text-decoration: underline;
+  filter: brightness(0.95);
 }
 
-.ghprt-count:active,
 .ghprt-hide:active {
   filter: brightness(0.89);
 }
 
-.ghprt-count:focus-visible,
 .ghprt-hide:focus-visible {
   outline: 2px solid #0969da;
   outline-offset: -2px;
+}
+
+.ghprt-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  font-weight: 500;
+  color: var(--ghprt-muted);
+  border: 1px solid var(--ghprt-border);
+  border-radius: 2em;
+}
+
+.ghprt-pill-yours {
+  color: var(--ghprt-accent-fg);
+  background: var(--ghprt-accent-bg);
+  border-color: var(--ghprt-accent-border);
+}
+
+.ghprt-status {
+  margin: 0;
+  padding: 0 16px 12px;
+  color: var(--ghprt-muted);
+}
+
+.ghprt-status[hidden] {
+  display: none;
 }
 
 .ghprt-label {
@@ -258,7 +269,6 @@ html[data-color-mode="dark"] .ghprt-label {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ghprt-count,
   .ghprt-hide {
     transition: none;
   }

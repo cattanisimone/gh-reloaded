@@ -9,7 +9,7 @@ import vm from "node:vm";
 const context = {};
 context.globalThis = context;
 vm.runInNewContext(readFileSync("features/pr-triage/classify.js", "utf8"), context);
-const { classify, summarize } = context.GHPRT_CLASSIFY;
+const { classify, summarize, groupEntries } = context.GHPRT_CLASSIFY;
 
 const facts = (over = {}) => ({
   ok: true,
@@ -112,4 +112,31 @@ test("classify: a closed or merged PR is not triaged", () => {
 test("summarize: counts yours, waiting and unavailable; teams count as neither", () => {
   const out = summarize(["yours", "yours", "waiting", "team", null, "unavailable", "waiting", "waiting"]);
   assert.deepEqual({ ...out }, { yours: 2, waiting: 3, unavailable: 1 });
+});
+
+const item = (number, placement, label = "L") => ({ number, title: `PR ${number}`, href: `/o/r/pull/${number}`, result: placement && { placement, label, title: `hint ${number}` } });
+
+test("groupEntries: each role lands in one group, native order kept", () => {
+  const out = groupEntries([item(5, "waiting"), item(4, "yours", "Review requested"), item(3, "yours"), item(2, "waiting")]);
+  assert.deepEqual([...out.yours.map((e) => e.number)], [4, 3]);
+  assert.deepEqual([...out.waiting.map((e) => e.number)], [5, 2]);
+  assert.deepEqual({ ...out.yours[0] }, { number: 4, title: "PR 4", href: "/o/r/pull/4", label: "Review requested", hint: "hint 4" });
+});
+
+test("groupEntries: one entry per PR, even if a row repeats", () => {
+  const out = groupEntries([item(4, "yours"), item(4, "yours"), item(4, "waiting")]);
+  assert.equal(out.yours.length, 1);
+  assert.equal(out.waiting.length, 0);
+});
+
+test("groupEntries: team requests and unavailable PRs are counted, not listed; no placement is skipped", () => {
+  const out = groupEntries([item(1, "team"), item(2, "team"), item(3, "unavailable"), item(4, null), item(5, "yours")]);
+  assert.equal(out.team, 2);
+  assert.equal(out.unavailable, 1);
+  assert.deepEqual([...out.yours.map((e) => e.number)], [5]);
+  assert.deepEqual([...out.waiting], []);
+});
+
+test("groupEntries: nothing in, empty groups out", () => {
+  assert.deepEqual({ ...groupEntries([]), yours: [], waiting: [] }, { yours: [], waiting: [], team: 0, unavailable: 0 });
 });

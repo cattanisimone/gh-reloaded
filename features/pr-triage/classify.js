@@ -72,5 +72,23 @@
     return out;
   }
 
-  global.GHPRT_CLASSIFY = { classify, summarize };
+  // The panel's two groups, from the classified rows of the current page in
+  // native order: `items` are { number, title, href, result } where result is
+  // a classify() outcome (or null). Each PR lands in one group only; team
+  // requests and unavailable PRs are counted, not listed.
+  function groupEntries(items) {
+    const out = { yours: [], waiting: [], team: 0, unavailable: 0 };
+    const seen = new Set();
+    for (const item of items) {
+      const p = item && item.result && item.result.placement;
+      if (!p || seen.has(item.number)) continue;
+      seen.add(item.number);
+      if (p === "yours" || p === "waiting") {
+        out[p].push({ number: item.number, title: item.title, href: item.href, label: item.result.label, hint: item.result.title });
+      } else if (p === "team" || p === "unavailable") out[p]++;
+    }
+    return out;
+  }
+
+  global.GHPRT_CLASSIFY = { classify, summarize, groupEntries };
 })(typeof window !== "undefined" ? window : globalThis);

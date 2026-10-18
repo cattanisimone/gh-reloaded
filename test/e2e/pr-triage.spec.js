@@ -1,7 +1,7 @@
 // E2E: PR triage on a repository's Pull requests page. The native list stays
-// as it is; each open row gets one label saying whose move it is and a one-
-// line "On this page" bar counts them. Covers: labels per role, the bar,
-// anchors on current and previous class naming, no markup when an anchor is
+// as it is; each open row gets one label saying whose move it is and a
+// two-group "My PR triage" panel above the search box lists them. Covers: labels per role, the bar,
+// anchors (the search landmark, no fallback container) on current and previous class naming, no markup when an anchor is
 // missing, degradation (no token, refusal, rate limit, slow response),
 // rescans (filters, pages, SPA navigation, repository switch), hide and
 // disable, keyboard, themes, narrow widths and native look. All names are invented.
@@ -97,7 +97,7 @@ for (const status of [403, 429]) {
     for (let i = 0; i < 5; i++) {
       await page.waitForTimeout(150);
       await expect(label(page, 501)).toHaveText("Your turn · Review requested");
-      await expect(page.locator('#ghprt-bar [data-jump="yours"]')).toHaveText("1 your turn");
+      await expect(page.locator("#ghprt-bar .ghprt-pill").first()).toHaveText("1 need my action");
     }
   });
 }
@@ -122,22 +122,25 @@ test("labels each role on the native rows, rows and links unchanged", async ({ c
   expect(text).not.toMatch(/ready to merge|merge ready|unread/);
 });
 
-test("the bar counts what is on this page and each count jumps to its rows", async ({ context, page }) => {
+test("the header counts what is on this page and sits right before the search box", async ({ context, page }) => {
   await setup(context, page);
   const bar = page.locator("#ghprt-bar");
   await expect(bar.locator(".ghprt-title")).toHaveText("On this page");
-  await expect(bar.locator('[data-jump="yours"]')).toHaveText("2 your turn");
-  await expect(bar.locator('[data-jump="waiting"]')).toHaveText("2 waiting on others");
-  await expect(bar).toContainText("1 unavailable");
-  // Directly before the native list, which is not moved.
-  await expect(page.locator("#ghprt-bar + ul")).toHaveCount(1);
-
-  await bar.locator('[data-jump="yours"]').click();
-  await expect(row(page, 412).locator("a[data-testid=listitem-title-link]")).toBeFocused();
-  await bar.locator('[data-jump="yours"]').click();
-  await expect(row(page, 409).locator("a[data-testid=listitem-title-link]")).toBeFocused();
-  await bar.locator('[data-jump="yours"]').click();
-  await expect(row(page, 412).locator("a[data-testid=listitem-title-link]")).toBeFocused();
+  await expect(bar.locator(".ghprt-pill").nth(0)).toHaveText("2 need my action");
+  await expect(bar.locator(".ghprt-pill").nth(1)).toHaveText("2 waiting on others");
+  await expect(bar.locator(".ghprt-summary")).toContainText("1 team request · 1 unavailable");
+  // Plain counts: the entries are the links, no jump buttons.
+  await expect(bar.locator("[data-jump]")).toHaveCount(0);
+  await expect(bar.locator(".ghprt-summary button")).toHaveCount(0);
+  // Primary anchor on current markup: directly before the page's own search landmark, which is not moved.
+  await expect(page.locator('#ghprt-bar + [role="search"][aria-label="Pull requests"]')).toHaveCount(1);
+  await expect(page.locator('form[role="search"][aria-label="Site"]')).toHaveCount(1);
+  const below = await page.evaluate(() => {
+    const y = (sel) => document.querySelector(sel).getBoundingClientRect().top;
+    return { bar: y("#ghprt-bar"), search: y('[role="search"][aria-label="Pull requests"]'), list: y("ul") };
+  });
+  expect(below.bar).toBeLessThan(below.search);
+  expect(below.search).toBeLessThan(below.list);
 });
 
 test("selected panel layout groups compact PR links and reasons above the unchanged native list", async ({ context, page }) => {
@@ -155,7 +158,7 @@ test("selected panel layout groups compact PR links and reasons above the unchan
   await expect(waiting).toContainText("#405 · Waiting on review");
   await expect(waiting).toContainText("#401 · Waiting on author");
   await expect(panel.locator(".ghprt-link")).toHaveCount(4);
-  await expect(page.locator("#ghprt-bar + ul > li")).toHaveCount(6);
+  await expect(page.locator("ul[role=list] > li")).toHaveCount(6);
   const boxes = await panel.locator(".ghprt-group").evaluateAll((groups) => groups.map((g) => g.getBoundingClientRect().toJSON()));
   expect(boxes[0].y).toBe(boxes[1].y);
   expect(boxes[0].right).toBeLessThan(boxes[1].left);
@@ -174,7 +177,7 @@ test("collapse keeps counts and keyboard focus, and expansion does not refetch o
   await expect(expand).toBeFocused();
   await expect(expand).toHaveAttribute("aria-expanded", "false");
   await expect(page.locator(".ghprt-groups")).toBeHidden();
-  await expect(page.locator('#ghprt-bar [data-jump="yours"]')).toHaveText("2 your turn");
+  await expect(page.locator("#ghprt-bar .ghprt-pill").first()).toHaveText("2 need my action");
   await page.keyboard.press("Space");
   await expect(page.locator(".ghprt-groups")).toBeVisible();
   expect(bodies).toHaveLength(1);
@@ -220,8 +223,8 @@ test("panel updates titles and removes filtered entries without duplicate links"
     document.querySelector('a[data-testid="listitem-title-link"][href$="/pull/409"]').closest("li").remove();
   });
   const group = page.locator('[data-group="yours"]');
-  await expect(group.getByRole("link")).toHaveText("Renamed native title");
   await expect(group.locator(".ghprt-total")).toHaveText("1");
+  await expect(group.locator(".ghprt-link")).toHaveText("Renamed native title");
   await expect(page.locator(".ghprt-link")).toHaveCount(3);
 });
 
@@ -229,8 +232,8 @@ test("unavailable data is not described as a verified empty panel", async ({ con
   await setup(context, page, { handlers: [graphqlHandler([], { data: {} })] });
   const panel = page.locator("#ghprt-bar");
   await expect(panel).toContainText("6 unavailable");
-  await expect(panel.locator(".ghprt-empty").first()).toContainText("Some PRs are unavailable");
-  await expect(panel).not.toContainText("No confirmed action");
+  await expect(panel.locator(".ghprt-empty").first()).toHaveText("None among the PRs that could be read (6 could not).");
+  await expect(panel).not.toContainText("Nothing needs your action");
   await expect(panel.locator(".ghprt-link")).toHaveCount(0);
 });
 
@@ -249,23 +252,29 @@ test("400px panel stacks groups and wraps long titles while preserving native ac
   await expect(page.locator('a[data-testid="listitem-title-link"]')).toHaveCount(6);
 });
 
-test("keyboard: Tab reaches the count buttons and Enter moves focus to the row", async ({ context, page }) => {
+test("keyboard: the panel is a named region, buttons and links show the native focus ring", async ({ context, page }) => {
   await setup(context, page);
-  const yours = page.locator('#ghprt-bar [data-jump="yours"]');
-  await expect(yours).toBeVisible();
-  await yours.focus();
-  await page.keyboard.press("Enter");
-  await expect(row(page, 412).locator("a[data-testid=listitem-title-link]")).toBeFocused();
-  await page.keyboard.press("Shift+Tab");
-  // Focus ring: 2px solid #0969da at offset -2px.
-  await yours.focus();
+  await expect(page.getByRole("region", { name: "My PR triage" })).toBeVisible();
+  const collapse = page.getByRole("button", { name: "Collapse panel" });
+  await collapse.focus();
   await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Hide triage" })).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  const ring = await yours.evaluate((el) => {
-    const s = getComputedStyle(el);
-    return [s.outlineWidth, s.outlineStyle, s.outlineColor, s.outlineOffset];
-  });
-  expect(ring).toEqual(["2px", "solid", "rgb(9, 105, 218)", "-2px"]);
+  await expect(collapse).toBeFocused();
+  // Focus ring: 2px solid #0969da at offset -2px.
+  for (const target of [collapse, page.locator(".ghprt-link").first()]) {
+    await target.focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
+    const ring = await target.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return [s.outlineWidth, s.outlineStyle, s.outlineColor, s.outlineOffset];
+    });
+    expect(ring).toEqual(["2px", "solid", "rgb(9, 105, 218)", "-2px"]);
+  }
+  await page.locator(".ghprt-link").first().focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/pull\/412$/);
 });
 
 test("one label per row after rescans", async ({ context, page }) => {
@@ -300,12 +309,12 @@ test("a re-render that drops the injected nodes gets them back without refetchin
 test("a filter change rescans: labels follow the new rows, counts are recomputed", async ({ context, page }) => {
   const bodies = [];
   await setup(context, page, { bodies });
-  await expect(page.locator('#ghprt-bar [data-jump="yours"]')).toHaveText("2 your turn");
+  await expect(page.locator("#ghprt-bar .ghprt-pill").first()).toHaveText("2 need my action");
   await page.evaluate(() => {
     for (const n of [409, 405, 401, 398, 390]) document.querySelector(`a[data-testid="listitem-title-link"][href$="/pull/${n}"]`).closest("li").remove();
   });
-  await expect(page.locator('#ghprt-bar [data-jump="yours"]')).toHaveText("1 your turn");
-  await expect(page.locator('#ghprt-bar [data-jump="waiting"]')).toHaveCount(0);
+  await expect(page.locator("#ghprt-bar .ghprt-pill").first()).toHaveText("1 need my action");
+  await expect(page.locator("#ghprt-bar .ghprt-pill").nth(1)).toHaveText("0 waiting on others");
   expect(bodies).toHaveLength(1);
 });
 
@@ -324,7 +333,7 @@ test("page 2 queries and counts only its own rows", async ({ context, page }) =>
   });
   await expect(label(page, 501)).toHaveText("Waiting on review · lee");
   await expect(page.locator("#ghprt-bar")).toContainText("1 waiting on others");
-  await expect(page.locator('#ghprt-bar [data-jump="yours"]')).toHaveCount(0);
+  await expect(page.locator("#ghprt-bar .ghprt-pill").first()).toHaveText("0 need my action");
   expect(bodies.at(-1).query).toMatch(/p501:/);
   expect(bodies.at(-1).query).not.toMatch(/p412:/);
 });
@@ -433,6 +442,7 @@ test("previous CSS-module class names work the same", async ({ context, page }) 
   });
   await expect(page.locator("[data-ghprt]")).toHaveCount(6);
   await expect(page.locator("#ghprt-bar")).toHaveCount(1);
+  await expect(page.locator('#ghprt-bar + [role="search"]')).toHaveCount(1);
 });
 
 test("without the title-link anchor nothing is rendered, and it comes back when the anchor does", async ({ context, page }) => {
@@ -516,7 +526,7 @@ test("native look: label, bar buttons, and the row's metadata line is not resize
   // Same spacing as the native items: 4px from the previous item, not flush.
   const gap = await label(page, 412).evaluate((el) => Math.round(el.getBoundingClientRect().left - el.previousElementSibling.getBoundingClientRect().right));
   expect(gap).toBe(4);
-  const btn = await page.locator('#ghprt-bar [data-jump="yours"]').evaluate((el) => {
+  const btn = await page.locator("#ghprt-bar .ghprt-collapse").evaluate((el) => {
     const s = getComputedStyle(el);
     return { h: Math.round(el.getBoundingClientRect().height), r: s.borderTopLeftRadius, b: s.borderTopWidth, f: s.fontFamily };
   });
@@ -538,4 +548,86 @@ test("a token mapped only to another owner is reported as missing, not as lackin
   await setup(context, page, { tokens: { githubTokens: [{ id: "o", name: "o", token: "x", owner: "other-org" }] }, bodies });
   await expect(page.locator("#ghprt-bar")).toContainText("needs a GitHub token for this repository owner");
   expect(bodies).toHaveLength(0);
+});
+
+test("the panel is built before the search landmark; without it there is no panel and no other container", async ({ context, page }) => {
+  await setup(context, page, { transform: (h) => h.replace('role="search" aria-label="Pull requests"', 'aria-label="Pull requests" data-x="gone"') });
+  await expect(label(page, 412)).toHaveText("Your turn · Review requested");
+  await page.waitForTimeout(800);
+  await expect(page.locator("#ghprt-bar")).toHaveCount(0);
+  await expect(page.locator(".ghprt-group")).toHaveCount(0);
+  // Not even the site search (the only other landmark) is used as a place.
+  await expect(page.locator('form[role="search"] ~ #ghprt-bar, header #ghprt-bar')).toHaveCount(0);
+  await page.evaluate(() => document.querySelector("[data-x=gone]").setAttribute("role", "search"));
+  await expect(page.locator('#ghprt-bar + [role="search"]')).toHaveCount(1);
+});
+
+test("the native list is untouched except for our label nodes", async ({ context, page }) => {
+  await setup(context, page, { storage: { ghprtEnabled: false } });
+  await page.waitForTimeout(500);
+  const strip = () => page.evaluate(() => {
+    const clone = document.querySelector("ul[role=list]").cloneNode(true);
+    clone.querySelectorAll("[data-ghprt]").forEach((e) => e.remove());
+    clone.querySelectorAll("[data-ghprt-placement]").forEach((e) => e.removeAttribute("data-ghprt-placement"));
+    return clone.outerHTML;
+  });
+  const before = await strip();
+  await context.serviceWorkers()[0].evaluate(() => chrome.storage.local.set({ ghprtEnabled: true }));
+  await expect(page.locator("[data-ghprt]")).toHaveCount(6);
+  expect(await strip()).toBe(before);
+});
+
+test("a verified empty group says nothing needs action; an incomplete one says so", async ({ context, page }) => {
+  await setup(context, page, { handlers: [graphqlHandler([], { data: { 405: pr("ana") } })], transform: (h) => h.replace(/<li class="listItem__X41oTe[\s\S]*?<\/li>/g, (m) => (/pull\/405"/.test(m) ? m : "")) });
+  const panel = page.locator("#ghprt-bar");
+  await expect(panel.locator('[data-group="yours"] .ghprt-empty')).toHaveText("Nothing needs your action on this page.");
+  await expect(panel.locator('[data-group="waiting"] .ghprt-empty')).toHaveText("Nothing is waiting on others on this page.");
+  await expect(panel).not.toContainText("could not");
+});
+
+test("collapse survives a filter change and resets in another repository", async ({ context, page }) => {
+  await setup(context, page);
+  await page.getByRole("button", { name: "Collapse panel" }).click();
+  await expect(page.locator(".ghprt-groups")).toBeHidden();
+  await page.evaluate(() => {
+    document.querySelector('a[data-testid="listitem-title-link"][href$="/pull/409"]').closest("li").remove();
+    history.pushState({}, "", "/acme/web/pulls?q=is%3Apr+author%3Alee");
+  });
+  await expect(page.locator("#ghprt-bar .ghprt-pill").first()).toHaveText("1 need my action");
+  await expect(page.locator(".ghprt-groups")).toBeHidden();
+  await expect(page.getByRole("button", { name: "Expand panel" })).toHaveAttribute("aria-expanded", "false");
+  await page.evaluate(() => history.pushState({}, "", "/acme/api/pulls"));
+  await expect(page.locator(".ghprt-groups")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Collapse panel" })).toHaveAttribute("aria-expanded", "true");
+});
+
+test("A to B to A: each repository gets its panel from its own cache, back and forward included", async ({ context, page }) => {
+  const bodies = [];
+  await setup(context, page, { bodies });
+  await expect(page.locator(".ghprt-link")).toHaveCount(4);
+  await page.evaluate(() => history.pushState({}, "", "/acme/api/pulls"));
+  await expect.poll(() => bodies.length).toBe(2);
+  await expect(page.locator(".ghprt-link")).toHaveCount(4);
+  await page.evaluate(() => history.pushState({}, "", "/acme/web/pulls"));
+  await expect(page.locator("#ghprt-bar")).toHaveCount(1);
+  await expect(page.locator(".ghprt-link")).toHaveCount(4);
+  await page.evaluate(() => history.back());
+  await page.evaluate(() => history.forward());
+  await expect(page.locator("#ghprt-bar")).toHaveCount(1);
+  await expect(page.locator(".ghprt-link")).toHaveCount(4);
+  expect(bodies).toHaveLength(2);
+});
+
+test("desktop: the two groups sit side by side and the buttons look native", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await setup(context, page);
+  await expect(page.locator(".ghprt-link")).toHaveCount(4);
+  const hide = await page.locator(".ghprt-hide").evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { h: Math.round(el.getBoundingClientRect().height), r: s.borderTopLeftRadius, b: s.borderTopWidth };
+  });
+  expect(hide).toEqual({ h: 28, r: "6px", b: "1px" });
+  const box = await page.locator("#ghprt-bar").evaluate((el) => el.getBoundingClientRect().toJSON());
+  const search = await page.locator('[role="search"][aria-label="Pull requests"]').evaluate((el) => el.getBoundingClientRect().toJSON());
+  expect(Math.round(search.top - box.bottom), `panel ${JSON.stringify(box)} search ${JSON.stringify(search)}`).toBe(16);
 });
