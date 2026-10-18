@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.1.0...v1.2.0) (2026-10-18)
+
+
+### Features
+
+* show personal PR triage in a two-group summary panel ([#86](https://github.com/cattanisimone/gh-reloaded/issues/86)) ([b5c696e](https://github.com/cattanisimone/gh-reloaded/commit/b5c696e1b3d3675a7321d8028e3217e3469e3199))
+
 ## [1.1.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.0.0...v1.1.0) (2026-10-17)
 
 
