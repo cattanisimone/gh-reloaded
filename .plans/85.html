@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #85 PR triage panel</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa;--abg:#ddf4ff;--aline:rgba(84,174,255,.4)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  h3{font-size:14px;margin:16px 0 6px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:13px;word-break:break-word} .scroll{overflow-x:auto}
+  .new{outline:2px dashed var(--accent);outline-offset:3px}
+  .tag{display:inline-block;font-size:11px;font-weight:600;color:var(--accent);margin:0 0 4px}
+  /* mockup */
+  .gh{border:1px solid var(--line);border-radius:6px;padding:16px;font-size:14px;background:#fff}
+  .gh .top{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+  .gh .top b{font-size:20px;font-weight:600;flex:1}
+  .btn{height:32px;padding:0 12px;border-radius:6px;border:1px solid var(--line);background:var(--soft);font:inherit;font-weight:500;display:inline-flex;align-items:center;white-space:nowrap}
+  .btn.pri{background:#1f883d;color:#fff;border-color:rgba(31,35,40,.15)}
+  .btn.sm{height:28px;padding:0 8px;font-size:12px}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+  .search{height:32px;border:1px solid var(--line);border-radius:6px;padding:0 12px;display:flex;align-items:center;color:var(--muted);margin-bottom:24px}
+  .panel{border:1px solid var(--line);border-radius:6px;margin-bottom:16px}
+  .ph{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;background:var(--soft);border-bottom:1px solid var(--line);border-radius:6px 6px 0 0;font-size:12px}
+  .ph strong{font-size:14px}
+  .ph .sub{color:var(--muted)} .ph .sp{flex:1}
+  .cnt{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:2em;border:1px solid var(--line);font-weight:500;font-size:12px}
+  .cnt.y{color:var(--accent);background:var(--abg);border-color:var(--aline)}
+  .groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0}
+  .grp{padding:8px 12px 10px}
+  .grp+.grp{border-left:1px solid var(--line)}
+  .grp h4{margin:0 0 4px;font-size:13px;display:flex;align-items:center;gap:6px}
+  .ent{display:block;padding:5px 0;border-top:1px solid #eff2f5;font-size:13px}
+  .ent:first-of-type{border-top:0}
+  .ent a{color:var(--fg);font-weight:600;text-decoration:none}
+  .ent .why{display:block;color:var(--muted);font-size:12px}
+  .ent .why.y{color:var(--accent)}
+  .more{font-size:12px;color:var(--accent);background:none;border:0;padding:4px 0;font:inherit;font-size:12px;cursor:pointer}
+  .note{color:var(--muted);font-size:12px;padding:6px 0}
+  .list{border:1px solid var(--line);border-radius:6px}
+  .lh{background:var(--soft);padding:10px 12px;border-bottom:1px solid var(--line);display:flex;gap:16px;font-size:13px;flex-wrap:wrap}
+  .row{padding:8px 12px;border-top:1px solid var(--line);font-size:13px}
+  .row:first-of-type{border-top:0}
+  .row b{display:block;font-size:14px}
+  .row span{color:var(--muted);font-size:12px}
+  .lbl{display:inline-flex;height:18px;align-items:center;padding:0 6px;margin-left:4px;border:1px solid var(--line);border-radius:2em;font-size:11px;color:var(--muted)}
+  .lbl.y{color:var(--accent);background:var(--abg);border-color:var(--aline)}
+  .states{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  .narrow{max-width:380px}
+  .narrow .groups{grid-template-columns:1fr}
+  .narrow .grp+.grp{border-left:0;border-top:1px solid var(--line)}
+  .cap{font-size:12px;color:var(--muted);margin:4px 0 12px}
+</style></head><body><main>
+
+<h1><a href="https://github.com/cattanisimone/gh-reloaded/issues/85">#85</a> · Show personal PR triage in a two-group summary panel</h1>
+<p class="meta">Size: <b>normal</b> (new UI surface, rewrite of the bar) · Goal: on a repository's <code>/pulls</code> page, replace the count-only “On this page” bar with a compact <b>My PR triage</b> panel listing <b>Needs my action</b> and <b>Waiting on others</b>, above an untouched native list.</p>
+
+<h2>What changes for users</h2>
+<ul>
+  <li>Above the search box, a panel <b>My PR triage · On this page</b> with two groups side by side: <b>Needs my action</b> and <b>Waiting on others</b>, each with a count.</li>
+  <li>Each entry is a link to the PR: title, <code>#number</code> and the reason (“Review requested”, “Changes requested by sam”, “Waiting on author”…). At most 5 per group, then <b>Show N more</b>.</li>
+  <li><b>Collapse</b> (chevron button, <code>aria-expanded</code>) hides the groups but keeps the header and counts. <b>Hide triage</b> still turns everything off, persisted as today.</li>
+  <li>Loading, missing token, refusal, rate limit and unreadable PRs are each said in words, never shown as an empty group. The row labels stay as secondary context.</li>
+  <li>Same classifier, same single batched query: no new API calls, no new rules, no new stored setting.</li>
+</ul>
+
+<h2>Prototype in this pull request (5c2c51f): keep or change</h2>
+<table>
+  <tr><th>Prototype</th><th>Plan</th></tr>
+  <tr><td>Panel, two groups, 5 + Show N more, Collapse with <code>aria-expanded</code>, row labels kept, README / Settings / SVG + PNG refreshed</td><td><b>Keep</b> as the base</td></tr>
+  <tr><td>Panel inserted with <code>list.before()</code>, i.e. inside GitHub's bordered list, between its toolbar and the rows; search above it</td><td><b>Change</b>: insert before <code>[role="search"]</code> so search, filters, list and pagination are all below (issue: “keep … search, filters … below the panel”)</td></tr>
+  <tr><td>Old jump buttons still rendered in the header next to the groups</td><td><b>Change</b>: header shows plain counts; entries are the links</td></tr>
+  <tr><td>Grouping inline in <code>render()</code>; no unit test</td><td><b>Change</b>: pure <code>groupEntries()</code> in <code>classify.js</code> with unit tests</td></tr>
+  <tr><td>Collapse / show-more reset on every query change</td><td><b>Change</b>: kept while the repository is the same (a filter change is not a new choice to collapse); reset on another repository or reload</td></tr>
+  <tr><td>Team requests not reported; partial note same in both groups</td><td><b>Change</b>: “1 team request · 1 unavailable” in the header; empty-but-incomplete vs verified empty wording</td></tr>
+  <tr><td>Groups stack under a 640px <i>viewport</i> media query</td><td><b>Keep</b> the breakpoint, plus the 400px e2e assertions</td></tr>
+</table>
+
+<h2>Mockup</h2>
+<p class="cap">Fictional data (acme/web, signed in as mira). Dashed outline = added by the extension. Everything else is GitHub's own page, unchanged.</p>
+<div class="scroll"><div class="gh" style="min-width:600px">
+  <div class="top"><b>Pull requests</b><span class="btn">Labels</span><span class="btn pri">New pull request</span></div>
+  <div class="panel new" role="region" aria-label="My PR triage">
+    <div class="ph">
+      <strong>My PR triage</strong><span class="sub">· On this page</span>
+      <span class="cnt y">2 need my action</span><span class="cnt">2 waiting on others</span>
+      <span class="sub">· 1 team request · 1 unavailable</span>
+      <span class="sp"></span>
+      <button class="btn sm ghost">Hide triage</button><button class="btn sm" aria-expanded="true">Collapse ▴</button>
+    </div>
+    <div class="groups">
+      <div class="grp">
+        <h4>Needs my action <span class="cnt y">2</span></h4>
+        <div class="ent"><a href="#">Add audit trail to settings</a> <span style="color:var(--muted)">#412</span><span class="why y">Review requested</span></div>
+        <div class="ent"><a href="#">Improve keyboard navigation in the sidebar</a> <span style="color:var(--muted)">#409</span><span class="why y">Changes requested by sam</span></div>
+      </div>
+      <div class="grp">
+        <h4>Waiting on others <span class="cnt">2</span></h4>
+        <div class="ent"><a href="#">Refactor project filters</a> <span style="color:var(--muted)">#405</span><span class="why">Waiting on review · sam, @acme/design</span></div>
+        <div class="ent"><a href="#">Reduce API error noise</a> <span style="color:var(--muted)">#401</span><span class="why">Waiting on author · new commits since your review</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="search">is:pr is:open</div>
+  <div class="list">
+    <div class="lh"><b>◉ 6 Open</b><span>✓ 56 Closed</span><span style="margin-left:auto">Author ▾ Label ▾ Sort ▾</span></div>
+    <div class="row"><b>Add audit trail to settings</b><span>#412 opened by lee</span><span class="lbl y new">Your turn · Review requested</span></div>
+    <div class="row"><b>Improve keyboard navigation in the sidebar</b><span>#409 opened by mira</span><span class="lbl y new">Your turn · Changes requested by sam</span></div>
+    <div class="row"><b>Refactor project filters</b><span>#405 opened by mira</span><span class="lbl new">Waiting on review · sam, @acme/design</span></div>
+    <div class="row" style="color:var(--muted)">… native rows, order, filters and pagination unchanged</div>
+  </div>
+</div></div>
+
+<h3>States</h3>
+<div class="states">
+  <div>
+    <div class="panel"><div class="ph"><strong>My PR triage</strong><span class="sub">· On this page</span><span class="sp"></span><button class="btn sm" aria-expanded="false">Expand ▾</button></div></div>
+    <p class="cap"><b>Collapsed</b>: header only. Counts stay in the header (<code>2 need my action · 2 waiting</code>); not stored, survives rescans and filter changes in this tab.</p>
+  </div>
+  <div>
+    <div class="panel"><div class="ph"><strong>My PR triage</strong><span class="sub">· On this page</span></div>
+      <div class="groups"><div class="grp"><h4>Needs my action</h4><div class="note">Loading review data…</div></div><div class="grp"><h4>Waiting on others</h4><div class="note">Loading review data…</div></div></div></div>
+    <p class="cap"><b>Loading</b>: list is already usable; no count, no “nothing”.</p>
+  </div>
+  <div>
+    <div class="panel"><div class="ph"><strong>My PR triage</strong><span class="sub">· On this page</span></div>
+      <div class="note" style="padding:8px 12px">Triage needs a GitHub token for this repository owner, with Pull requests: Read (Settings → GitHub tokens).</div></div>
+    <p class="cap"><b>No token / refused / rate limit</b>: one note replaces both groups (today's texts). No group says “nothing”.</p>
+  </div>
+  <div>
+    <div class="panel"><div class="ph"><strong>My PR triage</strong><span class="sub">· On this page · 2 unavailable</span></div>
+      <div class="groups"><div class="grp"><h4>Needs my action <span class="cnt y">0</span></h4><div class="note">None among the PRs that could be read (2 could not).</div></div><div class="grp"><h4>Waiting on others <span class="cnt">1</span></h4><div class="ent"><a href="#">Refactor project filters</a> #405<span class="why">Waiting on checks</span></div></div></div></div>
+    <p class="cap"><b>Partial</b>: unreadable PRs are counted apart; an empty group says it is incomplete. A <i>verified</i> empty group says “Nothing needs your action on this page.”</p>
+  </div>
+  <div>
+    <div class="panel"><div class="ph"><strong>My PR triage</strong></div>
+      <div class="groups"><div class="grp"><h4>Needs my action <span class="cnt y">8</span></h4>
+        <div class="ent"><a href="#">Entry 1 … 5</a><span class="why y">Review requested</span></div>
+        <button class="more">Show 3 more</button></div></div></div>
+    <p class="cap"><b>Many</b>: 5 per group, then <b>Show N more</b> (button, <code>aria-expanded</code>), current page only.</p>
+  </div>
+  <div class="narrow">
+    <div class="panel"><div class="ph"><strong>My PR triage</strong><span class="sp"></span><button class="btn sm">Collapse ▴</button></div>
+      <div class="groups"><div class="grp"><h4>Needs my action <span class="cnt y">2</span></h4><div class="ent"><a href="#">Improve keyboard navigation in the sidebar, with a long title that wraps</a> #409<span class="why y">Changes requested by sam</span></div></div>
+      <div class="grp"><h4>Waiting on others <span class="cnt">2</span></h4><div class="ent"><a href="#">Refactor project filters</a> #405<span class="why">Waiting on review</span></div></div></div></div>
+    <p class="cap"><b>400px</b>: groups stack, titles wrap, no horizontal scroll. Dark mode uses the same Primer dark tokens as today's bar.</p>
+  </div>
+</div>
+
+<h2>Route matrix</h2>
+<table>
+  <tr><th>Route / state</th><th>Panel</th><th>Back</th></tr>
+  <tr><td><code>/&lt;o&gt;/&lt;r&gt;/pulls</code> open or draft rows (any query, any page)</td><td>Shown, entries from the rows currently loaded</td><td>—</td></tr>
+  <tr><td>Closed / merged tab, or a query with no open rows</td><td>Removed (as the bar is today)</td><td>Back to Open: rebuilt from cache, no duplicate</td></tr>
+  <tr><td><code>/pull/&lt;n&gt;</code> (entry or row clicked)</td><td>Removed</td><td>Back/forward: rebuilt once, titles from the current rows</td></tr>
+  <tr><td>Another repository's <code>/pulls</code></td><td>Rebuilt for that repository; nothing carried over</td><td>A → B → A: A from its own cache</td></tr>
+  <tr><td>Global <code>github.com/pulls</code></td><td>Out of scope, nothing</td><td>—</td></tr>
+  <tr><td>Hide triage / Settings switch off</td><td>Panel and labels removed, persisted (<code>ghprtEnabled</code>)</td><td>Settings → Features switch</td></tr>
+</table>
+
+<h2>How it works</h2>
+<div class="scroll"><svg viewBox="0 0 860 200" width="100%" style="min-width:620px" role="img" aria-label="Data flow: native rows to classifier to panel">
+  <defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#59636e"/></marker></defs>
+  <g font-size="12" font-family="-apple-system,Segoe UI,sans-serif" fill="#1f2328">
+    <rect x="10" y="20" width="160" height="62" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="20" y="42" font-weight="600">Native list rows</text><text x="20" y="60">findRows(): number,</text><text x="20" y="74">title link, open/draft</text>
+    <rect x="230" y="20" width="170" height="62" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="240" y="42" font-weight="600">Background (unchanged)</text><text x="240" y="60">1 batched GraphQL / 25</text><text x="240" y="74">60 s cache, token by owner</text>
+    <rect x="460" y="20" width="170" height="62" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="470" y="42" font-weight="600">classify.js</text><text x="470" y="60">classify() unchanged</text><text x="470" y="74">+ groupEntries() (new, pure)</text>
+    <rect x="690" y="10" width="160" height="40" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-dasharray="4 3"/>
+    <text x="700" y="34" font-weight="600">Panel (new)</text>
+    <rect x="690" y="60" width="160" height="34" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="700" y="82">Row labels (kept)</text>
+    <path d="M170,51 L226,51" stroke="#59636e" marker-end="url(#a)"/>
+    <path d="M400,51 L456,51" stroke="#59636e" marker-end="url(#a)"/>
+    <path d="M630,45 L686,32" stroke="#59636e" marker-end="url(#a)"/>
+    <path d="M630,58 L686,76" stroke="#59636e" marker-end="url(#a)"/>
+    <text x="10" y="125" font-weight="600">Anchor (from the live probe, microsoft/vscode/pulls, 1280 and 400px)</text>
+    <text x="10" y="145">PageLayout header › [role="search"][aria-label="Pull requests"]  →  panel inserted just before it</text>
+    <text x="10" y="163">list: a[data-testid="listitem-title-link"] › li › ul[role="list"]  (same layout root as the search)</text>
+    <text x="10" y="181" fill="#d1242f">No search landmark or no open row → no panel, retry on next scan. No other container is used.</text>
+  </g>
+</svg></div>
+<ul>
+  <li><b>Live structure</b> (anonymous probe): the title row (<code>Pull requests</code> + buttons) and <code>div[role="search"][aria-label="Pull requests"]</code> sit in the PageLayout <code>header</code>; the bordered list (<code>listContainer__&lt;hash&gt;</code> › toolbar › <code>ul[role=list]</code>) and pagination follow in the content area. Today's bar is inserted <i>inside</i> the bordered list; the panel moves above the search, so search, filters, list and pagination are all below it, as the issue asks.</li>
+  <li>The anchor is a role + ARIA attribute, no class names. Primary anchor asserted on current markup in a test; the fixture keeps real <code>Name__hash</code> classes plus the old-prefix variant.</li>
+  <li><b>Render</b>: <code>groupEntries(me, rows, facts)</code> returns <code>{yours:[], waiting:[], team, unavailable, loading}</code> in native row order, one group per PR (classifier's single placement). The panel is rebuilt by key (<code>number + title + reason</code>), so a filter, page, SPA or repository change reconciles in place: no duplicates, no stale titles.</li>
+  <li><b>Temporary UI state</b> (collapsed, expanded groups) lives in a module variable, keyed per repository; never written to storage.</li>
+  <li>Today's jump buttons are dropped: the entries are real links to <code>/pull/&lt;n&gt;</code>.</li>
+</ul>
+
+<h2>Changes by file</h2>
+<table>
+  <tr><th>File</th><th>Change</th><th>Why</th></tr>
+  <tr><td><code>features/pr-triage/classify.js</code></td><td>Add pure <code>groupEntries()</code>; <code>classify()</code> untouched</td><td>Grouping and limits testable with <code>node --test</code></td></tr>
+  <tr><td><code>features/pr-triage/content.js</code></td><td>From the prototype: move the anchor to <code>[role="search"]</code>, drop jump buttons, render from <code>groupEntries()</code>; keep fetch, cache, rows, labels, teardown</td><td>The panel itself</td></tr>
+  <tr><td><code>features/pr-triage/content.css</code></td><td>Prototype styles kept; remove the jump-button styles, add header counts</td><td>Native look, stack at 400px</td></tr>
+  <tr><td><code>options/options.html</code> (shared)</td><td>PR triage description: “…with a My PR triage panel above the list”</td><td>Settings help says what it does</td></tr>
+  <tr><td><code>README.md</code>, <code>screenshots/pr-triage.svg</code> + <code>.png</code></td><td>Already refreshed in the prototype; redraw the panel above the search box</td><td>Docs in sync; issue asks for SVG and PNG</td></tr>
+  <tr><td><code>test/e2e/fixtures/repo-pulls.html</code>, its README</td><td>Add the PageLayout header with title row and <code>[role="search"]</code> from the live structure</td><td>The new anchor must exist in the fixture</td></tr>
+  <tr><td><code>test/e2e/pr-triage.spec.js</code>, <code>test/unit/pr-triage-classify.test.js</code></td><td>Bar tests become panel tests; new ones below</td><td>Test plan</td></tr>
+</table>
+<p class="meta"><code>background/pr-triage.js</code>, <code>lib/github-api.js</code>, <code>manifest.json</code>, <code>background.js</code>: no change.</p>
+
+<h2>Data, permissions, privacy</h2>
+<p>None. Same request, same cache, same storage key (<code>ghprtEnabled</code>), no new permission. <code>PRIVACY.md</code> unchanged.</p>
+
+<h2>Test plan</h2>
+<div class="scroll"><table>
+  <tr><th>Acceptance criterion</th><th>Type</th><th>Test</th></tr>
+  <tr><td>Review request + authored changes-requested → Needs my action; authored pending review + my unrenewed changes-requested → Waiting; existing regressions pass</td><td>unit + e2e</td><td><code>groupEntries places each role in one group</code>; e2e <code>panel groups each role, rows unchanged</code>; existing classify tests kept</td></tr>
+  <tr><td>Entries link to the native PR, carry the reason, appear once; counts and show-more cover the current page</td><td>unit + e2e</td><td><code>groupEntries keeps native order, one entry per PR</code>; e2e <code>entries link to their rows with the reason</code>, <code>show more reveals the rest of this page only</code> (8-row variant)</td></tr>
+  <tr><td>Collapse keeps header/counts, reversible by keyboard; Hide triage removes panel + labels and persists</td><td>e2e</td><td><code>collapse keeps the counts and Enter/Space restore it</code>; <code>Hide triage removes everything and the choice persists</code> (updated)</td></tr>
+  <tr><td>Native rows, order, query, links, filters, pagination intact; search/page, SPA A→B→A, back/forward, repo change reconcile without duplicates or stale titles</td><td>e2e</td><td><code>native list is byte-identical except our nodes</code>; updated <code>filter change</code>, <code>page 2</code>, <code>navigation … back/forward</code>, <code>another repository is fresh</code>; new <code>a renamed title updates its entry</code></td></tr>
+  <tr><td>Loading, no token, 403, rate limit, partial errors distinct from verified empty; rows stay</td><td>e2e</td><td>updated <code>no token</code>, <code>403</code>, <code>rate limit</code>, <code>Loading</code>, <code>server error</code>; new <code>partial: empty group says incomplete</code>, <code>verified empty says nothing needs action</code></td></tr>
+  <tr><td>Side by side on desktop, stacked at 400px, wrapping, no h-scroll, accessible names, focus, light/dark</td><td>e2e</td><td><code>desktop: two groups side by side</code>; <code>400px: stacked, no horizontal scroll</code>; <code>panel has region name and visible focus</code>; updated <code>dark theme</code>; <code>native look: buttons 28px/6px radius, focus ring</code></td></tr>
+  <tr><td>Anchors: primary anchor used on current markup, old class naming too, no other container</td><td>e2e</td><td><code>panel sits right before the search landmark</code>; <code>previous CSS-module class names work the same</code>; <code>without the search landmark no panel and no fallback container</code></td></tr>
+  <tr><td>README, Settings help, mockup; compare with the visual baseline</td><td>manual</td><td>PR body: screenshot of the fixture panel next to concept-v2</td></tr>
+</table></div>
+<p><b>Fixture</b>: <code>repo-pulls.html</code> refreshed with the header/search structure; an 8-row variant built in-test for show-more. Each new e2e spec run with <code>--repeat-each=3</code>.</p>
+<p><b>Live check</b>: probed <code>github.com/microsoft/vscode/pulls</code> anonymously at 1280 and 400px: <code>[role="search"][aria-label="Pull requests"]</code> in the PageLayout header, list in <code>listContainer__&lt;hash&gt;</code> with <code>ul[role=list]</code> and grid <code>li</code> rows. Signed-in rendering (user-login meta, private repositories, real review requests) <b>cannot be checked anonymously</b>: to be reported under “Not verified on live github.com”, the maintainer should open a signed-in <code>/pulls</code> page and check that the panel sits above the search box and the entries match the rows.</p>
+
+<h2>Risks and open questions</h2>
+<ul>
+  <li><b>Placement</b>: above the search (issue: “search, filters … below the panel”) rather than inside the bordered list as today. Default: above the search landmark; nothing if it is missing.</li>
+  <li><b>Team requests and unavailable PRs</b> belong to neither group (unchanged rule). Default: counted in the header as “1 team request · 1 unavailable”, not listed.</li>
+  <li><b>Collapsed state</b> lasts for the tab (module memory), reset on reload; not stored, as the issue requires.</li>
+  <li><b>PNG</b>: <code>main</code> only has <code>screenshots/pr-triage.svg</code>. Default: redraw the SVG and add <code>screenshots/pr-triage.png</code> rendered from it with headless Chromium.</li>
+  <li><b>Jump buttons</b> are removed (entries are links). Default: remove; the row labels remain for in-list scanning.</li>
+</ul>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Global inbox, the global <code>github.com/pulls</code> page, notifications, unread or merge-ready states.</li>
+  <li>New classification rules, repository-wide fetching, new API calls or storage keys.</li>
+  <li>Replacing or reordering GitHub's own list; version bumps, releases, store publication.</li>
+</ul>
+</main></body></html>
