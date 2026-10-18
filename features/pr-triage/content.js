@@ -367,7 +367,7 @@
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ["data-testid", "href", "aria-label"], // an anchor coming back
+    attributeFilter: ["data-testid", "href", "aria-label", "role"], // an anchor coming back
   });
 
   let lastUrl = location.href;
