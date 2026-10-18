@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- Fixture: a repository's Pull requests page (React list view), fictional repository acme/web, signed in as mira.
      Structure and class names copied from github.com's live markup (probed 2026-10-16). Anchors the feature uses:
-     meta[name=user-login]; ul[role=list] with li rows; a[data-testid=listitem-title-link] (href /pull/N);
+     meta[name=user-login]; div[role=search][aria-label="Pull requests"] in the page header (the panel goes right before it; the site header has its own role=search labelled Site); ul[role=list] with li rows; a[data-testid=listitem-title-link] (href /pull/N);
      svg[aria-label="Open pull request" | "Draft pull request"]; [data-testid=timestamp-container] (label goes into its parent).
      Hashed classes (Name__hash) are kept as served; no feature code matches them. -->
 <html lang="en" data-color-mode="light"><head><meta charset="utf-8"><title>Pull requests · acme/web</title>
@@ -24,7 +24,13 @@
   .container__VGL_Vt { flex: 1 1 auto; min-width: 0; }
   .trailingBadgesSpacer__YtV8rh { flex: 1; }
 </style></head>
-<body><main>
+<body>
+  <header class="AppHeader"><form role="search" aria-label="Site" class="js-site-search-form"><input type="search" aria-label="Search GitHub"></form></header>
+<main>
+  <div class="PageLayout__header" data-testid="pulls-header">
+    <div class="titleRow__hX2k1a" style="display:flex;gap:8px;align-items:center;margin-bottom:16px"><h2 style="flex:1;margin:0;font-size:20px">Pull requests</h2><a class="prc-Button-ButtonBase-9n-Xk" href="/acme/web/labels">Labels</a><a class="prc-Button-ButtonBase-9n-Xk" href="/acme/web/compare">New pull request</a></div>
+    <div role="search" aria-label="Pull requests" class="searchContainer__w3Zp1q" style="border:1px solid #d1d9e0;border-radius:6px;height:32px;margin-bottom:16px;padding:0 12px;display:flex;align-items:center"><input aria-label="Search all pull requests" value="is:pr is:open" style="border:0;flex:1"></div>
+  </div>
   <h1 class="sr-only" id="list-heading" style="position:absolute;left:-9999px">Pull requests</h1>
   <div class="container__uZQXyV listContainer__NnQKCt">
     <div class="header"><span>○ 6 Open</span><span>✓ 41 Closed</span><button type="button">Author ▾</button><button type="button">Sort ▾</button></div>

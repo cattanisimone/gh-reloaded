@@ -1,8 +1,7 @@
 // features/pr-triage/content.js — on a repository's own Pull requests page
 // (github.com/<owner>/<repo>/pulls), adds PR triage next to GitHub's native
-// list: one small label on each open row saying whose move it is ("Your
-// turn · Review requested", "Waiting on author", ...) and a one-line "On
-// this page" bar whose buttons jump to the matching rows.
+// list: a compact two-group personal panel plus contextual row labels.
+// The panel lists only the currently loaded native rows, above the search box.
 //
 // Nothing native is hidden, moved or duplicated, and the list never waits
 // for the extension: rows are read from the page, the review facts come
@@ -135,54 +134,142 @@
     return r.placement ? r : null;
   }
 
-  function ensureBar(list) {
+  // The panel sits right before the page's own "Pull requests" search
+  // landmark (role + ARIA label, no class names), so search, filters, list and
+  // pagination all stay below it. No landmark, no panel: never another place.
+  function findSearch() {
+    return [...document.querySelectorAll('[role="search"]')].find((el) => /^pull requests$/i.test(el.getAttribute("aria-label") || "")) || null;
+  }
+
+  function ensureBar(search) {
     let bar = document.getElementById(BAR_ID);
-    if (bar && bar.nextElementSibling === list) return bar;
+    if (bar && bar.nextElementSibling === search) return bar;
     bar?.remove();
     bar = document.createElement("div");
     bar.id = BAR_ID;
     bar.className = "ghprt-bar";
-    bar.setAttribute("role", "group");
-    bar.setAttribute("aria-label", "PR triage");
+    bar.setAttribute("role", "region");
+    bar.setAttribute("aria-label", "My PR triage");
     bar.innerHTML =
+      '<div class="ghprt-header"><h2>My PR triage</h2>' +
       '<span class="ghprt-title">On this page</span>' +
       '<span class="ghprt-summary" aria-live="polite"></span>' +
-      '<button type="button" class="ghprt-hide">Hide triage</button>';
+      '<button type="button" class="ghprt-collapse" aria-expanded="true" aria-controls="ghprt-groups">Collapse panel</button>' +
+      '<button type="button" class="ghprt-hide">Hide triage</button></div>' +
+      '<p class="ghprt-status" hidden></p>' +
+      '<div class="ghprt-groups" id="ghprt-groups"></div>';
+    const groups = bar.querySelector(".ghprt-groups");
+    for (const [placement, title] of [["yours", "Needs my action"], ["waiting", "Waiting on others"]]) {
+      const group = document.createElement("section");
+      group.className = "ghprt-group";
+      group.dataset.group = placement;
+      group.setAttribute("aria-labelledby", `ghprt-heading-${placement}`);
+      group.innerHTML = `<h3 id="ghprt-heading-${placement}">${title} <span class="ghprt-total"></span></h3>` +
+        `<div class="ghprt-entries" role="list" aria-label="${title}"></div>` +
+        '<p class="ghprt-empty"></p>' +
+        '<button type="button" class="ghprt-more" hidden></button>';
+      group.querySelector(".ghprt-more").addEventListener("click", () => {
+        panelState.expanded[placement] = !panelState.expanded[placement];
+        schedule();
+      });
+      groups.append(group);
+    }
+    bar.querySelector(".ghprt-collapse").addEventListener("click", () => {
+      panelState.collapsed = !panelState.collapsed;
+      schedule();
+    });
     bar.querySelector(".ghprt-hide").addEventListener("click", () => {
       try {
         chrome.storage.local.set({ [STORAGE_ENABLED]: false });
       } catch {}
       teardown();
     });
-    list.before(bar);
+    search.before(bar);
     return bar;
   }
 
-  function jumpButton(placement, count, text) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "ghprt-count";
-    b.dataset.jump = placement;
-    b.textContent = `${count} ${text}`;
-    b.setAttribute("aria-label", `${count} ${text}: go to the next one`);
-    return b;
+  // Temporary view state, never stored. It follows the repository: a filter,
+  // page or route change keeps it, another repository or a reload resets it.
+  const panelState = { repo: "", collapsed: false, expanded: {} };
+  const PREVIEW_LIMIT = 5;
+
+  function renderGroups(bar, page, grouped, entry, loading, failed) {
+    if (panelState.repo !== page.key) {
+      panelState.repo = page.key;
+      panelState.collapsed = false;
+      panelState.expanded = {};
+    }
+    const status = bar.querySelector(".ghprt-status");
+    const statusText = failed || "";
+    if (status.textContent !== statusText) status.textContent = statusText;
+    status.hidden = !failed;
+    const groups = bar.querySelector(".ghprt-groups");
+    groups.hidden = panelState.collapsed || !!failed;
+    const toggle = bar.querySelector(".ghprt-collapse");
+    toggle.hidden = !!failed; // nothing to collapse while one note replaces the groups
+    const expanded = String(!panelState.collapsed);
+    if (toggle.getAttribute("aria-expanded") !== expanded) {
+      toggle.setAttribute("aria-expanded", expanded);
+      toggle.textContent = panelState.collapsed ? "Expand panel" : "Collapse panel";
+    }
+    for (const placement of ["yours", "waiting"]) {
+      const group = bar.querySelector(`[data-group="${placement}"]`);
+      const items = grouped[placement];
+      const total = group.querySelector(".ghprt-total");
+      const number = loading ? "" : String(items.length);
+      if (total.textContent !== number) total.textContent = number;
+      const shown = panelState.expanded[placement] ? items : items.slice(0, PREVIEW_LIMIT);
+      const signature = JSON.stringify(shown.map((e) => [e.number, e.href, e.title, e.label, e.hint]));
+      const list = group.querySelector(".ghprt-entries");
+      if (list.dataset.key !== signature) {
+        list.dataset.key = signature;
+        list.replaceChildren(...shown.map((e) => {
+          const item = document.createElement("div");
+          item.className = "ghprt-entry";
+          item.setAttribute("role", "listitem");
+          const link = document.createElement("a");
+          link.className = "ghprt-link";
+          link.href = e.href;
+          link.textContent = e.title;
+          const reason = document.createElement("span");
+          reason.className = "ghprt-reason";
+          reason.textContent = `#${e.number} · ${e.label}`;
+          reason.title = e.hint;
+          item.append(link, reason);
+          return item;
+        }));
+      }
+      const empty = group.querySelector(".ghprt-empty");
+      const note = (loading && "Loading review data…") ||
+        (grouped.unavailable && `None among the PRs that could be read (${grouped.unavailable} could not).`) ||
+        (placement === "yours" ? "Nothing needs your action on this page." : "Nothing is waiting on others on this page.");
+      if (empty.textContent !== note) empty.textContent = note;
+      empty.hidden = items.length > 0;
+      const more = group.querySelector(".ghprt-more");
+      more.hidden = items.length <= PREVIEW_LIMIT;
+      const moreText = panelState.expanded[placement] ? "Show fewer" : `Show ${items.length - PREVIEW_LIMIT} more`;
+      if (more.textContent !== moreText) more.textContent = moreText;
+      more.setAttribute("aria-expanded", String(!!panelState.expanded[placement]));
+    }
   }
 
-  function renderBar(bar, entry, counts, loading) {
+  // Header: plain counts (the entries below are the links), kept visible
+  // while the panel is collapsed.
+  function renderSummary(bar, grouped, loading, failed) {
     const sum = bar.querySelector(".ghprt-summary");
-    const failed = entry.status !== "ready" && BAR_NOTES[entry.status];
-    const empty = !counts.yours && !counts.waiting && !counts.unavailable;
-    const note = failed || (loading && "Loading review data…") || (empty && "Nothing waiting on you.") || "";
-    const key = JSON.stringify([note, counts]);
+    const counts = [grouped.yours.length, grouped.waiting.length, grouped.team, grouped.unavailable];
+    const key = JSON.stringify([loading, !!failed, counts]);
     if (sum.dataset.key === key) return;
     sum.dataset.key = key;
-    const text = (s) => Object.assign(document.createElement("span"), { className: "ghprt-note", textContent: s });
+    const span = (className, text) => Object.assign(document.createElement("span"), { className, textContent: text });
     const parts = [];
-    if (note) parts.push(text(note));
-    else {
-      if (counts.yours) parts.push(jumpButton("yours", counts.yours, "your turn"));
-      if (counts.waiting) parts.push(jumpButton("waiting", counts.waiting, "waiting on others"));
-      if (counts.unavailable) parts.push(text(`${counts.unavailable} unavailable`));
+    if (!loading && !failed) {
+      parts.push(span(`ghprt-pill${counts[0] ? " ghprt-pill-yours" : ""}`, `${counts[0]} need my action`));
+      parts.push(span("ghprt-pill", `${counts[1]} waiting on others`));
+      const extra = [];
+      if (counts[2]) extra.push(`${counts[2]} team request${counts[2] === 1 ? "" : "s"}`);
+      if (counts[3]) extra.push(`${counts[3]} unavailable`);
+      if (extra.length) parts.push(span("ghprt-note", `· ${extra.join(" · ")}`));
     }
     sum.replaceChildren(...parts);
   }
@@ -207,38 +294,27 @@
     row.li.dataset.ghprtPlacement = result.placement;
   }
 
-  function render(page, rows, list) {
+  function render(page, rows, search) {
     const me = currentUser();
     const entry = entryFor(page.key);
-    const bar = ensureBar(list);
-    const placements = [];
+    const failed = entry.status !== "ready" && BAR_NOTES[entry.status] ? BAR_NOTES[entry.status] : "";
+    const items = [];
     for (const row of rows) {
-      const result = row.meta ? labelFor(me, entry, row) : null;
-      // Rows only get a label with an answer for them; the bar's note covers
-      // a failure of the whole request.
-      const shown = BAR_NOTES[entry.status] && entry.status !== "ready" ? null : result;
+      const result = labelFor(me, entry, row);
+      // Rows only get a label with an answer for them; the panel's note
+      // covers a failure of the whole request.
+      const shown = failed ? null : result;
       if (row.meta) applyLabel(row, shown);
       if (!shown) row.li.removeAttribute("data-ghprt-placement");
-      placements.push(shown ? shown.placement : null);
+      items.push({ number: row.number, title: row.link.textContent.trim(), href: row.link.href, result: shown });
     }
-    const loading = rows.some((r) => r.triaged && !entry.facts.has(r.number)) && entry.status === "ready";
-    renderBar(bar, entry, C.summarize(placements), loading);
+    if (!search) return document.getElementById(BAR_ID)?.remove(); // no anchor: no panel, retry on the next scan
+    const loading = !failed && rows.some((r) => r.triaged && !entry.facts.has(r.number)) && entry.status === "ready";
+    const grouped = C.groupEntries(items);
+    const bar = ensureBar(search);
+    renderSummary(bar, grouped, loading, failed);
+    renderGroups(bar, page, grouped, entry, loading, failed);
   }
-
-  // Count buttons move focus to the next matching row's title link, cycling.
-  // Focus sits on the button while clicking, so the last target is remembered.
-  let lastJump = null;
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest?.(`#${BAR_ID} [data-jump]`);
-    if (!btn) return;
-    const matches = [...document.querySelectorAll(`li[data-ghprt-placement="${btn.dataset.jump}"]`)];
-    if (!matches.length) return;
-    const from = lastJump?.isConnected && matches.includes(lastJump) ? lastJump : document.activeElement?.closest?.("li");
-    lastJump = matches[(matches.indexOf(from) + 1) % matches.length];
-    const link = lastJump.querySelector('a[data-testid="listitem-title-link"]');
-    link?.focus();
-    link?.scrollIntoView({ block: "center" });
-  });
 
   function teardown() {
     document.getElementById(BAR_ID)?.remove();
@@ -259,12 +335,11 @@
     if (enabled === false || !currentUser()) return teardown();
 
     const rows = findRows();
-    const list = rows.find((r) => r.triaged)?.li.parentElement;
-    if (!list) return teardown(); // nothing to triage here, or no anchor: do nothing, retry on the next scan
+    if (!rows.some((r) => r.triaged)) return teardown(); // nothing to triage here: do nothing, retry on the next scan
     const entry = entryFor(page.key);
     const need = wanted(entry, rows);
     if (need.length) fetchFacts(page, need);
-    render(page, rows, list);
+    render(page, rows, findSearch());
   }
 
   let timer;
@@ -293,7 +368,7 @@
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ["data-testid", "href", "aria-label"], // an anchor coming back
+    attributeFilter: ["data-testid", "href", "aria-label", "role"], // an anchor coming back
   });
 
   let lastUrl = location.href;
