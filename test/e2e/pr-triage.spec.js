@@ -277,6 +277,17 @@ test("keyboard: the panel is a named region, buttons and links show the native f
   await expect(page).toHaveURL(/\/pull\/412$/);
 });
 
+test("panel buttons darken while pressed", async ({ context, page }) => {
+  await setup(context, page);
+  const collapse = page.getByRole("button", { name: "Collapse panel" });
+  const box = await collapse.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  const filter = await collapse.evaluate((el) => getComputedStyle(el).filter);
+  await page.mouse.up();
+  expect(filter).toBe("brightness(0.89)");
+});
+
 test("one label per row after rescans", async ({ context, page }) => {
   const bodies = [];
   await setup(context, page, { bodies });

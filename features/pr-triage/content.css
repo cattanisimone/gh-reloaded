@@ -154,6 +154,11 @@ html[data-color-mode="dark"] .ghprt-label {
   filter: brightness(0.95);
 }
 
+.ghprt-collapse:active,
+.ghprt-more:active {
+  filter: brightness(0.89);
+}
+
 .ghprt-collapse:focus-visible,
 .ghprt-more:focus-visible,
 .ghprt-link:focus-visible {
