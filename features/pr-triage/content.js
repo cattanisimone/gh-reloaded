@@ -206,6 +206,7 @@
     const groups = bar.querySelector(".ghprt-groups");
     groups.hidden = panelState.collapsed || !!failed;
     const toggle = bar.querySelector(".ghprt-collapse");
+    toggle.hidden = !!failed; // nothing to collapse while one note replaces the groups
     const expanded = String(!panelState.collapsed);
     if (toggle.getAttribute("aria-expanded") !== expanded) {
       toggle.setAttribute("aria-expanded", expanded);

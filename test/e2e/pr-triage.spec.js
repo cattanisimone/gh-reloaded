@@ -605,10 +605,24 @@ test("A to B to A: each repository gets its panel from its own cache, back and f
   const bodies = [];
   await setup(context, page, { bodies });
   await expect(page.locator(".ghprt-link")).toHaveCount(4);
-  await page.evaluate(() => history.pushState({}, "", "/acme/api/pulls"));
+  // Repository B's own list replaces A's rows.
+  await page.evaluate(() => {
+    for (const a of document.querySelectorAll('a[data-testid="listitem-title-link"]')) {
+      a.setAttribute("href", a.getAttribute("href").replace("/acme/web/", "/acme/api/"));
+      a.textContent = `API ${a.textContent}`;
+    }
+    history.pushState({}, "", "/acme/api/pulls");
+  });
   await expect.poll(() => bodies.length).toBe(2);
   await expect(page.locator(".ghprt-link")).toHaveCount(4);
-  await page.evaluate(() => history.pushState({}, "", "/acme/web/pulls"));
+  expect(await page.locator(".ghprt-link").evaluateAll((as) => as.every((a) => a.href.includes("/acme/api/pull/") && a.textContent.startsWith("API ")))).toBe(true);
+  await page.evaluate(() => {
+    for (const a of document.querySelectorAll('a[data-testid="listitem-title-link"]')) {
+      a.setAttribute("href", a.getAttribute("href").replace("/acme/api/", "/acme/web/"));
+      a.textContent = a.textContent.replace(/^API /, "");
+    }
+    history.pushState({}, "", "/acme/web/pulls");
+  });
   await expect(page.locator("#ghprt-bar")).toHaveCount(1);
   await expect(page.locator(".ghprt-link")).toHaveCount(4);
   await page.evaluate(() => history.back());
@@ -630,4 +644,10 @@ test("desktop: the two groups sit side by side and the buttons look native", asy
   const box = await page.locator("#ghprt-bar").evaluate((el) => el.getBoundingClientRect().toJSON());
   const search = await page.locator('[role="search"][aria-label="Pull requests"]').evaluate((el) => el.getBoundingClientRect().toJSON());
   expect(Math.round(search.top - box.bottom), `panel ${JSON.stringify(box)} search ${JSON.stringify(search)}`).toBe(16);
+});
+
+test("while one note replaces the groups there is no Collapse button", async ({ context, page }) => {
+  await setup(context, page, { tokens: {} });
+  await expect(page.locator("#ghprt-bar")).toContainText("needs a GitHub token");
+  await expect(page.getByRole("button", { name: /Collapse panel|Expand panel/ })).toHaveCount(0);
 });
