@@ -589,3 +589,24 @@ test("Retry follows the system dark theme when GitHub syncs with the system", as
   await dot(page).click();
   await expect(panel(page).getByRole("button", { name: "Retry" })).toHaveCSS("background-color", "rgb(33, 40, 48)");
 });
+
+// GitHub hides a ButtonGroup that holds a search button at narrow widths; the pill must not end up inside it.
+const HIDDEN_SEARCH = '<div class="searchButtonGroup__x1" style="display:none"><button type="button" aria-label="Open quick search dialog">Search</button></div>';
+
+test("a search control that is not rendered is skipped: the pill goes next to a visible one", async ({ page, context }) => {
+  await setup(context, page, { feed: actionsFeed(), transform: (html) => html.replace("<qbsearch-input", HIDDEN_SEARCH + "<qbsearch-input") });
+  await expect(pill(page)).toBeVisible();
+  const box = await pill(page).boundingBox();
+  expect(box.width).toBeGreaterThan(0);
+  expect(await pill(page).evaluate((p) => !p.closest(".searchButtonGroup__x1"))).toBe(true);
+});
+
+test("with no rendered search control nothing is inserted: no pill and no line", async ({ page, context }) => {
+  await setup(context, page, {
+    feed: actionsFeed(),
+    transform: (html) => html.replace(/<qbsearch-input[\s\S]*?<\/qbsearch-input>/, HIDDEN_SEARCH),
+  });
+  await expect(dot(page)).toHaveAttribute("data-state", "minor");
+  await expect(pill(page)).toHaveCount(0);
+  await expect(page.locator("#ghgs-line")).toHaveCount(0);
+});

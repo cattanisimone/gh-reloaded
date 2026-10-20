@@ -111,14 +111,23 @@
   // control whose accessible name or text says "search".
   function findSearch(header) {
     if (!header) return null;
+    const own = "#" + PILL_ID + ", #" + PANEL_ID;
+    // GitHub hides whole groups at narrow widths (display: none), so a match with no layout box is skipped:
+    // the pill goes next to a rendered search control or nowhere.
+    const rendered = (n) => {
+      const r = n.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    };
     // Landmarks first, then controls whose accessible name says "search". Link text is never read:
     // a repository called "research" must not become the anchor.
-    let node = header.querySelector("qbsearch-input, [role='search'], input[type='search'], [role='searchbox']");
-    if (!node) {
-      node = [...header.querySelectorAll("button, input")].find((n) => !n.closest("#" + PILL_ID + ", #" + PANEL_ID) && /search/i.test(n.getAttribute("aria-label") || n.getAttribute("placeholder") || "")) || null;
+    const landmarks = [...header.querySelectorAll("qbsearch-input, [role='search'], input[type='search'], [role='searchbox']")];
+    const named = [...header.querySelectorAll("button, input")].filter((n) => !n.closest(own) && /search/i.test(n.getAttribute("aria-label") || n.getAttribute("placeholder") || ""));
+    for (let node of [...landmarks, ...named]) {
+      if (!rendered(node)) continue;
+      while (node.parentElement && node.parentElement !== header && node.parentElement.children.length === 1) node = node.parentElement;
+      if (node.parentElement) return node;
     }
-    while (node && node.parentElement && node.parentElement !== header && node.parentElement.children.length === 1) node = node.parentElement;
-    return node && node.parentElement ? node : null;
+    return null;
   }
 
   // --- model ----------------------------------------------------------------
