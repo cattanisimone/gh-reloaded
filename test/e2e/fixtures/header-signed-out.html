@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- Fixture: github.com's signed-out marketing header on a repository page (probed live 2026-10-20, 1280px: header 72px high).
+     Real class names kept as served (root__hash, topRow__hash, logo__hash). Anchors the GitHub Status feature uses:
+     header[role=banner]; a[aria-label=Homepage] containing svg.octicon-mark-github inside the flex row topRow__hash (the dot goes right after it).
+     This header has no search control in its bar, so no pill can be placed here. -->
+<html lang="en" data-color-mode="light"><head><meta charset="utf-8"><title>acme/web</title>
+<style>
+  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; color: #1f2328; background: #fff; }
+  .root__q6pgdo { background: #fff; border-bottom: 1px solid #d1d9e0; }
+  .bar__cF4m1O { padding: 20px 32px; }
+  .topRow__-dqkhM { display: flex; align-items: center; gap: 0; }
+  .toggleSlot__-ODxSX { display: none; }
+  .logo__bX9RKh { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; color: inherit; }
+  .menu__2EHTkB { margin-left: 16px; }
+  .mobileActions__8F9jkX { margin-left: auto; display: flex; gap: 8px; }
+</style></head>
+<body>
+  <header class="root__q6pgdo HeaderMktg header-logged-out" role="banner"><h2 style="position:absolute;left:-9999px">Navigation Menu</h2>
+    <div class="bar__cF4m1O"><div class="topRow__-dqkhM">
+      <div class="toggleSlot__-ODxSX"><button type="button" aria-label="Toggle navigation" aria-expanded="false">≡</button></div>
+      <a href="/" aria-label="Homepage" class="logo__bX9RKh"><svg class="octicon octicon-mark-github" width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/></svg></a>
+      <div class="menu__2EHTkB"><nav aria-label="Global"><a href="/features">Platform</a> <a href="/pricing">Pricing</a></nav></div>
+      <div class="mobileActions__8F9jkX"><a href="/login">Sign in</a></div>
+    </div></div>
+  </header>
+  <main style="padding:24px 32px"><h1>acme/web</h1><p>Page content.</p></main>
+</body></html>

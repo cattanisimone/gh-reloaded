@@ -106,5 +106,18 @@
     return out;
   }
 
-  global.GHGS_RELEVANCE = { STALE_MS, dotState, componentsForPath, isWide, isRelevant, isDismissed, noticeFor, pruneDismissed };
+  const STATUS_WORDS = { degraded_performance: "degraded performance", partial_outage: "partial outage", major_outage: "major outage", under_maintenance: "maintenance" };
+  const IMPACT_WORDS = { minor: "minor incident", major: "major incident", critical: "critical incident", none: "incident" };
+
+  // The pill's words: the relevant component and what is wrong with it, or
+  // the incident's own name when it is wide (concerns no single component).
+  function pillText(incident, snapshot, pathname) {
+    const here = componentsForPath(pathname);
+    const name = (incident.components || []).find((c) => here.has(lower(c)));
+    if (!name || isWide(incident)) return { name: incident.components.length === 1 ? incident.components[0] : "GitHub", detail: IMPACT_WORDS[incident.impact] || "incident" };
+    const comp = (snapshot.components || []).find((c) => lower(c.name) === lower(name));
+    return { name, detail: (comp && STATUS_WORDS[comp.status]) || IMPACT_WORDS[incident.impact] || "incident" };
+  }
+
+  global.GHGS_RELEVANCE = { pillText, STALE_MS, dotState, componentsForPath, isWide, isRelevant, isDismissed, noticeFor, pruneDismissed };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -131,6 +131,19 @@
         "features/pr-triage/content.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://github.com/*"
+      ],
+      "js": [
+        "features/github-status/relevance.js",
+        "features/github-status/content.js"
+      ],
+      "css": [
+        "features/github-status/content.css"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "sandbox": {

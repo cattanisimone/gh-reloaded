@@ -132,3 +132,44 @@ export async function routeApi(context, handlers = []) {
     return route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
   });
 }
+
+// Mock githubstatus.com's summary feed at the extension's boundary. `json` may
+// be a function of the call number. Every request is pushed to `log` so a test
+// can assert what was (or was not) sent. `fail` answers with a network error.
+export async function routeStatus(context, { json, status = 200, headers = {}, fail = false, log = [] } = {}) {
+  await context.route("https://www.githubstatus.com/**", (route) => {
+    const request = route.request();
+    log.push({ url: request.url(), headers: request.headers(), method: request.method() });
+    if (fail) return route.abort();
+    const body = typeof json === "function" ? json(log.length) : json;
+    return route.fulfill({ status, contentType: "application/json", headers: { "access-control-allow-origin": "*", ...headers }, body: JSON.stringify(body ?? {}) });
+  });
+  return log;
+}
+
+// A githubstatus.com summary with the given overrides; operational by default.
+export function statusFeed(over = {}) {
+  const comp = (name, status = "operational") => ({ id: name, name, status });
+  return {
+    page: { updated_at: "2026-10-20T06:41:00Z" },
+    status: { indicator: "none", description: "All Systems Operational" },
+    components: ["Git Operations", "API Requests", "Issues", "Pull Requests", "Actions", "Webhooks", "Pages", "Copilot"].map((n) => comp(n)),
+    incidents: [],
+    scheduled_maintenances: [],
+    ...over,
+  };
+}
+
+export function statusIncident(over = {}) {
+  return {
+    id: "inc1",
+    name: "Incident with Actions",
+    status: "investigating",
+    impact: "minor",
+    shortlink: "https://www.githubstatus.com/incidents/inc1",
+    updated_at: "2026-10-20T06:38:00Z",
+    components: [{ name: "Actions" }],
+    incident_updates: [{ body: "Some workflow runs may be delayed.", status: "investigating", updated_at: "2026-10-20T06:38:00Z" }],
+    ...over,
+  };
+}

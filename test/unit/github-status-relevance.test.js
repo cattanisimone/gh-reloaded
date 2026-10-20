@@ -100,3 +100,10 @@ test("resolved incidents are pruned from the dismissals", () => {
   assert.deepEqual({ ...R.pruneDismissed({ i1: "t1", gone: "t0" }, snap({ incidents: [inc()] })) }, { i1: "t1" });
   assert.deepEqual({ ...R.pruneDismissed({ i1: "t1" }, null) }, {});
 });
+
+test("pill text: component and its status, or a generic label when wide", () => {
+  const s = snap({ indicator: "minor", components: [{ name: "Actions", status: "degraded_performance" }], incidents: [inc()] });
+  assert.deepEqual({ ...R.pillText(s.incidents[0], s, "/acme/web/actions") }, { name: "Actions", detail: "degraded performance" });
+  const wide = inc({ impact: "critical", components: ["Git Operations", "Issues", "Actions"] });
+  assert.deepEqual({ ...R.pillText(wide, snap({ incidents: [wide] }), "/settings/profile") }, { name: "GitHub", detail: "critical incident" });
+});

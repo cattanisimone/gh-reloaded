@@ -1,0 +1,42 @@
+<!doctype html>
+<!-- Fixture: github.com's signed-in global header (fictional repository acme/web, signed in as mira).
+     Structure and class names follow the live signed-in header (AppHeader). Anchors the GitHub Status feature uses:
+     header[role=banner] / .AppHeader; a[aria-label=Homepage] containing svg.octicon-mark-github (the dot goes right after it, same flex row);
+     the search control (qbsearch-input with a button labelled "Search or jump to…"; the pill goes right before it).
+     Layout mirrors the live one: 64px bar, 32px controls, 8px gap. Not captured from a signed-in session: the markup is reproduced from the public header structure. -->
+<html lang="en" data-color-mode="light"><head><meta charset="utf-8"><title>acme/web</title>
+<style>
+  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; color: #1f2328; background: #fff; }
+  html[data-color-mode="dark"] body { background: #0d1117; color: #f0f6fc; }
+  .AppHeader { background: #f6f8fa; border-bottom: 1px solid #d1d9e0; padding: 16px 32px 0; }
+  html[data-color-mode="dark"] .AppHeader { background: #151b23; border-color: #3d444d; }
+  .AppHeader-globalBar { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; padding-bottom: 16px; }
+  .AppHeader-globalBar-start, .AppHeader-globalBar-end { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .AppHeader-globalBar-end { flex: 0 1 auto; }
+  .AppHeader-button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid #d1d9e0; border-radius: 6px; background: #f6f8fa; padding: 0; }
+  .AppHeader-logo { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; color: inherit; }
+  .AppHeader-context { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .search-input { display: block; }
+  .header-search-button { display: inline-flex; align-items: center; gap: 8px; height: 32px; min-width: 0; width: 272px; padding: 0 12px; border: 1px solid #d1d9e0; border-radius: 6px; background: #fff; font: inherit; color: #59636e; text-align: left; }
+  .AppHeader-nav { display: flex; gap: 4px; padding: 0 0 0; }
+  @media (max-width: 767px) { .AppHeader { padding: 8px 16px 0; } .header-search-button { width: 32px; padding: 0; justify-content: center; } .header-search-button span { display: none; } .AppHeader-context { display: none; } }
+</style></head>
+<body>
+  <header class="AppHeader" role="banner">
+    <div class="AppHeader-globalBar">
+      <div class="AppHeader-globalBar-start">
+        <button type="button" class="AppHeader-button" aria-label="Open global navigation menu">☰</button>
+        <a class="AppHeader-logo" href="https://github.com/" aria-label="Homepage" data-hotkey="g d"><svg class="octicon octicon-mark-github" width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/></svg></a>
+        <div class="AppHeader-context"><a href="/acme">acme</a><span>/</span><a href="/acme/web"><strong>web</strong></a></div>
+      </div>
+      <div class="AppHeader-globalBar-end">
+        <qbsearch-input class="search-input"><button type="button" class="header-search-button" aria-label="Search or jump to…"><span>Type / to search</span></button></qbsearch-input>
+        <button type="button" class="AppHeader-button" aria-label="Create new…">+</button>
+        <a class="AppHeader-button" href="/issues" aria-label="Your issues">◎</a>
+        <a class="AppHeader-button" href="/pulls" aria-label="Your pull requests">⇅</a>
+        <button type="button" class="AppHeader-button" aria-label="Open user navigation menu">M</button>
+      </div>
+    </div>
+  </header>
+  <main style="padding:24px 32px"><h1>acme/web</h1><p>Page content.</p></main>
+</body></html>

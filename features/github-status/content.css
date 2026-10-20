@@ -1,0 +1,200 @@
+/* features/github-status/content.css — the status dot, the incident pill and
+   the details panel. Light and dark follow GitHub's data-color-mode and the
+   system setting. Sizes copy a medium Primer control: 32px high, 6px radius,
+   1px border. No margins: the header row's own gap spaces everything. */
+
+:root {
+  --ghgs-fg: #1f2328;
+  --ghgs-muted: #59636e;
+  --ghgs-surface: #ffffff;
+  --ghgs-border: #d1d9e0;
+  --ghgs-hover: #818b981a;
+  --ghgs-ok: #1a7f37;
+  --ghgs-minor: #9a6700;
+  --ghgs-major: #cf222e;
+  --ghgs-unknown: #6e7781;
+  --ghgs-minor-bg: #fff8c5;
+  --ghgs-minor-fg: #633c01;
+  --ghgs-minor-bd: #d4a72c;
+  --ghgs-major-bg: #ffebe9;
+  --ghgs-major-fg: #82071e;
+  --ghgs-major-bd: #ff8182;
+  --ghgs-focus: #0969da;
+}
+html[data-color-mode="dark"] {
+  --ghgs-fg: #f0f6fc;
+  --ghgs-muted: #9198a1;
+  --ghgs-surface: #151b23;
+  --ghgs-border: #3d444d;
+  --ghgs-ok: #3fb950;
+  --ghgs-minor: #d29922;
+  --ghgs-major: #f85149;
+  --ghgs-unknown: #8b949e;
+  --ghgs-minor-bg: #3b2300;
+  --ghgs-minor-fg: #f0c36d;
+  --ghgs-minor-bd: #9e6a03;
+  --ghgs-major-bg: #67060c;
+  --ghgs-major-fg: #ffdcd7;
+  --ghgs-major-bd: #da3633;
+  --ghgs-focus: #1f6feb;
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-color-mode="light"]):not([data-color-mode="dark"]),
+  html[data-color-mode="auto"] {
+    --ghgs-fg: #f0f6fc;
+    --ghgs-muted: #9198a1;
+    --ghgs-surface: #151b23;
+    --ghgs-border: #3d444d;
+    --ghgs-ok: #3fb950;
+    --ghgs-minor: #d29922;
+    --ghgs-major: #f85149;
+    --ghgs-unknown: #8b949e;
+    --ghgs-minor-bg: #3b2300;
+    --ghgs-minor-fg: #f0c36d;
+    --ghgs-minor-bd: #9e6a03;
+    --ghgs-major-bg: #67060c;
+    --ghgs-major-fg: #ffdcd7;
+    --ghgs-major-bd: #da3633;
+    --ghgs-focus: #1f6feb;
+  }
+}
+
+/* --- dot --- */
+.ghgs-dot {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 32px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.ghgs-dot:hover { background: var(--ghgs-hover); }
+.ghgs-dot:active { background: #818b9833; }
+.ghgs-dot:focus-visible { outline: 2px solid var(--ghgs-focus); outline-offset: -2px; }
+.ghgs-dot-mark {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ghgs-unknown);
+}
+[data-state="ok"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="ok"] { background: var(--ghgs-ok); }
+[data-state="minor"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="minor"],
+[data-state="maintenance"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="maintenance"] { background: var(--ghgs-minor); }
+[data-state="major"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="major"] { background: var(--ghgs-major); }
+[data-state="unknown"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="unknown"] { background: transparent; border: 2px solid var(--ghgs-unknown); }
+
+/* --- pill --- */
+.ghgs-pill {
+  flex: 0 1 auto;
+  display: inline-flex;
+  align-items: stretch;
+  min-width: 0;
+  max-width: 100%;
+  height: 32px;
+  box-sizing: border-box;
+  border: 1px solid;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  overflow: hidden;
+}
+.ghgs-pill.ghgs-minor { background: var(--ghgs-minor-bg); color: var(--ghgs-minor-fg); border-color: var(--ghgs-minor-bd); }
+.ghgs-pill.ghgs-major { background: var(--ghgs-major-bg); color: var(--ghgs-major-fg); border-color: var(--ghgs-major-bd); }
+.ghgs-pill button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.ghgs-pill-main { padding: 0 8px 0 10px; }
+.ghgs-pill-close { padding: 0 8px; }
+.ghgs-pill button:hover { filter: brightness(0.95); }
+.ghgs-pill button:active { filter: brightness(0.89); }
+.ghgs-pill button:focus-visible { outline: 2px solid var(--ghgs-focus); outline-offset: -2px; }
+.ghgs-pill svg { flex: none; }
+.ghgs-pill-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+.ghgs-pill-detail, .ghgs-pill-link { white-space: nowrap; }
+.ghgs-pill-link { text-decoration: underline; }
+@media (max-width: 767px) {
+  .ghgs-pill-link { display: none; }
+}
+@media (max-width: 399px) {
+  .ghgs-pill-name, .ghgs-pill-detail { display: none; }
+  .ghgs-pill-main { padding: 0 6px 0 8px; }
+  .ghgs-pill-close { padding: 0 6px; }
+}
+@media (max-width: 599px) {
+  .ghgs-pill-detail { display: none; }
+}
+
+.ghgs-line { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; pointer-events: none; z-index: 1; }
+.ghgs-line.ghgs-minor { background: var(--ghgs-minor); }
+.ghgs-line.ghgs-major { background: var(--ghgs-major); }
+
+/* --- panel (top layer) --- */
+.ghgs-panel {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  box-sizing: border-box;
+  max-height: calc(100vh - 80px);
+  overflow: auto;
+  padding: 12px 16px;
+  border: 1px solid var(--ghgs-border);
+  border-radius: 12px;
+  background: var(--ghgs-surface);
+  color: var(--ghgs-fg);
+  box-shadow: 0 8px 24px #1f232826;
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+}
+.ghgs-panel p, .ghgs-panel h3, .ghgs-panel ul { margin: 0; }
+.ghgs-head { display: flex; align-items: center; gap: 8px; }
+.ghgs-state { margin-left: auto; color: var(--ghgs-muted); font-size: 12px; }
+.ghgs-meta, .ghgs-note, .ghgs-quote { color: var(--ghgs-muted); font-size: 12px; margin-top: 4px !important; }
+.ghgs-h { margin-top: 12px !important; font-size: 12px; font-weight: 600; color: var(--ghgs-muted); text-transform: none; }
+.ghgs-list { list-style: none; padding: 0; margin-top: 4px !important; }
+.ghgs-list li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.ghgs-comp-state { color: var(--ghgs-muted); font-size: 12px; }
+.ghgs-incident { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--ghgs-border); }
+.ghgs-incident-title { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.ghgs-tag { color: var(--ghgs-muted); font-size: 12px; text-transform: capitalize; }
+.ghgs-panel a { color: #0969da; }
+html[data-color-mode="dark"] .ghgs-panel a { color: #4493f8; }
+@media (prefers-color-scheme: dark) {
+  html:not([data-color-mode="light"]):not([data-color-mode="dark"]) .ghgs-panel a { color: #4493f8; }
+}
+.ghgs-foot { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px !important; padding-top: 8px; border-top: 1px solid var(--ghgs-border); font-size: 12px; color: var(--ghgs-muted); }
+.ghgs-retry {
+  margin-top: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--ghgs-border);
+  border-radius: 6px;
+  background: #f6f8fa;
+  color: #1f2328;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 1px 0 #1f23280a;
+  cursor: pointer;
+}
+html[data-color-mode="dark"] .ghgs-retry { background: #212830; color: #f0f6fc; }
+.ghgs-retry:hover { filter: brightness(0.95); }
+.ghgs-retry:focus-visible { outline: 2px solid var(--ghgs-focus); outline-offset: -2px; }
