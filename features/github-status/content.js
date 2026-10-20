@@ -261,15 +261,20 @@
   function renderPanel(panel) {
     const s = dotState();
     const snap = state.view.snapshot;
-    panel.dataset.sig = `${s}|${state.view.fetchedAt}|${state.view.error}|${Math.floor(Date.now() / 60_000)}`;
+    panel.dataset.sig = panelSig();
     panel.replaceChildren();
     const head = el("div", { class: "ghgs-head" }, el("span", { class: "ghgs-dot-mark", "data-state": s, "aria-hidden": "true" }), el("strong", { text: "GitHub Status" }), el("span", { class: "ghgs-state", text: STATE_TEXT[s] }));
     const meta = el("p", { class: "ghgs-meta" });
-    meta.textContent = snap && s !== "unknown" ? `Checked ${agoText(state.view.fetchedAt)}${snap.updatedAt && clock(snap.updatedAt) ? ` · Updated by GitHub ${clock(snap.updatedAt)}` : ""}` : "";
+    // The ages are rewritten in place by refreshPanel, so the text comes from a function.
+    meta.ageText = () => (snap && s !== "unknown" ? `Checked ${agoText(state.view.fetchedAt)}${snap.updatedAt && clock(snap.updatedAt) ? ` · Updated by GitHub ${clock(snap.updatedAt)}` : ""}` : "");
+    meta.textContent = meta.ageText();
     panel.append(head);
 
     if (s === "unknown") {
-      panel.append(el("p", { class: "ghgs-meta", text: state.view.fetchedAt ? `Last verified ${agoText(state.view.fetchedAt)}. githubstatus.com could not be reached.` : "githubstatus.com could not be reached." }));
+      const lost = el("p", { class: "ghgs-meta" });
+      lost.ageText = () => (state.view.fetchedAt ? `Last verified ${agoText(state.view.fetchedAt)}. githubstatus.com could not be reached.` : "githubstatus.com could not be reached.");
+      lost.textContent = lost.ageText();
+      panel.append(lost);
       const retry = el("button", { type: "button", class: "ghgs-retry", text: "Retry" });
       retry.addEventListener("click", async () => {
         retry.disabled = true;
@@ -308,6 +313,10 @@
     panel.append(el("p", { class: "ghgs-foot" }, el("span", { text: "GitHub Status · via GH Reloaded" }), el("a", { href: "https://www.githubstatus.com/", target: "_blank", rel: "noopener noreferrer", text: "githubstatus.com ↗" })));
   }
 
+  function panelSig() {
+    return `${dotState()}|${state.view.fetchedAt}|${state.view.error}`;
+  }
+
   function placePanel(panel) {
     const dot = document.getElementById(DOT_ID);
     if (!dot) return;
@@ -340,12 +349,18 @@
     return panel;
   }
 
-  // The open panel is redrawn only when what it shows changed, never on every scan: a redraw would drop
-  // the focus and the selection inside it.
+  // The open panel is redrawn only when what it shows changed, never on every scan or minute: a redraw
+  // would drop the focus and the selection inside it. The "checked N min ago" text is updated in place.
   function refreshPanel(panel) {
-    const sig = `${dotState()}|${state.view.fetchedAt}|${state.view.error}|${Math.floor(Date.now() / 60_000)}`;
-    if (panel.dataset.sig === sig) return;
-    renderPanel(panel);
+    if (panel.dataset.sig !== panelSig()) {
+      renderPanel(panel);
+      return;
+    }
+    for (const m of panel.querySelectorAll(".ghgs-meta")) {
+      if (!m.ageText) continue;
+      const t = m.ageText();
+      if (m.textContent !== t) m.textContent = t;
+    }
   }
 
   // --- scan -----------------------------------------------------------------------

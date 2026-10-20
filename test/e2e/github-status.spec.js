@@ -441,6 +441,22 @@ test("an open panel is not redrawn behind the user's back: focus inside it stays
   await expect(link).toBeFocused();
 });
 
+test("when the minute changes the open panel updates its age in place and keeps the focus", async ({ page, context }) => {
+  // The content script's timers live in the isolated world, which a fake clock does not reach: this waits real 30 s ticks.
+  test.setTimeout(120_000);
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(async () => {
+    await chrome.storage.session.set({ ghgsCache: { snapshot: { indicator: "none", description: "", updatedAt: "", components: [], incidents: [], maintenances: [] }, fetchedAt: Date.now() - 135_000, failures: 0, retryAt: 0 } });
+  });
+  await setup(context, page);
+  await dot(page).click();
+  await expect(panel(page)).toContainText("Checked 2 min ago");
+  const link = panel(page).locator(".ghgs-foot a");
+  await link.focus();
+  await expect(panel(page)).toContainText("Checked 3 min ago", { timeout: 90_000 });
+  await expect(link).toBeFocused();
+});
+
 test("a second click on the dot closes the panel; clicking a page field keeps the focus there", async ({ page, context }) => {
   await setup(context, page, { transform: (h) => h.replace("<h1>", '<input id="q" style="position:absolute;right:20px;top:300px"><h1>') });
   await dot(page).click();
