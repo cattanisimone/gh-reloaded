@@ -457,6 +457,18 @@ test("when the minute changes the open panel updates its age in place and keeps 
   await expect(link).toBeFocused();
 });
 
+test("a failed refresh over an older green snapshot is Unverified, with the last verification as context", async ({ page, context }) => {
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(async () => {
+    await chrome.storage.session.set({ ghgsCache: { snapshot: { indicator: "none", description: "", updatedAt: "", components: [], incidents: [], maintenances: [] }, fetchedAt: Date.now() - 6 * 60_000, failures: 0, retryAt: 0 } });
+  });
+  await setup(context, page, { fail: true });
+  await expect(dot(page)).toHaveAttribute("data-state", "unknown");
+  await dot(page).click();
+  await expect(panel(page)).toContainText("Unverified");
+  await expect(panel(page)).toContainText("Last verified 6 min ago");
+});
+
 test("a tab opened on an almost-expired cached snapshot refreshes at the next tick, not five minutes later", async ({ page, context }) => {
   // Real 30 s tick, see the test above.
   test.setTimeout(120_000);

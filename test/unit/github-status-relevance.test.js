@@ -30,6 +30,8 @@ test("unknown when never fetched, and older than 15 min", () => {
   assert.equal(R.dotState(null, NOW), "unknown");
   assert.equal(R.dotState({ snapshot: snap(), fetchedAt: NOW - (14 * 60 + 59) * 1000 }, NOW), "ok");
   assert.equal(R.dotState({ snapshot: snap(), fetchedAt: NOW - (15 * 60 + 1) * 1000 }, NOW), "unknown");
+  assert.equal(R.dotState({ snapshot: snap(), fetchedAt: NOW - 1000, error: true }, NOW), "unknown");
+  assert.equal(R.dotState({ snapshot: snap({ indicator: "major" }), fetchedAt: NOW - 1000, error: true }, NOW), "unknown");
 });
 
 test("route matrix", () => {

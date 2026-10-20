@@ -25,7 +25,7 @@
   // "ok" | "minor" | "major" | "maintenance" | "unknown".
   function dotState(view, now) {
     const s = view && view.snapshot;
-    if (!s || !view.fetchedAt || now - view.fetchedAt > STALE_MS) return "unknown";
+    if (!s || view.error || !view.fetchedAt || now - view.fetchedAt > STALE_MS) return "unknown";
     if (s.indicator === "major" || s.indicator === "critical") return "major";
     if (s.indicator === "minor") return "minor";
     if (s.indicator === "maintenance" || (s.maintenances && s.maintenances.length)) return "maintenance";
