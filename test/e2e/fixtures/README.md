@@ -19,7 +19,7 @@ These are the saved GitHub pages the end-to-end tests run against. Serving them 
 | `my-issues.html` | The "My Issues" dashboard (`github.com/issues`) | my-issues (group by project, collapsible sidebar) |
 | `my-issues-no-nav.html` | The same dashboard with its sidebar items labelled differently | my-issues (no sidebar toggle when the nav items are not found) |
 | `repo-pulls.html` | A repository's **Pull requests** list (React list view) with six rows of fictional data (acme/web, signed in as mira), the page header with the `Pull requests` search landmark, class names as served today (`Name__hash`) | pr-triage (labels, triage panel above the search box, route and state handling) |
-| `header-signed-in.html` | github.com's signed-in global header (`AppHeader`, logo link, search control, controls), 64px bar, fictional acme/web; reproduced from the public structure, not captured from a signed-in session | github-status (dot after the logo, pill before the search control) |
+| `header-signed-in.html` | github.com's signed-in global header (`GlobalNav`/`appHeader__hash` classes, no banner role, logo named by `aria-labelledby`, quick-search button, controls), 64px bar, fictional acme/web; reproduced from the public structure, not captured from a signed-in session | github-status (dot after the logo, pill before the search control) |
 | `header-signed-out.html` | The signed-out marketing header as probed live on 2026-10-20 (`root__`, `topRow__`, `logo__` classes, no search control in the bar) | github-status (dot anchor on the second header generation, no pill invented) |
 
 ## Capture date and how these were produced

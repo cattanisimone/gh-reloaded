@@ -84,13 +84,23 @@
 
   // --- anchors ----------------------------------------------------------------
 
+  const LOGO = 'a[href="/"]:has(svg.octicon-mark-github), a[href="https://github.com/"]:has(svg.octicon-mark-github)';
+
+  // The header is found by structure: the one that holds the GitHub mark link. Class names and the banner role are
+  // only a second case (the hashed GlobalNav / appHeader classes and the role have both come and gone).
   function findHeader() {
-    return document.querySelector('header[role="banner"], header.AppHeader');
+    const headers = [...document.querySelectorAll("header")];
+    return (
+      headers.find((h) => h.querySelector(LOGO)) ||
+      headers.find((h) => h.matches('[role="banner"], .AppHeader, [class*="appHeader"]') && h.querySelector("a:has(svg.octicon-mark-github)")) ||
+      null
+    );
   }
 
   function findLogo(header) {
     if (!header) return null;
     return (
+      header.querySelector(LOGO) ||
       header.querySelector('a[aria-label="Homepage"]') ||
       header.querySelector("a:has(svg.octicon-mark-github)") ||
       null

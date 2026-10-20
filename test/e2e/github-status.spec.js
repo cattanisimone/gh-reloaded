@@ -39,14 +39,14 @@ const panel = (page) => page.locator("#ghgs-panel");
 test("the dot sits right after the logo in the same row, and the logo is untouched", async ({ page, context }) => {
   await setup(context, page);
   await expect(dot(page)).toHaveAttribute("data-state", "ok");
-  const logo = page.locator('header a[aria-label="Homepage"]');
+  const logo = page.locator("header a.AppHeader-logo");
   expect(await logo.evaluate((a) => a.nextElementSibling.id)).toBe("ghgs-dot");
   expect(await logo.evaluate((a) => a.parentElement === document.getElementById("ghgs-dot").parentElement)).toBe(true);
   const before = await logo.boundingBox();
   await dot(page).evaluate((d) => d.remove());
   const after = await logo.boundingBox();
   expect(before).toEqual(after);
-  await expect(logo).toHaveAttribute("href", "https://github.com/");
+  await expect(logo).toHaveAttribute("href", "/");
   // The row's own gap spaces the dot: no margin of ours.
   expect(await dot(page).evaluate((d) => getComputedStyle(d).margin)).toBe("0px");
 });
@@ -268,13 +268,31 @@ test("no logo: nothing is inserted, and the dot appears once the logo does", asy
   await setup(context, page, { transform: (h) => h.replace(/<a class="AppHeader-logo"[\s\S]*?<\/a>/, '<span id="slot"></span>') });
   await page.waitForTimeout(500);
   await expect(dot(page)).toHaveCount(0);
-  await page.evaluate(() => document.getElementById("slot").outerHTML = '<a class="AppHeader-logo" href="/" aria-label="Homepage"><svg class="octicon octicon-mark-github" width="32" height="32"></svg></a>');
+  await page.evaluate(() => document.getElementById("slot").outerHTML = '<a class="AppHeader-logo" href="/" aria-labelledby="x"><svg class="octicon octicon-mark-github" width="32" height="32"></svg></a>');
   await expect(dot(page)).toBeVisible();
 });
 
-test("the logo is found by its octicon when the label is gone", async ({ page, context }) => {
-  await setup(context, page, { transform: (h) => h.replace('aria-label="Homepage"', "") });
+test("the logo is found by its octicon when the link is not /", async ({ page, context }) => {
+  await setup(context, page, { transform: (h) => h.replace('href="/" aria-labelledby', 'href="/home" aria-labelledby') });
   await expect(dot(page)).toBeVisible();
+});
+
+test("current header markup (no role, appHeader__hash class, aria-labelledby logo, quick search button): dot after the logo, pill before the search", async ({ page, context }) => {
+  await setup(context, page, { feed: actionsFeed() });
+  await expect(dot(page)).toHaveAttribute("data-state", "minor");
+  expect(await page.locator("header").evaluate((h) => [h.getAttribute("role"), /appHeader__/.test(h.className)])).toEqual([null, true]);
+  await expect(pill(page)).toBeVisible();
+  expect(await pill(page).evaluate((p) => p.nextElementSibling.tagName.toLowerCase())).toBe("qbsearch-input");
+});
+
+test("old header naming (role=banner, AppHeader, aria-label=Homepage logo) still works", async ({ page, context }) => {
+  await setup(context, page, {
+    feed: actionsFeed(),
+    transform: (h) => h.replace(/<header class="[^"]*">/, '<header class="AppHeader" role="banner">').replace(/<a class="AppHeader-logo" href="\/" aria-labelledby="gh-logo-label"[^>]*>/, '<a class="AppHeader-logo" href="https://github.com/" aria-label="Homepage">'),
+  });
+  await expect(dot(page)).toHaveAttribute("data-state", "minor");
+  expect(await page.locator('header a[aria-label="Homepage"]').evaluate((a) => a.nextElementSibling.id)).toBe("ghgs-dot");
+  await expect(pill(page)).toBeVisible();
 });
 
 test("no search control: the pill is not placed anywhere else", async ({ page, context }) => {
