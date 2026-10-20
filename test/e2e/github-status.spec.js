@@ -434,6 +434,7 @@ test("below 400px the pill keeps the icon and the dismiss button; its accessible
 
 test("an open panel is not redrawn behind the user's back: focus inside it stays", async ({ page, context }) => {
   await setup(context, page, { feed: actionsFeed() });
+  await expect(dot(page)).toHaveAttribute("data-state", "minor");
   await dot(page).click();
   const link = panel(page).locator("a").first();
   await link.focus();
