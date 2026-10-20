@@ -35,14 +35,17 @@ function parseWhen(v) {
   return Number.isFinite(t) ? t : 0;
 }
 
-// Only https links to githubstatus.com are kept; anything else is dropped.
-function statusLink(v) {
+// Only https links to githubstatus.com are kept. Real incidents carry a
+// stspg.io shortlink, so without a githubstatus.com link the canonical page
+// is derived from the incident id, which must be a plain alphanumeric token.
+function statusLink(v, id) {
   try {
     const u = new URL(v);
-    return u.protocol === "https:" && /(^|\.)githubstatus\.com$/.test(u.hostname) ? u.href : "";
+    if (u.protocol === "https:" && /(^|\.)githubstatus\.com$/.test(u.hostname)) return u.href;
   } catch {
-    return "";
+    // fall through to the id
   }
+  return /^[A-Za-z0-9]{1,64}$/.test(id) ? `https://www.githubstatus.com/incidents/${id}` : "";
 }
 
 function parseIncident(i) {
@@ -55,7 +58,7 @@ function parseIncident(i) {
     status: str(i.status, 40),
     impact: INDICATORS.includes(i.impact) ? i.impact : "none",
     updatedAt: str(i.updated_at, 40),
-    url: statusLink(i.shortlink),
+    url: statusLink(i.shortlink, str(i.id, 64)),
     components: (Array.isArray(i.components) ? i.components : []).map((c) => str(c?.name, 120)).filter(Boolean),
     latest: latest ? { body: str(latest.body, 600), status: str(latest.status, 40), at: str(latest.updated_at || latest.created_at, 40) } : null,
   };

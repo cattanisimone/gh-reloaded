@@ -53,12 +53,13 @@ test("incident: newest update, components, impact, official short link", () => {
   assert.equal(i.latest.body, "Some workflow runs may be delayed.");
   assert.deepEqual(i.components, ["Actions"]);
   assert.equal(i.impact, "minor");
-  assert.equal(i.url, ""); // stspg.io is not githubstatus.com
+  assert.equal(i.url, "https://www.githubstatus.com/incidents/i1"); // stspg.io shortlink: canonical page from the id
   assert.equal(parseSummary(feed({ incidents: [incident({ shortlink: "https://www.githubstatus.com/incidents/abc" })] })).incidents[0].url, "https://www.githubstatus.com/incidents/abc");
 });
 
-test("javascript: and foreign links are dropped", () => {
-  assert.equal(parseSummary(feed({ incidents: [incident({ shortlink: "javascript:alert(1)" })] })).incidents[0].url, "");
+test("javascript: and foreign links are never used", () => {
+  assert.equal(parseSummary(feed({ incidents: [incident({ shortlink: "javascript:alert(1)" })] })).incidents[0].url, "https://www.githubstatus.com/incidents/i1");
+  assert.equal(parseSummary(feed({ incidents: [incident({ shortlink: "javascript:alert(1)", id: "a/../b" })] })).incidents[0].url, "");
 });
 
 test("multiple incidents are kept in order", () => {
