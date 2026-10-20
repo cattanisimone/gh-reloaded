@@ -171,6 +171,9 @@
     return R.noticeFor(state.view.snapshot, location.pathname, state.dismissed);
   }
 
+  // A deep copy of the pill keeps its data attributes but not its listeners: only nodes built here are live.
+  const livePills = new WeakSet();
+
   function buildPill(incident) {
     const { name, detail } = R.pillText(incident, state.view.snapshot, location.pathname);
     const sev = incident.impact === "minor" ? "minor" : "major";
@@ -184,6 +187,7 @@
     pill.dataset.incident = incident.id;
     pill.dataset.at = incident.updatedAt;
     pill.dataset.path = location.pathname;
+    livePills.add(pill);
     return pill;
   }
 
@@ -199,7 +203,7 @@
     }
     const fresh = !old || old.dataset.incident !== notice.id || old.dataset.at !== notice.updatedAt || old.dataset.path !== location.pathname;
     let pill = old;
-    if (fresh) {
+    if (fresh || !livePills.has(old)) {
       old?.remove();
       pill = buildPill(notice);
     }
@@ -329,6 +333,9 @@
         document.getElementById(DOT_ID)?.setAttribute("aria-expanded", String(e.newState === "open"));
       });
       document.body.append(panel);
+      window.addEventListener("resize", () => {
+        if (panel.matches(":popover-open")) placePanel(panel);
+      });
     }
     return panel;
   }

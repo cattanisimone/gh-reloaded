@@ -222,6 +222,23 @@ test("the dot and pill are not duplicated when GitHub re-renders the header", as
   await expect(page.locator("#ghgs-pill")).toHaveCount(1);
 });
 
+test("the dismiss button still works after GitHub replaces the header with a copy", async ({ page, context }) => {
+  await setup(context, page, { feed: actionsFeed() });
+  await expect(pill(page)).toBeVisible();
+  await page.evaluate(() => { const h = document.querySelector("header"); document.getElementById("ghgs-pill").dataset.copy = "1"; h.replaceWith(h.cloneNode(true)); });
+  await expect(page.locator("#ghgs-pill:not([data-copy])")).toBeVisible();
+  await page.locator("#ghgs-pill .ghgs-pill-close").click();
+  await expect(pill(page)).toHaveCount(0);
+});
+
+test("an open panel stays inside the viewport when the window is narrowed", async ({ page, context }) => {
+  await setup(context, page, { feed: actionsFeed() });
+  await dot(page).click();
+  await expect(page.locator("#ghgs-panel")).toBeVisible();
+  await page.setViewportSize({ width: 320, height: 700 });
+  await expect.poll(() => page.locator("#ghgs-panel").evaluate((p) => { const r = p.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; })).toBe(true);
+});
+
 test("signed-out header: the dot is the next sibling of the logo in topRow, and no pill is invented", async ({ page, context }) => {
   await setup(context, page, { fixture: "header-signed-out.html", feed: actionsFeed() });
   await expect(dot(page)).toBeVisible();
