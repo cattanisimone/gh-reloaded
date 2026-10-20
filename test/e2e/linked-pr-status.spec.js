@@ -98,7 +98,6 @@ test("rows appear only on cards with linked PRs, with the PR number and one text
   await expect(row(page, 208).locator(".ghlps-label")).toHaveText("Review pending");
   await expect(row(page, 212).locator(".ghlps-label")).toHaveText("Merged");
   await expect(row(page, 217).locator(".ghlps-label")).toHaveText("Checks pending");
-  await expect(row(page, 218).locator(".ghlps-label")).toHaveText("Draft");
   // No linked PR, a PR item and a draft item: no row.
   for (const n of [209, 215, 216]) await expect(row(page, n)).toHaveCount(0);
   // The signal is conveyed by text, not colour alone: every summary button is named.
@@ -318,7 +317,6 @@ test("clicking the row does not click the card; clicking the card body and the P
   await row(page, 207).locator("button").click();
   await page.keyboard.press("Escape");
   expect(await page.evaluate(() => window.__cardClicks)).toEqual([]);
-  await card(page, 207).locator("a.Title__h2").click({ trial: false }).catch(() => {});
   await card(page, 208).locator(".Header__h4").click();
   expect(await page.evaluate(() => window.__cardClicks)).toContain(208);
   const popup = page.waitForEvent("popup");
@@ -422,20 +420,29 @@ test("a refusal from GitHub leaves unlinked-knowledge cards without a row", asyn
 });
 
 test("temporary loss of access: known PRs turn Status unavailable, nothing turns green", async ({ context, page }) => {
-  await page.clock.install();
   let down = false;
   const h = graphqlHandler([], { errorsFor: [] });
-  const handlers = [{ ...h, status: () => (down ? 403 : 200) }];
-  await setup(context, page, { handlers });
-  await page.clock.runFor(500);
+  await setup(context, page, { handlers: [{ ...h, status: () => (down ? 403 : 200) }] });
   await expect(row(page, 207).locator(".ghlps-label")).toHaveText("Checks failed");
   down = true;
-  await page.clock.fastForward(130_000);
-  await page.clock.runFor(1000);
+  // Age the cached facts: move the Date of the extension's isolated world, and
+  // of the service worker's own 60 s response cache, two minutes ahead.
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => { const real = Date.now; Date.now = () => real() + 130_000; });
+  const cdp = await context.newCDPSession(page);
+  const contexts = [];
+  cdp.on("Runtime.executionContextCreated", (e) => contexts.push(e.context));
+  await cdp.send("Runtime.enable");
+  const isolated = contexts.find((c) => c.origin.startsWith("chrome-extension://"));
+  expect(isolated, "extension isolated world").toBeTruthy();
+  await cdp.send("Runtime.evaluate", { contextId: isolated.id, expression: "(() => { const real = Date.now; Date.now = () => real() + 130000; })()" });
+  // Any re-render of the board triggers a scan.
+  await page.evaluate(() => document.querySelector("main").append(document.createElement("i")));
   await expect(row(page, 207).locator(".ghlps-label")).toHaveText("Status unavailable");
   await expect(row(page, 207).locator(".ghlps-pr")).toHaveText("PR #317");
   await expect(row(page, 208).locator(".ghlps-label")).toHaveText("Status unavailable");
   await expect(row(page, 209)).toHaveCount(0);
+  await expect(page.locator(".ghlps-tone-bad, .ghlps-tone-warn")).toHaveCount(0);
 });
 
 test("only cards near the viewport are queried; scrolling asks for the rest once", async ({ context, page }) => {
@@ -445,6 +452,7 @@ test("only cards near the viewport are queried; scrolling asks for the rest once
   expect(log.join("\n")).not.toContain("issue(number: 218)");
   await card(page, 218).scrollIntoViewIfNeeded();
   await expect(row(page, 218)).toBeVisible();
+  await expect(row(page, 218).locator(".ghlps-label")).toHaveText("Draft");
   const count = log.filter((q) => q.includes("issue(number: 218)")).length;
   expect(count).toBe(1);
   await card(page, 207).scrollIntoViewIfNeeded();

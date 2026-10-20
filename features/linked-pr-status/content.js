@@ -384,11 +384,7 @@
       if (!f || Date.now() - f.at > TTL_MS) want.push(info);
     }
     if (want.length && (status.state === "ready" || Date.now() >= status.until)) fetchFacts(want);
-  }
-
-  function isOwn(node) {
-    if (node.nodeType !== 1) return false;
-    return node.classList.contains(ROW_CLASS) || node.classList.contains("ghlps-dialog") || !!node.closest(`.${ROW_CLASS}, .ghlps-dialog`);
+    observer?.takeRecords();
   }
 
   function start() {
@@ -407,11 +403,10 @@
       },
       { rootMargin: "600px 400px" }
     );
-    observer = new MutationObserver((muts) => {
-      const foreign = muts.some((m) => !(isOwn(m.target) || [...m.addedNodes, ...m.removedNodes].every(isOwn)));
-      if (foreign) schedule();
-    });
-    observer.observe(document.querySelector("main") || document.body, { childList: true, subtree: true });
+    // The scan drops the records of its own changes (takeRecords), so what
+    // reaches here is GitHub re-rendering, including it dropping our row.
+    observer = new MutationObserver(() => schedule());
+    observer.observe(document.querySelector("main") || document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["href"] });
     schedule();
   }
 
