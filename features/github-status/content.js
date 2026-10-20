@@ -29,7 +29,6 @@
     loaded: false,
     path: "",
     lastAsk: 0,
-    sig: "",
   };
 
   function extensionAlive() {
@@ -102,12 +101,12 @@
   // control whose accessible name or text says "search".
   function findSearch(header) {
     if (!header) return null;
-    const named = [...header.querySelectorAll("button, a, input, qbsearch-input, [role='search'], [role='searchbox']")].filter((n) => {
-      if (n.closest("#" + PILL_ID + ", #" + PANEL_ID)) return false;
-      const label = n.getAttribute("aria-label") || n.getAttribute("placeholder") || n.textContent || "";
-      return n.matches("qbsearch-input, [role='search'], [role='searchbox'], input[type='search']") || /search/i.test(label);
-    });
-    let node = named[0] || null;
+    // Landmarks first, then controls whose accessible name says "search". Link text is never read:
+    // a repository called "research" must not become the anchor.
+    let node = header.querySelector("qbsearch-input, [role='search'], input[type='search'], [role='searchbox']");
+    if (!node) {
+      node = [...header.querySelectorAll("button, input")].find((n) => !n.closest("#" + PILL_ID + ", #" + PANEL_ID) && /search/i.test(n.getAttribute("aria-label") || n.getAttribute("placeholder") || "")) || null;
+    }
     while (node && node.parentElement && node.parentElement !== header && node.parentElement.children.length === 1) node = node.parentElement;
     return node && node.parentElement ? node : null;
   }
@@ -144,9 +143,8 @@
   // --- dot ------------------------------------------------------------------
 
   function buildDot() {
-    const b = el("button", { id: DOT_ID, type: "button", class: "ghgs-dot", "aria-haspopup": "dialog", "aria-expanded": "false", "aria-controls": PANEL_ID });
+    const b = el("button", { id: DOT_ID, type: "button", class: "ghgs-dot", "aria-haspopup": "dialog", "aria-expanded": "false", "aria-controls": PANEL_ID, popovertarget: PANEL_ID });
     b.append(el("span", { class: "ghgs-dot-mark", "aria-hidden": "true" }));
-    b.addEventListener("click", togglePanel);
     return b;
   }
 
@@ -177,9 +175,8 @@
     const { name, detail } = R.pillText(incident, state.view.snapshot, location.pathname);
     const sev = incident.impact === "minor" ? "minor" : "major";
     const full = `GitHub Status: ${name}, ${detail}`;
-    const open = el("button", { type: "button", class: "ghgs-pill-main", "aria-label": `${full}. Open details` });
+    const open = el("button", { type: "button", class: "ghgs-pill-main", "aria-label": `${full}. Open details`, popovertarget: PANEL_ID });
     open.append(icon(sev), el("span", { class: "ghgs-pill-name", text: name }), el("span", { class: "ghgs-pill-detail", text: detail }), el("span", { class: "ghgs-pill-link", text: "Details" }));
-    open.addEventListener("click", togglePanel);
     const close = el("button", { type: "button", class: "ghgs-pill-close", "aria-label": `Dismiss notice: ${name}, ${detail}` });
     close.append(closeIcon());
     close.addEventListener("click", () => dismiss(incident));
@@ -249,6 +246,7 @@
   function renderPanel(panel) {
     const s = dotState();
     const snap = state.view.snapshot;
+    panel.dataset.sig = `${s}|${state.view.fetchedAt}|${state.view.error}|${Math.floor(Date.now() / 60_000)}`;
     panel.replaceChildren();
     const head = el("div", { class: "ghgs-head" }, el("span", { class: "ghgs-dot-mark", "data-state": s, "aria-hidden": "true" }), el("strong", { text: "GitHub Status" }), el("span", { class: "ghgs-state", text: STATE_TEXT[s] }));
     const meta = el("p", { class: "ghgs-meta" });
@@ -309,27 +307,27 @@
     let panel = document.getElementById(PANEL_ID);
     if (!panel) {
       panel = el("div", { id: PANEL_ID, class: "ghgs-panel", popover: "auto", role: "dialog", "aria-label": "GitHub Status" });
+      // The dot and the pill are the panel's invokers (popovertarget), so a second click closes it
+      // and the browser gives the focus back only when it was inside the panel.
+      panel.addEventListener("beforetoggle", (e) => {
+        if (e.newState !== "open") return;
+        renderPanel(panel);
+        placePanel(panel);
+      });
       panel.addEventListener("toggle", (e) => {
-        const open = e.newState === "open";
-        document.getElementById(DOT_ID)?.setAttribute("aria-expanded", String(open));
-        if (open) {
-          renderPanel(panel);
-          placePanel(panel);
-        } else document.getElementById(DOT_ID)?.focus({ preventScroll: true });
+        document.getElementById(DOT_ID)?.setAttribute("aria-expanded", String(e.newState === "open"));
       });
       document.body.append(panel);
     }
     return panel;
   }
 
-  function togglePanel() {
-    const panel = ensurePanel();
-    if (panel.matches(":popover-open")) panel.hidePopover();
-    else {
-      renderPanel(panel);
-      placePanel(panel);
-      panel.showPopover();
-    }
+  // The open panel is redrawn only when what it shows changed, never on every scan: a redraw would drop
+  // the focus and the selection inside it.
+  function refreshPanel(panel) {
+    const sig = `${dotState()}|${state.view.fetchedAt}|${state.view.error}|${Math.floor(Date.now() / 60_000)}`;
+    if (panel.dataset.sig === sig) return;
+    renderPanel(panel);
   }
 
   // --- scan -----------------------------------------------------------------------
@@ -354,8 +352,8 @@
     state.path = location.pathname;
     ensureDot(header);
     ensurePill(header);
-    const panel = document.getElementById(PANEL_ID);
-    if (panel && panel.matches(":popover-open")) renderPanel(panel);
+    const panel = ensurePanel();
+    if (panel.matches(":popover-open")) refreshPanel(panel);
   }
 
   let scanTimer = 0;

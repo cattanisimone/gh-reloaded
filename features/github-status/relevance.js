@@ -42,8 +42,8 @@
     const add = (...names) => names.forEach((n) => out.add(n));
     if (!parts.length) return out;
     const first = lower(parts[0]);
-    if (parts.length === 1 || first in GLOBAL) {
-      if (first in GLOBAL) {
+    if (parts.length === 1 || Object.hasOwn(GLOBAL, first)) {
+      if (Object.hasOwn(GLOBAL, first)) {
         if (first === "orgs" || first === "users") {
           if (parts[2] === "projects") add("issues", "api requests");
         } else add(...GLOBAL[first]);

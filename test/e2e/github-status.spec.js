@@ -211,7 +211,7 @@ test("SPA navigation: /actions adds the pill, a PR page removes it, back brings 
   await page.goForward();
   await expect(pill(page)).toHaveCount(0);
   await expect(page.locator("#ghgs-dot")).toHaveCount(1);
-  await expect(page.locator("#ghgs-panel")).toHaveCount(0);
+  await expect(page.locator("#ghgs-panel")).toHaveCount(1);
 });
 
 test("the dot and pill are not duplicated when GitHub re-renders the header", async ({ page, context }) => {
@@ -398,6 +398,48 @@ test("below 400px the pill keeps the icon and the dismiss button; its accessible
   await page.setViewportSize({ width: 320, height: 800 });
   await expect(pill(page).locator(".ghgs-pill-name")).toBeHidden();
   await expect(pill(page).getByRole("button", { name: "GitHub Status: Actions, degraded performance. Open details" })).toBeVisible();
+});
+
+test("an open panel is not redrawn behind the user's back: focus inside it stays", async ({ page, context }) => {
+  await setup(context, page, { feed: actionsFeed() });
+  await dot(page).click();
+  const link = panel(page).locator("a").first();
+  await link.focus();
+  await page.waitForTimeout(600);
+  await expect(link).toBeFocused();
+});
+
+test("a second click on the dot closes the panel; clicking a page field keeps the focus there", async ({ page, context }) => {
+  await setup(context, page, { transform: (h) => h.replace("<h1>", '<input id="q" style="position:absolute;right:20px;top:300px"><h1>') });
+  await dot(page).click();
+  await expect(panel(page)).toBeVisible();
+  await dot(page).click();
+  await expect(panel(page)).toBeHidden();
+  await dot(page).click();
+  await expect(panel(page)).toBeVisible();
+  await page.locator("#q").click();
+  await expect(panel(page)).toBeHidden();
+  await expect(page.locator("#q")).toBeFocused();
+});
+
+test("the pill's Details opens the panel and a second click closes it", async ({ page, context }) => {
+  await setup(context, page, { feed: actionsFeed() });
+  await pill(page).locator(".ghgs-pill-main").click();
+  await expect(panel(page)).toBeVisible();
+  await pill(page).locator(".ghgs-pill-main").click();
+  await expect(panel(page)).toBeHidden();
+});
+
+test("a repository called research does not take the search anchor", async ({ page, context }) => {
+  await setup(context, page, { feed: actionsFeed(), url: "https://github.com/acme/research/actions", transform: (h) => h.replace(">web</strong>", ">research</strong>").replace('href="/acme/web"', 'href="/acme/research"') });
+  await expect(pill(page)).toBeVisible();
+  expect(await pill(page).evaluate((p) => p.nextElementSibling.tagName.toLowerCase())).toBe("qbsearch-input");
+});
+
+test("an owner named like an Object property still gets a critical notice", async ({ page, context }) => {
+  const feed = actionsFeed({ status: { indicator: "critical", description: "x" }, incidents: [statusIncident({ impact: "critical", components: [{ name: "Copilot" }] })] });
+  await setup(context, page, { feed, url: "https://github.com/constructor/web/actions" });
+  await expect(pill(page)).toBeVisible();
 });
 
 test("the panel stays inside a narrow window", async ({ page, context }) => {

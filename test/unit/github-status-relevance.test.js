@@ -107,3 +107,7 @@ test("pill text: component and its status, or a generic label when wide", () => 
   const wide = inc({ impact: "critical", components: ["Git Operations", "Issues", "Actions"] });
   assert.deepEqual({ ...R.pillText(wide, snap({ incidents: [wide] }), "/settings/profile") }, { name: "GitHub", detail: "critical incident" });
 });
+
+test("owner names that are Object properties are ordinary owners", () => {
+  for (const owner of ["constructor", "toString", "hasOwnProperty", "__proto__"]) assert.deepEqual(comps(`/${owner}/web/actions`), ["actions"], owner);
+});
