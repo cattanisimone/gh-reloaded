@@ -25,7 +25,8 @@ test("Standup and tile fields live in their Advanced groups", async ({ context, 
   await expect(page.locator("#advanced-my-issues #ghmi-tile-min")).toHaveCount(1);
   await expect(page.locator("#advanced-my-issues #ghmi-tile-max")).toHaveCount(1);
   await expect(page.locator("#advanced-my-issues #ghmi-tile-reset")).toHaveCount(1);
-  await expect(page.locator("#advanced-section").getByRole("switch")).toHaveCount(0);
+  await expect(page.locator("#advanced-section [role=switch]")).toHaveCount(1);
+  await expect(page.locator("#advanced-github-status #feature-ghgs-notice")).toHaveCount(1);
 });
 
 test("seeded keys load into the new controls unchanged", async ({ context, page }) => {
