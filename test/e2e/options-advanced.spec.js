@@ -102,3 +102,21 @@ test("PR triage switch defaults on, has no Configure link, and persists", async 
   await expect(sw).toHaveAttribute("aria-checked", "false");
   expect(await worker.evaluate(() => chrome.storage.local.get("ghprtEnabled"))).toEqual({ ghprtEnabled: false });
 });
+
+test("GitHub Status: the feature switch has a Configure link; the notice switch lives in Advanced; both default on and persist", async ({ context, page }) => {
+  const worker = await openOptions(context, page, "#features");
+  const sw = page.locator("#feature-ghgs");
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator(".row", { has: sw }).locator("a.cfg")).toHaveAttribute("href", "#advanced-github-status");
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "false");
+  expect(await worker.evaluate(() => chrome.storage.local.get("ghgsEnabled"))).toEqual({ ghgsEnabled: false });
+  // Switching the feature off keeps its Advanced option editable.
+  await page.locator(".row", { has: sw }).locator("a.cfg").click();
+  const notice = page.locator("#feature-ghgs-notice");
+  await expect(notice).toHaveAttribute("aria-checked", "true");
+  await expect(notice).toBeEnabled();
+  await notice.click();
+  await expect(notice).toHaveAttribute("aria-checked", "false");
+  expect(await worker.evaluate(() => chrome.storage.local.get("ghgsNotice"))).toEqual({ ghgsNotice: false });
+});

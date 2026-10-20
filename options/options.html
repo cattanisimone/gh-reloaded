@@ -107,6 +107,16 @@
               <span class="switch-track"><span class="switch-knob"></span></span>
             </button>
           </div>
+          <div class="row">
+            <div class="row-text">
+              <span class="row-title">GitHub Status</span>
+              <span class="row-desc">A status dot next to the GitHub logo, fed by githubstatus.com, with a notice when an open incident concerns the page you are on.</span>
+            </div>
+            <a class="cfg" href="#advanced-github-status">Configure <span aria-hidden="true">→</span></a>
+            <button id="feature-ghgs" type="button" role="switch" aria-checked="false" aria-label="GitHub Status" class="switch">
+              <span class="switch-track"><span class="switch-knob"></span></span>
+            </button>
+          </div>
           </div>
         </section>
 
@@ -213,6 +223,21 @@
             <div class="actions">
               <span class="spacer"></span>
               <button id="ghmi-tile-reset" type="button" class="btn btn-secondary">Reset to defaults</button>
+            </div>
+          </div>
+
+          <div class="group" id="advanced-github-status">
+            <h2 id="advanced-github-status-title" tabindex="-1">GitHub Status</h2>
+            <div class="card list">
+              <div class="row">
+                <div class="row-text">
+                  <span class="row-title">Show incident notice</span>
+                  <span class="row-desc">A notice in the header when an open incident concerns the page you are on, or has wide impact. The dot and its panel stay either way.</span>
+                </div>
+                <button id="feature-ghgs-notice" type="button" role="switch" aria-checked="false" aria-label="Show incident notice" class="switch">
+                  <span class="switch-track"><span class="switch-knob"></span></span>
+                </button>
+              </div>
             </div>
           </div>
         </section>

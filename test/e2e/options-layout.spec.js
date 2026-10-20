@@ -2,18 +2,19 @@
 import { test, expect } from "./support/extension.js";
 import { openOptions } from "./support/options.js";
 
-const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt"];
+const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt", "ghgs"];
 
-test("Features lists 8 switches and Configure only for Quick-create, Standup, My Issues", async ({ context, page }) => {
+test("Features lists 9 switches and Configure only for Quick-create, Standup, My Issues, GitHub Status", async ({ context, page }) => {
   await openOptions(context, page);
   const features = page.locator("#features");
-  await expect(features.getByRole("switch")).toHaveCount(8);
+  await expect(features.getByRole("switch")).toHaveCount(9);
   for (const s of SWITCHES) await expect(page.locator(`#feature-${s}`)).toHaveCount(1);
   const links = features.locator("a.cfg");
-  await expect(links).toHaveCount(3);
+  await expect(links).toHaveCount(4);
   await expect(links.nth(0)).toHaveAttribute("href", "#shortcuts-section");
   await expect(links.nth(1)).toHaveAttribute("href", "#advanced-standup");
   await expect(links.nth(2)).toHaveAttribute("href", "#advanced-my-issues");
+  await expect(links.nth(3)).toHaveAttribute("href", "#advanced-github-status");
   await expect(features.locator("input")).toHaveCount(0);
 });
 
@@ -24,7 +25,8 @@ test("Standup and tile fields live in their Advanced groups", async ({ context, 
   await expect(page.locator("#advanced-my-issues #ghmi-tile-min")).toHaveCount(1);
   await expect(page.locator("#advanced-my-issues #ghmi-tile-max")).toHaveCount(1);
   await expect(page.locator("#advanced-my-issues #ghmi-tile-reset")).toHaveCount(1);
-  await expect(page.locator("#advanced-section").getByRole("switch")).toHaveCount(0);
+  await expect(page.locator("#advanced-section [role=switch]")).toHaveCount(1);
+  await expect(page.locator("#advanced-github-status #feature-ghgs-notice")).toHaveCount(1);
 });
 
 test("seeded keys load into the new controls unchanged", async ({ context, page }) => {

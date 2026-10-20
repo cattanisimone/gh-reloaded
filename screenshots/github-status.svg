@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" font-family="DejaVu Sans, sans-serif">
+<rect x="0" y="0" width="1200" height="560" fill="#fff"/>
+<rect x="0" y="0" width="1200" height="64" fill="#f6f8fa" stroke="#d1d9e0"/>
+<rect x="0" y="62" width="1200" height="2" fill="#9a6700"/>
+<rect x="32" y="16" width="32" height="32" fill="#fff" stroke="#d1d9e0" rx="6"/>
+<text x="42" y="38" font-size="15" fill="#1f2328">☰</text>
+<circle cx="88" cy="32" r="14" fill="#1f2328"/>
+<rect x="104" y="16" width="24" height="32" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="6"/>
+<circle cx="116" cy="32" r="5" fill="#1a7f37"/>
+<text x="142" y="38" font-size="14" fill="#1f2328">acme / <tspan font-weight="600">web</tspan></text>
+<rect x="536" y="16" width="224" height="32" fill="#fff8c5" stroke="#d4a72c" rx="6"/>
+<rect x="535" y="15" width="226" height="34" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="7"/>
+<path d="M552 24.5l6.5 11.5h-13z" fill="#633c01"/>
+<text x="568" y="37" font-size="12" font-weight="600" fill="#633c01">Actions</text>
+<text x="620" y="37" font-size="12" fill="#633c01">degraded performance</text>
+<text x="744" y="37" font-size="12" fill="#633c01">✕</text>
+<rect x="772" y="16" width="272" height="32" fill="#fff" stroke="#d1d9e0" rx="6"/>
+<text x="788" y="37" font-size="13" fill="#59636e">Type / to search</text>
+<rect x="1052" y="16" width="32" height="32" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<rect x="1092" y="16" width="32" height="32" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<circle cx="1156" cy="32" r="14" fill="#8250df"/>
+<text x="32" y="112" font-size="22" font-weight="600" fill="#1f2328">acme / web — Actions</text>
+<text x="32" y="140" font-size="13" fill="#59636e">Dashed blue outline = added by GH Reloaded. Fictional data.</text>
+<rect x="96" y="176" width="372" height="244" fill="#fff" stroke="#d1d9e0" rx="12"/>
+<circle cx="116" cy="200" r="5" fill="#9a6700"/>
+<text x="132" y="205" font-size="14" font-weight="600" fill="#1f2328">GitHub Status</text>
+<text x="392" y="205" font-size="12" fill="#59636e">Minor incident</text>
+<text x="112" y="228" font-size="12" fill="#59636e">Checked 1 min ago · Updated by GitHub 06:41</text>
+<text x="112" y="258" font-size="12" font-weight="600" fill="#59636e">Affected components</text>
+<text x="112" y="282" font-size="14" fill="#1f2328">Actions</text>
+<text x="352" y="282" font-size="12" fill="#59636e">Degraded performance</text>
+<line x1="112" y1="300" x2="452" y2="300" stroke="#d1d9e0"/>
+<text x="112" y="322" font-size="12" font-weight="600" fill="#59636e">Open incidents</text>
+<text x="112" y="346" font-size="14" font-weight="600" fill="#1f2328">Incident with Actions</text>
+<text x="394" y="346" font-size="12" fill="#59636e">Investigating</text>
+<text x="112" y="366" font-size="12" fill="#59636e">“Some workflow runs may be delayed.” · 06:38</text>
+<text x="112" y="386" font-size="12" fill="#0969da">Incident page ↗</text>
+<line x1="112" y1="398" x2="452" y2="398" stroke="#d1d9e0"/>
+<text x="112" y="412" font-size="12" fill="#59636e">GitHub Status · via GH Reloaded</text>
+<text x="352" y="412" font-size="12" fill="#0969da">githubstatus.com ↗</text>
+<rect x="520" y="176" width="372" height="130" fill="#fff" stroke="#d1d9e0" rx="12"/>
+<circle cx="540" cy="200" r="5" fill="none" stroke="#6e7781" stroke-width="2"/>
+<text x="556" y="205" font-size="14" font-weight="600" fill="#1f2328">GitHub Status</text>
+<text x="800" y="205" font-size="12" fill="#59636e">Unverified</text>
+<text x="536" y="232" font-size="12" fill="#59636e">Last verified 22 min ago. githubstatus.com could not be reached.</text>
+<rect x="536" y="244" width="64" height="32" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<text x="552" y="265" font-size="14" font-weight="500" fill="#1f2328">Retry</text>
+<text x="536" y="294" font-size="12" fill="#59636e">GitHub Status · via GH Reloaded</text>
+</svg>
