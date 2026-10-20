@@ -125,8 +125,8 @@ html[data-color-mode="dark"] {
 }
 .ghgs-pill-main { padding: 0 8px 0 10px; }
 .ghgs-pill-close { padding: 0 8px; }
-.ghgs-pill button:hover { filter: brightness(0.95); }
-.ghgs-pill button:active { filter: brightness(0.89); }
+.ghgs-pill button:hover { background: rgba(31, 35, 40, 0.07); }
+.ghgs-pill button:active { background: rgba(31, 35, 40, 0.14); }
 .ghgs-pill button:focus-visible { outline: 2px solid var(--ghgs-focus); outline-offset: -2px; }
 .ghgs-pill svg { flex: none; }
 .ghgs-pill-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }

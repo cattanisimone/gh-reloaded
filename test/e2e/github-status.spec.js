@@ -389,7 +389,9 @@ test("the pill looks like a native control: 32px high, 6px radius, 1px border; h
   expect(s).toEqual({ h: 32, r: "6px", b: "1px", m: "0px" });
   const main = pill(page).locator(".ghgs-pill-main");
   await main.hover();
-  expect(await main.evaluate((m) => getComputedStyle(m).filter)).toBe("brightness(0.95)");
+  // The coloured surface belongs to the pill: hovering a half must darken it (an overlay on the button), not just its text.
+  expect(await main.evaluate((m) => getComputedStyle(m).backgroundColor)).toBe("rgba(31, 35, 40, 0.07)");
+  expect(await main.evaluate((m) => getComputedStyle(m).filter)).toBe("none");
   await main.focus();
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Tab");
