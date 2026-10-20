@@ -289,7 +289,9 @@
     meta.textContent = meta.ageText();
     panel.append(head);
 
-    if (s === "unknown") {
+    if (s === "unknown" && !state.loaded) {
+      panel.append(el("p", { class: "ghgs-meta", text: "Checking githubstatus.com…" }));
+    } else if (s === "unknown") {
       const lost = el("p", { class: "ghgs-meta" });
       lost.ageText = () => (state.view.fetchedAt ? `Last verified ${agoText(state.view.fetchedAt)}. githubstatus.com could not be reached.` : "githubstatus.com could not be reached.");
       lost.textContent = lost.ageText();
@@ -341,7 +343,7 @@
 
   function panelSig() {
     // What the panel shows, not when it was fetched: an unchanged refresh must not redraw it.
-    return `${dotState()}|${state.view.error}|${stable(state.view.snapshot)}`;
+    return `${dotState()}|${state.loaded}|${state.view.error}|${stable(state.view.snapshot)}`;
   }
 
   function placePanel(panel) {
@@ -471,7 +473,7 @@
       if (area !== "local") return;
       if (changes.ghgsEnabled) {
         state.enabled = changes.ghgsEnabled.newValue !== false;
-        if (state.enabled) refresh();
+        if (state.enabled && !document.hidden) refresh();
       }
       if (changes.ghgsNotice) state.notice = changes.ghgsNotice.newValue !== false;
       if (changes.ghgsDismissed) state.dismissed = changes.ghgsDismissed.newValue && typeof changes.ghgsDismissed.newValue === "object" ? changes.ghgsDismissed.newValue : {};
@@ -486,7 +488,12 @@
     // Same-document navigations (history.pushState) re-evaluate the page at once.
     if (window.navigation) window.navigation.addEventListener("navigatesuccess", scheduleScan);
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && state.enabled && refreshDue()) refresh();
+      if (document.hidden || !state.enabled) return;
+      if (refreshDue()) {
+        // Repaint first: a snapshot older than the freshness window must not stay green while the request is out.
+        scan();
+        refresh();
+      }
     });
     // Keeps "checked N min ago" and the unverified state honest, and
     // refreshes while the tab is visible.

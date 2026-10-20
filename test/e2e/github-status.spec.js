@@ -23,10 +23,11 @@ const copilotFeed = () =>
     incidents: [statusIncident({ id: "cp", name: "Incident with Copilot", components: [{ name: "Copilot" }] })],
   });
 
-async function setup(context, page, { feed = statusFeed(), fixture = "header-signed-in.html", storage, url = ACTIONS, status, fail, go = true, transform } = {}) {
+async function setup(context, page, { feed = statusFeed(), fixture = "header-signed-in.html", storage, url = ACTIONS, status, fail, go = true, transform, delay, init } = {}) {
   const log = [];
   if (storage) await seedStorage(context, storage);
-  await routeStatus(context, { json: feed, log, status, fail });
+  if (init) await page.addInitScript(init);
+  await routeStatus(context, { json: feed, log, status, fail, delay });
   await routeGithub(context, fixture, { transform });
   if (go) await page.goto(url);
   return log;
@@ -609,4 +610,51 @@ test("with no rendered search control nothing is inserted: no pill and no line",
   await expect(dot(page)).toHaveAttribute("data-state", "minor");
   await expect(pill(page)).toHaveCount(0);
   await expect(page.locator("#ghgs-line")).toHaveCount(0);
+});
+
+test("the panel opened before the first answer says it is checking, with no Retry", async ({ page, context }) => {
+  await setup(context, page, { delay: 2500 });
+  await dot(page).click();
+  await expect(panel(page)).toContainText("Checking githubstatus.com");
+  await expect(panel(page)).not.toContainText("could not be reached");
+  await expect(panel(page).getByRole("button", { name: "Retry" })).toHaveCount(0);
+  await expect(panel(page)).toContainText("No incident reported", { timeout: 10_000 });
+});
+
+// The content script lives in an isolated world: page.evaluate cannot reach its
+// `document` or `Date`, so these tests evaluate in the extension's own context.
+async function extensionWorld(page) {
+  const cdp = await page.context().newCDPSession(page);
+  const contexts = [];
+  cdp.on("Runtime.executionContextCreated", (e) => contexts.push(e.context));
+  await cdp.send("Runtime.enable");
+  const ctx = contexts.find((c) => c.origin.startsWith("chrome-extension://") && c.auxData?.type === "isolated");
+  if (!ctx) throw new Error("no extension isolated world on the page");
+  return (expression) => cdp.send("Runtime.evaluate", { expression, contextId: ctx.id, awaitPromise: true });
+}
+
+test("enabling the feature from Settings does not fetch while the tab is hidden", async ({ page, context }) => {
+  const log = await setup(context, page, { storage: { ghgsEnabled: false } });
+  await page.waitForTimeout(300);
+  const run = await extensionWorld(page);
+  await run("Object.defineProperty(document, 'hidden', { configurable: true, get: () => true })");
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => chrome.storage.local.set({ ghgsEnabled: true }));
+  await page.waitForTimeout(800);
+  expect(log).toHaveLength(0);
+});
+
+test("a tab that becomes visible on a stale snapshot repaints gray before the refresh answers", async ({ page, context }) => {
+  const log = await setup(context, page, { delay: (n) => (n >= 1 ? 4000 : 0) });
+  await expect(dot(page)).toHaveAttribute("data-state", "ok");
+  const run = await extensionWorld(page);
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(async () => {
+    const { ghgsCache } = await chrome.storage.session.get("ghgsCache");
+    await chrome.storage.session.set({ ghgsCache: { ...ghgsCache, fetchedAt: Date.now() - 16 * 60_000 } });
+  });
+  await run("const real = Date.now.bind(Date); Date.now = () => real() + 16 * 60000; document.dispatchEvent(new Event('visibilitychange'))");
+  await expect(dot(page)).toHaveAttribute("data-state", "unknown", { timeout: 1500 });
+  // The refresh is still out (answers after 4 s): gray came from the repaint, not from the answer.
+  expect(log).toHaveLength(2);
 });

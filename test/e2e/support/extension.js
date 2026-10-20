@@ -136,10 +136,12 @@ export async function routeApi(context, handlers = []) {
 // Mock githubstatus.com's summary feed at the extension's boundary. `json` may
 // be a function of the call number. Every request is pushed to `log` so a test
 // can assert what was (or was not) sent. `fail` answers with a network error.
-export async function routeStatus(context, { json, status = 200, headers = {}, fail = false, log = [] } = {}) {
-  await context.route("https://www.githubstatus.com/**", (route) => {
+export async function routeStatus(context, { json, status = 200, headers = {}, fail = false, log = [], delay = 0 } = {}) {
+  await context.route("https://www.githubstatus.com/**", async (route) => {
     const request = route.request();
     log.push({ url: request.url(), headers: request.headers(), method: request.method() });
+    const wait = typeof delay === "function" ? delay(log.length) : delay;
+    if (wait) await new Promise((r) => setTimeout(r, wait));
     if (fail) return route.abort();
     const body = typeof json === "function" ? json(log.length) : json;
     return route.fulfill({ status, contentType: "application/json", headers: { "access-control-allow-origin": "*", ...headers }, body: JSON.stringify(body ?? {}) });
