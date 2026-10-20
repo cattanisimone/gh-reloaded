@@ -400,6 +400,15 @@
 
   // --- data ---------------------------------------------------------------------
 
+  // Due when the last check failed, or the snapshot (not our last question)
+  // is REFRESH_MS old: a tab opened just before the shared cache expired gets
+  // an almost-stale snapshot and must ask again soon.
+  function refreshDue() {
+    if (state.view.error) return true;
+    const since = state.view.fetchedAt || state.lastAsk;
+    return Date.now() - since >= REFRESH_MS;
+  }
+
   async function refresh(force = false) {
     if (!state.enabled || !extensionAlive()) return;
     state.lastAsk = Date.now();
@@ -450,7 +459,7 @@
     // Same-document navigations (history.pushState) re-evaluate the page at once.
     if (window.navigation) window.navigation.addEventListener("navigatesuccess", scheduleScan);
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && state.enabled && (state.view.error || Date.now() - state.lastAsk >= REFRESH_MS)) refresh();
+      if (!document.hidden && state.enabled && refreshDue()) refresh();
     });
     // Keeps "checked N min ago" and the unverified state honest, and
     // refreshes while the tab is visible.
@@ -458,7 +467,7 @@
       if (!state.enabled || document.hidden) return;
       // While the last check failed, ask on every tick: the background answers
       // from its cache until its own backoff (30 s, 60 s, ...) has elapsed.
-      if (state.view.error || Date.now() - state.lastAsk >= REFRESH_MS) refresh();
+      if (refreshDue()) refresh();
       else scan();
     }, TICK_MS);
   }

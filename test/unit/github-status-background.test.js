@@ -4,7 +4,7 @@
 import "../support/chrome-stub.js"; // must come first: installs globalThis.chrome
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseSummary, nextRetryDelay, createStatusService, SUMMARY_URL, TTL_MS } from "../../background/github-status.js";
+import { parseSummary, nextRetryDelay, parseRetryAfter, createStatusService, SUMMARY_URL, TTL_MS } from "../../background/github-status.js";
 
 const component = (name, status = "operational") => ({ id: name, name, status });
 const feed = (over = {}) => ({
@@ -182,6 +182,30 @@ test("429 honours Retry-After", async () => {
   clock.t += 2_000;
   await service.get();
   assert.equal(calls.length, 2);
+});
+
+test("Retry-After accepts delay-seconds and HTTP-dates", () => {
+  const now = Date.parse("2026-10-20T08:00:00Z");
+  assert.equal(parseRetryAfter("120", now), 120);
+  assert.equal(parseRetryAfter("Tue, 20 Oct 2026 08:10:00 GMT", now), 600);
+  assert.equal(parseRetryAfter("Tue, 20 Oct 2026 07:00:00 GMT", now), 0);
+  assert.ok(Number.isNaN(parseRetryAfter("soon", now)));
+  assert.ok(Number.isNaN(parseRetryAfter(null, now)));
+  assert.ok(Number.isNaN(parseRetryAfter("", now)));
+});
+
+test("an HTTP-date Retry-After delays the retry", async () => {
+  const start = Date.parse("2026-10-20T08:00:00Z");
+  const date = new Date(start + 600_000).toUTCString();
+  const { service: s2, calls: c2, clock: k2 } = setup([{ ok: false, status: 429, headers: new Headers({ "retry-after": date }) }, ok(feed())]);
+  k2.t = start;
+  await s2.get();
+  k2.t += 590_000;
+  await s2.get();
+  assert.equal(c2.length, 1);
+  k2.t += 20_000;
+  await s2.get();
+  assert.equal(c2.length, 2);
 });
 
 test("a malformed body is an error, not a snapshot", async () => {

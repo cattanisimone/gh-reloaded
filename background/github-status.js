@@ -86,6 +86,15 @@ export function parseSummary(json) {
   };
 }
 
+// Retry-After is delay-seconds or an HTTP-date; returns seconds, or NaN.
+export function parseRetryAfter(value, nowMs) {
+  if (value == null || String(value).trim() === "") return NaN;
+  const text = String(value).trim();
+  if (/^\d+$/.test(text)) return Number(text);
+  const at = Date.parse(text);
+  return Number.isNaN(at) ? NaN : Math.max(0, Math.ceil((at - nowMs) / 1000));
+}
+
 export function nextRetryDelay(failures, retryAfterSeconds) {
   if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) return Math.min(retryAfterSeconds * 1000, RETRY_AFTER_CAP_MS);
   return BACKOFF_MS[Math.min(Math.max(failures, 1), BACKOFF_MS.length) - 1];
@@ -107,7 +116,7 @@ export function createStatusService({ fetchImpl = (...a) => fetch(...a), area, n
       const res = await fetchImpl(SUMMARY_URL, { credentials: "omit", referrerPolicy: "no-referrer", cache: "no-store", signal: ctl.signal });
       if (!res.ok) {
         const e = new Error(`githubstatus.com answered ${res.status}`);
-        e.retryAfter = Number(res.headers?.get?.("retry-after"));
+        e.retryAfter = parseRetryAfter(res.headers?.get?.("retry-after"), now());
         throw e;
       }
       const snapshot = parseSummary(await res.json());

@@ -457,6 +457,19 @@ test("when the minute changes the open panel updates its age in place and keeps 
   await expect(link).toBeFocused();
 });
 
+test("a tab opened on an almost-expired cached snapshot refreshes at the next tick, not five minutes later", async ({ page, context }) => {
+  // Real 30 s tick, see the test above.
+  test.setTimeout(120_000);
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(async () => {
+    await chrome.storage.session.set({ ghgsCache: { snapshot: { indicator: "none", description: "", updatedAt: "", components: [], incidents: [], maintenances: [] }, fetchedAt: Date.now() - 290_000, failures: 0, retryAt: 0 } });
+  });
+  await setup(context, page);
+  await dot(page).click();
+  await expect(panel(page)).toContainText("Checked 4 min ago");
+  await expect(panel(page)).not.toContainText(/Checked [4-9] min ago/, { timeout: 60_000 });
+});
+
 test("a second click on the dot closes the panel; clicking a page field keeps the focus there", async ({ page, context }) => {
   await setup(context, page, { transform: (h) => h.replace("<h1>", '<input id="q" style="position:absolute;right:20px;top:300px"><h1>') });
   await dot(page).click();
