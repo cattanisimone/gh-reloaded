@@ -435,13 +435,15 @@
     // Same-document navigations (history.pushState) re-evaluate the page at once.
     if (window.navigation) window.navigation.addEventListener("navigatesuccess", scheduleScan);
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && state.enabled && Date.now() - state.lastAsk >= REFRESH_MS) refresh();
+      if (!document.hidden && state.enabled && (state.view.error || Date.now() - state.lastAsk >= REFRESH_MS)) refresh();
     });
     // Keeps "checked N min ago" and the unverified state honest, and
     // refreshes while the tab is visible.
     setInterval(() => {
       if (!state.enabled || document.hidden) return;
-      if (Date.now() - state.lastAsk >= REFRESH_MS) refresh();
+      // While the last check failed, ask on every tick: the background answers
+      // from its cache until its own backoff (30 s, 60 s, ...) has elapsed.
+      if (state.view.error || Date.now() - state.lastAsk >= REFRESH_MS) refresh();
       else scan();
     }, TICK_MS);
   }

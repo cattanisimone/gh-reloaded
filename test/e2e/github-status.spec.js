@@ -121,6 +121,21 @@ test("an unreachable feed: gray ring, Unverified, no pill", async ({ page, conte
   expect(mark).toEqual({ bg: "rgba(0, 0, 0, 0)", w: "2px" });
 });
 
+test("after a failed check the next ticks retry on the background backoff, not after five minutes", async ({ page, context }) => {
+  // The content script's timers live in the isolated world, which a fake clock does not reach: this waits one real 30 s tick.
+  test.setTimeout(90_000);
+  await setup(context, page, { fail: true });
+  await expect(dot(page)).toHaveAttribute("data-state", "unknown");
+  // The feed recovers and the background backoff has elapsed.
+  await routeStatus(context, { json: statusFeed() });
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(async () => {
+    const { ghgsCache } = await chrome.storage.session.get("ghgsCache");
+    await chrome.storage.session.set({ ghgsCache: { ...ghgsCache, retryAt: 0 } });
+  });
+  await expect(dot(page)).toHaveAttribute("data-state", "ok", { timeout: 45_000 });
+});
+
 test("a malformed feed is treated as unreachable, never as green", async ({ page, context }) => {
   await setup(context, page, { feed: { hello: "world" } });
   await expect(dot(page)).toHaveAttribute("data-state", "unknown");
