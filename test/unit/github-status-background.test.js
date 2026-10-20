@@ -217,3 +217,9 @@ test("a hanging request is aborted after 10 s", async () => {
     globalThis.setTimeout = realSetTimeout;
   }
 });
+
+test("the page indicator \"maintenance\" of a running maintenance is accepted, not a malformed feed", () => {
+  const s = parseSummary(feed({ status: { indicator: "maintenance", description: "Service Under Maintenance" }, scheduled_maintenances: [incident({ id: "m1", status: "in_progress", impact: "maintenance" })] }));
+  assert.equal(s.indicator, "maintenance");
+  assert.equal(s.maintenances.length, 1);
+});

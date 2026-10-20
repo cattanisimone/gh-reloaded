@@ -18,7 +18,7 @@
     orgs: [],
     users: [],
   };
-  for (const g of ["settings", "notifications", "marketplace", "explore", "search", "features", "sponsors", "topics", "login", "new", "dashboard", "enterprises", "organizations", "enterprise", "copilot", "apps"]) GLOBAL[g] = [];
+  for (const g of ["settings", "notifications", "marketplace", "explore", "search", "features", "sponsors", "topics", "login", "new", "dashboard", "enterprises", "organizations", "enterprise", "copilot", "apps", "trending", "stars", "account", "collections", "github-copilot", "watching", "readme", "about", "pricing", "customer-stories", "security", "premium-support", "resources", "events", "solutions", "orgs-new", "mobile", "login", "join", "signup"]) GLOBAL[g] = [];
 
   const lower = (s) => String(s || "").toLowerCase();
 
@@ -28,7 +28,7 @@
     if (!s || !view.fetchedAt || now - view.fetchedAt > STALE_MS) return "unknown";
     if (s.indicator === "major" || s.indicator === "critical") return "major";
     if (s.indicator === "minor") return "minor";
-    if (s.maintenances && s.maintenances.length) return "maintenance";
+    if (s.indicator === "maintenance" || (s.maintenances && s.maintenances.length)) return "maintenance";
     return "ok";
   }
 

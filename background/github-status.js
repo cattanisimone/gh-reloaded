@@ -20,6 +20,8 @@ const RETRY_AFTER_CAP_MS = 15 * 60_000;
 const MIN_FORCE_GAP_MS = 5_000;
 
 const INDICATORS = ["none", "minor", "major", "critical"];
+// Statuspage reports a running scheduled maintenance as its own page indicator.
+const PAGE_INDICATORS = [...INDICATORS, "maintenance"];
 const COMPONENT_STATUSES = ["operational", "degraded_performance", "partial_outage", "major_outage", "under_maintenance"];
 
 const str = (v, max = 400) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -64,7 +66,7 @@ function parseIncident(i) {
 // instead of a wrong green.
 export function parseSummary(json) {
   need(json && typeof json === "object", "not an object");
-  need(json.status && INDICATORS.includes(json.status.indicator), "status.indicator");
+  need(json.status && PAGE_INDICATORS.includes(json.status.indicator), "status.indicator");
   need(Array.isArray(json.components), "components");
   need(Array.isArray(json.incidents), "incidents");
   const components = json.components.map((c) => {

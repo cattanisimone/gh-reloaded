@@ -196,5 +196,9 @@ html[data-color-mode="dark"] .ghgs-panel a { color: #4493f8; }
   cursor: pointer;
 }
 html[data-color-mode="dark"] .ghgs-retry { background: #212830; color: #f0f6fc; }
+@media (prefers-color-scheme: dark) {
+  html:not([data-color-mode="light"]):not([data-color-mode="dark"]) .ghgs-retry,
+  html[data-color-mode="auto"] .ghgs-retry { background: #212830; color: #f0f6fc; }
+}
 .ghgs-retry:hover { filter: brightness(0.95); }
 .ghgs-retry:focus-visible { outline: 2px solid var(--ghgs-focus); outline-offset: -2px; }

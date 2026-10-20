@@ -450,3 +450,32 @@ test("the panel stays inside a narrow window", async ({ page, context }) => {
   expect(r.x).toBeGreaterThanOrEqual(0);
   expect(r.x + r.width).toBeLessThanOrEqual(320);
 });
+
+const LOCAL_BAR = '<div class="AppHeader-localBar" style="height:48px;border-top:1px solid #d1d9e0"><nav class="AppHeader-nav"><a href="/acme/web/actions" aria-current="page" style="border-bottom:2px solid #fd8c73">Actions</a></nav></div></header>';
+
+test("the severity line closes the global bar and leaves the repository tab bar alone", async ({ page, context }) => {
+  await setup(context, page, { feed: actionsFeed(), transform: (h) => h.replace("</header>", LOCAL_BAR) });
+  await expect(page.locator("#ghgs-line")).toHaveCount(1);
+  const r = await page.evaluate(() => {
+    const line = document.getElementById("ghgs-line").getBoundingClientRect();
+    const bar = document.querySelector(".AppHeader-globalBar").getBoundingClientRect();
+    const local = document.querySelector(".AppHeader-localBar").getBoundingClientRect();
+    return { lineBottom: line.bottom, barBottom: bar.bottom, localTop: local.top, localBottom: local.bottom };
+  });
+  expect(r.lineBottom, JSON.stringify(r)).toBeCloseTo(r.barBottom, 0);
+  expect(r.lineBottom).toBeLessThanOrEqual(r.localTop + 1);
+});
+
+test("a running maintenance reported by the page indicator is amber, not Unverified", async ({ page, context }) => {
+  const maintenance = statusIncident({ id: "m", name: "Database maintenance", status: "in_progress", impact: "maintenance", components: [{ name: "Actions" }] });
+  await setup(context, page, { feed: statusFeed({ status: { indicator: "maintenance", description: "Service Under Maintenance" }, scheduled_maintenances: [maintenance] }) });
+  await expect(dot(page)).toHaveAttribute("data-state", "maintenance");
+});
+
+test("Retry follows the system dark theme when GitHub syncs with the system", async ({ page, context }) => {
+  await setup(context, page, { fail: true });
+  await page.evaluate(() => document.documentElement.setAttribute("data-color-mode", "auto"));
+  await page.emulateMedia({ colorScheme: "dark" });
+  await dot(page).click();
+  await expect(panel(page).getByRole("button", { name: "Retry" })).toHaveCSS("background-color", "rgb(33, 40, 48)");
+});

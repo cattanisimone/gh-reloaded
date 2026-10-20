@@ -111,3 +111,11 @@ test("pill text: component and its status, or a generic label when wide", () => 
 test("owner names that are Object properties are ordinary owners", () => {
   for (const owner of ["constructor", "toString", "hasOwnProperty", "__proto__"]) assert.deepEqual(comps(`/${owner}/web/actions`), ["actions"], owner);
 });
+
+test("a maintenance page indicator is amber even before the list is read", () => {
+  assert.equal(R.dotState({ snapshot: snap({ indicator: "maintenance" }), fetchedAt: NOW - 1000 }, NOW), "maintenance");
+});
+
+test("global two-segment pages are not repositories", () => {
+  for (const p of ["/trending/python", "/stars/mira", "/account/billing", "/collections/choosing-a-license"]) assert.deepEqual(comps(p), [], p);
+});

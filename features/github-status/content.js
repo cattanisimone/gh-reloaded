@@ -218,6 +218,17 @@
       header.append(line);
     }
     line.className = `ghgs-line ghgs-${sev}`;
+    // The line closes the global bar (logo row), never the repository tab bar below it.
+    const logo = findLogo(header);
+    const bar = logo && [...header.children].find((c) => c.contains(logo));
+    if (bar) {
+      const top = bar.getBoundingClientRect().bottom - header.getBoundingClientRect().top - 2;
+      line.style.top = `${Math.max(0, Math.round(top))}px`;
+      line.style.bottom = "auto";
+    } else {
+      line.style.top = "";
+      line.style.bottom = "";
+    }
   }
 
   function removeLine(line, header) {
@@ -413,7 +424,7 @@
       if (!state.enabled) return;
       scheduleScan();
     }).observe(document.documentElement, { childList: true, subtree: true });
-    for (const ev of ["turbo:load", "popstate", "pageshow"]) window.addEventListener(ev, scheduleScan);
+    for (const ev of ["turbo:load", "popstate", "pageshow", "resize"]) window.addEventListener(ev, scheduleScan);
     // Same-document navigations (history.pushState) re-evaluate the page at once.
     if (window.navigation) window.navigation.addEventListener("navigatesuccess", scheduleScan);
     document.addEventListener("visibilitychange", () => {
