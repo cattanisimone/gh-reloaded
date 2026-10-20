@@ -14,8 +14,9 @@ import * as standupMode from "./background/standup-mode.js";
 import * as htmlPreview from "./background/html-preview.js";
 import * as myIssues from "./background/my-issues.js";
 import * as prTriage from "./background/pr-triage.js";
+import * as githubStatus from "./background/github-status.js";
 
-const FEATURES = [dependencyGraph, boardDependencies, standupMode, htmlPreview, myIssues, prTriage];
+const FEATURES = [dependencyGraph, boardDependencies, standupMode, htmlPreview, myIssues, prTriage, githubStatus];
 
 chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage();
