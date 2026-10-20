@@ -13,6 +13,7 @@ These are the saved GitHub pages the end-to-end tests run against. Serving them 
 | `board-standup-grouped.html` | A **Board** view using Group by: two horizontal sections that repeat the same three columns | standup-mode (column positions, group headers) |
 | `board-data-columns.html` | The same board with columns as `[data-board-column]` frames and no `.board-view-column`, one frame without a visible heading | standup-mode (columns and cards on current markup) |
 | `board-legacy-classes.html` | The same board with the previous `Board-module__…--hash` and `index-module__…--hash` class naming | standup-mode, quick-create (old build keeps working) |
+| `board-linked-prs.html` | A Projects v2 **Board** view whose issue cards carry the real card structure probed live on 2026-10-20 (`.board-view-column-card` with `Box_N__hash` / `Header__hash`, `ul[aria-label="Fields"]`), nine cards: issues with and without linked PRs, one showing the native Linked pull requests field (markup assumed), a PR item, a draft item, a card with no fields list and one far below the viewport; a tiny pointer-drag script and a click counter. `--card-w` sets the card width, `data-color-mode` the theme | linked-pr-status |
 | `pr-files.html` | A pull request "Files changed" page with one changed `.html` file | html-preview (PR globe button) |
 | `blob.html` | A single-file blob page for an `.html` file | html-preview (blob Preview tab) |
 | `pr-files-lazy.html` | A "Files changed" page whose file path is not yet resolvable | html-preview #16 regression |
