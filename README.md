@@ -44,7 +44,7 @@ Go to [github.com/settings/personal-access-tokens/new](https://github.com/settin
 | Scope | Permission | Used for |
 | --- | --- | --- |
 | Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues |
-| Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage |
+| Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage, Linked PR status |
 | Repository | **Contents** | **HTML preview** of files in private repos (public repos work without a token) |
 | Repository | **Metadata** | added by GitHub automatically |
 | Organization | **Projects** | Projects v2 Status, Standup mode, My Issues project memberships |
@@ -172,6 +172,16 @@ On a repository's own **Pull requests** page (`github.com/<owner>/<repo>/pulls`)
 - A PR gets at most one placement, the **author role first**. As author: `Your turn` when a reviewer's latest review requests changes and they were not asked again, when the checks fail, or when the branch conflicts; `Waiting on review` (naming reviewers and teams) or `Waiting on checks` otherwise. As reviewer: `Your turn · Review requested` when you are asked (also after your own earlier "changes requested"); `Waiting on author` after you requested changes, with a note when there are new commits since (commits alone never make it your turn). A team request alone shows a neutral `Team review requested` (membership is not checked and it is counted in neither group). Approved, green, or a draft with no blocker: no placement. There is no "ready to merge" and no unread status, ever.
 - Review facts come from one batched GraphQL query per page of visible PR numbers (25 per query, two in flight, cached for 60 seconds), with the token mapped to the repository owner or the default one. The native list never waits for it: the panel says `Loading review data…` first. Without a token, with a refusal or a rate limit, the panel says what is missing and the rows get no guessed label; a single PR that cannot be read says `Triage unavailable`. Needs a token with **Pull requests: Read** (and read access to commit statuses or checks for the checks rollup).
 - Only open and draft rows of the repository's list are triaged; the closed and merged tabs and the global `github.com/pulls` page are left alone. Rows are found through `data-testid` hooks and ARIA labels, never CSS-module classes; if an anchor (the page's `Pull requests` search landmark for the panel) is missing, nothing is rendered until the next scan.
+
+### Linked PR status — [features/linked-pr-status](features/linked-pr-status)
+
+On a Projects **Board** view, an issue card with at least one pull request explicitly linked to it (the issue's Development links, whether added by hand or by a closing keyword) gets a thin row under its fields: `PR #317` and one text signal. The signal is the first that applies of `Changes requested`, `Checks failed`, `Review pending`, `Checks pending`, `Approved`; draft, merged and closed PRs are neutral, and a PR whose data cannot be read says `Status unavailable`, never green. Several linked PRs show a neutral aggregate (`2 linked PRs · 1 needs attention`, `2 PRs · 1 needs attention` on narrow cards). Click, Enter or Space on the row opens a modal with one section per PR: checks and review shown separately, the names of the failing checks, a plain next step and a link to the PR. Cards without a linked PR, PR items and draft items are untouched. On by default; the switch is in Settings → Features.
+
+![Linked PR status: a Projects board with a status row on cards that have linked pull requests, and the details dialog for two PRs, fictional repository acme/web.](screenshots/linked-pr-status.svg)
+
+- Only explicit links count: nothing is inferred from titles, numbers or mentions. `Approved` describes the review only: there is no "ready to merge" anywhere, because branch rules may still block. State is always text plus a glyph, never colour alone.
+- Cards are found through the un-hashed `.board-view-column-card` and the `Fields` list's ARIA label, never CSS-module classes; if an anchor or the issue link is missing nothing is added until the next scan. When a card already shows GitHub's own *Linked pull requests* field, the row keeps the signal and drops the PR number. Click and key events stop at the row, pointer events do not, so a card can still be dragged from it.
+- Data comes from one aliased GraphQL query per 20 issues (two in flight), only for cards near the viewport, with the token mapped to the issue's owner or the default one, cached for 60 seconds in the service worker and 2 minutes on the page. Without a token nothing is shown. A PR in a repository the token cannot read is not returned by GitHub and cannot be shown. Needs **Pull requests: Read** (and read access to commit statuses or checks for the checks rollup). Nothing is ever written to Projects or PRs.
 
 ### GitHub Status — [features/github-status](features/github-status)
 
