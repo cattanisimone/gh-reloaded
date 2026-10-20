@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.2.0...v1.3.0) (2026-10-20)
+
+
+### Features
+
+* show official GitHub Status in the header ([#89](https://github.com/cattanisimone/gh-reloaded/issues/89)) ([cdb3a9e](https://github.com/cattanisimone/gh-reloaded/commit/cdb3a9eb775013ed5f2f20a2641d91fb51387e2d))
+
 ## [1.2.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.1.0...v1.2.0) (2026-10-18)
 
 
