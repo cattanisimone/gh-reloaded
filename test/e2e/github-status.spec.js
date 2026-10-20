@@ -476,6 +476,22 @@ test("when the minute changes the open panel updates its age in place and keeps 
   await expect(link).toBeFocused();
 });
 
+test("a successful refresh with unchanged data keeps the focus inside the open panel", async ({ page, context }) => {
+  // Real 30 s tick, see the test above: the cache is about to expire, so the next tick fetches again.
+  test.setTimeout(120_000);
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(async () => {
+    await chrome.storage.session.set({ ghgsCache: { snapshot: { indicator: "none", description: "All Systems Operational", updatedAt: "2026-10-20T06:41:00Z", components: [], incidents: [], maintenances: [] }, fetchedAt: Date.now() - 295_000, failures: 0, retryAt: 0 } });
+  });
+  await setup(context, page, { feed: statusFeed({ components: [] }) });
+  await dot(page).click();
+  await expect(panel(page)).toContainText("Checked 4 min ago");
+  const link = panel(page).locator(".ghgs-foot a");
+  await link.focus();
+  await expect(panel(page)).toContainText("Checked just now", { timeout: 90_000 });
+  await expect(link).toBeFocused();
+});
+
 test("a failed refresh over an older green snapshot is Unverified, with the last verification as context", async ({ page, context }) => {
   const worker = await backgroundWorker(context);
   await worker.evaluate(async () => {

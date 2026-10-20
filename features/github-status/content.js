@@ -323,8 +323,16 @@
     panel.append(el("p", { class: "ghgs-foot" }, el("span", { text: "GitHub Status · via GH Reloaded" }), el("a", { href: "https://www.githubstatus.com/", target: "_blank", rel: "noopener noreferrer", text: "githubstatus.com ↗" })));
   }
 
+  // Storage hands objects back with sorted keys, a fresh fetch does not: compare by content, not by key order.
+  function stable(v) {
+    if (Array.isArray(v)) return `[${v.map(stable).join(",")}]`;
+    if (v && typeof v === "object") return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stable(v[k])}`).join(",")}}`;
+    return JSON.stringify(v);
+  }
+
   function panelSig() {
-    return `${dotState()}|${state.view.fetchedAt}|${state.view.error}`;
+    // What the panel shows, not when it was fetched: an unchanged refresh must not redraw it.
+    return `${dotState()}|${state.view.error}|${stable(state.view.snapshot)}`;
   }
 
   function placePanel(panel) {
