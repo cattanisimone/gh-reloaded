@@ -20,7 +20,7 @@ None of this leaves your browser except the token itself, which is sent — over
 
 ## The status request
 
-The GitHub Status feature asks `https://www.githubstatus.com/api/v2/summary.json` for GitHub's public status, from the extension's background service worker, at most once every 5 minutes while a github.com tab is open and visible. The request has no query string, no cookies or credentials, no referrer and no token, and carries nothing about you, the page you are on or your repositories. It needs no extra permission. Switching the feature off in Settings stops the requests.
+The GitHub Status feature asks `https://www.githubstatus.com/api/v2/summary.json` for GitHub's public status, from the extension's background service worker, at most once every 5 minutes while a github.com tab is open and visible. When a request fails it retries sooner, after 30, 60, 120 and 240 seconds, and returns to every 5 minutes once it succeeds or the delay reaches that interval. The request has no query string, no cookies or credentials, no referrer and no token, and carries nothing about you, the page you are on or your repositories. It needs no extra permission. Switching the feature off in Settings stops the requests.
 
 ## What it reads from GitHub pages
 
