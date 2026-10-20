@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #93 Status dot as a logo badge</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  h3{font-size:14px;margin:16px 0 6px;color:var(--muted)}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} td code{word-break:break-all} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:13px} .scroll{overflow-x:auto}
+  .new{outline:2px dashed var(--accent);outline-offset:2px}
+  /* mockup */
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px} @media(max-width:640px){.pair{grid-template-columns:1fr}}
+  .cap{font-size:12px;color:var(--muted);margin:4px 0 0}
+  .hdr{display:flex;align-items:center;gap:8px;height:64px;padding:0 16px;background:#f6f8fa;border:1px solid var(--line);border-radius:6px;font-size:14px;white-space:nowrap;overflow:hidden}
+  .hdr.dark{background:#151b23;border-color:#3d444d;color:#f0f6fc}
+  .hdr.mktg{background:#000;border-color:#000;color:#fff;justify-content:center}
+  .btn{width:32px;height:32px;border:1px solid var(--line);border-radius:6px;box-sizing:border-box;display:grid;place-items:center;flex:none}
+  .dark .btn{border-color:#3d444d}
+  .logo{position:relative;width:32px;height:32px;border-radius:50%;background:currentColor;flex:none}
+  .slot{width:24px;height:32px;display:grid;place-items:center;flex:none;border-radius:6px}
+  .mark{width:10px;height:10px;border-radius:50%;box-sizing:border-box}
+  .badge{position:absolute;left:20px;top:20px;width:16px;height:16px;display:grid;place-items:center}
+  .badge .mark{box-shadow:0 0 0 2px var(--ring)}
+  .ok{background:#1a7f37} .minor{background:#9a6700} .major{background:#cf222e} .unk{background:var(--ring);border:2px solid #6e7781}
+  .dark .ok{background:#3fb950} .dark .minor{background:#d29922} .dark .major{background:#f85149} .dark .unk{border-color:#8b949e}
+  .crumb{color:inherit} .crumb b{font-weight:600}
+  .gap{display:inline-block;height:6px;background:var(--bad);opacity:.5;border-radius:2px}
+  .states{display:flex;gap:24px;flex-wrap:wrap;align-items:center;padding:12px 16px;background:#f6f8fa;border:1px solid var(--line);border-radius:6px;font-size:13px}
+  .states span.l{display:flex;align-items:center;gap:8px}
+</style></head><body><main>
+  <h1>#93 · Overlay the GitHub Status dot on the header logo as a status badge</h1>
+  <p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/93">Issue #93</a> · Size: normal (layout change of an injected control) · Goal: the status dot reads as a badge on the GitHub logo, not a stray dot beside it.</p>
+
+  <h2>What changes for users</h2>
+  <ul>
+    <li>The dot sits on the bottom-right corner of the GitHub logo, like a presence badge on an avatar, with a 2px ring in the header's own background colour.</li>
+    <li>The header no longer reserves a 24px slot plus a gap for it: the breadcrumb moves left by 32px (signed-in header).</li>
+    <li>States, colours, click / keyboard behaviour, popover and the <code>GitHub Status: …</code> accessible name are unchanged.</li>
+    <li>On the centred narrow-window header (signed out, ≤ 767px) the logo stays exactly centred, since the dot no longer takes a flex slot next to it.</li>
+  </ul>
+
+  <h2>Mockup</h2>
+  <p class="meta">Fictional repository <code>acme/web</code>. Not to scale beyond the 32px logo / 64px bar.</p>
+  <div class="pair">
+    <div>
+      <div class="hdr" style="--ring:#f6f8fa">
+        <span class="btn">☰</span><span class="logo"></span><span class="slot" style="background:#d1242f22"><span class="mark ok"></span></span><span class="crumb">acme / <b>web</b></span>
+      </div>
+      <p class="cap">Before: a separate 24px slot (red tint) after the logo, 8px gap on each side.</p>
+    </div>
+    <div>
+      <div class="hdr" style="--ring:#f6f8fa">
+        <span class="btn">☰</span><span class="logo"><span class="badge new"><span class="mark ok"></span></span></span><span class="crumb">acme / <b>web</b></span>
+      </div>
+      <p class="cap">After: badge overlaps the logo corner (dashed = new), breadcrumb moved left.</p>
+    </div>
+  </div>
+
+  <h3>The three states, light and dark</h3>
+  <div class="states" style="--ring:#f6f8fa">
+    <span class="l"><span class="logo" style="color:#1f2328"><span class="badge"><span class="mark ok"></span></span></span>No incident</span>
+    <span class="l"><span class="logo" style="color:#1f2328"><span class="badge"><span class="mark minor"></span></span></span>Minor / maintenance</span>
+    <span class="l"><span class="logo" style="color:#1f2328"><span class="badge"><span class="mark major"></span></span></span>Major</span>
+    <span class="l"><span class="logo" style="color:#1f2328"><span class="badge"><span class="mark unk"></span></span></span>Unavailable (hollow ring, filled with the header colour so the logo does not show through)</span>
+  </div>
+  <div class="hdr dark" style="--ring:#151b23;margin-top:8px;justify-content:flex-start;gap:24px">
+    <span class="logo"><span class="badge"><span class="mark ok"></span></span></span>
+    <span class="logo"><span class="badge"><span class="mark minor"></span></span></span>
+    <span class="logo"><span class="badge"><span class="mark major"></span></span></span>
+    <span class="logo"><span class="badge"><span class="mark unk"></span></span></span>
+    
+  </div>
+
+  <p class="cap">Dark theme: ring = <code>#151b23</code>.</p>
+
+  <h3>Signed-out header, narrow window (375px)</h3>
+  <div class="pair">
+    <div><div class="hdr mktg" style="--ring:#000;max-width:375px"><span class="logo"></span><span class="slot"><span class="mark ok"></span></span></div><p class="cap">Before: logo pushed 16px off centre by the dot slot.</p></div>
+    <div><div class="hdr mktg" style="--ring:#000;max-width:375px"><span class="logo"><span class="badge new"><span class="mark ok"></span></span></span></div><p class="cap">After: logo centred; ring is black, read from the page (this header is black in every theme).</p></div>
+  </div>
+
+  <h2>How it works</h2>
+  <div class="scroll"><svg viewBox="0 0 860 210" width="100%" role="img" aria-label="Badge positioning with CSS anchor positioning">
+    <style>.b{fill:#f6f8fa;stroke:#d1d9e0}.t{font:13px -apple-system,Segoe UI,sans-serif;fill:#1f2328}.m{font:12px -apple-system,Segoe UI,sans-serif;fill:#59636e}.a{stroke:#0969da;stroke-width:1.5;fill:none;marker-end:url(#h)}</style>
+    <defs><marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0969da"/></marker></defs>
+    <rect class="b" x="10" y="20" width="250" height="170" rx="6"/>
+    <text class="t" x="24" y="44">header row (GitHub's flex, unchanged)</text>
+    <rect x="30" y="64" width="40" height="40" rx="6" fill="#fff" stroke="#d1d9e0"/><text class="m" x="40" y="89">☰</text>
+    <rect x="84" y="64" width="40" height="40" rx="20" fill="#1f2328"/>
+    <circle cx="120" cy="100" r="9" fill="#1a7f37" stroke="#f6f8fa" stroke-width="3"/>
+    <text class="m" x="140" y="89">acme / web</text>
+    <text class="m" x="24" y="132">&lt;a logo data-ghgs-logo&gt;</text>
+    <text class="m" x="24" y="150">&lt;button #ghgs-dot&gt; still the next</text>
+    <text class="m" x="24" y="168">sibling (same tab order)</text>
+    <rect class="b" x="300" y="20" width="250" height="170" rx="6"/>
+    <text class="t" x="314" y="44">content.css</text>
+    <text class="m" x="314" y="68">[data-ghgs-logo] {</text>
+    <text class="m" x="326" y="84">anchor-name: --ghgs-logo }</text>
+    <text class="m" x="314" y="106">.ghgs-dot { position: absolute;</text>
+    <text class="m" x="326" y="122">position-anchor: --ghgs-logo;</text>
+    <text class="m" x="326" y="138">left: calc(anchor(right) - 12px);</text>
+    <text class="m" x="326" y="154">top: calc(anchor(bottom) - 12px);</text>
+    <text class="m" x="326" y="170">16×16, round }</text>
+    <rect class="b" x="590" y="20" width="260" height="170" rx="6"/>
+    <text class="t" x="604" y="44">content.js · ensureDot()</text>
+    <text class="m" x="604" y="68">1. find logo (unchanged anchors)</text>
+    <text class="m" x="604" y="88">2. mark it data-ghgs-logo, unmark</text>
+    <text class="m" x="616" y="104">any stale one</text>
+    <text class="m" x="604" y="124">3. insert dot after it (unchanged)</text>
+    <text class="m" x="604" y="144">4. --ghgs-ring = first opaque</text>
+    <text class="m" x="616" y="160">background up from the logo</text>
+    <text class="m" x="604" y="180">removeAll() unmarks the logo</text>
+    <path class="a" d="M550 105H590"/><path class="a" d="M300 105H262"/>
+  </svg></div>
+  <ul>
+    <li><b>Why anchor positioning, not a wrapper or JS offsets.</b> Wrapping GitHub's logo moves a React-owned node; JS offsets need observers for every layout shift (hamburger appearing, centred mobile row). An absolutely positioned element leaves the flex flow (no slot, no gap) and <code>anchor()</code> follows the logo on every reflow. Supported in Chromium since 125; the live probe confirms <code>CSS.supports("anchor-name: --x")</code>.</li>
+    <li><b>Hit area.</b> The button is a 16px circle (<code>border-radius:50%</code> clips hit testing), covering only the logo's bottom-right corner; the rest of the logo stays the link. The visible mark is the same 10px circle plus a 2px <code>box-shadow</code> ring.</li>
+    <li><b>Ring colour read from the page</b>, not hardcoded: the signed-in header is <code>#f6f8fa</code> / <code>#151b23</code>, the signed-out marketing header is black in every theme. Fallback when every ancestor is transparent: the existing <code>--ghgs-surface</code> token.</li>
+    <li><b>States.</b> Hover darkens the mark (<code>brightness(.9)</code>), pressed <code>.85</code>; keyboard focus keeps the 2px <code>#0969da</code> ring, drawn at offset <code>1px</code> around the circle instead of <code>-2px</code> so it does not cover the dot.</li>
+    <li><b>Panel.</b> <code>placePanel()</code> keeps reading the dot's rect, so the popover opens under the badge, clamped to the viewport as today.</li>
+    <li>Live probe (anonymous, <code>/cattanisimone/gh-reloaded/pulls</code>): <code>header.HeaderMktg › div[class*=bar] (position:relative) › div[class*=topRow] (flex) › a[aria-label=Homepage][class*=logo] › svg.octicon-mark-github</code> 32×32; at 375px <code>topRow</code> centres the logo between two equal flex slots. Anchors stay the existing ones (href / aria-label / octicon), no class names.</li>
+  </ul>
+
+  <h2>Route matrix</h2>
+  <table>
+    <tr><th>Page / header</th><th>Badge</th></tr>
+    <tr><td>Signed-in global header (every repository, dashboard, Actions, PR page)</td><td>On the logo corner, ring <code>#f6f8fa</code> light / <code>#151b23</code> dark. Pill and severity line unchanged.</td></tr>
+    <tr><td>Signed-out marketing header</td><td>On the logo corner, ring black; logo stays centred at ≤ 767px.</td></tr>
+    <tr><td>SPA navigation / GitHub re-renders the header</td><td>Next scan re-marks the new logo and moves the dot; never two anchors with the same name.</td></tr>
+    <tr><td>Feature switched off</td><td>Dot removed and <code>data-ghgs-logo</code> removed from the logo.</td></tr>
+  </table>
+
+  <h2>Changes by file</h2>
+  <div class="scroll"><table>
+    <tr><th>File</th><th>Change</th><th>Why</th></tr>
+    <tr><td><code>features/github-status/content.css</code></td><td>Dot becomes a 16px absolutely positioned anchor-positioned circle; ring via <code>box-shadow</code> in <code>--ghgs-ring</code>; unknown state filled with the ring colour; hover / pressed / focus for a round badge. <code>@supports not (anchor-name: --a)</code> keeps today's inline 24×32 dot.</td><td>The overlay itself.</td></tr>
+    <tr><td><code>features/github-status/content.js</code></td><td><code>ensureDot()</code> marks the logo and sets <code>--ghgs-ring</code>; <code>removeAll()</code> unmarks it. Header comment updated.</td><td>Anchor name and ring colour from the page.</td></tr>
+    <tr><td><code>test/e2e/github-status.spec.js</code></td><td>New and updated tests (below).</td><td>Overlay, ring, hit area, no slot.</td></tr>
+    <tr><td><code>test/e2e/fixtures/header-signed-out.html</code></td><td>Refresh from the live probe: black header, <code>bar</code> relative, centred <code>topRow</code> at ≤ 767px.</td><td>The fixture's layout must mirror the live one.</td></tr>
+    <tr><td><code>README.md</code>, <code>features/github-status/README.md</code>, <code>screenshots/github-status.svg</code></td><td>"dot right after the logo" → "badge on the logo's corner"; redraw the dot in the mockup.</td><td>Docs in sync with the visible change.</td></tr>
+  </table></div>
+  <p class="meta">No shared file (<code>lib/github-api.js</code>, <code>background.js</code>, <code>options/</code>, <code>manifest.json</code>) is touched.</p>
+
+  <h2>Data, permissions, privacy</h2>
+  <p>None. No new storage key, permission or request.</p>
+
+  <h2>Test plan</h2>
+  <table>
+    <tr><th>Acceptance criterion</th><th>Test</th><th>Name (e2e unless noted)</th></tr>
+    <tr><td>Dot overlaps the logo's bottom-right corner</td><td>e2e, signed-in + signed-out fixtures</td><td><code>the badge overlaps the logo's bottom-right corner</code>: badge centre inside the logo box, within 6px of its corner; still the logo's next sibling.</td></tr>
+    <tr><td>Thin ring in the header background colour</td><td>e2e, light, dark, signed-out</td><td><code>the badge ring takes the header background</code>: ring colour = computed header background (<code>#f6f8fa</code>, <code>#151b23</code>, black).</td></tr>
+    <tr><td>Three states and colours kept</td><td>e2e (existing, updated)</td><td><code>a major outage turns the dot red</code>, <code>an unreachable feed: gray ring…</code> (now filled with the ring colour), amber maintenance test.</td></tr>
+    <tr><td>Click, popover, accessible name unchanged</td><td>e2e (existing)</td><td>Enter / Space / Esc, second-click-closes, panel inside the viewport tests keep passing unchanged.</td></tr>
+    <tr><td>No clicks stolen beyond its own area</td><td>e2e</td><td><code>the badge takes clicks only on its own circle</code>: <code>elementFromPoint</code> at the logo centre and its top-left → logo link; at the badge centre → dot; at the badge box corner (outside the circle) → logo link.</td></tr>
+    <tr><td>No reserved 24px slot; breadcrumb moves left</td><td>e2e</td><td><code>the badge reserves no room in the header row</code>: breadcrumb x with the dot = breadcrumb x after removing the dot; dot is <code>position:absolute</code>.</td></tr>
+    <tr><td>Light / dark and narrow windows</td><td>e2e</td><td>Existing width loop (1280–320px) plus: badge inside the viewport and over the logo at every width; signed-out 375px: logo centre = row centre ±1px.</td></tr>
+    <tr><td>Native look of the round control</td><td>e2e</td><td><code>badge hover darkens and keyboard focus shows a 2px ring</code>.</td></tr>
+    <tr><td>Anchors: current and old naming, primary used</td><td>e2e (existing, extended)</td><td>Current markup (<code>appHeader__hash</code>, <code>aria-labelledby</code>) and old naming (<code>AppHeader</code>, <code>aria-label=Homepage</code>) both assert the overlay geometry; signed-out fixture uses live <code>logo__bX9RKh</code> / <code>topRow__-dqkhM</code>.</td></tr>
+    <tr><td>Re-render and switch-off hygiene</td><td>e2e</td><td><code>a replaced logo gets the badge back; switched off leaves no anchor on the logo</code>: exactly one <code>[data-ghgs-logo]</code>, none when off.</td></tr>
+  </table>
+  <p><b>Live check.</b> Probed anonymously <code>github.com/cattanisimone/gh-reloaded/pulls</code> at 1279px (light, dark) and 375px: signed-out header structure above, logo 32×32, header black. <b>Not verified on live github.com: the signed-in header</b> (needs a login). Its numbers come from the issue (logo 32×32 at x=60, dot slot 24×32 at x=100). The maintainer should look at: badge on the logo corner, ring matching the header in light and dark, the breadcrumb having moved left, and the popover opening under the badge.</p>
+
+  <h2>Risks and open questions</h2>
+  <ul>
+    <li>A 16px target is below WCAG's 24px target size. Growing it would cover more of the logo link. <i>Default: 16px, keyboard access unchanged; tell me if you prefer 24px with a transparent hit area.</i></li>
+    <li>Browsers without CSS anchor positioning (Chromium &lt; 125). <i>Default: <code>@supports not</code> keeps today's dot beside the logo; no <code>minimum_chrome_version</code> bump.</i></li>
+    <li>For one scan (~120ms) after GitHub swaps the logo node, the dot can lose its anchor and fall back to its static position. <i>Default: the MutationObserver scan re-marks it; the test checks it settles.</i></li>
+    <li>Badge offset (centre 4px inside the corner) is a visual call. <i>Default: as mocked; easy to tune.</i></li>
+  </ul>
+
+  <h2>Out of scope</h2>
+  <ul>
+    <li>The incident pill, severity line and panel content.</li>
+    <li>Changing states, colours or the 15-minute freshness rule.</li>
+  </ul>
+</main></body></html>
