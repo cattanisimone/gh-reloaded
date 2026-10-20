@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #88 GitHub Status in the header</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--warn:#9a6700;--bg:#fff;--soft:#f6f8fa}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px} h3{font-size:14px;margin:16px 0 6px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:13.5px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:12.5px;overflow-wrap:anywhere} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto} .tag{display:inline-block;font-size:12px;font-weight:600;padding:0 6px;border-radius:10px;border:1px solid var(--line)}
+  .cap{font-size:12px;color:var(--muted);margin:4px 0 14px}
+  /* --- GitHub header mockup --- */
+  .gh{border:1px solid var(--line);border-radius:6px;overflow:hidden;font-size:14px;min-width:620px}
+  .gh.dark{--h-bg:#010409;--h-fg:#f0f6fc;--h-mut:#9198a1;--h-line:#3d444d;--h-btn:#151b23;border-color:#3d444d}
+  .gh{--h-bg:#f6f8fa;--h-fg:#1f2328;--h-mut:#59636e;--h-line:#d1d9e0;--h-btn:#fff}
+  .hdr{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;height:64px;padding:16px;background:var(--h-bg);color:var(--h-fg);border-bottom:1px solid var(--h-line)}
+  .start,.end{display:flex;align-items:center;gap:8px;min-width:0}
+  .ibtn{width:32px;height:32px;border:1px solid var(--h-line);border-radius:6px;background:var(--h-btn);flex:none;display:grid;place-items:center;color:var(--h-mut);font-size:13px}
+  .logo{width:32px;height:32px;border-radius:50%;background:var(--h-fg);flex:none}
+  .crumb{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .search{height:32px;width:150px;border:1px solid var(--h-line);border-radius:6px;background:var(--h-btn);color:var(--h-mut);font-size:13px;display:flex;align-items:center;padding:0 8px;flex:0 1 auto;min-width:80px}
+  .av{width:32px;height:32px;border-radius:50%;background:#8250df;flex:none}
+  .dotbtn{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;flex:none}
+  .dot{width:10px;height:10px;border-radius:50%;display:block}
+  .d-ok{background:#1a7f37} .d-warn{background:#bf8700;box-shadow:0 0 0 2px #fff8c5} .d-bad{background:#cf222e;box-shadow:0 0 0 2px #ffebe9} .d-unk{background:transparent;border:2px dashed #818b98}
+  .pill{display:flex;align-items:center;gap:6px;height:28px;padding:0 4px 0 10px;border-radius:14px;font-size:12.5px;font-weight:500;white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden}
+  .p-warn{background:#fff8c5;color:#7d4e00;border:1px solid #bf8700}
+  .p-bad{background:#ffebe9;color:#a40e26;border:1px solid #cf222e}
+  .dark .p-warn{background:#2e2205;color:#f2cc60;border-color:#9e6a03} .dark .p-bad{background:#3d0d10;color:#ffaba8;border-color:#da3633}
+  .pill b{font-weight:600}.pill .x{width:22px;height:22px;display:grid;place-items:center;border-radius:50%}
+  .pill .lnk{text-decoration:underline}
+  .edge{position:absolute;left:0;right:0;bottom:-1px;height:2px}
+  .e-warn{background:#bf8700}.e-bad{background:#cf222e}
+  .local{display:flex;gap:20px;padding:0 16px;height:48px;align-items:center;background:var(--h-bg);color:var(--h-mut);font-size:13.5px;border-bottom:1px solid var(--h-line)}
+  .body{height:70px;background:var(--bg)} .dark .body{background:#0d1117}
+  /* panel */
+  .panel{width:340px;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(140,149,159,.2);background:#fff;font-size:13px;overflow:hidden}
+  .panel.dark{background:#151b23;border-color:#3d444d;color:#f0f6fc;box-shadow:none}
+  .panel .ph{padding:12px 14px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .panel .ph strong{font-size:14px}
+  .panel .sub{padding:0 14px 8px;color:var(--muted);font-size:12px} .panel.dark .sub{color:#9198a1}
+  .panel .sec{border-top:1px solid var(--line);padding:8px 14px} .panel.dark .sec{border-color:#3d444d}
+  .panel .row{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
+  .panel .foot{border-top:1px solid var(--line);padding:8px 14px;display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+  .panel.dark .foot{border-color:#3d444d;color:#9198a1}
+  .panel a{color:var(--accent)} .panel.dark a{color:#4493f8}
+  .badge{font-size:12px;font-weight:600;padding:0 8px;border-radius:10px;line-height:20px}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+  .narrow{width:375px;min-width:375px}
+  .narrow .hdr{padding:16px 12px}
+  svg text{font-family:inherit}
+</style></head><body><main>
+
+<h1>#88 · Official GitHub Status in the header</h1>
+<p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/88">Issue #88</a> · Size: <b>normal</b> · PR title: <code>feat: show official GitHub Status in the header</code><br>Goal: a small, clearly attributed status dot next to the GitHub logo on every page, details one click away, and a notice only when an open incident concerns the page you are on.</p>
+
+<h2>What changes for users</h2>
+<ul>
+  <li>A <b>status dot</b> right after the GitHub logo on every github.com page: green (no incident reported), amber (minor / maintenance), red (major / critical), gray hollow ring (unknown or older than 15 min). Never on top of the logo link.</li>
+  <li>Clicking it (or Enter / Space) opens a <b>panel</b>: overall status, only the affected components, open incidents with their latest update, "checked N min ago", the attribution <b>GitHub Status · via GH Reloaded</b> and a link to githubstatus.com.</li>
+  <li>An <b>incident pill</b> inside the header bar (placement B, no new row) only when an open incident hits a component relevant to the page (Actions on Actions pages, Pull Requests on PR pages, …) or has wide impact. Dismissible per incident update; the panel still lists it.</li>
+  <li>Settings → Features gets a <b>GitHub Status</b> switch (on by default); Settings → Advanced → GitHub Status gets <b>Show incident notice</b> (on by default).</li>
+  <li><b>No new permission</b> for the user to accept (see Data, permissions, privacy).</li>
+</ul>
+
+<h2>Mockup</h2>
+<p class="cap">Fictional repository <code>acme/web</code>. Dashed blue outline = added by GH Reloaded. Header proportions follow GitHub's signed-in header (64px bar, 32px controls, 8px gap).</p>
+
+<h3>1 · Operational (light)</h3>
+<div class="scroll"><div class="gh">
+  <div class="hdr"><div class="start"><span class="ibtn">☰</span><span class="logo"></span><span class="dotbtn new" title="GitHub Status: no incident reported (via GH Reloaded)"><span class="dot d-ok"></span></span><span class="crumb">acme / web</span></div>
+  <div class="end"><span class="search">Type / to search</span><span class="ibtn">+</span><span class="ibtn">◎</span><span class="ibtn">⇅</span><span class="ibtn">✉</span><span class="av"></span></div></div>
+  <div class="local"><span>Code</span><span>Issues</span><span>Pull requests</span><span>Actions</span><span>Projects</span></div>
+</div></div>
+
+<h3>2 · Relevant incident on an Actions page — placement B (light and dark)</h3>
+<div class="scroll"><div class="gh">
+  <div class="hdr"><div class="start"><span class="ibtn">☰</span><span class="logo"></span><span class="dotbtn new"><span class="dot d-warn"></span></span><span class="crumb">acme / web</span></div>
+  <div class="end"><span class="pill p-warn new" role="status"><span>▲</span><b>Actions</b> degraded performance · <span class="lnk">Details</span><span class="x" aria-label="Dismiss">✕</span></span><span class="search">Type / to search</span><span class="ibtn">+</span><span class="ibtn">◎</span><span class="ibtn">✉</span><span class="av"></span></div>
+  <span class="edge e-warn new"></span></div>
+  <div class="local"><span>Code</span><span>Issues</span><span>Pull requests</span><span style="color:var(--h-fg);font-weight:600">Actions</span><span>Projects</span></div>
+</div></div>
+<div style="height:10px"></div>
+<div class="scroll"><div class="gh dark">
+  <div class="hdr"><div class="start"><span class="ibtn">☰</span><span class="logo"></span><span class="dotbtn new"><span class="dot d-bad" style="box-shadow:0 0 0 2px #3d0d10"></span></span><span class="crumb">acme / web</span></div>
+  <div class="end"><span class="pill p-bad new"><span>⬣</span><b>Pull Requests</b> major outage · <span class="lnk">Details</span><span class="x">✕</span></span><span class="search">Type / to search</span><span class="ibtn">+</span><span class="ibtn">◎</span><span class="ibtn">✉</span><span class="av"></span></div>
+  <span class="edge e-bad new"></span></div>
+  <div class="local"><span>Code</span><span>Issues</span><span style="color:var(--h-fg);font-weight:600">Pull requests</span><span>Actions</span></div>
+</div></div>
+<p class="cap">The pill is the first item of the header's right-hand group (before search); the search box shrinks as it already does on narrow windows. The "light tint" of B is a 2px severity line on the header's bottom edge, drawn by an absolutely positioned element of ours: GitHub's own header background, buttons and icons keep their colors. Icon shape differs by severity (▲ minor, ⬣ major/critical), so the signal is not color alone.</p>
+
+<h3>3 · Panel (opened from the dot)</h3>
+<div class="grid2">
+  <div class="panel new" role="dialog" aria-label="GitHub Status · via GH Reloaded">
+    <div class="ph"><strong>GitHub Status</strong><span class="badge" style="background:#fff8c5;color:#7d4e00">▲ Minor incident</span></div>
+    <div class="sub">Checked 1 min ago · Updated by GitHub 06:41</div>
+    <div class="sec"><div class="row"><b>Actions</b><span>Degraded performance</span></div><div class="row"><b>API Requests</b><span>Partial outage</span></div></div>
+    <div class="sec"><b>Incident with Actions</b> · Investigating<br><span style="color:var(--muted)">"Some workflow runs may be delayed." · 06:38</span><br><a href="#">Incident page ↗</a></div>
+    <div class="foot"><span>GitHub Status · via GH Reloaded</span><a href="#">githubstatus.com ↗</a></div>
+  </div>
+  <div class="panel dark new">
+    <div class="ph"><strong>GitHub Status</strong><span class="badge" style="background:#212830;color:#9198a1">◌ Unverified</span></div>
+    <div class="sub">Last verified 22 min ago. githubstatus.com could not be reached. <a href="#">Retry</a></div>
+    <div class="sec" style="color:#9198a1">Showing nothing rather than an outdated "all good". "No incident reported" never guarantees that everything works.</div>
+    <div class="foot"><span>GitHub Status · via GH Reloaded</span><a href="#">githubstatus.com ↗</a></div>
+  </div>
+</div>
+<p class="cap">Operational panel: one line "No incident reported on githubstatus.com — this is not a guarantee that everything works", no component list. In-progress maintenances get their own section. Native <code>popover</code> (top layer): Esc and outside click close it, focus returns to the dot, it never sits under GitHub's overlays and never blocks them.</p>
+
+<h3>4 · Narrow viewport (375px) and 320px</h3>
+<div class="scroll"><div class="gh narrow">
+  <div class="hdr"><div class="start"><span class="ibtn">☰</span><span class="logo"></span><span class="dotbtn new"><span class="dot d-warn"></span></span></div>
+  <div class="end"><span class="pill p-warn new"><span>▲</span><b>Actions</b><span class="x">✕</span></span><span class="ibtn">⌕</span><span class="av"></span></div><span class="edge e-warn new"></span></div>
+  <div class="body"></div>
+</div></div>
+<p class="cap">Below 768px the pill keeps icon + component name; below 400px icon only plus ✕ (accessible name keeps the full text, e.g. "GitHub Status: Actions, degraded performance. Open details"). Header height unchanged at every width.</p>
+
+<h2>How it works</h2>
+<div class="scroll"><svg viewBox="0 0 860 230" width="100%" style="min-width:620px" role="img" aria-label="Data flow: content script on every github.com tab asks the service worker, which serves a shared cache and fetches summary.json at most once per 5 minutes">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+  <g font-size="12.5" fill="#1f2328">
+    <rect x="10" y="20" width="200" height="88" rx="6" fill="#ddf4ff" stroke="#0969da"/>
+    <text x="20" y="40" font-weight="600">Tabs on github.com/*</text>
+    <text x="20" y="58">features/github-status/</text>
+    <text x="20" y="74">content.js · relevance.js</text>
+    <text x="20" y="92" fill="#59636e">load · visible · SPA nav · 60s tick</text>
+    <rect x="300" y="20" width="230" height="88" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="310" y="40" font-weight="600">Service worker</text>
+    <text x="310" y="58">background/github-status.js</text>
+    <text x="310" y="74">TTL 5 min · single flight</text>
+    <text x="310" y="92">timeout 10s · backoff 30s→5min</text>
+    <rect x="620" y="20" width="230" height="88" rx="6" fill="#dafbe1" stroke="#1a7f37"/>
+    <text x="630" y="40" font-weight="600">www.githubstatus.com</text>
+    <text x="630" y="58">GET /api/v2/summary.json</text>
+    <text x="630" y="74">anonymous, credentials: omit</text>
+    <text x="630" y="92" fill="#59636e">CORS: allow-origin *</text>
+    <rect x="300" y="150" width="230" height="64" rx="6" fill="#fff8c5" stroke="#bf8700"/>
+    <text x="310" y="170" font-weight="600">chrome.storage.session</text>
+    <text x="310" y="188">ghgsCache: trimmed data,</text>
+    <text x="310" y="204">fetchedAt, failures, nextRetryAt</text>
+    <rect x="10" y="150" width="200" height="64" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="20" y="170" font-weight="600">chrome.storage.local</text>
+    <text x="20" y="188">ghgsEnabled · ghgsNotice</text>
+    <text x="20" y="204">ghgsDismissed</text>
+    <path d="M210 52H296" stroke="#59636e" marker-end="url(#a)"/><text x="226" y="46" font-size="11" fill="#59636e">message</text>
+    <path d="M296 80H214" stroke="#59636e" marker-end="url(#a)"/><text x="226" y="96" font-size="11" fill="#59636e">snapshot</text>
+    <path d="M530 52H616" stroke="#59636e" marker-end="url(#a)"/><text x="540" y="46" font-size="11" fill="#59636e">if TTL expired</text>
+    <path d="M415 108V146" stroke="#59636e" marker-end="url(#a)"/>
+    <path d="M110 108V146" stroke="#59636e" marker-end="url(#a)"/>
+  </g>
+</svg></div>
+<ul>
+  <li><b>One fetch for all tabs.</b> <code>summary.json</code> alone carries the overall indicator, components, unresolved incidents and maintenances, so <code>status.json</code> is not needed. The cache lives in <code>storage.session</code> (survives service-worker restarts, in memory only, cleared with the browser) plus an in-flight promise, so ten tabs asking at once trigger one request. Tabs only ask the worker; the network is hit at most once per 5 min, and only while some github.com tab is open and visible.</li>
+  <li><b>Truthfulness.</b> A snapshot older than 15 min (by our last successful fetch) or a feed never reached renders gray "Unverified" — the last good data is still shown in the panel, labelled with its age, never as a current green. A malformed body (schema check on every field we read) counts as an error. Errors keep the last good snapshot and retry with backoff 30s, 1, 2, 4, 5 min (a 429 honours <code>Retry-After</code>, capped at 15 min).</li>
+  <li><b>Relevance</b> (<code>relevance.js</code>, pure, unit-tested): route → components. <code>/actions</code>, <code>/runs/</code>, <code>/pull/N/checks</code> → Actions · <code>/pull/</code>, <code>/pulls</code> → Pull Requests · <code>/issues</code>, Projects → Issues · <code>/packages</code> → Packages · <code>/settings/hooks</code> → Webhooks · <code>/settings/pages</code> → Pages · <code>/codespaces</code> → Codespaces · repo code routes (tree, blob, commits, compare, branches) → Git Operations · routes where a GH Reloaded feature calls the GitHub API (issues, Projects, repo pulls, /issues, .html blobs) also → API Requests. An incident is <b>wide</b> (notice everywhere) when its impact is <code>critical</code>, or it hits 3 or more of the core components (Git Operations, API Requests, Issues, Pull Requests, Actions, Webhooks). Impact <code>none</code>, maintenances and Copilot / Pages / Codespaces on unrelated pages: panel only.</li>
+  <li><b>Anchors</b>, read from the environment, no CSS-module prefix: the dot goes right after <code>header a[href="/"]</code> containing <code>svg.octicon-mark-github</code> (aria-label "Homepage"), in the same flex row, no margin (the row's gap spaces it). The pill goes right before the header's search control, found by role / aria-label / visible text "search" within <code>header</code>. Missing anchor → nothing is inserted and the next scan retries; there is no other container fallback. Live probe: the signed-out header serves <code>a.logo__&lt;hash&gt;</code> (aria-label "Homepage") inside <code>topRow__&lt;hash&gt;</code>, a flex row.</li>
+  <li><b>SPA navigation.</b> A throttled <code>MutationObserver</code> plus <code>turbo:load</code> / <code>popstate</code> re-ensure the dot and pill by id (never duplicated), recompute relevance when <code>location.pathname</code> changes, and remove the pill when the incident resolves or the route stops being relevant.</li>
+  <li><b>Dismissal</b> stores <code>{incidentId: updated_at}</code>; a newer incident update shows the pill again; resolved incidents are pruned. Focus moves to the dot after dismiss.</li>
+</ul>
+
+<h2>Changes by file</h2>
+<div class="scroll"><table>
+<tr><th>File</th><th>Change</th><th>Why</th></tr>
+<tr><td><code>background/github-status.js</code> (new)</td><td><code>MESSAGE_TYPE = "GITHUB_STATUS_GET"</code>; fetch, trim + validate, TTL, single flight, backoff, session cache. Exports pure <code>parseSummary</code>, <code>nextRetryDelay</code>.</td><td>One shared fetch for all tabs.</td></tr>
+<tr><td><code>background.js</code> ⚠ shared</td><td>Import and add to <code>FEATURES</code>.</td><td>Generic router.</td></tr>
+<tr><td><code>features/github-status/relevance.js</code> (new)</td><td>Pure: severity of the snapshot, staleness, route → components, which incident (if any) gets the pill, dismissal check.</td><td>Unit-testable rules.</td></tr>
+<tr><td><code>features/github-status/content.js</code>, <code>content.css</code> (new)</td><td>Anchors, dot button, popover panel, pill, SPA handling, light/dark via <code>prefers-color-scheme</code> and GitHub's <code>data-color-mode</code>.</td><td>UI.</td></tr>
+<tr><td><code>manifest.json</code> ⚠ shared</td><td>New <code>content_scripts</code> entry for <code>https://github.com/*</code>. No new permission, no host permission. Description stays within 132 chars.</td><td>All pages.</td></tr>
+<tr><td><code>options/options.html</code>, <code>options.js</code> ⚠ shared</td><td>Features switch <code>ghgsEnabled</code> (default on); Advanced → GitHub Status → <code>ghgsNotice</code> switch (default on).</td><td>Issue's Settings section.</td></tr>
+<tr><td><code>README.md</code>, <code>PRIVACY.md</code>, <code>screenshots/github-status.svg</code></td><td>Feature section; githubstatus.com request and new storage keys; mockup.</td><td>Definition of done.</td></tr>
+<tr><td><code>test/…</code></td><td>Unit + e2e (below), <code>routeStatus()</code> helper, two header fixtures.</td><td>Test plan.</td></tr>
+</table></div>
+
+<h2>Data, permissions, privacy</h2>
+<ul>
+  <li><b>Sent:</b> one anonymous <code>GET https://www.githubstatus.com/api/v2/summary.json</code> with <code>credentials: "omit"</code>; no token, no page URL, no user, repository or issue data (no query string, <code>referrerPolicy: "no-referrer"</code>, sent from the service worker, never from the page).</li>
+  <li><b>Permission: none added.</b> The endpoint answers <code>access-control-allow-origin: *</code>; I checked that an MV3 service worker with no <code>host_permissions</code> reads it (status 200, 12 components). A new host permission would make Chrome disable the extension on update until the user accepts it (a breaking change by our rules), so this keeps the change a <code>feat</code>. If GitHub ever drops CORS, the dot turns gray "Unverified", which is the designed degraded state. This differs from the issue's "only the www.githubstatus.com host permission is added", which the issue lets the reviewer revisit.</li>
+  <li><b>Stored:</b> <code>storage.local</code>: <code>ghgsEnabled</code>, <code>ghgsNotice</code>, <code>ghgsDismissed</code> (incident ids + timestamps). <code>storage.session</code>: <code>ghgsCache</code> (public status data). No remote JS, no Statuspage widget.</li>
+</ul>
+
+<h2>Test plan</h2>
+<div class="scroll"><table>
+<tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
+<tr><td>Dot near the logo, keyboard + screen reader, light / dark, logo link intact</td><td>e2e</td><td><code>github-status.spec.js</code>: "dot follows the logo in the same row", "dot is a button with an accessible name, opens with Enter/Space", "logo link box and href unchanged", "dark mode colors"</td></tr>
+<tr><td>Data only from the official API, presented correctly</td><td>unit + e2e</td><td><code>github-status-background.test.js</code>: parseSummary on operational / minor / major / critical / maintenance / multiple incidents / malformed feeds; e2e "panel lists affected components, incidents, checked-at and attribution"</td></tr>
+<tr><td>Irrelevant incident → no global notice</td><td>unit + e2e</td><td><code>github-status-relevance.test.js</code> route matrix; e2e "Copilot incident on a PR page: amber dot, no pill"</td></tr>
+<tr><td>Contextual notice, accessible dismissal, still in panel</td><td>unit + e2e</td><td>"Actions incident on /actions shows the pill", "dismiss hides it, panel still lists it", "new incident update re-shows it", "dismiss button is keyboard-operable, focus returns to the dot"</td></tr>
+<tr><td>Unknown / stale distinct from green; disclaimer</td><td>unit + e2e</td><td>staleness at 14:59 vs 15:01 min; e2e "unreachable feed → gray ring, Unverified, no pill"; "operational panel says no incident reported is not a guarantee"</td></tr>
+<tr><td>Refresh and cache: many tabs, SPA, state changes, resolved, network loss</td><td>unit + e2e</td><td>"10 concurrent requests → 1 fetch", "TTL 5 min", "backoff sequence and Retry-After cap", "cache survives worker restart"; e2e "two tabs, one request", "SPA nav to /actions adds the pill, back removes it, no duplicates", "resolved incident removes the pill", "timeout and offline keep last snapshot"</td></tr>
+<tr><td>No token / repo data leaves; no remote JS</td><td>unit + e2e</td><td>e2e asserts the githubstatus request has no query, no Authorization, credentials omitted; <code>manifest.test.js</code> asserts no new host permission</td></tr>
+<tr><td>B-or-A placement gates</td><td>e2e + manual</td><td>"header height unchanged (±0px) at 320 / 375 / 768 / 1280 and at 200% zoom (deviceScaleFactor 2, 640px)", "no overflow, no sibling overlap, gaps before = after", "pill/text contrast ≥ 4.5:1, border/icon ≥ 3:1 (computed)", "nothing covers the search, menus or avatar (elementFromPoint at their centres)"; screenshots light/dark × desktop/mobile × minor/major for the PR</td></tr>
+<tr><td>README and tests; other features unchanged</td><td>suite</td><td><code>npm test</code> green; options specs updated for the two new switches; disabled-state test "ghgsEnabled false → nothing injected, no request"</td></tr>
+<tr><td>Anchors on real markup, both header generations, primary asserted</td><td>e2e</td><td>Fixtures <code>header-signed-in.html</code> (<code>AppHeader-globalBar-start</code>, <code>AppHeader-logo</code>, search button) and <code>header-signed-out.html</code> (live <code>logo__&lt;hash&gt;</code> / <code>topRow__&lt;hash&gt;</code>); "anchor found, dot is next sibling of the logo" on both; "no logo → no dot, retried after it appears"</td></tr>
+</table></div>
+<p><b>Live check:</b> probed anonymously <code>github.com/cattanisimone/gh-reloaded</code> and <code>/actions</code> at 1280 and 375px: only the <b>signed-out</b> header is reachable (<code>header[role=banner]</code>, <code>a.logo__&lt;hash&gt;[aria-label=Homepage]</code> in a flex row, 72px / 65px high). The <b>signed-in header</b> (where most users will see the dot and the pill), Projects pages and private repositories cannot be opened anonymously: <b>Not verified on live github.com</b>. The maintainer should check, signed in, on a repository, an Actions page, a PR and a Projects board: the dot sits right after the logo with even spacing, the pill sits before search without pushing the avatar, and the header height does not change.</p>
+
+<h2>Risks and open questions</h2>
+<ul>
+  <li><b>Host permission vs CORS.</b> Default: no new permission (above). Say so if you prefer the explicit permission; the PR becomes <code>feat!:</code>.</li>
+  <li><b>"Lightly severity-tinted bar".</b> Tinting GitHub's whole header background conflicts with the gate "do not change colors of surfaces outside the notice area". Default: tinted pill + 2px severity line on the header's bottom edge, GitHub surfaces untouched.</li>
+  <li><b>Maintenance colour.</b> The issue defines four colours. Default: an in-progress maintenance shows amber with the label "Maintenance"; scheduled (future) maintenance is panel-only and does not change the dot.</li>
+  <li><b>Signed-in header markup unverified live.</b> Default: anchors only on the logo link + octicon and the search control (present in both header generations), both variants in fixtures; nothing is injected if they are missing.</li>
+  <li><b>Fallback A.</b> Default: build B only. If the reviewer picks A, it is a rework of this PR: only the notice placement module changes, the status, relevance and dismissal logic stays.</li>
+</ul>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Push / system notifications, telemetry, extra configuration beyond the two switches.</li>
+  <li>Inferring incidents not published on githubstatus.com; Statuspage widget or any remote script.</li>
+  <li>Shipping A and B as a user option, or a third placement.</li>
+  <li>Changing other features (e.g. reacting to their own API failures).</li>
+</ul>
+</main></body></html>
