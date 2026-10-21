@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.3.0...v1.4.0) (2026-10-21)
+
+
+### Features
+
+* show linked-PR status on Projects board cards ([#92](https://github.com/cattanisimone/gh-reloaded/issues/92)) ([8ebf3e3](https://github.com/cattanisimone/gh-reloaded/commit/8ebf3e3c70ce3e5f5fad17f251fd6be957c314a9))
+
+
+### Bug Fixes
+
+* overlay the GitHub Status dot on the header logo as a badge ([#94](https://github.com/cattanisimone/gh-reloaded/issues/94)) ([1a4d3b7](https://github.com/cattanisimone/gh-reloaded/commit/1a4d3b712ecc25751d0865797b2985883e9c35d6))
+
 ## [1.3.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.2.0...v1.3.0) (2026-10-20)
 
 
