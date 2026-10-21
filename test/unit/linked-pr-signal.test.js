@@ -9,7 +9,7 @@ import vm from "node:vm";
 const context = {};
 context.globalThis = context;
 vm.runInNewContext(readFileSync("features/linked-pr-status/signal.js", "utf8"), context);
-const { signalOf, summarize, nextStep, checksText, reviewText } = context.GHLPS_SIGNAL;
+const { signalOf, summarize, caption, nextStep, checksText, reviewText } = context.GHLPS_SIGNAL;
 
 const pr = (over = {}) => ({ ok: true, state: "OPEN", merged: false, isDraft: false, reviewDecision: null, checks: null, ...over });
 const label = (over) => signalOf(pr(over)).label;
@@ -114,4 +114,17 @@ test("caption: why the attention chip is there, empty when nothing to add", () =
 test("nextStep: a refused PR names the missing permission", () => {
   assert.match(context.GHLPS_SIGNAL.nextStep({ ok: false, denied: true }), /Pull requests: Read/);
   assert.match(context.GHLPS_SIGNAL.nextStep({ ok: false }), /Open the pull request/);
+});
+
+test("summarize: unreadable PRs are counted in the aggregate, neutral, and explained when the token was refused", () => {
+  const list = [pr({ checks: "FAILURE" }), { ok: false, denied: true }];
+  const many = summarize(list);
+  assert.equal(many.unavailable, 1);
+  assert.equal(many.unavailableText, "1 status unavailable");
+  assert.equal(many.needs, 1);
+  assert.equal(summarize(list, { compact: true }).unavailableText, "1 ?");
+  assert.equal(summarize([pr(), pr()]).unavailable, 0);
+  assert.equal(summarize([pr(), pr()]).unavailableText, "");
+  assert.equal(caption([pr(), { ok: false, denied: true }]), "The token cannot read some of these pull requests");
+  assert.equal(caption([pr(), { ok: false }]), "");
 });

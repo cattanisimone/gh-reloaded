@@ -221,13 +221,19 @@
       const b = opener("ghlps-left", label);
       b.setAttribute("aria-label", `${sum.text}. Show details`);
       row.append(b);
-      if (sum.needs) {
-        const chip = el("span", "ghlps-sig ghlps-tone-bad");
-        chip.append(el("span", "ghlps-long", sum.attention), el("span", "ghlps-short", compact.attention));
-        const c = opener("ghlps-right", chip);
-        c.setAttribute("aria-label", `${sum.attention}. Show details`);
+      let first = true;
+      const side = (tone, glyph, long, short) => {
+        const chip = el("span", `ghlps-sig ghlps-tone-${tone}`);
+        const g = el("span", "ghlps-glyph", glyph);
+        g.setAttribute("aria-hidden", "true");
+        chip.append(...(glyph ? [g] : []), el("span", "ghlps-long", long), el("span", "ghlps-short", short));
+        const c = opener(first ? "ghlps-right" : "", chip);
+        c.setAttribute("aria-label", `${long}. Show details`);
+        first = false;
         row.append(c);
-      }
+      };
+      if (sum.needs) side("bad", "", sum.attention, compact.attention);
+      if (sum.unavailable) side("neutral", "?", sum.unavailableText, compact.unavailableText);
     }
     const note = S.caption(prs);
     if (note) row.append(el("span", "ghlps-caption", note));

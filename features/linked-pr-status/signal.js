@@ -38,14 +38,17 @@
     if (list.length === 1) return { kind: "one", pr: list[0], signal: signalOf(list[0]) };
     const needs = list.filter((p) => signalOf(p).attention).length;
     const noun = compact ? "PRs" : "linked PRs";
-    const tail = needs ? ` · ${needs} needs attention` : "";
+    const unavailable = list.filter((p) => p.ok === false).length;
+    const tail = (needs ? ` · ${needs} needs attention` : "") + (unavailable ? ` · ${unavailable} status unavailable` : "");
     return {
       kind: "many",
       count: list.length,
       needs,
+      unavailable,
       text: `${list.length} ${noun}${tail}`,
       label: `${list.length} ${noun}`,
       attention: needs ? (compact ? `${needs} ⚠` : `${needs} needs attention`) : "",
+      unavailableText: unavailable ? (compact ? `${unavailable} ?` : `${unavailable} status unavailable`) : "",
     };
   }
 
@@ -55,6 +58,7 @@
     const list = (prs || []).filter(Boolean);
     const hit = list.map(signalOf).find((x) => x.attention);
     if (hit) return hit.id === "changes" ? "Review feedback blocks progress" : "Checks are failing";
+    if (list.length > 1 && list.some((p) => p.ok === false && p.denied)) return "The token cannot read some of these pull requests";
     if (list.length === 1) {
       const id = signalOf(list[0]).id;
       if (id === "review") return "Waiting for a reviewer";

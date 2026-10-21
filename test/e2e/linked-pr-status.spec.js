@@ -197,6 +197,18 @@ test("several PRs: a neutral aggregate, no verdict, details in the dialog", asyn
   await expect(d).toContainText("Merge rules are not evaluated here");
 });
 
+test("several PRs with one unreadable: the card counts it, neutral, and says why", async ({ context, page }) => {
+  const data = { ...DATA, 214: [pr(330, { reviewDecision: "APPROVED" }), pr(332, { reviewDecision: "REVIEW_REQUIRED" })] };
+  await setup(context, page, { handlers: [graphqlHandler([], { data, errorsFor: [214] })] });
+  const r = row(page, 214);
+  await expect(r.locator(".ghlps-count .ghlps-long")).toHaveText("2 linked PRs");
+  const chip = r.locator(".ghlps-sig.ghlps-tone-neutral");
+  await expect(chip.locator(".ghlps-long")).toHaveText("1 status unavailable");
+  await expect(chip.locator(".ghlps-glyph")).toHaveText("?");
+  await expect(r.locator(".ghlps-tone-bad")).toHaveCount(0);
+  await expect(r.locator(".ghlps-caption")).toHaveText("The token cannot read some of these pull requests");
+});
+
 test("Escape closes the dialog even when the page's own handler prevents it", async ({ context, page }) => {
   await setup(context, page);
   await page.evaluate(() => document.addEventListener("keydown", (e) => e.key === "Escape" && e.preventDefault()));
