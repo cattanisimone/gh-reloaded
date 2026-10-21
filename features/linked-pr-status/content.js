@@ -252,6 +252,27 @@
     if (fields) fields.after(row);
     else (card.firstElementChild || card).append(row);
     fitRow(card, row);
+    fitCaption(row);
+    if (typeof ResizeObserver === "function") new ResizeObserver(() => fitCaption(row)).observe(row);
+  }
+
+  // GitHub's cards end with 1px screen-reader-only spans: they take no room.
+  function visuallyHidden(n) {
+    if (n.classList.contains("sr-only")) return true;
+    const cs = getComputedStyle(n);
+    if (cs.display === "none" || cs.position === "absolute") return true;
+    const b = n.getBoundingClientRect();
+    return b.width <= 1 && b.height <= 1;
+  }
+
+  // A caption squeezed to a few letters says nothing: hide it (the chip, the
+  // title attribute and the modal keep the meaning).
+  const CAPTION_MIN_WIDTH = 72;
+  function fitCaption(row) {
+    const c = row.querySelector(".ghlps-caption");
+    if (!c) return;
+    c.hidden = false;
+    if (row.clientWidth && c.clientWidth < CAPTION_MIN_WIDTH) c.hidden = true;
   }
 
   // Make the band reach the card's inner edges and, when nothing follows it,
@@ -267,7 +288,9 @@
     const left = r.left - c.left - bw("Left");
     const right = c.right - bw("Right") - r.right;
     let last = true;
-    for (let n = row; n && n !== card; n = n.parentElement) if (n.nextElementSibling) last = false;
+    for (let n = row; n && n !== card; n = n.parentElement) {
+      for (let k = n.nextElementSibling; k; k = k.nextElementSibling) if (!visuallyHidden(k)) last = false;
+    }
     const bottom = last ? c.bottom - bw("Bottom") - r.bottom : 0;
     const px = (v) => `${Math.max(0, Math.round(v * 100) / 100)}px`;
     row.style.marginInline = `-${px(left)} -${px(right)}`;

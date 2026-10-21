@@ -640,3 +640,35 @@ test("no hint while data loads fine", async ({ context, page }) => {
   await expect(row(page, 207)).toBeVisible();
   await expect(page.locator(".ghlps-hint")).toHaveCount(0);
 });
+
+test("a trailing visually-hidden span does not stop the band reaching the card's bottom edge and corners", async ({ context, page }) => {
+  const sr = '<span class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Draggable item</span>';
+  await setup(context, page, { transform: (h) => h.replaceAll("</ul>\n        </div></div>", `</ul>${sr}\n        </div></div>`) });
+  await expect(row(page, 207)).toBeVisible();
+  const g = await card(page, 207).evaluate((c) => {
+    const row = c.querySelector(".ghlps-row");
+    const cs = getComputedStyle(c);
+    return {
+      sr: !!row.nextElementSibling?.classList.contains("sr-only"),
+      bottomGap: c.getBoundingClientRect().bottom - parseFloat(cs.borderBottomWidth) - row.getBoundingClientRect().bottom,
+      radius: getComputedStyle(row).borderBottomLeftRadius,
+    };
+  });
+  expect(g, JSON.stringify(g)).toEqual({ sr: true, bottomGap: 0, radius: "5px" });
+});
+
+test("a caption too narrow to show a few words is hidden, not cut to a few letters", async ({ context, page }) => {
+  await setup(context, page);
+  await page.evaluate(() => document.documentElement.style.setProperty("--card-w", "420px"));
+  await expect(row(page, 211).locator(".ghlps-caption")).toBeVisible();
+  for (const w of [215, 230]) {
+    await page.evaluate((cw) => document.documentElement.style.setProperty("--card-w", `${cw}px`), w);
+    const cap = row(page, 211).locator(".ghlps-caption");
+    await expect.poll(() => cap.evaluate((c) => c.hidden || c.clientWidth >= 72), { message: `width ${w}` }).toBe(true);
+  }
+  await page.evaluate(() => document.documentElement.style.setProperty("--card-w", "215px"));
+  await expect(row(page, 211).locator(".ghlps-caption")).toBeHidden();
+  await expect(row(page, 211).locator(".ghlps-caption")).toHaveAttribute("title", "Review feedback blocks progress");
+  await page.evaluate(() => document.documentElement.style.setProperty("--card-w", "420px"));
+  await expect(row(page, 211).locator(".ghlps-caption")).toBeVisible();
+});
