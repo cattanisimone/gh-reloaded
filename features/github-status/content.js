@@ -113,6 +113,12 @@
   // children are not rendered (a hidden or joined sibling), and past a gap-less group when the row above
   // spaces its children with a gap. Layout facts only, never a class name. A gap-less row with no gapped row
   // above it is left alone: the pill stays next to the control and ensurePill adds the missing space.
+  // True when the rendered children of a row touch each other (a joined group, not controls spaced by margins).
+  function joined(parent) {
+    const rects = [...parent.children].map((c) => c.getBoundingClientRect()).filter((r) => r.width > 0 && r.height > 0).sort((a, b) => a.left - b.left);
+    return rects.every((r, i) => i === 0 || r.left - rects[i - 1].right <= 1);
+  }
+
   function outermostSearchWrapper(node, header, rendered) {
     const gapOf = (n) => parseFloat(getComputedStyle(n).columnGap) || 0;
     const isRow = (n) => /flex|grid/.test(getComputedStyle(n).display);
@@ -122,7 +128,7 @@
         continue;
       }
       const above = parent.parentElement;
-      if (isRow(parent) && gapOf(parent) === 0 && above && above !== header && isRow(above) && gapOf(above) > 0) {
+      if (isRow(parent) && gapOf(parent) === 0 && joined(parent) && above && above !== header && isRow(above) && gapOf(above) > 0) {
         node = parent;
         continue;
       }
@@ -169,6 +175,13 @@
     unknown: "Unverified",
   };
 
+  // A dot raised only by a component status (no incident, indicator calm) must not claim an incident.
+  function stateText(s) {
+    const snap = state.view.snapshot;
+    if ((s === "minor" || s === "major") && snap && !(snap.incidents || []).length && !["minor", "major", "critical"].includes(snap.indicator)) return s === "major" ? "Service outage" : "Degraded service";
+    return STATE_TEXT[s];
+  }
+
   function agoText(at) {
     const min = Math.floor((Date.now() - at) / 60_000);
     if (!at) return "never";
@@ -195,7 +208,7 @@
   function paintDot(dot) {
     const s = dotState();
     dot.dataset.state = s;
-    dot.setAttribute("aria-label", `GitHub Status: ${STATE_TEXT[s]}. Open details`);
+    dot.setAttribute("aria-label", `GitHub Status: ${stateText(s)}. Open details`);
   }
 
   function ensureDot(header) {
@@ -310,7 +323,7 @@
     const snap = state.view.snapshot;
     panel.dataset.sig = panelSig();
     panel.replaceChildren();
-    const head = el("div", { class: "ghgs-head" }, el("span", { class: "ghgs-dot-mark", "data-state": s, "aria-hidden": "true" }), el("strong", { text: "GitHub Status" }), el("span", { class: "ghgs-state", text: STATE_TEXT[s] }));
+    const head = el("div", { class: "ghgs-head" }, el("span", { class: "ghgs-dot-mark", "data-state": s, "aria-hidden": "true" }), el("strong", { text: "GitHub Status" }), el("span", { class: "ghgs-state", text: stateText(s) }));
     const meta = el("p", { class: "ghgs-meta" });
     // The ages are rewritten in place by refreshPanel, so the text comes from a function.
     meta.ageText = () => (snap && s !== "unknown" ? `Checked ${agoText(state.view.fetchedAt)}${snap.updatedAt && clock(snap.updatedAt) ? ` · Updated by GitHub ${clock(snap.updatedAt)}` : ""}` : "");

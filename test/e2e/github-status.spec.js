@@ -923,6 +923,30 @@ test("the margin safety net is not used on current markup, and covers only the s
   expect(await pill(p2).evaluate((p) => p.style.marginInlineEnd)).toBe("8px");
 });
 
+test("a gap-less actions row of margin-spaced controls does not pull the pill away from the search", async ({ page, context }) => {
+  // No searchGroup wrapper, no row gap, controls spaced by margins: the row sits in a space-between bar. The pill must stay next to the search control.
+  await setup(context, page, {
+    feed: criticalFeed(),
+    fixture: GLOBALNAV,
+    transform: (h) => h
+      .replace(".topBarActions__h9k2 { display: flex; align-items: center; gap: 8px;", ".topBarActions__h9k2 { display: flex; align-items: center; gap: 0;")
+      .replace("</style>", ".topBarActions__h9k2 > * + * { margin-left: 8px; }</style>")
+      .replace('<div class="searchGroup__a1b2c">', "").replace(/(<button type="button" class="iconButton__d4e5f joined"[^>]*>✦<\/button>\s*)<\/div>/, "$1"),
+  });
+  await expect(pill(page)).toBeVisible();
+  const m = await rects(page);
+  // The pill stays in the actions row, right before the search control, not between the bar's two groups.
+  expect(await pill(page).evaluate((p) => ({ inActions: !!p.closest("[class*=topBarActions]"), next: p.nextElementSibling.tagName }))).toEqual({ inActions: true, next: "QBSEARCH-INPUT" });
+  expect(m.pill.right, JSON.stringify(m)).toBeLessThanOrEqual(m.next.left + 0.5);
+});
+
+test("a component-only problem names the dot as degraded service, not as an incident", async ({ page, context }) => {
+  const feed = statusFeed();
+  feed.components = [{ name: "Actions", status: "degraded_performance" }];
+  await setup(context, page, { feed, fixture: GLOBALNAV });
+  await expect(dot(page)).toHaveAttribute("aria-label", /Degraded service/);
+});
+
 test("both class namings of the two-row header give the same placement", async ({ page, context }) => {
   await setup(context, page, {
     feed: criticalFeed(),
