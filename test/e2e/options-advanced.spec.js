@@ -103,6 +103,16 @@ test("PR triage switch defaults on, has no Configure link, and persists", async 
   expect(await worker.evaluate(() => chrome.storage.local.get("ghprtEnabled"))).toEqual({ ghprtEnabled: false });
 });
 
+test("Linked PR status switch defaults on, has no Configure link, and persists", async ({ context, page }) => {
+  const worker = await openOptions(context, page, "#features");
+  const sw = page.locator("#feature-ghlps");
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator(".row", { has: sw }).locator("a.cfg")).toHaveCount(0);
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "false");
+  expect(await worker.evaluate(() => chrome.storage.local.get("ghlpsEnabled"))).toEqual({ ghlpsEnabled: false });
+});
+
 test("GitHub Status: the feature switch has a Configure link; the notice switch lives in Advanced; both default on and persist", async ({ context, page }) => {
   const worker = await openOptions(context, page, "#features");
   const sw = page.locator("#feature-ghgs");

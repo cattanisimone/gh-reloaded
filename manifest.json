@@ -85,11 +85,14 @@
       ],
       "js": [
         "features/full-width-board/content.js",
-        "features/standup-mode/content.js"
+        "features/standup-mode/content.js",
+        "features/linked-pr-status/signal.js",
+        "features/linked-pr-status/content.js"
       ],
       "css": [
         "features/full-width-board/content.css",
-        "features/standup-mode/content.css"
+        "features/standup-mode/content.css",
+        "features/linked-pr-status/content.css"
       ],
       "run_at": "document_idle"
     },

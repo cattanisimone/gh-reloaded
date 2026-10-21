@@ -53,14 +53,20 @@ test("graph-bench: chosen engine is at least as good as current on crossings and
     assert.ok(b.width <= a.width * 1.1, `${kind} width ${b.width} vs ${a.width}`);
   }
   const g = makeGraph("dense", 80, 1);
-  const ms = [];
+  // 50 ms is the plan's target. The unit suite may run on a busy shared runner,
+  // where wall-clock time measures the neighbours, so the budget is checked on
+  // the CPU time the layout itself spends; the wall-clock p95 is printed too.
+  const cpu = [];
+  const wall = [];
   for (let i = 0; i < 12; i++) {
+    const c0 = process.cpuUsage();
     const t = performance.now();
     await mine.layout(g, dims);
-    ms.push(performance.now() - t);
+    wall.push(performance.now() - t);
+    const c = process.cpuUsage(c0);
+    cpu.push((c.user + c.system) / 1000);
   }
-  // 50 ms is the plan's target; the unit suite may run on a busy shared runner.
-  assert.ok(percentile(ms, 95) < 250, `p95 ${percentile(ms, 95)} ms`);
+  assert.ok(percentile(cpu, 95) < 250, `p95 cpu ${percentile(cpu, 95).toFixed(1)} ms, wall ${percentile(wall, 95).toFixed(1)} ms`);
 });
 
 test("graph-bench: a sparse segment crossing a card counts as a card hit", () => {
