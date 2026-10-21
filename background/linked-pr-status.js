@@ -212,3 +212,13 @@ export async function handleDetail({ owner, repo, number } = {}) {
 // The router in background.js finds a feature by one MESSAGE_TYPE; the detail
 // message is its own tiny feature module.
 export const detail = { MESSAGE_TYPE: DETAIL_MESSAGE_TYPE, handleMessage: handleDetail };
+
+// The hint on the board links to Settings; a content script cannot open the
+// options page itself.
+export const settings = {
+  MESSAGE_TYPE: "GHLPS_OPEN_SETTINGS",
+  handleMessage: async () => {
+    await chrome.runtime.openOptionsPage();
+    return {};
+  },
+};

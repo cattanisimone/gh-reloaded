@@ -27,7 +27,7 @@
     if (pr.reviewDecision === "REVIEW_REQUIRED") return sig("review", "Review pending", "warn", "●");
     if (RUNNING.has(pr.checks)) return sig("running", "Checks pending", "warn", "●");
     if (pr.reviewDecision === "APPROVED") return sig("approved", "Approved", "neutral", "✓");
-    return sig("open", "Open", "neutral", "○");
+    return sig("open", "", "neutral", "○"); // nothing to say: the row shows no chip
   }
 
   // The card text for the linked PRs of one issue. `compact` is the short
@@ -57,7 +57,7 @@
       case "review": return "Waiting for a reviewer.";
       case "running": return "Waiting for the checks to finish.";
       case "approved": return "Approved by reviewers. Merge rules are not evaluated here.";
-      default: return "No review or checks rule applies.";
+      default: return "No review or checks signal to report.";
     }
   }
 

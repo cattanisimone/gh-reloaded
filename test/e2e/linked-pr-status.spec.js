@@ -491,3 +491,59 @@ test("a swapped <main> after a soft navigation gets its rows without waiting for
   });
   await expect(row(page, 207)).toBeVisible();
 });
+
+test("the row is inset like the card's own text and the divider with it", async ({ context, page }) => {
+  await setup(context, page);
+  await expect(row(page, 207)).toBeVisible();
+  const g = await card(page, 207).evaluate((c) => {
+    const r = c.querySelector(".ghlps-row").getBoundingClientRect();
+    const t = c.querySelector("a.Title__h2").getBoundingClientRect();
+    const pr = c.querySelector(".ghlps-pr").getBoundingClientRect();
+    const chip = c.querySelector(".ghlps-sig").getBoundingClientRect();
+    const b = c.getBoundingClientRect();
+    const rule = getComputedStyle(c.querySelector(".ghlps-row"), "::before");
+    return { textLeft: t.left - b.left, prLeft: pr.left - b.left, chipRight: b.right - chip.right, ruleLeft: parseFloat(rule.left), ruleRight: parseFloat(rule.right), rowEdge: r.left - b.left };
+  });
+  expect(g, JSON.stringify(g)).toMatchObject({ prLeft: g.textLeft, ruleLeft: 12, ruleRight: 12 });
+  expect(g.chipRight).toBeGreaterThanOrEqual(g.textLeft - 1);
+});
+
+test("an open PR with no review or checks signal shows the PR link and no chip", async ({ context, page }) => {
+  const data = { ...DATA, 207: [pr(317, { reviewDecision: null, ...checks("SUCCESS") })] };
+  await setup(context, page, { handlers: [graphqlHandler([], { data, errorsFor: [] })] });
+  await expect(row(page, 207).locator(".ghlps-pr")).toHaveText("PR #317");
+  await expect(row(page, 207).locator(".ghlps-sig, button")).toHaveCount(0);
+  await expect(row(page, 207)).not.toContainText("Open");
+});
+
+test("no token: a dismissible hint names the cause and Settings, remembered once dismissed", async ({ context, page }) => {
+  await setup(context, page, { tokens: { githubTokens: [], defaultTokenId: null } });
+  const hint = page.locator(".ghlps-hint");
+  await expect(hint).toContainText("needs a GitHub token");
+  await expect(hint.getByRole("link", { name: "Open Settings" })).toBeVisible();
+  await expect(page.locator(".ghlps-row")).toHaveCount(0);
+  await hint.getByRole("button", { name: "Dismiss" }).click();
+  await expect(hint).toHaveCount(0);
+  await page.reload();
+  await expect(card(page, 207)).toBeVisible();
+  await page.waitForTimeout(800);
+  await expect(page.locator(".ghlps-hint")).toHaveCount(0);
+});
+
+test("a refused token: the hint names Pull requests: Read; a working token shows no hint", async ({ context, page }) => {
+  await setup(context, page, { handlers: [{ method: "POST", match: (p) => p === "/graphql", status: 403, json: { message: "Resource not accessible by personal access token" } }] });
+  await expect(page.locator(".ghlps-hint")).toContainText("Pull requests: Read");
+});
+
+test("a rate limit shows a hint that is not remembered", async ({ context, page }) => {
+  await setup(context, page, { handlers: [{ method: "POST", match: (p) => p === "/graphql", status: 429, json: { message: "rate limit" } }] });
+  await expect(page.locator(".ghlps-hint")).toContainText("rate limit");
+  await page.locator(".ghlps-hint").getByRole("button", { name: "Dismiss" }).click();
+  expect(await backgroundWorker(context).then((w) => w.evaluate(() => chrome.storage.local.get("ghlpsHintDismissed")))).toEqual({});
+});
+
+test("no hint while data loads fine", async ({ context, page }) => {
+  await setup(context, page);
+  await expect(row(page, 207)).toBeVisible();
+  await expect(page.locator(".ghlps-hint")).toHaveCount(0);
+});

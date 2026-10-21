@@ -24,9 +24,10 @@ test("priority: changes requested beats failed checks, review pending, running c
   assert.equal(label({ reviewDecision: "APPROVED", checks: "SUCCESS" }), "Approved");
 });
 
-test("null reviewDecision and null rollup are plain Open, never a verdict", () => {
-  assert.equal(label({}), "Open");
-  assert.equal(label({ checks: "SUCCESS" }), "Open");
+test("null reviewDecision and null rollup are plain open with no label to show, never a verdict", () => {
+  assert.equal(signalOf(pr()).id, "open");
+  assert.equal(label({}), "");
+  assert.equal(label({ checks: "SUCCESS" }), "");
   assert.equal(signalOf(pr()).tone, "neutral");
 });
 
@@ -56,8 +57,9 @@ test("only the first two ranks need attention", () => {
   assert.equal(att({ reviewDecision: "APPROVED" }), false);
 });
 
-test("every signal has a glyph and visible text", () => {
-  for (const o of [{}, { isDraft: true }, { state: "CLOSED" }, { state: "MERGED" }, { reviewDecision: "APPROVED" }, { checks: "FAILURE" }]) {
+test("every signal has a glyph and visible text, except plain open which shows no chip", () => {
+  assert.equal(signalOf(pr()).label, "");
+  for (const o of [{ isDraft: true }, { state: "CLOSED" }, { state: "MERGED" }, { reviewDecision: "APPROVED" }, { checks: "FAILURE" }]) {
     const s = signalOf(pr(o));
     assert.ok(s.glyph && s.label);
   }

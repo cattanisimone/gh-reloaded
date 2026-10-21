@@ -17,6 +17,8 @@
   const STORAGE_ENABLED = "ghlpsEnabled"; // unset = on
   const FETCH_TYPE = "GHLPS_FETCH"; // matches background/linked-pr-status.js
   const DETAIL_TYPE = "GHLPS_DETAIL";
+  const SETTINGS_TYPE = "GHLPS_OPEN_SETTINGS";
+  const STORAGE_HINT = "ghlpsHintDismissed"; // one-time hint for a missing token or permission
   const TTL_MS = 120_000;
   const BACKOFF_MS = 60_000;
   const CARD_SELECTOR = ".board-view-column-card";
@@ -90,9 +92,11 @@
     if (!running) return;
     if (res && res.ok && res.facts) {
       if (mine === generation) status = { state: "ready", until: 0 };
+      showHint();
       for (const i of infos) facts.set(i.key, { at: Date.now(), value: res.facts[i.key] || { ok: false }, stale: false });
     } else {
       status = { state: statusFromError(res), until: Date.now() + BACKOFF_MS };
+      showHint();
       // Known pull requests stay named but turn "Status unavailable"; an issue
       // whose links were never read keeps no row.
       for (const i of infos) {
@@ -102,6 +106,54 @@
     }
     schedule();
     setTimeout(schedule, TTL_MS + 50);
+  }
+
+  // --- hint: say why nothing shows --------------------------------------
+
+  const HINTS = {
+    notoken: "Linked PR status needs a GitHub token for this repository owner to read pull requests. Add one in Settings.",
+    denied: "GitHub refused the request. The token needs the Pull requests: Read permission (and access to these repositories). Check it in Settings.",
+    rate: "GitHub's rate limit was reached, so linked PR status is paused. It retries in about a minute.",
+  };
+  let hintDismissed = false; // this page load; "rate" is never remembered
+
+  async function showHint() {
+    document.querySelector(".ghlps-hint")?.remove();
+    const text = HINTS[status.state];
+    if (!text || !running || hintDismissed) return;
+    if (status.state !== "rate") {
+      try {
+        if ((await chrome.storage.local.get(STORAGE_HINT))[STORAGE_HINT]) return;
+      } catch {}
+      if (!running || !HINTS[status.state]) return;
+    }
+    const box = el("div", "ghlps-hint");
+    box.setAttribute("role", "status");
+    const p = el("p", null, text + " ");
+    if (status.state !== "rate") {
+      const a = el("a", null, "Open Settings");
+      a.href = "#";
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        try {
+          chrome.runtime.sendMessage({ type: SETTINGS_TYPE });
+        } catch {}
+      });
+      p.append(a);
+    }
+    const x = el("button", null, "Dismiss");
+    x.type = "button";
+    x.addEventListener("click", async () => {
+      hintDismissed = true;
+      box.remove();
+      if (status.state !== "rate") {
+        try {
+          await chrome.storage.local.set({ [STORAGE_HINT]: true });
+        } catch {}
+      }
+    });
+    box.append(p, x);
+    document.body.append(box);
   }
 
   // --- rendering ----------------------------------------------------------
@@ -141,8 +193,11 @@
         a.rel = "noopener noreferrer";
         row.append(a);
       }
-      summary.append(signalChip(sum.signal));
-      summary.setAttribute("aria-label", `${p.number ? `Pull request #${p.number}: ` : ""}${sum.signal.label}. Show details`);
+      // An open PR with no review or checks signal: just the PR link.
+      if (sum.signal.id !== "open") {
+        summary.append(signalChip(sum.signal));
+        summary.setAttribute("aria-label", `${p.number ? `Pull request #${p.number}: ` : ""}${sum.signal.label}. Show details`);
+      }
     } else {
       const long = S.summarize(prs).text;
       const short = S.summarize(prs, { compact: true }).text;
@@ -151,7 +206,7 @@
       summary.append(chip);
       summary.setAttribute("aria-label", `${long}. Show details`);
     }
-    row.append(summary);
+    if (summary.childElementCount) row.append(summary);
     return row;
   }
 
@@ -176,6 +231,10 @@
       return;
     }
     const native = hasNativeField(card);
+    if (native && prs.length === 1 && S.signalOf(prs[0]).id === "open") {
+      row?.remove(); // nothing left to show next to GitHub's own field
+      return;
+    }
     const sig = JSON.stringify([info.key, native, prs.map((p) => [p.ok, p.number, p.state, p.isDraft, p.reviewDecision, p.checks, p.url])]);
     if (row && row.dataset.ghlpsSig === sig && rowInPlace(card, row)) return;
     row?.remove();
@@ -415,6 +474,7 @@
     observer = io = null;
     inflight.clear();
     closeDialog();
+    document.querySelector(".ghlps-hint")?.remove();
     for (const r of document.querySelectorAll(`.${ROW_CLASS}`)) r.remove();
     for (const c of document.querySelectorAll(CARD_SELECTOR)) watched.delete(c);
   }
