@@ -21,8 +21,27 @@ test("dot state per indicator", () => {
   assert.equal(R.dotState(v(snap()), NOW), "ok");
   assert.equal(R.dotState(v(snap({ indicator: "minor" })), NOW), "minor");
   assert.equal(R.dotState(v(snap({ indicator: "major" })), NOW), "major");
-  assert.equal(R.dotState(v(snap({ indicator: "critical" })), NOW), "major");
+  assert.equal(R.dotState(v(snap({ indicator: "critical" })), NOW), "critical");
   assert.equal(R.dotState(v(snap({ maintenances: [inc()] })), NOW), "maintenance");
+});
+
+test("dot state takes the worst of the indicator, the open incidents and the components", () => {
+  const v = (s) => ({ snapshot: s, fetchedAt: NOW - 1000 });
+  const comp = (status) => [{ name: "Actions", status }];
+  assert.equal(R.dotState(v(snap({ incidents: [inc({ impact: "critical" })] })), NOW), "critical");
+  assert.equal(R.dotState(v(snap({ incidents: [inc({ impact: "minor" })] })), NOW), "minor");
+  assert.equal(R.dotState(v(snap({ incidents: [inc({ impact: "major" }), inc({ id: "i2", impact: "minor" })] })), NOW), "major");
+  assert.equal(R.dotState(v(snap({ incidents: [inc({ impact: "none" })] })), NOW), "ok");
+  assert.equal(R.dotState(v(snap({ components: comp("partial_outage") })), NOW), "minor");
+  assert.equal(R.dotState(v(snap({ components: comp("degraded_performance") })), NOW), "minor");
+  assert.equal(R.dotState(v(snap({ components: comp("major_outage") })), NOW), "major");
+  assert.equal(R.dotState(v(snap({ components: comp("operational") })), NOW), "ok");
+  assert.equal(R.dotState(v(snap({ indicator: "major", incidents: [inc({ impact: "minor" })] })), NOW), "major");
+  assert.equal(R.dotState(v(snap({ indicator: "minor", incidents: [inc({ impact: "critical" })] })), NOW), "critical");
+  assert.equal(R.dotState(v(snap({ maintenances: [inc()], incidents: [inc({ impact: "major" })] })), NOW), "major");
+  assert.equal(R.dotState(v(snap({ maintenances: [inc()], incidents: [inc({ impact: "minor" })] })), NOW), "minor");
+  assert.equal(R.dotState(v(snap({ maintenances: [inc()] })), NOW), "maintenance");
+  assert.equal(R.dotState({ snapshot: snap({ incidents: [inc({ impact: "critical" })] }), fetchedAt: NOW - 16 * 60_000 }, NOW), "unknown");
 });
 
 test("unknown when never fetched, and older than 15 min", () => {

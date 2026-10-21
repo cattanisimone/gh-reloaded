@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" font-family="DejaVu Sans, sans-serif">
 <rect x="0" y="0" width="1200" height="560" fill="#fff"/>
 <rect x="0" y="0" width="1200" height="64" fill="#f6f8fa" stroke="#d1d9e0"/>
-<rect x="0" y="62" width="1200" height="2" fill="#9a6700"/>
 <rect x="32" y="16" width="32" height="32" fill="#fff" stroke="#d1d9e0" rx="6"/>
 <text x="42" y="38" font-size="15" fill="#1f2328">☰</text>
 <circle cx="88" cy="32" r="14" fill="#1f2328"/>
@@ -9,12 +8,12 @@
 <circle cx="100" cy="44" r="5" fill="#1a7f37"/>
 <circle cx="100" cy="44" r="10" fill="none" stroke="#54aeff" stroke-dasharray="4 3"/>
 <text x="110" y="38" font-size="14" fill="#1f2328">acme / <tspan font-weight="600">web</tspan></text>
-<rect x="536" y="16" width="224" height="32" fill="#fff8c5" stroke="#d4a72c" rx="6"/>
-<rect x="535" y="15" width="226" height="34" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="7"/>
-<path d="M552 24.5l6.5 11.5h-13z" fill="#633c01"/>
-<text x="568" y="37" font-size="12" font-weight="600" fill="#633c01">Actions</text>
-<text x="620" y="37" font-size="12" fill="#633c01">degraded performance</text>
-<text x="744" y="37" font-size="12" fill="#633c01">✕</text>
+<rect x="540" y="16" width="224" height="32" fill="#fff8c5" stroke="#d4a72c" rx="6"/>
+<rect x="539" y="15" width="226" height="34" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="7"/>
+<path d="M556 24.5l6.5 11.5h-13z" fill="#633c01"/>
+<text x="572" y="37" font-size="12" font-weight="600" fill="#633c01">Actions</text>
+<text x="624" y="37" font-size="12" fill="#633c01">degraded performance</text>
+<text x="748" y="37" font-size="12" fill="#633c01">✕</text>
 <rect x="772" y="16" width="272" height="32" fill="#fff" stroke="#d1d9e0" rx="6"/>
 <text x="788" y="37" font-size="13" fill="#59636e">Type / to search</text>
 <rect x="1052" y="16" width="32" height="32" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>

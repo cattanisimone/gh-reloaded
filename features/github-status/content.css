@@ -1,7 +1,7 @@
 /* features/github-status/content.css — the status dot, the incident pill and
    the details panel. Light and dark follow GitHub's data-color-mode and the
    system setting. Sizes copy a medium Primer control: 32px high, 6px radius,
-   1px border. No margins: the header row's own gap spaces everything. */
+   1px border. No margin of its own: the header row's gap spaces it (see keepGap in content.js for a row with none). */
 
 :root {
   --ghgs-fg: #1f2328;
@@ -110,7 +110,8 @@ html[data-color-mode="dark"] {
 [data-state="ok"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="ok"] { background: var(--ghgs-ok); }
 [data-state="minor"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="minor"],
 [data-state="maintenance"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="maintenance"] { background: var(--ghgs-minor); }
-[data-state="major"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="major"] { background: var(--ghgs-major); }
+[data-state="major"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="major"],
+[data-state="critical"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="critical"] { background: var(--ghgs-major); }
 [data-state="unknown"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="unknown"] { background: var(--ghgs-unknown); }
 
 /* --- pill --- */
@@ -164,10 +165,6 @@ html[data-color-mode="dark"] {
 @media (max-width: 599px) {
   .ghgs-pill-detail { display: none; }
 }
-
-.ghgs-line { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; pointer-events: none; z-index: 1; }
-.ghgs-line.ghgs-minor { background: var(--ghgs-minor); }
-.ghgs-line.ghgs-major { background: var(--ghgs-major); }
 
 /* --- panel (top layer) --- */
 .ghgs-panel {

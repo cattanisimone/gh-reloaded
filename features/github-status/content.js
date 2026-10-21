@@ -16,7 +16,7 @@
   const R = globalThis.GHGS_RELEVANCE;
   const DOT_ID = "ghgs-dot";
   const PILL_ID = "ghgs-pill";
-  const LINE_ID = "ghgs-line";
+  const LINE_ID = "ghgs-line"; // drawn by older versions: only removed now
   const PANEL_ID = "ghgs-panel";
   const MESSAGE_TYPE = "GITHUB_STATUS_GET"; // matches background/github-status.js
   const REFRESH_MS = 5 * 60_000;
@@ -109,6 +109,28 @@
     );
   }
 
+  // Climbs from the search control to the wrapper that sits in the header's row: past parents whose other
+  // children are not rendered (a hidden or joined sibling), and past a gap-less group when the row above
+  // spaces its children with a gap. Layout facts only, never a class name. A gap-less row with no gapped row
+  // above it is left alone: the pill stays next to the control and ensurePill adds the missing space.
+  function outermostSearchWrapper(node, header, rendered) {
+    const gapOf = (n) => parseFloat(getComputedStyle(n).columnGap) || 0;
+    const isRow = (n) => /flex|grid/.test(getComputedStyle(n).display);
+    for (let parent = node.parentElement; parent && parent !== header; parent = node.parentElement) {
+      if ([...parent.children].filter(rendered).length === 1) {
+        node = parent;
+        continue;
+      }
+      const above = parent.parentElement;
+      if (isRow(parent) && gapOf(parent) === 0 && above && above !== header && isRow(above) && gapOf(above) > 0) {
+        node = parent;
+        continue;
+      }
+      break;
+    }
+    return node;
+  }
+
   // The header's search control: a search landmark, the search element or a
   // control whose accessible name or text says "search".
   function findSearch(header) {
@@ -126,7 +148,7 @@
     const named = [...header.querySelectorAll("button, input")].filter((n) => !n.closest(own) && /search/i.test(n.getAttribute("aria-label") || n.getAttribute("placeholder") || ""));
     for (let node of [...landmarks, ...named]) {
       if (!rendered(node)) continue;
-      while (node.parentElement && node.parentElement !== header && node.parentElement.children.length === 1) node = node.parentElement;
+      node = outermostSearchWrapper(node, header, rendered);
       if (node.parentElement) return node;
     }
     return null;
@@ -142,6 +164,7 @@
     ok: "No incident reported",
     minor: "Minor incident",
     major: "Major incident",
+    critical: "Critical incident",
     maintenance: "Maintenance in progress",
     unknown: "Unverified",
   };
@@ -231,10 +254,8 @@
     const notice = currentNotice();
     const search = notice ? findSearch(header) : null;
     const old = document.getElementById(PILL_ID);
-    const line = document.getElementById(LINE_ID);
     if (!notice || !search) {
       old?.remove();
-      removeLine(line, header);
       return;
     }
     const fresh = !old || old.dataset.incident !== notice.id || old.dataset.at !== notice.updatedAt || old.dataset.path !== location.pathname;
@@ -244,35 +265,25 @@
       pill = buildPill(notice);
     }
     if (search.previousElementSibling !== pill) search.before(pill);
-    paintLine(header, notice.impact === "minor" ? "minor" : "major");
+    keepGap(pill, search);
   }
 
-  function paintLine(header, sev) {
-    let line = document.getElementById(LINE_ID);
-    if (!line) {
-      line = el("div", { id: LINE_ID, class: "ghgs-line", "aria-hidden": "true" });
-      if (getComputedStyle(header).position === "static") {
-        header.dataset.ghgsPositioned = "1";
-        header.style.position = "relative";
-      }
-      header.append(line);
-    }
-    line.className = `ghgs-line ghgs-${sev}`;
-    // The line closes the global bar (logo row), never the repository tab bar below it.
-    const logo = findLogo(header);
-    const bar = logo && [...header.children].find((c) => c.contains(logo));
-    if (bar) {
-      const top = bar.getBoundingClientRect().bottom - header.getBoundingClientRect().top - 2;
-      line.style.top = `${Math.max(0, Math.round(top))}px`;
-      line.style.bottom = "auto";
-    } else {
-      line.style.top = "";
-      line.style.bottom = "";
-    }
+  // The row's own gap spaces the pill from the search control. Only when the row has none (the pill sits
+  // in a gap-less group) is the shortfall to the header's 8px added as a margin on the pill.
+  const WANTED_GAP = 8;
+  function keepGap(pill, search) {
+    pill.style.marginInlineEnd = "";
+    const p = pill.getBoundingClientRect();
+    const q = search.getBoundingClientRect();
+    if (!p.width || !q.width) return;
+    const rtl = getComputedStyle(pill).direction === "rtl";
+    const space = rtl ? p.left - q.right : q.left - p.right;
+    if (space < WANTED_GAP - 0.5) pill.style.marginInlineEnd = `${Math.round((WANTED_GAP - space) * 100) / 100}px`;
   }
 
-  function removeLine(line, header) {
-    line?.remove();
+  // Older versions drew a 2px rule across the header and made it position: relative.
+  function removeLegacyLine(header) {
+    document.getElementById(LINE_ID)?.remove();
     if (header && header.dataset.ghgsPositioned) {
       header.style.position = "";
       delete header.dataset.ghgsPositioned;
@@ -416,7 +427,7 @@
     document.getElementById(DOT_ID)?.remove();
     for (const l of document.querySelectorAll("[data-ghgs-logo]")) l.removeAttribute("data-ghgs-logo");
     document.getElementById(PILL_ID)?.remove();
-    removeLine(document.getElementById(LINE_ID), header);
+    removeLegacyLine(header);
     const panel = document.getElementById(PANEL_ID);
     if (panel) {
       try { panel.hidePopover(); } catch {}
@@ -430,6 +441,7 @@
     const header = findHeader();
     if (!header) return;
     state.path = location.pathname;
+    removeLegacyLine(header);
     ensureDot(header);
     ensurePill(header);
     const panel = ensurePanel();

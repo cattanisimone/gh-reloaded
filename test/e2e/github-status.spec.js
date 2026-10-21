@@ -339,7 +339,7 @@ test("an Actions incident on an Actions page shows the pill before the search co
   await expect(pill(page)).toContainText("Actions");
   await expect(pill(page)).toContainText("degraded performance");
   expect(await pill(page).evaluate((p) => p.nextElementSibling.tagName.toLowerCase())).toBe("qbsearch-input");
-  await expect(page.locator("#ghgs-line")).toHaveCount(1);
+  await expect(page.locator("#ghgs-line")).toHaveCount(0);
   await expect(pill(page).getByRole("button", { name: "GitHub Status: Actions, degraded performance. Open details" })).toBeVisible();
   await pill(page).locator(".ghgs-pill-main").click();
   await expect(panel(page)).toContainText("Incident with Actions");
@@ -739,17 +739,11 @@ test("the panel stays inside a narrow window", async ({ page, context }) => {
 
 const LOCAL_BAR = '<div class="AppHeader-localBar" style="height:48px;border-top:1px solid #d1d9e0"><nav class="AppHeader-nav"><a href="/acme/web/actions" aria-current="page" style="border-bottom:2px solid #fd8c73">Actions</a></nav></div></header>';
 
-test("the severity line closes the global bar and leaves the repository tab bar alone", async ({ page, context }) => {
-  await setup(context, page, { feed: actionsFeed(), transform: (h) => h.replace("</header>", LOCAL_BAR) });
-  await expect(page.locator("#ghgs-line")).toHaveCount(1);
-  const r = await page.evaluate(() => {
-    const line = document.getElementById("ghgs-line").getBoundingClientRect();
-    const bar = document.querySelector(".AppHeader-globalBar").getBoundingClientRect();
-    const local = document.querySelector(".AppHeader-localBar").getBoundingClientRect();
-    return { lineBottom: line.bottom, barBottom: bar.bottom, localTop: local.top, localBottom: local.bottom };
-  });
-  expect(r.lineBottom, JSON.stringify(r)).toBeCloseTo(r.barBottom, 0);
-  expect(r.lineBottom).toBeLessThanOrEqual(r.localTop + 1);
+test("an incident adds no line and leaves the header's position alone, on the two-row header", async ({ page, context }) => {
+  await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
+  await expect(pill(page)).toBeVisible();
+  await expect(page.locator("#ghgs-line, .ghgs-line")).toHaveCount(0);
+  expect(await page.locator("header").evaluate((h) => [h.style.position, getComputedStyle(h).position, h.dataset.ghgsPositioned || ""])).toEqual(["", "static", ""]);
 });
 
 test("a running maintenance reported by the page indicator is amber, not Unverified", async ({ page, context }) => {
@@ -838,4 +832,146 @@ test("a header transparent all the way up gets no ring instead of a wrong colour
   await setup(context, page, { fixture: "header-signed-out.html", transform: (h) => h.replace("</head>", "<style>header, header * { background-color: transparent !important; } body, html { background: transparent !important; }</style></head>") });
   await expect(dot(page)).toBeVisible();
   await expect.poll(() => dot(page).locator(".ghgs-dot-mark").evaluate((m) => getComputedStyle(m).boxShadow), { timeout: 8000 }).toMatch(/rgba\(0, 0, 0, 0\)|none/);
+});
+
+// --- #96: the dot follows the worst open incident; the pill keeps the row's gap -----------------------
+
+const GLOBALNAV = "header-signed-in-globalnav.html";
+// The live summary on 2026-10-21: the page indicator said "none" while a critical incident was open.
+const criticalFeed = () =>
+  statusFeed({
+    status: { indicator: "none", description: "All Systems Operational" },
+    incidents: [statusIncident({ id: "crit", name: "Delays for Pull Requests and Webhook deliveries", impact: "critical", components: [{ name: "Pull Requests" }, { name: "Webhooks" }] })],
+  });
+
+test("indicator none with a critical incident open: the dot is red and named Critical incident, like the pill", async ({ page, context }) => {
+  await setup(context, page, { feed: criticalFeed(), fixture: GLOBALNAV });
+  await expect(pill(page)).toBeVisible();
+  await expect(pill(page)).toContainText("critical incident");
+  await expect(dot(page)).toHaveAttribute("data-state", "critical");
+  await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("background-color", "rgb(207, 34, 46)");
+  await expect(dot(page)).toHaveAttribute("aria-label", "GitHub Status: Critical incident. Open details");
+  await dot(page).click();
+  await expect(panel(page).locator(".ghgs-state")).toHaveText("Critical incident");
+});
+
+const rects = (page) =>
+  page.evaluate(() => {
+    const r = (n) => n && n.getBoundingClientRect();
+    const pillEl = document.getElementById("ghgs-pill");
+    const p = r(pillEl);
+    const group = pillEl.nextElementSibling;
+    const g = r(group);
+    const row = pillEl.parentElement;
+    const cs = getComputedStyle(row);
+    return {
+      pill: { left: p.left, right: p.right, width: p.width },
+      next: { left: g.left, tag: group.tagName, cls: group.className },
+      gap: g.left - p.right,
+      rowGap: cs.columnGap,
+      rowCls: row.className,
+      margin: pillEl.style.marginInlineEnd || getComputedStyle(pillEl).marginInlineEnd,
+      header: r(document.querySelector("header")).height,
+      bar: r(document.querySelector("header > div, header > *")).height,
+      scrollW: document.documentElement.scrollWidth,
+      clientW: document.documentElement.clientWidth,
+      innerW: window.innerWidth,
+    };
+  });
+
+for (const width of [1280, 1012, 768, 375]) {
+  test(`two-row header at ${width}px: the pill sits before the search group with the row's 8px gap and changes no height`, async ({ context }) => {
+    const page = await context.newPage();
+    await page.setViewportSize({ width, height: 800 });
+    let feed = statusFeed();
+    await routeStatus(context, { json: () => feed });
+    await routeGithub(context, GLOBALNAV);
+    await page.goto(ACTIONS);
+    await expect(dot(page)).toBeVisible();
+    const h0 = await page.locator("header").evaluate((h) => [h.getBoundingClientRect().height, h.firstElementChild.getBoundingClientRect().height]);
+    const worker = await backgroundWorker(context);
+    feed = criticalFeed();
+    await worker.evaluate(() => chrome.storage.session.remove("ghgsCache"));
+    await page.reload();
+    await expect(pill(page)).toBeVisible();
+    const m = await rects(page);
+    const hs = await page.locator("header").evaluate((h) => [h.getBoundingClientRect().height, h.firstElementChild.getBoundingClientRect().height]);
+    const info = JSON.stringify({ width, ...m });
+    expect(m.rowGap, info).toBe("8px");
+    expect(m.rowCls, info).toContain("topBarActions__");
+    expect(m.next.cls, info).toContain("searchGroup__");
+    expect(m.gap, info).toBeCloseTo(8, 0);
+    expect(m.margin, info).toMatch(/^0(px)?$/);
+    expect(m.pill.right, info).toBeLessThanOrEqual(m.innerW);
+    expect(m.pill.left, info).toBeGreaterThanOrEqual(0);
+    expect(m.scrollW, info).toBeLessThanOrEqual(m.clientW);
+    expect(hs, info).toEqual(h0);
+  });
+}
+
+test("the margin safety net is not used on current markup, and covers only the shortfall of a row with no gap", async ({ page, context }) => {
+  await setup(context, page, { feed: criticalFeed(), fixture: GLOBALNAV });
+  await expect(pill(page)).toBeVisible();
+  expect(await pill(page).evaluate((p) => p.style.marginInlineEnd)).toBe("");
+  // The row and the group both have no gap: the pill stays next to the search control and the missing space is added to it, to 8px.
+  const p2 = await context.newPage();
+  await routeGithub(context, GLOBALNAV, { transform: (h) => h.replace(".topBarActions__h9k2 { display: flex; align-items: center; gap: 8px;", ".topBarActions__h9k2 { display: flex; align-items: center; gap: 0;") });
+  await p2.goto(ACTIONS);
+  await expect(pill(p2)).toBeVisible();
+  const m = await rects(p2);
+  expect(m.gap, JSON.stringify(m)).toBeCloseTo(8, 0);
+  expect(await pill(p2).evaluate((p) => p.style.marginInlineEnd)).toBe("8px");
+});
+
+test("both class namings of the two-row header give the same placement", async ({ page, context }) => {
+  await setup(context, page, {
+    feed: criticalFeed(),
+    fixture: GLOBALNAV,
+    transform: (h) => h.replace(/(\w+)__(?:k3j9a|m2p4q|r5t6u|h9k2|a1b2c|d4e5f|g7h8i|j1k2l|n3o4p)/g, (_, n) => `GlobalNav-module__${n}--x1y2z`).replace(/GlobalNav-module__root__x1y2z/, "GlobalNav-module__root--x"),
+  });
+  await expect(pill(page)).toBeVisible();
+  const m = await rects(page);
+  expect(m.rowCls, JSON.stringify(m)).toContain("topBarActions");
+  expect(m.next.cls, JSON.stringify(m)).toContain("searchGroup");
+  expect(m.gap, JSON.stringify(m)).toBeCloseTo(8, 0);
+});
+
+test("the signed-out header: a hidden sibling next to the search is ignored and the pill stays outside the search slot", async ({ page, context }) => {
+  await setup(context, page, {
+    feed: criticalFeed(),
+    fixture: "header-signed-out.html",
+    transform: (h) => h.replace('<div class="mobileActions__8F9jkX">', '<div class="searchSlot__x9" style="display:flex;gap:0"><button type="button" aria-label="Search or jump to…">Search</button><div class="d-none" style="display:none">more</div></div><div class="mobileActions__8F9jkX">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  expect(await pill(page).evaluate((p) => ({ inside: !!p.closest(".searchSlot__x9"), next: p.nextElementSibling.className }))).toEqual({ inside: false, next: "searchSlot__x9" });
+});
+
+test("SPA /pull/1 -> /actions -> back -> forward: one pill in the same place, no line", async ({ page, context }) => {
+  await setup(context, page, { feed: criticalFeed(), fixture: GLOBALNAV, url: ACTIONS });
+  await expect(pill(page)).toHaveCount(1);
+  const where = async () => { const m = await rects(page); return [Math.round(m.pill.left), Math.round(m.gap)]; };
+  const first = await where();
+  await page.evaluate(() => history.pushState({}, "", "/acme/web/pull/1"));
+  await page.evaluate(() => history.pushState({}, "", "/acme/web/actions"));
+  await page.goBack();
+  await page.goForward();
+  await expect(pill(page)).toHaveCount(1);
+  expect(await where()).toEqual(first);
+  await expect(page.locator("#ghgs-line")).toHaveCount(0);
+  expect(await page.locator("header").evaluate((h) => h.style.position)).toBe("");
+});
+
+test("a rule and a position override left by an older version are cleaned up", async ({ page, context }) => {
+  await setup(context, page, { feed: criticalFeed(), fixture: GLOBALNAV });
+  await expect(pill(page)).toBeVisible();
+  await page.evaluate(() => {
+    const h = document.querySelector("header");
+    h.dataset.ghgsPositioned = "1";
+    h.style.position = "relative";
+    const l = document.createElement("div");
+    l.id = "ghgs-line";
+    h.append(l);
+  });
+  await expect(page.locator("#ghgs-line")).toHaveCount(0);
+  expect(await page.locator("header").evaluate((h) => h.style.position)).toBe("");
 });
