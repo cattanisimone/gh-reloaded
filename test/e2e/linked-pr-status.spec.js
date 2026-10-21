@@ -162,18 +162,18 @@ test("GitHub's native Linked pull requests field is not duplicated", async ({ co
 test("several PRs: a neutral aggregate, no verdict, details in the dialog", async ({ context, page }) => {
   await setup(context, page);
   await expect(row(page, 211).locator(".ghlps-count .ghlps-long")).toHaveText("2 linked PRs");
-  await expect(row(page, 211).locator(".ghlps-right .ghlps-long")).toHaveText("1 needs attention");
+  await expect(row(page, 211).locator(".ghlps-first .ghlps-long")).toHaveText("1 needs attention");
   await expect(row(page, 211).locator(".ghlps-caption")).toHaveText("Review feedback blocks progress");
   await expect(row(page, 211).locator(".ghlps-pr")).toHaveCount(0);
-  // The label sits on the left of the row, the attention chip on the right.
-  const sides = await row(page, 211).evaluate((r) => {
+  // "Linked PRs:" leads, then the count, then the attention chip, left to right.
+  const order = await row(page, 211).evaluate((r) => {
+    const x = (q) => r.querySelector(q).getBoundingClientRect().left;
     const b = r.getBoundingClientRect();
-    const l = r.querySelector(".ghlps-count").getBoundingClientRect();
-    const c = r.querySelector(".ghlps-sig").getBoundingClientRect();
-    return { labelLeft: l.left - b.left, chipRight: b.right - c.right };
+    return { lead: x(".ghlps-label-static") - b.left, count: x(".ghlps-count"), chip: x(".ghlps-sig") };
   });
-  expect(sides.labelLeft, JSON.stringify(sides)).toBeLessThanOrEqual(14);
-  expect(sides.chipRight, JSON.stringify(sides)).toBeLessThanOrEqual(14);
+  expect(order.lead, JSON.stringify(order)).toBeLessThanOrEqual(14);
+  expect(order.count, JSON.stringify(order)).toBeGreaterThan(order.lead);
+  expect(order.chip, JSON.stringify(order)).toBeGreaterThan(order.count);
   await row(page, 211).locator("button").first().click();
   const d = page.locator("dialog.ghlps-dialog");
   await expect(d.locator(".ghlps-pr-section")).toHaveCount(2);
@@ -543,20 +543,62 @@ test("a swapped <main> after a soft navigation gets its rows without waiting for
   await expect(row(page, 207)).toBeVisible();
 });
 
-test("the row is inset like the card's own text and the divider with it", async ({ context, page }) => {
+test("the row is a muted band flush with the card edges, with no divider, and its text is inset like the card's", async ({ context, page }) => {
   await setup(context, page);
   await expect(row(page, 207)).toBeVisible();
   const g = await card(page, 207).evaluate((c) => {
-    const r = c.querySelector(".ghlps-row").getBoundingClientRect();
+    const row = c.querySelector(".ghlps-row");
+    const r = row.getBoundingClientRect();
     const t = c.querySelector("a.Title__h2").getBoundingClientRect();
-    const pr = c.querySelector(".ghlps-pr").getBoundingClientRect();
-    const chip = c.querySelector(".ghlps-sig").getBoundingClientRect();
+    const lead = c.querySelector(".ghlps-label-static").getBoundingClientRect();
     const b = c.getBoundingClientRect();
-    const rule = getComputedStyle(c.querySelector(".ghlps-row"), "::before");
-    return { textLeft: t.left - b.left, prLeft: pr.left - b.left, chipRight: b.right - chip.right, ruleLeft: parseFloat(rule.left), ruleRight: parseFloat(rule.right), rowEdge: r.left - b.left };
+    const cs = getComputedStyle(c);
+    const rs = getComputedStyle(row);
+    const rule = getComputedStyle(row, "::before");
+    return {
+      leftGap: r.left - b.left - parseFloat(cs.borderLeftWidth),
+      rightGap: b.right - parseFloat(cs.borderRightWidth) - r.right,
+      bottomGap: b.bottom - parseFloat(cs.borderBottomWidth) - r.bottom,
+      textLeft: t.left - b.left,
+      leadLeft: lead.left - b.left,
+      bg: rs.backgroundColor,
+      radius: rs.borderBottomLeftRadius,
+      ruleContent: rule.content,
+      ruleBorder: rule.borderTopWidth,
+    };
   });
-  expect(g, JSON.stringify(g)).toMatchObject({ prLeft: g.textLeft, ruleLeft: 12, ruleRight: 12 });
-  expect(g.chipRight).toBeGreaterThanOrEqual(g.textLeft - 1);
+  expect(g, JSON.stringify(g)).toMatchObject({ leftGap: 0, rightGap: 0, bottomGap: 0, leadLeft: g.textLeft, radius: "5px" });
+  expect(g.bg).not.toBe("rgba(0, 0, 0, 0)");
+  expect(["none", "normal"]).toContain(g.ruleContent);
+});
+
+test("the band starts with a static 'Linked PRs:' label and stays on one line at wide and narrow widths, with every caption case", async ({ context, page }) => {
+  await setup(context, page);
+  for (const n of [207, 211, 213]) await expect(row(page, n)).toBeVisible();
+  for (const w of [null, 230]) {
+    await page.evaluate((cw) => document.documentElement.style.setProperty("--card-w", cw ? `${cw}px` : "320px"), w);
+    for (const n of [207, 211, 213]) {
+      const g = await row(page, n).evaluate((r) => {
+        const lead = r.querySelector(".ghlps-label-static");
+        const b = r.getBoundingClientRect();
+        const kids = [...r.children].filter((k) => getComputedStyle(k).display !== "none").map((k) => k.getBoundingClientRect());
+        return {
+          text: lead.textContent,
+          focusable: lead.tabIndex,
+          height: b.height,
+          overflow: r.scrollWidth > r.clientWidth + 1,
+          sameLine: kids.every((k) => Math.abs(k.top - kids[0].top) < 12),
+          lead: getComputedStyle(lead).color,
+        };
+      });
+      expect(g.text, `card ${n} at ${w}`).toMatch(/^(Linked PRs:|PRs:)/);
+      expect(g.height, JSON.stringify(g)).toBeLessThanOrEqual(32);
+      expect(g.overflow, JSON.stringify(g)).toBe(false);
+      expect(g.sameLine, JSON.stringify(g)).toBe(true);
+    }
+  }
+  await expect(row(page, 207).locator(".ghlps-label-static")).toContainText("Linked PRs:");
+  await expect(row(page, 211).locator(".ghlps-caption")).toHaveAttribute("title", "Review feedback blocks progress");
 });
 
 test("an open PR with no review or checks signal shows the PR link and no chip", async ({ context, page }) => {

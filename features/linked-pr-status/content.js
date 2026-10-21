@@ -192,6 +192,9 @@
     const sum = S.summarize(prs);
     const row = el("div", ROW_CLASS);
     row.dataset.ghlpsKey = info.key;
+    const lead = el("span", "ghlps-label-static");
+    lead.append(el("span", "ghlps-label-long", "Linked PRs:"), el("span", "ghlps-label-short", "PRs:"));
+    row.append(lead);
     const opener = (cls, ...kids) => {
       const b = el("button", `ghlps-open ${cls}`);
       b.type = "button";
@@ -210,7 +213,7 @@
       }
       // An open PR with no review or checks signal: just the PR link.
       if (sum.signal.id !== "open") {
-        const b = opener(native ? "ghlps-left" : "ghlps-right", signalChip(sum.signal));
+        const b = opener(native ? "ghlps-left" : "ghlps-first", signalChip(sum.signal));
         b.setAttribute("aria-label", `${p.number ? `Pull request #${p.number}: ` : ""}${sum.signal.label}. Show details`);
         row.append(b);
       }
@@ -227,7 +230,7 @@
         const g = el("span", "ghlps-glyph", glyph);
         g.setAttribute("aria-hidden", "true");
         chip.append(...(glyph ? [g] : []), el("span", "ghlps-long", long), el("span", "ghlps-short", short));
-        const c = opener(first ? "ghlps-right" : "", chip);
+        const c = opener(first ? "ghlps-first" : "", chip);
         c.setAttribute("aria-label", `${long}. Show details`);
         first = false;
         row.append(c);
@@ -236,7 +239,11 @@
       if (sum.unavailable) side("neutral", "?", sum.unavailableText, compact.unavailableText);
     }
     const note = S.caption(prs);
-    if (note) row.append(el("span", "ghlps-caption", note));
+    if (note) {
+      const c = el("span", "ghlps-caption", note);
+      c.title = note;
+      row.append(c);
+    }
     return row;
   }
 
@@ -244,6 +251,31 @@
     const fields = card.querySelector(FIELDS_SELECTOR);
     if (fields) fields.after(row);
     else (card.firstElementChild || card).append(row);
+    fitRow(card, row);
+  }
+
+  // Make the band reach the card's inner edges and, when nothing follows it,
+  // the bottom corners, whatever padding the card has: measured, not assumed.
+  function fitRow(card, row) {
+    row.style.margin = "";
+    row.style.borderRadius = "";
+    const cs = getComputedStyle(card);
+    const c = card.getBoundingClientRect();
+    const r = row.getBoundingClientRect();
+    if (!r.width) return;
+    const bw = (side) => parseFloat(cs[`border${side}Width`]) || 0;
+    const left = r.left - c.left - bw("Left");
+    const right = c.right - bw("Right") - r.right;
+    let last = true;
+    for (let n = row; n && n !== card; n = n.parentElement) if (n.nextElementSibling) last = false;
+    const bottom = last ? c.bottom - bw("Bottom") - r.bottom : 0;
+    const px = (v) => `${Math.max(0, Math.round(v * 100) / 100)}px`;
+    row.style.marginInline = `-${px(left)} -${px(right)}`;
+    if (last) {
+      row.style.marginBottom = `-${px(bottom)}`;
+      const rad = Math.max(0, (parseFloat(cs.borderBottomLeftRadius) || 0) - bw("Bottom"));
+      row.style.borderRadius = `0 0 ${rad}px ${rad}px`;
+    }
   }
 
   function rowInPlace(card, row) {

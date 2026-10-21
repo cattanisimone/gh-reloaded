@@ -7,25 +7,22 @@
   container-type: inline-size;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 2px 8px;
-  position: relative;
+  flex-wrap: nowrap;
+  gap: 8px;
+  box-sizing: border-box;
   margin-top: 8px;
-  /* Same inner padding as the card's own text (12px), so nothing sits closer
-     to the card border than the text does; the divider is inset the same. */
-  padding: 8px 12px 0;
+  /* A muted band instead of a divider line. Same inner padding as the card's
+     own text (12px); content.js widens it to the card's edges and corners. */
+  padding: 6px 12px;
+  background: var(--bgColor-muted, #f6f8fa);
   font-size: 12px;
   line-height: 18px;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
-.ghlps-row::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 12px;
-  right: 12px;
-  border-top: 1px solid var(--borderColor-muted, #d1d9e0);
-}
+.ghlps-label-static { flex: none; color: var(--fgColor-muted, #59636e); }
+.ghlps-label-short { display: none; }
 .ghlps-pr {
   color: var(--fgColor-accent, #0969da);
   font-weight: 600;
@@ -45,11 +42,11 @@
   border-radius: 999px;
   min-width: 0;
   max-width: 100%;
+  flex: 0 1 auto;
 }
-.ghlps-right { margin-left: auto; }
 .ghlps-count { font-weight: 600; color: var(--fgColor-accent, #0969da); white-space: nowrap; }
 .ghlps-open:hover .ghlps-count { text-decoration: underline; }
-.ghlps-caption { flex: 0 0 100%; color: var(--fgColor-muted, #59636e); font-size: 12px; }
+.ghlps-caption { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--fgColor-muted, #59636e); font-size: 12px; }
 .ghlps-open:focus-visible { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: 1px; }
 .ghlps-sig {
   display: inline-flex;
@@ -76,6 +73,8 @@
   .ghlps-long { display: none; }
   .ghlps-short { display: inline; }
   .ghlps-glyph { display: none; }
+  .ghlps-label-long { display: none; }
+  .ghlps-label-short { display: inline; }
 }
 
 /* Modal */

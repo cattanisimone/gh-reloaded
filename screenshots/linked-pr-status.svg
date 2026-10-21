@@ -10,36 +10,41 @@
 <text x="48" y="182" font-size="12" fill="#59636e">◯ web #207</text>
 <text x="48" y="204" font-size="14" fill="#1f2328">Add preview support for the settings…</text>
 <rect x="48" y="214" width="92" height="20" fill="none" stroke="#d1d9e0" rx="10"/><text x="56" y="228" font-size="12" fill="#59636e">enhancement</text>
-<line x1="48" y1="250" x2="344" y2="250" stroke="#d1d9e0"/>
-<text x="48" y="272" font-size="12" fill="#0969da" font-weight="600">PR #317</text>
-<rect x="209.0" y="258" width="135.0" height="20" fill="none" stroke="#e8a0a6" rx="10"/><text x="218.0" y="272" font-size="12" fill="#d1242f" font-weight="500">✕ Checks failed</text>
+<path d="M36.5 252 H355.5 V280 a5.5 5.5 0 0 1 -5.5 5.5 H42 a5.5 5.5 0 0 1 -5.5 -5.5 Z" fill="#f6f8fa"/>
+<text x="48" y="272" font-size="12" fill="#59636e">Linked PRs:</text>
+<text x="126" y="272" font-size="12" fill="#0969da" font-weight="600">PR #317</text>
+<rect x="184" y="258" width="135.0" height="20" fill="none" stroke="#e8a0a6" rx="10"/><text x="193" y="272" font-size="12" fill="#d1242f" font-weight="500">✕ Checks failed</text>
 <rect x="36" y="302" width="320" height="126" fill="#fff" stroke="#d1d9e0" rx="6"/>
 <text x="48" y="324" font-size="12" fill="#59636e">◯ web #208</text>
 <text x="48" y="346" font-size="14" fill="#1f2328">Improve settings cache</text>
 <rect x="48" y="356" width="92" height="20" fill="none" stroke="#d1d9e0" rx="10"/><text x="56" y="370" font-size="12" fill="#59636e">enhancement</text>
-<line x1="48" y1="392" x2="344" y2="392" stroke="#d1d9e0"/>
-<text x="48" y="414" font-size="12" fill="#0969da" font-weight="600">PR #318</text>
-<rect x="202.4" y="400" width="141.6" height="20" fill="none" stroke="#d9c28a" rx="10"/><text x="211.4" y="414" font-size="12" fill="#9a6700" font-weight="500">● Review pending</text>
+<path d="M36.5 394 H355.5 V422 a5.5 5.5 0 0 1 -5.5 5.5 H42 a5.5 5.5 0 0 1 -5.5 -5.5 Z" fill="#f6f8fa"/>
+<text x="48" y="414" font-size="12" fill="#59636e">Linked PRs:</text>
+<text x="126" y="414" font-size="12" fill="#0969da" font-weight="600">PR #318</text>
+<rect x="184" y="400" width="141.6" height="20" fill="none" stroke="#d9c28a" rx="10"/><text x="193" y="414" font-size="12" fill="#9a6700" font-weight="500">● Review pending</text>
 <rect x="396" y="160" width="320" height="126" fill="#fff" stroke="#d1d9e0" rx="6"/>
 <text x="408" y="182" font-size="12" fill="#59636e">◯ web #211</text>
 <text x="408" y="204" font-size="14" fill="#1f2328">Update activity view</text>
 <rect x="408" y="214" width="92" height="20" fill="none" stroke="#d1d9e0" rx="10"/><text x="416" y="228" font-size="12" fill="#59636e">enhancement</text>
-<line x1="408" y1="250" x2="704" y2="250" stroke="#d1d9e0"/>
-<rect x="458.8" y="258" width="233.2" height="20" fill="none" stroke="#d1d9e0" rx="10"/><text x="468.8" y="272" font-size="12" fill="#59636e" font-weight="500">2 linked PRs · 1 needs attention</text>
+<path d="M396.5 252 H715.5 V280 a5.5 5.5 0 0 1 -5.5 5.5 H402 a5.5 5.5 0 0 1 -5.5 -5.5 Z" fill="#f6f8fa"/>
+<text x="408" y="272" font-size="12" fill="#59636e">Linked PRs:</text>
+<text x="498" y="272" font-size="12" fill="#0969da" font-weight="600">2 linked PRs</text><rect x="580" y="258" width="118" height="20" fill="none" stroke="#e8a0a6" rx="10"/><text x="588" y="272" font-size="12" fill="#d1242f" font-weight="500">1 needs attention</text>
 <rect x="396" y="302" width="320" height="126" fill="#fff" stroke="#d1d9e0" rx="6"/>
 <text x="408" y="324" font-size="12" fill="#59636e">◯ web #213</text>
 <text x="408" y="346" font-size="14" fill="#1f2328">Cache headers</text>
 <rect x="408" y="356" width="52" height="20" fill="none" stroke="#d1d9e0" rx="10"/><text x="416" y="370" font-size="12" fill="#59636e">infra</text>
-<line x1="408" y1="392" x2="704" y2="392" stroke="#d1d9e0"/>
-<text x="408" y="414" font-size="12" fill="#0969da" font-weight="600">PR #331</text>
-<rect x="536.0" y="400" width="168.0" height="20" fill="none" stroke="#d1d9e0" rx="10"/><text x="545.0" y="414" font-size="12" fill="#59636e" font-weight="500">? Status unavailable</text>
+<path d="M396.5 394 H715.5 V422 a5.5 5.5 0 0 1 -5.5 5.5 H402 a5.5 5.5 0 0 1 -5.5 -5.5 Z" fill="#f6f8fa"/>
+<text x="408" y="414" font-size="12" fill="#59636e">Linked PRs:</text>
+<text x="486" y="414" font-size="12" fill="#0969da" font-weight="600">PR #331</text>
+<rect x="544" y="400" width="168.0" height="20" fill="none" stroke="#d1d9e0" rx="10"/><text x="553" y="414" font-size="12" fill="#59636e" font-weight="500">? Status unavailable</text>
 <rect x="756" y="160" width="320" height="126" fill="#fff" stroke="#d1d9e0" rx="6"/>
 <text x="768" y="182" font-size="12" fill="#59636e">◯ web #212</text>
 <text x="768" y="204" font-size="14" fill="#1f2328">Fix keyboard navigation in the dialog</text>
 <rect x="768" y="214" width="44" height="20" fill="none" stroke="#d1d9e0" rx="10"/><text x="776" y="228" font-size="12" fill="#59636e">a11y</text>
-<line x1="768" y1="250" x2="1064" y2="250" stroke="#d1d9e0"/>
-<text x="768" y="272" font-size="12" fill="#0969da" font-weight="600">PR #322</text>
-<rect x="975.2" y="258" width="88.8" height="20" fill="none" stroke="#c9b3f0" rx="10"/><text x="984.2" y="272" font-size="12" fill="#8250df" font-weight="500">● Merged</text>
+<path d="M756.5 252 H1075.5 V280 a5.5 5.5 0 0 1 -5.5 5.5 H762 a5.5 5.5 0 0 1 -5.5 -5.5 Z" fill="#f6f8fa"/>
+<text x="768" y="272" font-size="12" fill="#59636e">Linked PRs:</text>
+<text x="846" y="272" font-size="12" fill="#0969da" font-weight="600">PR #322</text>
+<rect x="1024" y="258" width="88.8" height="20" fill="none" stroke="#c9b3f0" rx="10"/><text x="1033" y="272" font-size="12" fill="#8250df" font-weight="500">● Merged</text>
 <rect x="756" y="302" width="320" height="100" fill="#fff" stroke="#d1d9e0" rx="6"/>
 <text x="768" y="324" font-size="12" fill="#59636e">◯ web #214</text>
 <text x="768" y="346" font-size="14" fill="#1f2328">No linked pull request here</text>
