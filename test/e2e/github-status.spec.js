@@ -183,11 +183,14 @@ for (const width of [1280, 768, 640, 375, 320]) {
     await routeGithub(context, "header-signed-in.html");
     await page.goto(ACTIONS);
     await expect(dot(page)).toBeVisible();
-    const l = await box(page, LOGO);
-    const d = await box(page, "#ghgs-dot");
-    const info = JSON.stringify({ l, d, width });
-    expect(d.x >= 0 && d.right <= width, info).toBe(true);
-    expect(d.cx > l.x && d.cx < l.right && d.cy > l.y && d.cy < l.bottom + 2, info).toBe(true);
+    // layout (anchor positioning, header reflow) can settle a frame after the dot shows: poll, and print the rects on failure
+    let info = "";
+    await expect.poll(async () => {
+      const l = await box(page, LOGO);
+      const d = await box(page, "#ghgs-dot");
+      info = JSON.stringify({ l, d, width });
+      return d.x >= 0 && d.right <= width && d.cx > l.x && d.cx < l.right && d.cy > l.y && d.cy < l.bottom + 2;
+    }, { message: () => info }).toBe(true);
   });
 }
 
