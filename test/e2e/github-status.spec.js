@@ -107,6 +107,30 @@ test("a theme change repaints the ring without waiting for the next tick", async
   await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("box-shadow", /rgb\(246, 248, 250\)/, { timeout: 2000 });
 });
 
+test("the unverified badge darkens on hover too", async ({ page, context }) => {
+  await setup(context, page, { fail: true });
+  await expect(dot(page)).toHaveAttribute("data-state", "unknown");
+  const mark = dot(page).locator(".ghgs-dot-mark");
+  expect(await mark.evaluate((m) => getComputedStyle(m).backgroundImage)).toBe("none");
+  await dot(page).hover();
+  expect(await mark.evaluate((m) => getComputedStyle(m).backgroundImage)).toContain("rgba(0, 0, 0, 0.1)");
+});
+
+test("a change of only the light or dark theme variant repaints the ring", async ({ page, context }) => {
+  await setup(context, page);
+  await expect(dot(page)).toHaveAttribute("data-state", "ok");
+  await page.waitForTimeout(600);
+  await page.evaluate(() => {
+    document.documentElement.setAttribute("data-color-mode", "dark");
+    const st = document.createElement("style");
+    st.textContent = 'html[data-dark-theme="dark_dimmed"] header { background-color: rgb(38, 44, 54) !important; }';
+    document.head.appendChild(st);
+  });
+  await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("box-shadow", /rgb\(21, 27, 35\)/, { timeout: 2000 });
+  await page.evaluate(() => document.documentElement.setAttribute("data-dark-theme", "dark_dimmed"));
+  await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("box-shadow", /rgb\(38, 44, 54\)/, { timeout: 2000 });
+});
+
 test("the badge ring is black on the signed-out header, read from the page", async ({ page, context }) => {
   await setup(context, page, { fixture: "header-signed-out.html" });
   await expect(dot(page)).toBeVisible();
