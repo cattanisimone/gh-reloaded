@@ -96,6 +96,17 @@ for (const [mode, ring] of [["light", "rgb(246, 248, 250)"], ["dark", "rgb(21, 2
   });
 }
 
+test("a theme change repaints the ring without waiting for the next tick", async ({ page, context }) => {
+  await setup(context, page);
+  await expect(dot(page)).toHaveAttribute("data-state", "ok");
+  await page.waitForTimeout(600); // let the first fetch and its scan settle
+  await page.evaluate(() => document.documentElement.setAttribute("data-color-mode", "dark"));
+  await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("box-shadow", /rgb\(21, 27, 35\)/, { timeout: 2000 });
+  await page.evaluate(() => document.documentElement.setAttribute("data-color-mode", "auto"));
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("box-shadow", /rgb\(246, 248, 250\)/, { timeout: 2000 });
+});
+
 test("the badge ring is black on the signed-out header, read from the page", async ({ page, context }) => {
   await setup(context, page, { fixture: "header-signed-out.html" });
   await expect(dot(page)).toBeVisible();

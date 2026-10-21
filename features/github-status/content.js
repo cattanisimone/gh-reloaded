@@ -502,6 +502,9 @@
       if (!state.enabled) return;
       scheduleScan();
     }).observe(document.documentElement, { childList: true, subtree: true });
+    // A theme change moves the header colour without any DOM insertion: repaint the ring.
+    new MutationObserver(scheduleScan).observe(document.documentElement, { attributes: true, attributeFilter: ["data-color-mode"] });
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", scheduleScan);
     for (const ev of ["turbo:load", "popstate", "pageshow", "resize"]) window.addEventListener(ev, scheduleScan);
     // Same-document navigations (history.pushState) re-evaluate the page at once.
     if (window.navigation) window.navigation.addEventListener("navigatesuccess", scheduleScan);
