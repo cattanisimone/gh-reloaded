@@ -251,9 +251,16 @@
     const fields = card.querySelector(FIELDS_SELECTOR);
     if (fields) fields.after(row);
     else (card.firstElementChild || card).append(row);
-    fitRow(card, row);
-    fitCaption(row);
-    if (typeof ResizeObserver === "function") new ResizeObserver(() => fitCaption(row)).observe(row);
+    const fit = () => {
+      fitRow(card, row);
+      fitCaption(row);
+    };
+    fit();
+    if (typeof ResizeObserver === "function") {
+      const ro = new ResizeObserver(() => (row.isConnected ? fit() : ro.disconnect()));
+      ro.observe(card);
+      ro.observe(row);
+    }
   }
 
   // GitHub's cards end with 1px screen-reader-only spans: they take no room.
@@ -265,14 +272,13 @@
     return b.width <= 1 && b.height <= 1;
   }
 
-  // A caption squeezed to a few letters says nothing: hide it (the chip, the
-  // title attribute and the modal keep the meaning).
-  const CAPTION_MIN_WIDTH = 72;
+  // A caption that does not fit whole is hidden, never cut mid-sentence (the
+  // chip, the title attribute and the modal keep the meaning).
   function fitCaption(row) {
     const c = row.querySelector(".ghlps-caption");
     if (!c) return;
     c.hidden = false;
-    if (row.clientWidth && c.clientWidth < CAPTION_MIN_WIDTH) c.hidden = true;
+    if (row.clientWidth && c.scrollWidth > c.clientWidth) c.hidden = true;
   }
 
   // Make the band reach the card's inner edges and, when nothing follows it,

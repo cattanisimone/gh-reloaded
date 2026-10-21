@@ -207,7 +207,7 @@ test("several PRs with one unreadable: the card counts it, neutral, and says why
   await expect(chip.locator(".ghlps-glyph")).toHaveText("?");
   await expect(r.locator(".ghlps-tone-bad")).toHaveCount(0);
   await expect(chip.locator(".ghlps-short")).toHaveText("1 unavailable");
-  await expect(r.locator(".ghlps-caption")).toHaveText("The token cannot read some of these pull requests");
+  await expect(r.locator(".ghlps-caption")).toHaveText("Token cannot read some PRs");
 });
 
 test("Escape closes the dialog even when the page's own handler prevents it", async ({ context, page }) => {
@@ -224,7 +224,7 @@ test("a PR whose status the token may not read: board hint and modal name Pull r
   await expect(row(page, 213)).toBeVisible();
   await expect(page.locator(".ghlps-hint")).toContainText("Pull requests: Read");
   await expect(page.locator(".ghlps-hint").getByRole("link", { name: "Open Settings" })).toBeVisible();
-  await expect(row(page, 213).locator(".ghlps-caption")).toHaveText("The token cannot read this pull request");
+  await expect(row(page, 213).locator(".ghlps-caption")).toHaveText("Token cannot read this PR");
   await row(page, 213).locator("button").click();
   const d = page.locator("dialog.ghlps-dialog");
   await expect(d).toContainText("Pull requests: Read");
@@ -659,16 +659,48 @@ test("a trailing visually-hidden span does not stop the band reaching the card's
 
 test("a caption too narrow to show a few words is hidden, not cut to a few letters", async ({ context, page }) => {
   await setup(context, page);
-  await page.evaluate(() => document.documentElement.style.setProperty("--card-w", "420px"));
+  await page.evaluate(() => document.documentElement.style.setProperty("--card-w", "640px"));
   await expect(row(page, 211).locator(".ghlps-caption")).toBeVisible();
   for (const w of [215, 230]) {
     await page.evaluate((cw) => document.documentElement.style.setProperty("--card-w", `${cw}px`), w);
     const cap = row(page, 211).locator(".ghlps-caption");
-    await expect.poll(() => cap.evaluate((c) => c.hidden || c.clientWidth >= 72), { message: `width ${w}` }).toBe(true);
+    await expect.poll(() => cap.evaluate((c) => c.hidden || c.scrollWidth <= c.clientWidth), { message: `width ${w}` }).toBe(true);
   }
   await page.evaluate(() => document.documentElement.style.setProperty("--card-w", "215px"));
   await expect(row(page, 211).locator(".ghlps-caption")).toBeHidden();
   await expect(row(page, 211).locator(".ghlps-caption")).toHaveAttribute("title", "Review feedback blocks progress");
-  await page.evaluate(() => document.documentElement.style.setProperty("--card-w", "420px"));
+  await page.evaluate(() => document.documentElement.style.setProperty("--card-w", "640px"));
   await expect(row(page, 211).locator(".ghlps-caption")).toBeVisible();
+});
+
+test("a caption is shown whole or not at all, never clipped, at every width", async ({ context, page }) => {
+  await setup(context, page);
+  for (const w of [443, 320, 280, 215]) {
+    await page.evaluate((cw) => document.documentElement.style.setProperty("--card-w", `${cw}px`), w);
+    for (const n of [207, 211, 213]) {
+      const cap = row(page, n).locator(".ghlps-caption");
+      await expect.poll(() => cap.evaluate((c) => c.hidden || c.scrollWidth <= c.clientWidth), { message: `card ${n} at ${w}` }).toBe(true);
+    }
+  }
+});
+
+test("the band keeps the card border and radius in both themes and at 280 and 320px", async ({ context, page }) => {
+  await setup(context, page);
+  for (const mode of ["light", "dark"]) {
+    await page.evaluate((m) => (document.documentElement.dataset.colorMode = m), mode);
+    for (const w of [443, 320, 280]) {
+      await page.evaluate((cw) => document.documentElement.style.setProperty("--card-w", `${cw}px`), w);
+      for (const n of [207, 211]) {
+        await expect.poll(() => card(page, n).evaluate((c) => {
+          const cs = getComputedStyle(c);
+          const b = c.getBoundingClientRect();
+          const row = c.querySelector(".ghlps-row");
+          if (!row) return false;
+          const r = row.getBoundingClientRect();
+          const bw = (s) => parseFloat(cs[`border${s}Width`]);
+          return [r.left - b.left - bw("Left"), b.right - bw("Right") - r.right, b.bottom - bw("Bottom") - r.bottom].map(Math.abs).every((v) => v < 0.5) && bw("Left") > 0;
+        }), { message: `${mode} ${w} card ${n}` }).toBe(true);
+      }
+    }
+  }
 });

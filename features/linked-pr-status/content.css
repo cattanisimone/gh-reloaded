@@ -47,7 +47,7 @@
 }
 .ghlps-count { font-weight: 600; color: var(--fgColor-accent, #0969da); white-space: nowrap; }
 .ghlps-open:hover .ghlps-count { text-decoration: underline; }
-.ghlps-caption { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--fgColor-muted, #59636e); font-size: 12px; }
+.ghlps-caption { flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; color: var(--fgColor-muted, #59636e); font-size: 12px; }
 .ghlps-caption[hidden] { display: none; }
 .ghlps-open:focus-visible { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: 1px; }
 .ghlps-sig {

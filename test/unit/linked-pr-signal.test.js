@@ -108,7 +108,7 @@ test("caption: why the attention chip is there, empty when nothing to add", () =
   assert.equal(context.GHLPS_SIGNAL.caption([bad]), "Review feedback blocks progress");
   assert.equal(context.GHLPS_SIGNAL.caption([failing]), "Checks are failing");
   assert.equal(context.GHLPS_SIGNAL.caption([{ ok: true, state: "OPEN" }]), "");
-  assert.equal(context.GHLPS_SIGNAL.caption([{ ok: false, denied: true }]), "The token cannot read this pull request");
+  assert.equal(context.GHLPS_SIGNAL.caption([{ ok: false, denied: true }]), "Token cannot read this PR");
 });
 
 test("nextStep: a refused PR names the missing permission", () => {
@@ -125,6 +125,6 @@ test("summarize: unreadable PRs are counted in the aggregate, neutral, and expla
   assert.equal(summarize(list, { compact: true }).unavailableText, "1 unavailable");
   assert.equal(summarize([pr(), pr()]).unavailable, 0);
   assert.equal(summarize([pr(), pr()]).unavailableText, "");
-  assert.equal(caption([pr(), { ok: false, denied: true }]), "The token cannot read some of these pull requests");
+  assert.equal(caption([pr(), { ok: false, denied: true }]), "Token cannot read some PRs");
   assert.equal(caption([pr(), { ok: false }]), "");
 });

@@ -58,12 +58,12 @@
     const list = (prs || []).filter(Boolean);
     const hit = list.map(signalOf).find((x) => x.attention);
     if (hit) return hit.id === "changes" ? "Review feedback blocks progress" : "Checks are failing";
-    if (list.length > 1 && list.some((p) => p.ok === false && p.denied)) return "The token cannot read some of these pull requests";
+    if (list.length > 1 && list.some((p) => p.ok === false && p.denied)) return "Token cannot read some PRs";
     if (list.length === 1) {
       const id = signalOf(list[0]).id;
       if (id === "review") return "Waiting for a reviewer";
       if (id === "running") return "Waiting for the checks to finish";
-      if (id === "unavailable") return list[0].denied ? "The token cannot read this pull request" : "";
+      if (id === "unavailable") return list[0].denied ? "Token cannot read this PR" : "";
     }
     return "";
   }
