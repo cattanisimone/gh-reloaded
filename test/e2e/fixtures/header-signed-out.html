@@ -1,18 +1,26 @@
 <!doctype html>
-<!-- Fixture: github.com's signed-out marketing header on a repository page (probed live 2026-10-20, 1280px: header 72px high).
+<!-- Fixture: github.com's signed-out marketing header on a repository page (probed live 2026-10-20, 1280px: header 72px high, black in every theme, bar position:relative).
      Real class names kept as served (root__hash, topRow__hash, logo__hash). Anchors the GitHub Status feature uses:
-     header[role=banner]; a[aria-label=Homepage] containing svg.octicon-mark-github inside the flex row topRow__hash (the dot goes right after it).
+     header[role=banner]; a[aria-label=Homepage] containing svg.octicon-mark-github inside the flex row topRow__hash (the dot badge is inserted right after it and overlays its corner).
      This header has no search control in its bar, so no pill can be placed here. -->
 <html lang="en" data-color-mode="light"><head><meta charset="utf-8"><title>acme/web</title>
 <style>
   body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; color: #1f2328; background: #fff; }
-  .root__q6pgdo { background: #fff; border-bottom: 1px solid #d1d9e0; }
-  .bar__cF4m1O { padding: 20px 32px; }
+  .root__q6pgdo { background: #000; color: #fff; border-bottom: 1px solid #d1d9e0; }
+  .root__q6pgdo a { color: inherit; }
+  .bar__cF4m1O { position: relative; padding: 20px 32px; }
   .topRow__-dqkhM { display: flex; align-items: center; gap: 0; }
   .toggleSlot__-ODxSX { display: none; }
   .logo__bX9RKh { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; color: inherit; }
   .menu__2EHTkB { margin-left: 16px; }
   .mobileActions__8F9jkX { margin-left: auto; display: flex; gap: 8px; }
+  /* Narrow window: the logo is centred between two equal flex slots (live, probed 375px). */
+  @media (max-width: 767px) {
+    .bar__cF4m1O { padding: 20px 16px; }
+    .toggleSlot__-ODxSX { display: flex; flex: 1 1 0; }
+    .mobileActions__8F9jkX { flex: 1 1 0; margin-left: 0; justify-content: flex-end; }
+    .menu__2EHTkB { display: none; }
+  }
 </style></head>
 <body>
   <header class="root__q6pgdo HeaderMktg header-logged-out" role="banner"><h2 style="position:absolute;left:-9999px">Navigation Menu</h2>

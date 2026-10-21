@@ -1,11 +1,13 @@
-// features/github-status/content.js — a small status dot right after the
-// GitHub logo on every github.com page, a native popover panel with what
+// features/github-status/content.js — a small status badge on the corner of
+// the GitHub logo on every github.com page, a native popover panel with what
 // githubstatus.com reports, and an incident pill in the header bar when an
 // open incident concerns the page the user is on.
 //
 // The data comes from the background (one shared fetch of the official
-// summary.json); this script only draws it. The dot is anchored on the logo
-// link (found by its aria-label or its octicon, never by a CSS-module class)
+// summary.json); this script only draws it. The dot is the logo's next
+// sibling, overlaid on its corner by CSS anchor positioning (the logo is marked
+// data-ghgs-logo), with a ring in the header's own background colour. It is
+// anchored on the logo link (found by its aria-label or its octicon, never by a CSS-module class)
 // and the pill on the header's search control. If an anchor is missing
 // nothing is inserted and the next scan tries again: there is no other
 // container to fall back to. The rules live in relevance.js (loaded first).
@@ -179,7 +181,22 @@
     if (!logo || !logo.parentElement) return; // no anchor: nothing inserted, retried on the next scan
     if (!dot) dot = buildDot();
     if (logo.nextElementSibling !== dot) logo.after(dot);
+    // One anchor name, one logo: a replaced logo hands the mark over on the next scan.
+    for (const old of document.querySelectorAll("[data-ghgs-logo]")) if (old !== logo) old.removeAttribute("data-ghgs-logo");
+    logo.setAttribute("data-ghgs-logo", "");
     paintDot(dot);
+    paintRing(dot, logo, header);
+  }
+
+  // The ring is the colour behind the logo: the first opaque background from the logo up to the header.
+  function paintRing(dot, logo, header) {
+    for (let n = logo; n; n = n.parentElement) {
+      const c = getComputedStyle(n).backgroundColor;
+      const m = c.match(/[\d.]+/g);
+      if (m && m.length >= 3 && (m.length < 4 || Number(m[3]) === 1)) return dot.style.setProperty("--ghgs-ring", c);
+      if (n === header) break;
+    }
+    dot.style.removeProperty("--ghgs-ring"); // transparent all the way: the CSS falls back to the surface token
   }
 
   // --- pill ---------------------------------------------------------------------
@@ -397,6 +414,7 @@
   function removeAll() {
     const header = findHeader();
     document.getElementById(DOT_ID)?.remove();
+    for (const l of document.querySelectorAll("[data-ghgs-logo]")) l.removeAttribute("data-ghgs-logo");
     document.getElementById(PILL_ID)?.remove();
     removeLine(document.getElementById(LINE_ID), header);
     const panel = document.getElementById(PANEL_ID);
