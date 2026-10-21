@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #96 GitHub Status incident UI</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  h3{font-size:14px;margin:14px 0 6px;color:var(--muted)}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{word-break:break-word;background:var(--soft);padding:1px 4px;border-radius:4px;font-size:13px} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto}
+  .bad{color:var(--bad);font-weight:600} .good{color:var(--ok);font-weight:600}
+  /* mockup */
+  .hdr{min-width:640px;background:#f6f8fa;border:1px solid var(--line);border-radius:6px;font-size:13px;overflow:hidden;position:relative}
+  .row1{display:flex;align-items:center;justify-content:space-between;gap:8px;height:48px;padding:0 12px}
+  .row2{display:flex;gap:16px;height:40px;align-items:flex-end;padding:0 12px;border-top:1px solid transparent}
+  .row2 span{padding:0 4px 8px} .row2 .cur{border-bottom:2px solid #fd8c73;font-weight:600}
+  .grp{display:flex;align-items:center;gap:8px}
+  .logo{width:28px;height:28px;border-radius:50%;background:#1f2328;position:relative;display:inline-block}
+  .badge{position:absolute;right:-3px;bottom:-3px;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 2px #f6f8fa}
+  .ok{background:#1a7f37} .red{background:#cf222e}
+  .search{display:flex}.search .s{height:30px;width:190px;border:1px solid var(--line);border-radius:6px 0 0 6px;background:#fff;color:var(--muted);display:flex;align-items:center;padding:0 8px;box-sizing:border-box}
+  .search .c{height:30px;width:30px;border:1px solid var(--line);border-left:0;border-radius:0 6px 6px 0;background:#fff;box-sizing:border-box}
+  .btn{width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:#f6f8fa;box-sizing:border-box}
+  .pill{height:30px;box-sizing:border-box;border:1px solid #ff8182;background:#ffebe9;color:#82071e;border-radius:6px;display:flex;align-items:center;gap:6px;padding:0 8px;font-size:12px;font-weight:500;white-space:nowrap}
+  .rule{position:absolute;left:0;right:0;top:48px;height:2px;background:#cf222e}
+  .lbl{font-size:12px;color:var(--muted);margin:4px 0 12px}
+  .tag{display:inline-block;font-size:11px;font-weight:600;border-radius:10px;padding:0 6px;margin-right:4px}
+  .tag.b{background:#ffebe9;color:#82071e}.tag.g{background:#dafbe1;color:#116329}
+</style></head><body><main>
+  <h1>#96 · GitHub Status: red line, green dot and pill touching search during a critical incident</h1>
+  <p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/96">cattanisimone/gh-reloaded#96</a> · Size: <b>normal</b> (three defects, layout change, CSS + logic + tests) · Type: <code>fix</code> → patch</p>
+  <p>Goal: during an incident, the header shows one consistent signal inside the header bar: a dot in the incident's colour and a pill that keeps a gap from the search field, with no extra line.</p>
+
+  <h2>What changes for users</h2>
+  <ul>
+    <li><b>No more red line</b> across the page between the top bar and the repository tabs. The pill alone signals the incident inside the header bar, as #88's default placement (B) intended.</li>
+    <li><b>The dot matches the pill.</b> While githubstatus.com lists an open critical incident, the dot is red and its accessible name says "Critical incident", even when the feed's overall indicator still says "none".</li>
+    <li><b>The pill keeps a gap from the search field</b>: the same 8px gap the header uses between its other controls, at every width. On narrow windows the pill gets shorter, as it does today.</li>
+  </ul>
+
+  <h2>Root causes</h2>
+  <div class="scroll"><table>
+    <tr><th>Symptom</th><th>Cause (verified)</th><th>Fix</th></tr>
+    <tr><td>Green dot, "critical incident" pill</td><td><code>relevance.js</code> <code>dotState()</code> reads only <code>status.indicator</code>. On 2026-10-21 the live <code>summary.json</code> had <code>indicator: "none"</code> ("All Systems Operational") <i>and</i> an open incident "Delays for Pull Requests and Webhook deliveries" with <code>impact: "critical"</code>. The pill reads the incident's impact, so the two disagree.</td><td>The dot takes the <b>worst</b> of: the page indicator, the impact of each open incident, and the status of each affected component (degraded / partial → minor, major outage → major). Maintenance only wins when nothing is worse.</td></tr>
+    <tr><td>2px red rule between the header rows</td><td><code>paintLine()</code> appends <code>div.ghgs-line</code> to the header, absolutely positioned at the bottom of the logo row, and sets <code>position: relative</code> on the header. In the two-row <code>GlobalNav</code> header it reads as a detached full-width rule.</td><td>Remove the line: no <code>#ghgs-line</code>, and the header's <code>position</code> is never touched. The pill already carries the severity colour and icon.</td></tr>
+    <tr><td>Pill touches the search field</td><td><code>findSearch()</code> climbs from the search control only while the parent has <b>one</b> child. In the live header the search sits in a group with another element (a joined button or a hidden one, like the <code>d-none</code> sibling the anonymous header shows), so the climb stops early. The pill lands <i>inside</i> the group, whose row has no gap: pill x 464 + 250 = 714 = search start.</td><td>Climb to the outermost search wrapper: <b>skip siblings with no layout box</b> when counting children, and keep climbing while the parent row has <b>no column gap</b>. The pill then sits in the row whose <code>gap</code> spaces the controls. A measured safety net, tested so it cannot hide the anchor: if the measured space between the pill and the search is still under the header's gap (8px), the pill gets <code>margin-inline-end</code> for the difference only.</td></tr>
+  </table></div>
+
+  <h2>Mockup</h2>
+  <p class="lbl">Signed-in two-row header, critical incident, about 1280px wide, light theme. Fictional repository acme/web.</p>
+  <div class="scroll">
+    <h3>Before (as reported)</h3>
+    <div class="hdr">
+      <div class="row1">
+        <div class="grp"><span class="btn"></span><span class="logo"><span class="badge ok"></span></span><span>acme / <b>web</b></span></div>
+        <div class="grp"><div class="search"><span class="pill">⬢ <b>GitHub</b> critical incident <u>Details</u> ✕</span><span class="s">Type / to search</span><span class="c"></span></div><span class="btn"></span><span class="btn"></span></div>
+      </div>
+      <div class="rule"></div>
+      <div class="row2"><span>Code</span><span>Issues</span><span class="cur">Pull requests</span><span>Actions</span></div>
+    </div>
+    <p class="lbl"><span class="tag b">1</span>red rule between the rows · <span class="tag b">2</span>green dot · <span class="tag b">3</span>pill flush against the search field</p>
+
+    <h3>After</h3>
+    <div class="hdr">
+      <div class="row1">
+        <div class="grp"><span class="btn"></span><span class="logo new"><span class="badge red"></span></span><span>acme / <b>web</b></span></div>
+        <div class="grp"><span class="pill new">⬢ <b>GitHub</b> critical incident <u>Details</u> ✕</span><div class="search"><span class="s">Type / to search</span><span class="c"></span></div><span class="btn"></span><span class="btn"></span></div>
+      </div>
+      <div class="row2"><span>Code</span><span>Issues</span><span class="cur">Pull requests</span><span>Actions</span></div>
+    </div>
+    <p class="lbl"><span class="tag g">1</span>no rule · <span class="tag g">2</span>red badge, name "GitHub Status: Critical incident. Open details" · <span class="tag g">3</span>8px gap (the row's own gap) before the search group. Dashed = changed by this fix.</p>
+
+    <h3>Narrow window (about 768px)</h3>
+    <div class="hdr" style="min-width:420px;max-width:520px">
+      <div class="row1">
+        <div class="grp"><span class="btn"></span><span class="logo"><span class="badge red"></span></span></div>
+        <div class="grp"><span class="pill new">⬢ <b>GitHub</b> critical incident ✕</span><span class="btn"></span><span class="btn"></span><span class="btn"></span></div>
+      </div>
+    </div>
+    <p class="lbl">Search collapses to an icon button; the pill drops "Details" (existing rule below 768px) and keeps the 8px gap.</p>
+  </div>
+
+  <h2>Pages the header appears on</h2>
+  <div class="scroll"><table>
+    <tr><th>Context</th><th>Dot</th><th>Pill</th><th>Line</th></tr>
+    <tr><td>Signed-in repository page (Code, Pull request, Actions, Issues) — two-row header</td><td>worst severity</td><td>before the search group, row gap</td><td>none</td></tr>
+    <tr><td>Signed-in global pages (dashboard, <code>/pulls</code>, <code>/issues</code>) — one-row header</td><td>worst severity</td><td>same</td><td>none</td></tr>
+    <tr><td>Signed-out header (<code>HeaderMktg</code>)</td><td>worst severity</td><td>before the search slot, gap kept</td><td>none</td></tr>
+    <tr><td>SPA navigation A → B → A, back / forward</td><td colspan="3">re-scan puts the pill in the same place, one pill, no line left behind</td></tr>
+  </table></div>
+
+  <h2>How it works</h2>
+  <div class="scroll">
+  <svg viewBox="0 0 860 210" width="100%" style="min-width:600px" role="img" aria-label="data flow from summary.json to the dot and the pill">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+    <g font-size="13" fill="#1f2328">
+      <rect x="10" y="80" width="150" height="50" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="85" y="102" text-anchor="middle">summary.json</text><text x="85" y="120" text-anchor="middle" font-size="11" fill="#59636e">background (unchanged)</text>
+      <rect x="230" y="20" width="230" height="70" rx="6" fill="#fff" stroke="#0969da" stroke-dasharray="5 3"/><text x="345" y="44" text-anchor="middle">dotState() — worst of</text><text x="345" y="62" text-anchor="middle" font-size="11" fill="#59636e">indicator · incident impacts ·</text><text x="345" y="77" text-anchor="middle" font-size="11" fill="#59636e">component statuses · maintenance</text>
+      <rect x="230" y="120" width="230" height="70" rx="6" fill="#fff" stroke="#d1d9e0"/><text x="345" y="146" text-anchor="middle">noticeFor() + pillText()</text><text x="345" y="166" text-anchor="middle" font-size="11" fill="#59636e">relevant incident (unchanged)</text>
+      <rect x="540" y="20" width="150" height="70" rx="6" fill="#fff" stroke="#d1d9e0"/><text x="615" y="50" text-anchor="middle">dot colour</text><text x="615" y="68" text-anchor="middle" font-size="11" fill="#59636e">+ "Critical incident" name</text>
+      <rect x="540" y="120" width="150" height="70" rx="6" fill="#fff" stroke="#0969da" stroke-dasharray="5 3"/><text x="615" y="146" text-anchor="middle">findSearch()</text><text x="615" y="164" text-anchor="middle" font-size="11" fill="#59636e">outermost search group</text><text x="615" y="178" text-anchor="middle" font-size="11" fill="#59636e">in a row with a gap</text>
+      <rect x="740" y="120" width="110" height="70" rx="6" fill="#fff" stroke="#0969da" stroke-dasharray="5 3"/><text x="795" y="146" text-anchor="middle">pill</text><text x="795" y="164" text-anchor="middle" font-size="11" fill="#59636e">gap measured;</text><text x="795" y="178" text-anchor="middle" font-size="11" fill="#cf222e">no line</text>
+    </g>
+    <g stroke="#59636e" fill="none" marker-end="url(#a)"><path d="M160 98L228 60"/><path d="M160 112L228 150"/><path d="M460 55L538 55"/><path d="M460 155L538 155"/><path d="M690 155L738 155"/></g>
+    <text x="10" y="205" font-size="11" fill="#59636e">Dashed = changed. Same snapshot feeds both, so the dot can no longer be calmer than the pill.</text>
+  </svg>
+  </div>
+  <h3>findSearch() climb, live structure as reported</h3>
+  <div class="box" style="font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow-x:auto;white-space:pre">row (flex, gap 8px)          ← pill goes here, before the search group
+ ├─ search group (flex, gap 0) ← today the pill lands inside this group: no gap
+ │   ├─ search control         ← anchor (role / aria-label "search", never a class)
+ │   └─ joined or hidden sibling
+ ├─ icon button
+ └─ …</div>
+
+  <h2>Changes by file</h2>
+  <div class="scroll"><table>
+    <tr><th>File</th><th>Change</th><th>Why</th></tr>
+    <tr><td><code>features/github-status/relevance.js</code></td><td><code>dotState()</code> returns the worst of indicator, open-incident impacts and component statuses; a new <code>"critical"</code> state (same red as major).</td><td>Defect 2: dot and pill tell the same story.</td></tr>
+    <tr><td><code>features/github-status/content.js</code></td><td><code>STATE_TEXT.critical</code>; remove <code>paintLine</code> / <code>removeLine</code> / <code>LINE_ID</code> and the header <code>position</code> override (still cleaned up in <code>removeAll</code> for pages from an older version); <code>findSearch()</code> ignores siblings with no layout box and climbs past gap-less wrappers; measured gap safety net on the pill.</td><td>Defects 1 and 3.</td></tr>
+    <tr><td><code>features/github-status/content.css</code></td><td>Drop <code>.ghgs-line</code>; <code>[data-state="critical"]</code> uses the major colour.</td><td>Defects 1 and 2.</td></tr>
+    <tr><td><code>test/e2e/fixtures/header-signed-in-globalnav.html</code> (new)</td><td>Two-row signed-in header (top bar + repository tab bar, 100px total) with <code>Name__hash</code> classes; the search control inside a gap-less group with a joined sibling, the row with an 8px gap. Fictional <code>acme/web</code>.</td><td>Mirrors the layout in the issue, which the current one-row fixture does not.</td></tr>
+    <tr><td><code>test/unit/github-status-relevance.test.js</code>, <code>test/e2e/github-status.spec.js</code></td><td>New tests below; existing line assertions become "no line".</td><td>Regression cover.</td></tr>
+    <tr><td><code>README.md</code>, <code>features/github-status/README.md</code>, <code>screenshots/github-status.svg</code></td><td>Remove the "2px severity line" sentence and the line in the mockup; say the dot follows the worst open incident.</td><td>Docs in sync.</td></tr>
+  </table></div>
+  <p class="meta">No shared files (<code>lib/github-api.js</code>, <code>background.js</code>, <code>options/</code>, <code>manifest.json</code>) change.</p>
+
+  <h2>Data, permissions, privacy</h2>
+  <p>None. Same anonymous <code>summary.json</code> fetch, no new storage key, no new permission. Token permissions: none.</p>
+
+  <h2>Test plan</h2>
+  <div class="scroll"><table>
+    <tr><th>Expected behaviour (issue)</th><th>Test</th><th>Name</th></tr>
+    <tr><td>Dot uses the major/critical colour while a critical incident is open, even with <code>indicator: "none"</code></td><td>unit</td><td><code>dotState takes the worst of indicator, incidents and components</code> (none + critical incident → critical; none + minor incident → minor; partial_outage component → minor; maintenance + major incident → major; stale still unknown)</td></tr>
+    <tr><td>Accessible name never says "No incident reported" while the pill shows an incident</td><td>e2e</td><td><code>with indicator none and a critical incident the dot is red and named Critical incident</code> (asserts pill and dot together, computed colour of <code>.ghgs-dot-mark</code>)</td></tr>
+    <tr><td>No detached full-width line</td><td>e2e</td><td><code>an incident adds no line and leaves the header position untouched</code> on both headers; existing tests switch from "1 line" to "0 lines"</td></tr>
+    <tr><td>Header height unchanged by the pill</td><td>e2e</td><td>header and top-bar heights equal before and after the pill (two-row fixture)</td></tr>
+    <tr><td>Pill keeps a visible gap from the search field, also when narrower</td><td>e2e</td><td><code>the pill sits before the search group with the row's gap</code> at 1280, 1012, 768 and 375px: <code>search.left − pill.right</code> equals the row gap (8px), no overlap, nothing past the viewport</td></tr>
+    <tr><td>Anchor: primary placement used on current markup, safety net cannot mask it</td><td>e2e</td><td>on the GlobalNav fixture and the existing one the pill's parent is the gapped row and <b>no</b> margin is applied; a fixture variant with a gap-less row triggers the margin and still gives 8px</td></tr>
+    <tr><td>Both class namings</td><td>e2e</td><td>GlobalNav fixture run with <code>Name__hash</code> classes and with the old <code>*-module__Name--x</code> naming (test transform): same placement</td></tr>
+    <tr><td>Hidden siblings are ignored by the climb</td><td>e2e</td><td>signed-out fixture with a <code>d-none</code> sibling next to the search: pill outside the search slot</td></tr>
+    <tr><td>SPA A → B → A, back and forward</td><td>e2e</td><td>one pill, same place, no line, after <code>/pull/1</code> → <code>/actions</code> → back → forward</td></tr>
+  </table></div>
+  <p><b>Live check:</b> the reported header is the <b>signed-in</b> <code>GlobalNav</code>, which an anonymous probe cannot open: <code>/cattanisimone/gh-reloaded/pull/92</code> anonymously serves the marketing header (<code>header.HeaderMktg</code>, one 40px bar, search button inside <code>div.searchSlot__…</code> next to a hidden <code>div.d-none</code>, row <code>ctaContainer__…</code> spaced by margins, not gap). The live feed was probed: <code>indicator: "none"</code> with a <code>critical</code> incident open, which confirms defect 2. The PR will say <i>Not verified on live github.com</i> for the signed-in header and ask the maintainer to check, during an incident or with a mocked feed: no rule between the rows, dot colour, the gap before the search at 1280px and 768px.</p>
+
+  <h2>Risks and open questions</h2>
+  <ul>
+    <li><b>Signed-in markup is inferred</b> from the issue's measurements, not captured. Default: the climb uses only layout facts (rendered siblings, computed gap), not class names, so it works whatever the group is called; the measured margin is the safety net.</li>
+    <li><b>Dot shows components too.</b> A degraded component with no incident turns the dot amber. Default: yes, it is a real reported problem and the panel already lists it.</li>
+    <li><b>Line removed rather than moved.</b> The issue asks for "no extra row or rule". Default: remove it; the pill carries colour and icon. Say if you would rather keep a tint inside the bar.</li>
+    <li><b>Dot not overlaid in the report</b> (x 100 beside the logo): likely an installed version older than #93. Default: not changed here; the maintainer confirms the version during the live check.</li>
+  </ul>
+
+  <h2>Out of scope</h2>
+  <ul>
+    <li>Relevance rules (which incident gets the pill), the panel, the fetch and its cache.</li>
+    <li>Fallback placement A (bar above the header).</li>
+  </ul>
+</main></body></html>
