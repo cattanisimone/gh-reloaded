@@ -7,8 +7,8 @@
   container-type: inline-size;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 2px 8px;
   position: relative;
   margin-top: 8px;
   /* Same inner padding as the card's own text (12px), so nothing sits closer
@@ -38,7 +38,7 @@
   background: none;
   border: 0;
   padding: 0;
-  margin: 0 0 0 auto;
+  margin: 0;
   font: inherit;
   color: inherit;
   cursor: pointer;
@@ -46,6 +46,10 @@
   min-width: 0;
   max-width: 100%;
 }
+.ghlps-right { margin-left: auto; }
+.ghlps-count { font-weight: 600; color: var(--fgColor-accent, #0969da); white-space: nowrap; }
+.ghlps-open:hover .ghlps-count { text-decoration: underline; }
+.ghlps-caption { flex: 0 0 100%; color: var(--fgColor-muted, #59636e); font-size: 12px; }
 .ghlps-open:focus-visible { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: 1px; }
 .ghlps-sig {
   display: inline-flex;
@@ -121,6 +125,19 @@ html.ghlps-modal-open { overflow: hidden; }
 .ghlps-kv-row { display: grid; grid-template-columns: 70px 1fr; gap: 8px; margin: 2px 0; }
 .ghlps-kv dt { color: var(--fgColor-muted, #59636e); }
 .ghlps-kv dd { margin: 0; overflow-wrap: anywhere; }
+.ghlps-banner { margin: 0 0 10px; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--fgColor-danger, #d1242f) 40%, transparent); border-radius: 6px; font-size: 13px; }
+.ghlps-banner strong { color: var(--fgColor-danger, #d1242f); }
+.ghlps-pill { display: inline-flex; align-items: center; gap: 4px; padding: 0 7px; border: 1px solid; border-radius: 999px; font-size: 12px; font-weight: 500; line-height: 18px; }
+.ghlps-pr-actions { margin: 8px 0 0; }
+.ghlps-openpr {
+  display: inline-flex; align-items: center; box-sizing: border-box; height: 28px; padding: 0 10px;
+  border: 1px solid var(--button-default-borderColor-rest, #d1d9e0); border-radius: 6px;
+  background: var(--button-default-bgColor-rest, #f6f8fa); color: var(--fgColor-default, #1f2328);
+  font-size: 13px; font-weight: 500; text-decoration: none; box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
+}
+.ghlps-openpr:hover { filter: brightness(0.95); }
+.ghlps-openpr:focus-visible { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: -2px; }
+.ghlps-note { margin: 0; color: var(--fgColor-muted, #59636e); font-size: 12px; }
 .ghlps-next { margin: 0; padding: 6px 8px; border-radius: 6px; background: var(--bgColor-muted, #f6f8fa); font-size: 13px; }
 .ghlps-foot { display: flex; justify-content: flex-end; padding: 10px 16px; border-top: 1px solid var(--borderColor-muted, #d1d9e0); }
 

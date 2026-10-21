@@ -102,7 +102,7 @@ test("rows appear only on cards with linked PRs, with the PR number and one text
   for (const n of [209, 215, 216]) await expect(row(page, n)).toHaveCount(0);
   // The signal is conveyed by text, not colour alone: every summary button is named.
   for (const n of [207, 208, 211, 212]) {
-    const name = await row(page, n).locator("button").getAttribute("aria-label");
+    const name = await row(page, n).locator("button").first().getAttribute("aria-label");
     expect(name).toMatch(/Show details$/);
   }
 });
@@ -161,10 +161,20 @@ test("GitHub's native Linked pull requests field is not duplicated", async ({ co
 
 test("several PRs: a neutral aggregate, no verdict, details in the dialog", async ({ context, page }) => {
   await setup(context, page);
-  await expect(row(page, 211).locator(".ghlps-long")).toHaveText("2 linked PRs · 1 needs attention");
-  await expect(row(page, 211).locator(".ghlps-tone-neutral")).toHaveCount(1);
+  await expect(row(page, 211).locator(".ghlps-count .ghlps-long")).toHaveText("2 linked PRs");
+  await expect(row(page, 211).locator(".ghlps-right .ghlps-long")).toHaveText("1 needs attention");
+  await expect(row(page, 211).locator(".ghlps-caption")).toHaveText("Review feedback blocks progress");
   await expect(row(page, 211).locator(".ghlps-pr")).toHaveCount(0);
-  await row(page, 211).locator("button").click();
+  // The label sits on the left of the row, the attention chip on the right.
+  const sides = await row(page, 211).evaluate((r) => {
+    const b = r.getBoundingClientRect();
+    const l = r.querySelector(".ghlps-count").getBoundingClientRect();
+    const c = r.querySelector(".ghlps-sig").getBoundingClientRect();
+    return { labelLeft: l.left - b.left, chipRight: b.right - c.right };
+  });
+  expect(sides.labelLeft, JSON.stringify(sides)).toBeLessThanOrEqual(14);
+  expect(sides.chipRight, JSON.stringify(sides)).toBeLessThanOrEqual(14);
+  await row(page, 211).locator("button").first().click();
   const d = page.locator("dialog.ghlps-dialog");
   await expect(d.locator(".ghlps-pr-section")).toHaveCount(2);
   const first = d.locator(".ghlps-pr-section").nth(0);
@@ -176,8 +186,36 @@ test("several PRs: a neutral aggregate, no verdict, details in the dialog", asyn
   const second = d.locator(".ghlps-pr-section").nth(1);
   await expect(second).toContainText("acme/api");
   await expect(second).toContainText("Review pending");
-  await expect(second.locator("a")).toHaveAttribute("href", "https://github.com/acme/api/pull/325");
+  await expect(second.locator("a").first()).toHaveAttribute("href", "https://github.com/acme/api/pull/325");
   await expect(d).not.toContainText(/ready to|mergeable/i);
+  await expect(d.locator(".ghlps-banner")).toContainText("1 PR needs attention");
+  await expect(d.locator(".ghlps-banner")).toContainText("not a merge verdict");
+  await expect(d.locator(".ghlps-sub")).toContainText("acme/web #211 ·");
+  await expect(d.locator(".ghlps-sub")).toContainText("· 2 linked PRs");
+  await expect(first.locator(".ghlps-pill")).toHaveCount(2);
+  await expect(first.getByRole("link", { name: "Open PR ↗" })).toHaveAttribute("href", "https://github.com/acme/web/pull/321");
+  await expect(d).toContainText("Merge rules are not evaluated here");
+});
+
+test("Escape closes the dialog even when the page's own handler prevents it", async ({ context, page }) => {
+  await setup(context, page);
+  await page.evaluate(() => document.addEventListener("keydown", (e) => e.key === "Escape" && e.preventDefault()));
+  await row(page, 207).locator("button").click();
+  await expect(page.locator("dialog.ghlps-dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("dialog.ghlps-dialog")).toHaveCount(0);
+});
+
+test("a PR whose status the token may not read: board hint and modal name Pull requests: Read", async ({ context, page }) => {
+  await setup(context, page);
+  await expect(row(page, 213)).toBeVisible();
+  await expect(page.locator(".ghlps-hint")).toContainText("Pull requests: Read");
+  await expect(page.locator(".ghlps-hint").getByRole("link", { name: "Open Settings" })).toBeVisible();
+  await expect(row(page, 213).locator(".ghlps-caption")).toHaveText("The token cannot read this pull request");
+  await row(page, 213).locator("button").click();
+  const d = page.locator("dialog.ghlps-dialog");
+  await expect(d).toContainText("Pull requests: Read");
+  await expect(d).not.toContainText("State could not be read");
 });
 
 test("a PR whose checks cannot be read says Status unavailable, never green", async ({ context, page }) => {
@@ -216,8 +254,8 @@ for (const width of [280, 320]) {
           expect(m.chipRight).toBe(true);
           expect(m.text.length).toBeGreaterThan(2);
         }
-        if (width === 280) await expect(row(page, 211).locator(".ghlps-short")).toBeVisible(); // short wording below 300px
-        else await expect(row(page, 211).locator(".ghlps-long")).toBeVisible();
+        if (width === 280) await expect(row(page, 211).locator(".ghlps-count .ghlps-short")).toBeVisible(); // short wording below 300px
+        else await expect(row(page, 211).locator(".ghlps-count .ghlps-long")).toBeVisible();
         const colour = await row(page, 207).locator(".ghlps-sig").evaluate((e) => getComputedStyle(e).color);
         expect(colour).toBe(mode === "dark" ? "rgb(248, 81, 73)" : "rgb(209, 36, 47)");
       });
@@ -295,7 +333,7 @@ test("dialog: role, modal, name, initial focus, Tab trap, Esc and Close restore 
 test("dialog on a 375px viewport fills most of it and scrolls inside, the page does not scroll", async ({ context, page }) => {
   await setup(context, page);
   await page.setViewportSize({ width: 375, height: 420 });
-  await row(page, 211).locator("button").click();
+  await row(page, 211).locator("button").first().click();
   const d = page.locator("dialog.ghlps-dialog");
   await expect(d).toBeVisible();
   const g = await d.evaluate((el) => {
@@ -543,7 +581,7 @@ test("a rate limit shows a hint that is not remembered", async ({ context, page 
 });
 
 test("no hint while data loads fine", async ({ context, page }) => {
-  await setup(context, page);
+  await setup(context, page, { handlers: [graphqlHandler([], { errorsFor: [] })] });
   await expect(row(page, 207)).toBeVisible();
   await expect(page.locator(".ghlps-hint")).toHaveCount(0);
 });

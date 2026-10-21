@@ -39,14 +39,38 @@
     const needs = list.filter((p) => signalOf(p).attention).length;
     const noun = compact ? "PRs" : "linked PRs";
     const tail = needs ? ` · ${needs} needs attention` : "";
-    return { kind: "many", count: list.length, needs, text: `${list.length} ${noun}${tail}` };
+    return {
+      kind: "many",
+      count: list.length,
+      needs,
+      text: `${list.length} ${noun}${tail}`,
+      label: `${list.length} ${noun}`,
+      attention: needs ? (compact ? `${needs} ⚠` : `${needs} needs attention`) : "",
+    };
+  }
+
+  // The one-line secondary text under the row: why the attention chip is
+  // there. Empty when there is nothing to add.
+  function caption(prs) {
+    const list = (prs || []).filter(Boolean);
+    const hit = list.map(signalOf).find((x) => x.attention);
+    if (hit) return hit.id === "changes" ? "Review feedback blocks progress" : "Checks are failing";
+    if (list.length === 1) {
+      const id = signalOf(list[0]).id;
+      if (id === "review") return "Waiting for a reviewer";
+      if (id === "running") return "Waiting for the checks to finish";
+      if (id === "unavailable") return list[0].denied ? "The token cannot read this pull request" : "";
+    }
+    return "";
   }
 
   // One plain sentence for the modal. `failing` is the list of failing check names.
   function nextStep(pr) {
     const s = signalOf(pr);
     switch (s.id) {
-      case "unavailable": return "Open the pull request to see its state.";
+      case "unavailable": return pr && pr.denied
+        ? "The token needs Pull requests: Read (and Commit statuses or Checks). Add it in Settings."
+        : "Open the pull request to see its state.";
       case "merged": return "Nothing to do: this pull request is merged.";
       case "closed": return "Nothing to do: this pull request is closed without merging.";
       case "draft": return "Waiting for the author to mark it ready for review.";
@@ -80,5 +104,5 @@
     }
   }
 
-  global.GHLPS_SIGNAL = { signalOf, summarize, nextStep, checksText, reviewText };
+  global.GHLPS_SIGNAL = { signalOf, summarize, caption, nextStep, checksText, reviewText };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -37,6 +37,7 @@
 
   function issueOfCard(card) {
     if (card.parentElement?.closest(CARD_SELECTOR)) return null;
+    let found = null;
     for (const a of card.querySelectorAll("a[href]")) {
       let path;
       try {
@@ -45,9 +46,15 @@
         continue;
       }
       const m = ISSUE_RE.exec(path);
-      if (m) return { owner: m[1], repo: m[2], number: Number(m[3]), key: `${m[1]}/${m[2]}#${m[3]}` };
+      if (!m) continue;
+      found = found || { owner: m[1], repo: m[2], number: Number(m[3]), key: `${m[1]}/${m[2]}#${m[3]}`, title: "" };
+      const text = (a.textContent || "").replace(/\s+/g, " ").trim();
+      if (text) {
+        found.title = text;
+        break;
+      }
     }
-    return null;
+    return found;
   }
 
   // GitHub's own "Linked pull requests" field, when the card shows it: a
@@ -67,6 +74,7 @@
   const inflight = new Set();
   let status = { state: "ready", until: 0 };
   let generation = 0;
+  let accessDenied = false; // a link was listed but its status was refused
 
   function statusFromError(res) {
     const msg = String(res?.error || "");
@@ -92,8 +100,9 @@
     if (!running) return;
     if (res && res.ok && res.facts) {
       if (mine === generation) status = { state: "ready", until: 0 };
-      showHint();
       for (const i of infos) facts.set(i.key, { at: Date.now(), value: res.facts[i.key] || { ok: false }, stale: false });
+      accessDenied = [...facts.values()].some((f) => f.value?.ok && f.value.prs.some((p) => p.denied));
+      showHint();
     } else {
       status = { state: statusFromError(res), until: Date.now() + BACKOFF_MS };
       showHint();
@@ -112,25 +121,27 @@
 
   const HINTS = {
     notoken: "Linked PR status needs a GitHub token for this repository owner to read pull requests. Add one in Settings.",
-    denied: "GitHub refused the request. The token needs the Pull requests: Read permission (and access to these repositories). Check it in Settings.",
+    denied: "GitHub refused part of the request. The token needs Pull requests: Read (and Commit statuses or Checks for the checks rollup) on these repositories. Check it in Settings.",
     rate: "GitHub's rate limit was reached, so linked PR status is paused. It retries in about a minute.",
   };
+  const hintKey = () => (status.state !== "ready" ? status.state : accessDenied ? "denied" : "");
   let hintDismissed = false; // this page load; "rate" is never remembered
 
   async function showHint() {
     document.querySelector(".ghlps-hint")?.remove();
-    const text = HINTS[status.state];
+    const key = hintKey();
+    const text = HINTS[key];
     if (!text || !running || hintDismissed) return;
-    if (status.state !== "rate") {
+    if (key !== "rate") {
       try {
         if ((await chrome.storage.local.get(STORAGE_HINT))[STORAGE_HINT]) return;
       } catch {}
-      if (!running || !HINTS[status.state]) return;
+      if (!running || hintKey() !== key) return;
     }
     const box = el("div", "ghlps-hint");
     box.setAttribute("role", "status");
     const p = el("p", null, text + " ");
-    if (status.state !== "rate") {
+    if (key !== "rate") {
       const a = el("a", null, "Open Settings");
       a.href = "#";
       a.addEventListener("click", (e) => {
@@ -146,7 +157,7 @@
     x.addEventListener("click", async () => {
       hintDismissed = true;
       box.remove();
-      if (status.state !== "rate") {
+      if (key !== "rate") {
         try {
           await chrome.storage.local.set({ [STORAGE_HINT]: true });
         } catch {}
@@ -181,9 +192,13 @@
     const sum = S.summarize(prs);
     const row = el("div", ROW_CLASS);
     row.dataset.ghlpsKey = info.key;
-    const summary = el("button", "ghlps-open");
-    summary.type = "button";
-    summary.setAttribute("aria-haspopup", "dialog");
+    const opener = (cls, ...kids) => {
+      const b = el("button", `ghlps-open ${cls}`);
+      b.type = "button";
+      b.setAttribute("aria-haspopup", "dialog");
+      b.append(...kids);
+      return b;
+    };
     if (sum.kind === "one") {
       const p = sum.pr;
       if (!native && p.number && p.url) {
@@ -195,18 +210,27 @@
       }
       // An open PR with no review or checks signal: just the PR link.
       if (sum.signal.id !== "open") {
-        summary.append(signalChip(sum.signal));
-        summary.setAttribute("aria-label", `${p.number ? `Pull request #${p.number}: ` : ""}${sum.signal.label}. Show details`);
+        const b = opener(native ? "ghlps-left" : "ghlps-right", signalChip(sum.signal));
+        b.setAttribute("aria-label", `${p.number ? `Pull request #${p.number}: ` : ""}${sum.signal.label}. Show details`);
+        row.append(b);
       }
     } else {
-      const long = S.summarize(prs).text;
-      const short = S.summarize(prs, { compact: true }).text;
-      const chip = el("span", "ghlps-sig ghlps-tone-neutral");
-      chip.append(el("span", "ghlps-long", long), el("span", "ghlps-short", short));
-      summary.append(chip);
-      summary.setAttribute("aria-label", `${long}. Show details`);
+      const compact = S.summarize(prs, { compact: true });
+      const label = el("span", "ghlps-count");
+      label.append(el("span", "ghlps-long", sum.label), el("span", "ghlps-short", compact.label));
+      const b = opener("ghlps-left", label);
+      b.setAttribute("aria-label", `${sum.text}. Show details`);
+      row.append(b);
+      if (sum.needs) {
+        const chip = el("span", "ghlps-sig ghlps-tone-bad");
+        chip.append(el("span", "ghlps-long", sum.attention), el("span", "ghlps-short", compact.attention));
+        const c = opener("ghlps-right", chip);
+        c.setAttribute("aria-label", `${sum.attention}. Show details`);
+        row.append(c);
+      }
     }
-    if (summary.childElementCount) row.append(summary);
+    const note = S.caption(prs);
+    if (note) row.append(el("span", "ghlps-caption", note));
     return row;
   }
 
@@ -235,7 +259,7 @@
       row?.remove(); // nothing left to show next to GitHub's own field
       return;
     }
-    const sig = JSON.stringify([info.key, native, prs.map((p) => [p.ok, p.number, p.state, p.isDraft, p.reviewDecision, p.checks, p.url])]);
+    const sig = JSON.stringify([info.key, native, prs.map((p) => [p.ok, p.denied, p.number, p.state, p.isDraft, p.reviewDecision, p.checks, p.url])]);
     if (row && row.dataset.ghlpsSig === sig && rowInPlace(card, row)) return;
     row?.remove();
     const next = buildRow(info, prs, native);
@@ -256,13 +280,25 @@
     if (d.open) d.close();
     d.remove();
     document.documentElement.classList.remove("ghlps-modal-open");
+    document.removeEventListener("keydown", onEscape, true);
     if (opener && opener.isConnected) opener.focus();
     opener = null;
   }
 
+  // GitHub's own handler can swallow Escape (preventDefault), so the native
+  // cancel event never fires: catch it first, in the capture phase.
+  function onEscape(e) {
+    if (e.key !== "Escape" || !dialog) return;
+    e.preventDefault();
+    e.stopPropagation();
+    closeDialog();
+  }
+
   function kv(label, value) {
     const dl = el("div", "ghlps-kv-row");
-    dl.append(el("dt", null, label), el("dd", null, value));
+    const dd = el("dd", null, typeof value === "string" ? value : null);
+    if (typeof value !== "string") dd.append(value);
+    dl.append(el("dt", null, label), dd);
     return dl;
   }
 
@@ -292,18 +328,37 @@
       head.append(a);
     } else head.textContent = "Pull request";
     sec.append(head);
-    const where = pr.ok ? `${pr.repo} · ${s.id === "merged" ? "Merged" : s.id === "closed" ? "Closed" : s.id === "draft" ? "Draft" : "Open"}` : "State could not be read";
+    const where = pr.ok
+      ? `${pr.repo} · ${s.id === "merged" ? "Merged" : s.id === "closed" ? "Closed" : s.id === "draft" ? "Draft" : "Open"}`
+      : pr.denied
+        ? "State not shown: the token needs Pull requests: Read (and Commit statuses or Checks)"
+        : "State could not be read";
     sec.append(el("p", "ghlps-meta", where));
     const list = el("dl", "ghlps-kv");
     const failing = el("span", "ghlps-failing");
     const open = pr.ok && s.id !== "merged" && s.id !== "closed";
-    const checksRow = kv("Checks", open || !pr.ok ? S.checksText(pr) : "Not applicable");
+    const pill = (text, tone) => {
+      const p = el("span", `ghlps-pill ghlps-tone-${tone}`, text);
+      return p;
+    };
+    const checksTone = !pr.ok ? "neutral" : pr.checks === "FAILURE" || pr.checks === "ERROR" ? "bad" : pr.checks === "PENDING" || pr.checks === "EXPECTED" ? "warn" : "neutral";
+    const reviewTone = !pr.ok ? "neutral" : pr.reviewDecision === "CHANGES_REQUESTED" ? "bad" : pr.reviewDecision === "REVIEW_REQUIRED" ? "warn" : "neutral";
+    const checksRow = kv("Checks", open || !pr.ok ? pill(S.checksText(pr), checksTone) : "Not applicable");
     if (open && (pr.checks === "FAILURE" || pr.checks === "ERROR")) {
       checksRow.querySelector("dd").append(" ", failing);
       loadFailing(pr, failing);
     }
-    list.append(checksRow, kv("Review", open || !pr.ok ? S.reviewText(pr) : "Not applicable"));
+    list.append(checksRow, kv("Review", open || !pr.ok ? pill(S.reviewText(pr), reviewTone) : "Not applicable"));
     sec.append(list, el("p", "ghlps-next", `Next: ${S.nextStep(pr)}`));
+    if (pr.url && pr.number) {
+      const go = el("a", "ghlps-openpr", "Open PR ↗");
+      go.href = pr.url;
+      go.target = "_blank";
+      go.rel = "noopener noreferrer";
+      const actions = el("p", "ghlps-pr-actions");
+      actions.append(go);
+      sec.append(actions);
+    }
     return sec;
   }
 
@@ -323,9 +378,20 @@
     x.setAttribute("aria-label", "Close");
     const head = el("div", "ghlps-head");
     head.append(title, x);
-    const sub = el("p", "ghlps-sub", `${info.owner}/${info.repo} #${info.number} · ${prs.length} ${prs.length === 1 ? "PR" : "PRs"}`);
+    const sub = el(
+      "p",
+      "ghlps-sub",
+      [`${info.owner}/${info.repo} #${info.number}`, info.title, `${prs.length} linked ${prs.length === 1 ? "PR" : "PRs"}`].filter(Boolean).join(" · ")
+    );
     const body = el("div", "ghlps-body");
-    body.append(sub, ...prs.map(prSection));
+    const needs = prs.filter((p) => S.signalOf(p).attention).length;
+    if (needs) {
+      const banner = el("p", "ghlps-banner");
+      banner.append(el("strong", null, `${needs} ${needs === 1 ? "PR needs" : "PRs need"} attention`));
+      banner.append(" — a status summary, not a merge verdict.");
+      body.append(banner);
+    }
+    body.append(sub, ...prs.map(prSection), el("p", "ghlps-note", "Review and checks are shown as GitHub reports them. Merge rules are not evaluated here."));
     const foot = el("div", "ghlps-foot");
     const close = el("button", "ghlps-close", "Close");
     close.type = "button";
@@ -356,6 +422,7 @@
       }
     });
     dialog = d;
+    document.addEventListener("keydown", onEscape, true);
     document.body.append(d);
     document.documentElement.classList.add("ghlps-modal-open");
     d.showModal();

@@ -191,3 +191,9 @@ test("handleMessage: one unreadable owner or one owner without a token does not 
   assert.equal(facts["sso/x#2"], undefined);
   assert.equal(facts["oss/lib#3"], undefined);
 });
+
+test("normalizeIssue: a permission refusal below a node marks the PR denied, other errors do not", () => {
+  const node = { issue: { closedByPullRequestsReferences: { nodes: [{ number: 1 }, { number: 2 }] } } };
+  const out = normalizeIssue(node, { issue: false, prs: new Set([0, 1]), denied: new Set([0]) });
+  assert.deepEqual(out.prs.map((p) => [p.ok, p.denied]), [[false, true], [false, false]]);
+});

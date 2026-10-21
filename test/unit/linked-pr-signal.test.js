@@ -101,3 +101,17 @@ test("modal wording keeps checks and review apart", () => {
   assert.equal(checksText(pr()), "None reported");
   assert.equal(checksText({ ok: false }), "Unavailable");
 });
+
+test("caption: why the attention chip is there, empty when nothing to add", () => {
+  const bad = { ok: true, state: "OPEN", reviewDecision: "CHANGES_REQUESTED" };
+  const failing = { ok: true, state: "OPEN", checks: "FAILURE" };
+  assert.equal(context.GHLPS_SIGNAL.caption([bad]), "Review feedback blocks progress");
+  assert.equal(context.GHLPS_SIGNAL.caption([failing]), "Checks are failing");
+  assert.equal(context.GHLPS_SIGNAL.caption([{ ok: true, state: "OPEN" }]), "");
+  assert.equal(context.GHLPS_SIGNAL.caption([{ ok: false, denied: true }]), "The token cannot read this pull request");
+});
+
+test("nextStep: a refused PR names the missing permission", () => {
+  assert.match(context.GHLPS_SIGNAL.nextStep({ ok: false, denied: true }), /Pull requests: Read/);
+  assert.match(context.GHLPS_SIGNAL.nextStep({ ok: false }), /Open the pull request/);
+});

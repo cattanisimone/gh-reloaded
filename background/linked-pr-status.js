@@ -75,22 +75,27 @@ export function normalizePr(pr) {
 // { issue: true } when the error is above the list (the links are unknown) or
 // { prs: Set<index> } for errors below a node.
 function errorsFor(errors, alias) {
-  const out = { issue: false, prs: new Set() };
+  const out = { issue: false, prs: new Set(), denied: new Set() };
   for (const e of errors || []) {
     if (!Array.isArray(e.path) || e.path[0] !== alias) continue;
     const at = e.path.indexOf("nodes");
-    if (at >= 0 && Number.isInteger(e.path[at + 1])) out.prs.add(e.path[at + 1]);
-    else out.issue = true;
+    if (at >= 0 && Number.isInteger(e.path[at + 1])) {
+      out.prs.add(e.path[at + 1]);
+      // A permission refusal, as opposed to any other error below the node.
+      if (/FORBIDDEN|INSUFFICIENT_SCOPES/.test(e.type || "") || /not accessible by (personal access token|integration)/i.test(e.message || "")) {
+        out.denied.add(e.path[at + 1]);
+      }
+    } else out.issue = true;
   }
   return out;
 }
 
-export function normalizeIssue(node, errs = { issue: false, prs: new Set() }) {
+export function normalizeIssue(node, errs = { issue: false, prs: new Set(), denied: new Set() }) {
   if (errs.issue || !node?.issue) return { ok: false };
   const nodes = node.issue.closedByPullRequestsReferences?.nodes;
   if (!Array.isArray(nodes)) return { ok: false };
   const prs = nodes
-    .map((n, i) => (errs.prs.has(i) ? { ...(n ? normalizePr(n) : {}), ok: false } : n ? normalizePr(n) : null))
+    .map((n, i) => (errs.prs.has(i) ? { ...(n ? normalizePr(n) : {}), ok: false, denied: !!errs.denied?.has(i) } : n ? normalizePr(n) : null))
     .filter(Boolean);
   return { ok: true, prs };
 }
