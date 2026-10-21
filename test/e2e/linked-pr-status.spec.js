@@ -342,7 +342,7 @@ test("dragging from the row moves the card and opens no dialog", async ({ contex
   await expect(page.locator('.board-view-column[data-board-column="In progress"] [data-num="208"] .ghlps-row')).toHaveCount(1);
 });
 
-test("rows follow re-rendered cards and reordered columns; leaving the Board removes them, back restores them without a new request", async ({ context, page }) => {
+test("rows follow re-rendered cards and reordered columns; leaving the Board removes them, back restores them", async ({ context, page }) => {
   const log = [];
   await setup(context, page, { log });
   await expect(row(page, 207)).toBeVisible();
@@ -366,7 +366,7 @@ test("rows follow re-rendered cards and reordered columns; leaving the Board rem
     document.querySelector('[role="tab"] svg').setAttribute("class", "octicon octicon-project");
   });
   await expect(row(page, 207)).toBeVisible();
-  expect(log.length).toBe(requests); // answered from the page's cache
+  expect(log.length).toBeGreaterThanOrEqual(requests); // a navigation refreshes the facts
 });
 
 test("Standup mode and Full-width board together: the row stays, before the standup badges", async ({ context, page }) => {
@@ -477,4 +477,17 @@ test("the request is read-only and asks for explicit links only", async ({ conte
   const all = log.join("\n");
   expect(all).toContain("closedByPullRequestsReferences");
   expect(all).not.toMatch(/mutation|timelineItems|search\(/);
+});
+
+test("a swapped <main> after a soft navigation gets its rows without waiting for the cache", async ({ context, page }) => {
+  await setup(context, page);
+  await expect(row(page, 207)).toBeVisible();
+  await page.evaluate(() => {
+    const main = document.querySelector("main");
+    const clone = main.cloneNode(true);
+    clone.querySelectorAll(".ghlps-row").forEach((r) => r.remove());
+    main.replaceWith(clone);
+    history.pushState({}, "", "/orgs/acme/projects/1/views/1?x=1");
+  });
+  await expect(row(page, 207)).toBeVisible();
 });

@@ -181,6 +181,7 @@
     row?.remove();
     const next = buildRow(info, prs, native);
     next.dataset.ghlpsSig = sig;
+    bindRow(next);
     placeRow(card, next);
   }
 
@@ -336,20 +337,20 @@
     if (e.key === "Enter" || e.key === " ") e.stopPropagation();
   }
 
-  // Delegated on the board so a re-rendered card needs no new listeners; the
-  // row sits inside the card, so stopping here keeps the event from React's
-  // root handler (the native side panel) only if the board is below it.
-  function bindBoard(board) {
-    if (board.__ghlps) return;
-    board.__ghlps = true;
-    board.addEventListener("click", onRowClick);
-    board.addEventListener("keydown", onRowKey);
+  // Bound on each row, so the event stops before any ancestor handler (React's
+  // root, the native side panel) and no board selector is needed.
+  function bindRow(row) {
+    if (row.__ghlps) return;
+    row.__ghlps = true;
+    row.addEventListener("click", onRowClick);
+    row.addEventListener("keydown", onRowKey);
   }
 
   // --- scanning -----------------------------------------------------------
 
   let running = false;
   let observer = null;
+  let observedRoot = null;
   let io = null;
   const watched = new WeakSet();
   const visible = new WeakSet();
@@ -361,14 +362,9 @@
     timer = setTimeout(scan, 120);
   }
 
-  function boardRoot() {
-    return document.querySelector('[class*="boardContainer__"], [class*="Board-module__boardContainer"]') || document.querySelector("main") || document.body;
-  }
-
   function scan() {
     if (!running) return;
     if (!isBoardPage()) return stop();
-    bindBoard(boardRoot());
     const want = [];
     const seen = new Set();
     for (const card of document.querySelectorAll(CARD_SELECTOR)) {
@@ -406,7 +402,8 @@
     // The scan drops the records of its own changes (takeRecords), so what
     // reaches here is GitHub re-rendering, including it dropping our row.
     observer = new MutationObserver(() => schedule());
-    observer.observe(document.querySelector("main") || document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["href"] });
+    observedRoot = document.querySelector("main") || document.body;
+    observer.observe(observedRoot, { childList: true, subtree: true, attributes: true, attributeFilter: ["href"] });
     schedule();
   }
 
@@ -430,6 +427,8 @@
     } catch {
       return;
     }
+    // GitHub swapped <main>: the observers watch a detached tree, restart.
+    if (enabled && running && observedRoot && !observedRoot.isConnected) stop();
     if (enabled && isBoardPage()) start();
     else if (running || document.querySelector(`.${ROW_CLASS}`)) stop();
   }
@@ -452,6 +451,7 @@
   setInterval(() => {
     if (location.href !== lastUrl) {
       lastUrl = location.href;
+      for (const [k, f] of facts) facts.set(k, { ...f, at: 0 });
       debouncedSync();
     } else if (!running && isBoardPage()) debouncedSync();
     else if (running && !isBoardPage()) stop();

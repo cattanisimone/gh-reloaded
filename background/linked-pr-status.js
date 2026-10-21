@@ -108,19 +108,38 @@ export async function handleMessage({ issues } = {}) {
     byOwner.get(o).push(i);
   }
 
-  // No token for an owner: the page says so; never query anonymously.
-  for (const owner of byOwner.keys()) {
+  // No token for an owner: that owner's cards get no facts; never query
+  // anonymously. One unreadable owner must not hide the rest of the board.
+  let tokenError = null;
+  for (const owner of [...byOwner.keys()]) {
     if (!(await resolveTokenRecord(owner))?.token) {
-      const err = new Error("No GitHub token for this repository owner");
-      err.status = 401;
-      throw err;
+      byOwner.delete(owner);
+      tokenError = tokenError || Object.assign(new Error("No GitHub token for this repository owner"), { status: 401 });
     }
   }
+  if (!byOwner.size) throw tokenError;
 
   const batches = [];
   for (const [owner, list] of byOwner) for (const batch of chunk(list, BATCH)) batches.push({ owner, batch });
 
+  const failures = [];
   await mapWithLimit(batches, IN_FLIGHT, async ({ owner, batch }) => {
+    try {
+      await runBatch(owner, batch, facts);
+    } catch (e) {
+      failures.push(e);
+    }
+  });
+  // A rate limit backs the whole page off; otherwise throw only when nothing
+  // at all could be read, and keep what the other batches returned.
+  const limited = failures.find((e) => e.rateLimited);
+  if (limited) throw limited;
+  if (failures.length === batches.length) throw failures[0];
+  return { facts };
+}
+
+async function runBatch(owner, batch, facts) {
+  {
     let data;
     try {
       data = await ghGraphQL(buildQuery(batch), {}, { owner, allowPartial: true });
@@ -145,8 +164,7 @@ export async function handleMessage({ issues } = {}) {
     batch.forEach((issue, n) => {
       facts[keyOf(issue)] = normalizeIssue(data[`i${n}`], errorsFor(errors, `i${n}`));
     });
-  });
-  return { facts };
+  }
 }
 
 // --- detail: failing check names of one pull request ---

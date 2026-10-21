@@ -180,3 +180,14 @@ test("detail: failing check runs and status contexts only", async () => {
   assert.deepEqual(await handleDetail({ owner: "acme", repo: "web", number: 317 }), { failing: ["build", "e2e", "ci/legacy"] });
   await assert.rejects(handleDetail({ owner: "a b", repo: "web", number: 1 }));
 });
+
+test("handleMessage: one unreadable owner or one owner without a token does not hide the readable ones", async () => {
+  await resetStorage({ githubTokens: [{ id: "o", name: "acme", token: "acme-token", owner: "acme" }, { id: "s", name: "sso", token: "s", owner: "sso" }], defaultTokenId: null });
+  mockFetch((body) => ({
+    json: body.query.includes('owner: "sso"') ? { data: { i0: null }, errors: [{ type: "FORBIDDEN", path: ["i0"] }] } : { data: { i0: issueNode(prNode()) } },
+  }));
+  const { facts } = await handleMessage({ issues: [issue(1), issue(2, "sso", "x"), issue(3, "oss", "lib")] });
+  assert.equal(facts["acme/web#1"].prs.length, 1);
+  assert.equal(facts["sso/x#2"], undefined);
+  assert.equal(facts["oss/lib#3"], undefined);
+});
