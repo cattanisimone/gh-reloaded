@@ -40,7 +40,7 @@
 <text x="112" y="412" font-size="12" fill="#59636e">GitHub Status · via GH Reloaded</text>
 <text x="352" y="412" font-size="12" fill="#0969da">githubstatus.com ↗</text>
 <rect x="520" y="176" width="372" height="130" fill="#fff" stroke="#d1d9e0" rx="12"/>
-<circle cx="540" cy="200" r="5" fill="none" stroke="#6e7781" stroke-width="2"/>
+<circle cx="540" cy="200" r="5" fill="#6e7781"/>
 <text x="556" y="205" font-size="14" font-weight="600" fill="#1f2328">GitHub Status</text>
 <text x="800" y="205" font-size="12" fill="#59636e">Unverified</text>
 <text x="536" y="232" font-size="12" fill="#59636e">Last verified 22 min ago. githubstatus.com could not be reached.</text>

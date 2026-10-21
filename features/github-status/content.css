@@ -111,11 +111,7 @@ html[data-color-mode="dark"] {
 [data-state="minor"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="minor"],
 [data-state="maintenance"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="maintenance"] { background: var(--ghgs-minor); }
 [data-state="major"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="major"] { background: var(--ghgs-major); }
-[data-state="unknown"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="unknown"] { background: transparent; border: 2px solid var(--ghgs-unknown); }
-/* Unavailable: a hollow ring, filled with the header colour so the logo does not show through. */
-@supports (anchor-name: --a) {
-  .ghgs-dot[data-state="unknown"] > .ghgs-dot-mark { background-color: var(--ghgs-ring, transparent); }
-}
+[data-state="unknown"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="unknown"] { background: var(--ghgs-unknown); }
 
 /* --- pill --- */
 .ghgs-pill {

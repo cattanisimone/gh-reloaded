@@ -280,7 +280,7 @@ test("an in-progress maintenance is amber and listed; it never gets a pill", asy
   await expect(panel(page)).toContainText("Database maintenance");
 });
 
-test("an unreachable feed: gray ring, Unverified, no pill", async ({ page, context }) => {
+test("an unreachable feed: gray dot, Unverified, no pill", async ({ page, context }) => {
   await setup(context, page, { fail: true });
   await expect(dot(page)).toHaveAttribute("data-state", "unknown");
   await expect(pill(page)).toHaveCount(0);
@@ -289,8 +289,8 @@ test("an unreachable feed: gray ring, Unverified, no pill", async ({ page, conte
   await expect(panel(page)).toContainText("githubstatus.com could not be reached.");
   await expect(panel(page).getByRole("button", { name: "Retry" })).toBeVisible();
   const mark = await dot(page).locator(".ghgs-dot-mark").evaluate((m) => { const c = getComputedStyle(m); return { bg: c.backgroundColor, w: c.borderTopWidth }; });
-  // Filled with the header colour so the logo does not show through the hollow ring.
-  expect(mark).toEqual({ bg: "rgb(246, 248, 250)", w: "2px" });
+  // A solid gray fill, no border, like the other states.
+  expect(mark).toEqual({ bg: "rgb(110, 119, 129)", w: "0px" });
 });
 
 test("after a failed check the next ticks retry on the background backoff, not after five minutes", async ({ page, context }) => {
