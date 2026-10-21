@@ -59,7 +59,11 @@ html[data-color-mode="dark"] {
   }
 }
 
-/* --- dot --- */
+/* --- dot ---
+   A 16px round badge on the logo's bottom-right corner, drawn with CSS anchor
+   positioning: the button stays the logo's next sibling (same tab order) but
+   leaves the header's flex flow, so it reserves no slot and no gap. The ring is
+   the header's own background (--ghgs-ring, read from the page by content.js). */
 .ghgs-dot {
   flex: none;
   display: inline-flex;
@@ -86,11 +90,28 @@ html[data-color-mode="dark"] {
   border-radius: 50%;
   background: var(--ghgs-unknown);
 }
+@supports (anchor-name: --a) {
+  [data-ghgs-logo] { anchor-name: --ghgs-logo; }
+  .ghgs-dot {
+    position: absolute;
+    position-anchor: --ghgs-logo;
+    left: calc(anchor(right) - 12px);
+    top: calc(anchor(bottom) - 12px);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+  }
+  .ghgs-dot:hover, .ghgs-dot:active { background: transparent; }
+  .ghgs-dot:focus-visible { outline-offset: 1px; }
+  .ghgs-dot .ghgs-dot-mark { box-shadow: 0 0 0 2px var(--ghgs-ring, transparent); }
+  .ghgs-dot:hover .ghgs-dot-mark { background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)); }
+  .ghgs-dot:active .ghgs-dot-mark { background-image: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15)); }
+}
 [data-state="ok"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="ok"] { background: var(--ghgs-ok); }
 [data-state="minor"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="minor"],
 [data-state="maintenance"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="maintenance"] { background: var(--ghgs-minor); }
 [data-state="major"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="major"] { background: var(--ghgs-major); }
-[data-state="unknown"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="unknown"] { background: transparent; border: 2px solid var(--ghgs-unknown); }
+[data-state="unknown"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="unknown"] { background: var(--ghgs-unknown); }
 
 /* --- pill --- */
 .ghgs-pill {

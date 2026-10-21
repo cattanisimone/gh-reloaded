@@ -1,4 +1,4 @@
-// E2E: GitHub Status. A dot right after the logo on every page, a native
+// E2E: GitHub Status. A status badge on the logo's corner on every page, a native
 // popover panel with what githubstatus.com reports, an incident pill in the
 // header only for an open incident that concerns the page. Covers anchors on
 // both header generations (no container fallback), per-update dismissal, SPA
@@ -50,6 +50,176 @@ test("the dot sits right after the logo in the same row, and the logo is untouch
   await expect(logo).toHaveAttribute("href", "/");
   // The row's own gap spaces the dot: no margin of ours.
   expect(await dot(page).evaluate((d) => getComputedStyle(d).margin)).toBe("0px");
+});
+
+const box = (page, sel) => page.locator(sel).evaluate((n) => { const r = n.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height, cx: r.x + r.width / 2, cy: r.y + r.height / 2, right: r.right, bottom: r.bottom }; });
+const LOGO = "header a.AppHeader-logo";
+const OUT_LOGO = 'header a[aria-label="Homepage"]';
+
+for (const [name, fixture, logo] of [["signed-in", "header-signed-in.html", LOGO], ["signed-out", "header-signed-out.html", OUT_LOGO]]) {
+  test(`the badge overlaps the logo's bottom-right corner (${name})`, async ({ page, context }) => {
+    await setup(context, page, { fixture });
+    await expect(dot(page)).toBeVisible();
+    const l = await box(page, logo);
+    const m = await box(page, "#ghgs-dot .ghgs-dot-mark");
+    const info = JSON.stringify({ l, m });
+    expect(m.cx > l.x && m.cx < l.right && m.cy > l.y && m.cy < l.bottom, info).toBe(true);
+    expect(Math.hypot(m.cx - l.right, m.cy - l.bottom), info).toBeLessThanOrEqual(6);
+    expect(await dot(page).evaluate((d) => getComputedStyle(d).position)).toBe("absolute");
+    expect(await page.locator(logo).evaluate((a) => a.nextElementSibling.id)).toBe("ghgs-dot");
+    const d = await box(page, "#ghgs-dot");
+    expect([d.w, d.h]).toEqual([16, 16]);
+  });
+}
+
+test("the badge reserves no room in the header row: the breadcrumb does not move when it is removed", async ({ page, context }) => {
+  await setup(context, page);
+  await expect(dot(page)).toBeVisible();
+  const ctx = ".AppHeader-context";
+  const with_ = await box(page, ctx);
+  const logoBefore = await box(page, LOGO);
+  await dot(page).evaluate((d) => d.remove());
+  expect(await box(page, ctx)).toEqual(with_);
+  expect(await box(page, LOGO)).toEqual(logoBefore);
+  // 8px gap after the logo, as GitHub lays it out (no 24px slot + second gap).
+  expect(with_.x - logoBefore.right).toBe(8);
+});
+
+for (const [mode, ring] of [["light", "rgb(246, 248, 250)"], ["dark", "rgb(21, 27, 35)"]]) {
+  test(`the badge ring takes the header background (${mode})`, async ({ page, context }) => {
+    await setup(context, page);
+    await page.evaluate((m) => document.documentElement.setAttribute("data-color-mode", m), mode);
+    await expect.poll(() => dot(page).evaluate((d) => getComputedStyle(d).getPropertyValue("--ghgs-ring").trim()), { timeout: 8000 }).not.toBe("");
+    await expect.poll(() => dot(page).locator(".ghgs-dot-mark").evaluate((m) => getComputedStyle(m).boxShadow), { timeout: 8000 }).toContain(ring);
+    expect(await dot(page).locator(".ghgs-dot-mark").evaluate((m) => getComputedStyle(m).boxShadow)).toMatch(/ 0px 0px 0px 2px/);
+    expect(await page.locator("header").evaluate((h) => getComputedStyle(h).backgroundColor)).toBe(ring);
+  });
+}
+
+test("a theme change repaints the ring without waiting for the next tick", async ({ page, context }) => {
+  await setup(context, page);
+  await expect(dot(page)).toHaveAttribute("data-state", "ok");
+  await page.waitForTimeout(600); // let the first fetch and its scan settle
+  await page.evaluate(() => document.documentElement.setAttribute("data-color-mode", "dark"));
+  await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("box-shadow", /rgb\(21, 27, 35\)/, { timeout: 2000 });
+  await page.evaluate(() => document.documentElement.setAttribute("data-color-mode", "auto"));
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("box-shadow", /rgb\(246, 248, 250\)/, { timeout: 2000 });
+});
+
+test("the unverified badge darkens on hover too", async ({ page, context }) => {
+  await setup(context, page, { fail: true });
+  await expect(dot(page)).toHaveAttribute("data-state", "unknown");
+  const mark = dot(page).locator(".ghgs-dot-mark");
+  expect(await mark.evaluate((m) => getComputedStyle(m).backgroundImage)).toBe("none");
+  await dot(page).hover();
+  expect(await mark.evaluate((m) => getComputedStyle(m).backgroundImage)).toContain("rgba(0, 0, 0, 0.1)");
+});
+
+test("a change of only the light or dark theme variant repaints the ring", async ({ page, context }) => {
+  await setup(context, page);
+  await expect(dot(page)).toHaveAttribute("data-state", "ok");
+  await page.waitForTimeout(600);
+  await page.evaluate(() => {
+    document.documentElement.setAttribute("data-color-mode", "dark");
+    const st = document.createElement("style");
+    st.textContent = 'html[data-dark-theme="dark_dimmed"] header { background-color: rgb(38, 44, 54) !important; }';
+    document.head.appendChild(st);
+  });
+  await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("box-shadow", /rgb\(21, 27, 35\)/, { timeout: 2000 });
+  await page.evaluate(() => document.documentElement.setAttribute("data-dark-theme", "dark_dimmed"));
+  await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("box-shadow", /rgb\(38, 44, 54\)/, { timeout: 2000 });
+});
+
+test("the badge ring is black on the signed-out header, read from the page", async ({ page, context }) => {
+  await setup(context, page, { fixture: "header-signed-out.html" });
+  await expect(dot(page)).toBeVisible();
+  expect(await dot(page).locator(".ghgs-dot-mark").evaluate((m) => getComputedStyle(m).boxShadow)).toContain("rgb(0, 0, 0)");
+});
+
+test("the badge takes clicks only on its own circle", async ({ page, context }) => {
+  await setup(context, page);
+  await expect(dot(page)).toBeVisible();
+  const r = await page.evaluate(() => {
+    const logo = document.querySelector("header a.AppHeader-logo").getBoundingClientRect();
+    const d = document.getElementById("ghgs-dot").getBoundingClientRect();
+    const at = (x, y) => { const n = document.elementFromPoint(x, y); return n && (n.closest("#ghgs-dot") ? "dot" : n.closest("a.AppHeader-logo") ? "logo" : n.tagName); };
+    return {
+      logoCentre: at(logo.x + logo.width / 2, logo.y + logo.height / 2),
+      logoTopLeft: at(logo.x + 2, logo.y + 2),
+      dotCentre: at(d.x + d.width / 2, d.y + d.height / 2),
+      // Inside the 16px box but outside its circle, over the logo.
+      boxCorner: at(d.x + 1, d.y + 1),
+    };
+  });
+  expect(r).toEqual({ logoCentre: "logo", logoTopLeft: "logo", dotCentre: "dot", boxCorner: "logo" });
+});
+
+test("the badge looks like a native round control: hover darkens, keyboard focus shows a 2px ring", async ({ page, context }) => {
+  await setup(context, page);
+  await expect(dot(page)).toBeVisible();
+  const mark = dot(page).locator(".ghgs-dot-mark");
+  const ringBefore = await mark.evaluate((m) => getComputedStyle(m).boxShadow);
+  expect(await mark.evaluate((m) => getComputedStyle(m).backgroundImage)).toBe("none");
+  await dot(page).hover();
+  expect(await mark.evaluate((m) => getComputedStyle(m).backgroundImage)).toContain("rgba(0, 0, 0, 0.1)");
+  // Hover darkens the fill only: the ring keeps matching the header.
+  expect(await mark.evaluate((m) => getComputedStyle(m).boxShadow)).toBe(ringBefore);
+  await page.mouse.move(5, 400);
+  await page.keyboard.press("Tab");
+  await dot(page).focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(dot(page)).toBeFocused();
+  const ring = await dot(page).evaluate((d) => { const c = getComputedStyle(d); return { w: c.outlineWidth, o: c.outlineOffset, style: c.outlineStyle, r: c.borderTopLeftRadius }; });
+  expect(ring).toEqual({ w: "2px", o: "1px", style: "solid", r: "50%" });
+});
+
+for (const width of [1280, 768, 640, 375, 320]) {
+  test(`the badge stays on the logo and inside the window at ${width}px`, async ({ context }) => {
+    const page = await context.newPage();
+    await page.setViewportSize({ width, height: 800 });
+    await routeStatus(context, { json: statusFeed() });
+    await routeGithub(context, "header-signed-in.html");
+    await page.goto(ACTIONS);
+    await expect(dot(page)).toBeVisible();
+    // layout (anchor positioning, header reflow) can settle a frame after the dot shows: poll, and print the rects on failure
+    let info = "";
+    await expect.poll(async () => {
+      const l = await box(page, LOGO);
+      const d = await box(page, "#ghgs-dot");
+      info = JSON.stringify({ l, d, width });
+      return d.x >= 0 && d.right <= width && d.cx > l.x && d.cx < l.right && d.cy > l.y && d.cy < l.bottom + 2;
+    }, { message: () => info }).toBe(true);
+  });
+}
+
+test("signed-out header at 375px: the logo stays centred in the row", async ({ context }) => {
+  const page = await context.newPage();
+  await page.setViewportSize({ width: 375, height: 800 });
+  await routeStatus(context, { json: statusFeed() });
+  await routeGithub(context, "header-signed-out.html");
+  await page.goto(ACTIONS);
+  await expect(dot(page)).toBeVisible();
+  const row = await box(page, 'header [class*="topRow"]');
+  const l = await box(page, OUT_LOGO);
+  const d = await box(page, "#ghgs-dot");
+  const info = JSON.stringify({ row, l, d });
+  expect(Math.abs(l.cx - row.cx), info).toBeLessThanOrEqual(1);
+  expect(Math.hypot(d.cx - l.right, d.cy - l.bottom), info).toBeLessThanOrEqual(8);
+});
+
+test("a replaced logo gets the badge back with a single anchor; switched off leaves no anchor on the logo", async ({ page, context }) => {
+  await setup(context, page);
+  await expect(dot(page)).toBeVisible();
+  await expect(page.locator("[data-ghgs-logo]")).toHaveCount(1);
+  await page.evaluate(() => { const a = document.querySelector("a.AppHeader-logo"); const c = a.cloneNode(true); c.removeAttribute("data-ghgs-logo"); a.replaceWith(c); });
+  await expect.poll(() => page.locator("[data-ghgs-logo]").count()).toBe(1);
+  await expect.poll(async () => { const l = await box(page, LOGO); const d = await box(page, "#ghgs-dot"); return Math.hypot(d.cx - l.right, d.cy - l.bottom) <= 6; }).toBe(true);
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => chrome.storage.local.set({ ghgsEnabled: false }));
+  await expect(dot(page)).toHaveCount(0);
+  await expect(page.locator("[data-ghgs-logo]")).toHaveCount(0);
 });
 
 test("the dot is a labelled button that opens with Enter and Space, closes with Esc and gives the focus back", async ({ page, context }) => {
@@ -110,7 +280,7 @@ test("an in-progress maintenance is amber and listed; it never gets a pill", asy
   await expect(panel(page)).toContainText("Database maintenance");
 });
 
-test("an unreachable feed: gray ring, Unverified, no pill", async ({ page, context }) => {
+test("an unreachable feed: gray dot, Unverified, no pill", async ({ page, context }) => {
   await setup(context, page, { fail: true });
   await expect(dot(page)).toHaveAttribute("data-state", "unknown");
   await expect(pill(page)).toHaveCount(0);
@@ -119,7 +289,8 @@ test("an unreachable feed: gray ring, Unverified, no pill", async ({ page, conte
   await expect(panel(page)).toContainText("githubstatus.com could not be reached.");
   await expect(panel(page).getByRole("button", { name: "Retry" })).toBeVisible();
   const mark = await dot(page).locator(".ghgs-dot-mark").evaluate((m) => { const c = getComputedStyle(m); return { bg: c.backgroundColor, w: c.borderTopWidth }; });
-  expect(mark).toEqual({ bg: "rgba(0, 0, 0, 0)", w: "2px" });
+  // A solid gray fill, no border, like the other states.
+  expect(mark).toEqual({ bg: "rgb(110, 119, 129)", w: "0px" });
 });
 
 test("after a failed check the next ticks retry on the background backoff, not after five minutes", async ({ page, context }) => {
@@ -293,6 +464,10 @@ test("old header naming (role=banner, AppHeader, aria-label=Homepage logo) still
   });
   await expect(dot(page)).toHaveAttribute("data-state", "minor");
   expect(await page.locator('header a[aria-label="Homepage"]').evaluate((a) => a.nextElementSibling.id)).toBe("ghgs-dot");
+  const l = await box(page, 'header a[aria-label="Homepage"]');
+  const m = await box(page, "#ghgs-dot .ghgs-dot-mark");
+  expect(Math.hypot(m.cx - l.right, m.cy - l.bottom), JSON.stringify({ l, m })).toBeLessThanOrEqual(6);
+  expect(await dot(page).evaluate((d) => getComputedStyle(d).position)).toBe("absolute");
   await expect(pill(page)).toBeVisible();
 });
 
@@ -657,4 +832,10 @@ test("a tab that becomes visible on a stale snapshot repaints gray before the re
   await expect(dot(page)).toHaveAttribute("data-state", "unknown", { timeout: 1500 });
   // The refresh is still out (answers after 4 s): gray came from the repaint, not from the answer.
   expect(log).toHaveLength(2);
+});
+
+test("a header transparent all the way up gets no ring instead of a wrong colour", async ({ page, context }) => {
+  await setup(context, page, { fixture: "header-signed-out.html", transform: (h) => h.replace("</head>", "<style>header, header * { background-color: transparent !important; } body, html { background: transparent !important; }</style></head>") });
+  await expect(dot(page)).toBeVisible();
+  await expect.poll(() => dot(page).locator(".ghgs-dot-mark").evaluate((m) => getComputedStyle(m).boxShadow), { timeout: 8000 }).toMatch(/rgba\(0, 0, 0, 0\)|none/);
 });
