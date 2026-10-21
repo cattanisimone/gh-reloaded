@@ -206,6 +206,7 @@ test("several PRs with one unreadable: the card counts it, neutral, and says why
   await expect(chip.locator(".ghlps-long")).toHaveText("1 status unavailable");
   await expect(chip.locator(".ghlps-glyph")).toHaveText("?");
   await expect(r.locator(".ghlps-tone-bad")).toHaveCount(0);
+  await expect(chip.locator(".ghlps-short")).toHaveText("1 unavailable");
   await expect(r.locator(".ghlps-caption")).toHaveText("The token cannot read some of these pull requests");
 });
 

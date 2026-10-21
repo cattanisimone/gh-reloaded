@@ -75,6 +75,7 @@
 @container (max-width: 273px) {
   .ghlps-long { display: none; }
   .ghlps-short { display: inline; }
+  .ghlps-glyph { display: none; }
 }
 
 /* Modal */

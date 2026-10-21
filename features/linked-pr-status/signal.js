@@ -48,7 +48,7 @@
       text: `${list.length} ${noun}${tail}`,
       label: `${list.length} ${noun}`,
       attention: needs ? (compact ? `${needs} ⚠` : `${needs} needs attention`) : "",
-      unavailableText: unavailable ? (compact ? `${unavailable} ?` : `${unavailable} status unavailable`) : "",
+      unavailableText: unavailable ? (compact ? `${unavailable} unavailable` : `${unavailable} status unavailable`) : "",
     };
   }
 

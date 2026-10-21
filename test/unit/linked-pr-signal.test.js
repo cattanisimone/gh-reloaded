@@ -122,7 +122,7 @@ test("summarize: unreadable PRs are counted in the aggregate, neutral, and expla
   assert.equal(many.unavailable, 1);
   assert.equal(many.unavailableText, "1 status unavailable");
   assert.equal(many.needs, 1);
-  assert.equal(summarize(list, { compact: true }).unavailableText, "1 ?");
+  assert.equal(summarize(list, { compact: true }).unavailableText, "1 unavailable");
   assert.equal(summarize([pr(), pr()]).unavailable, 0);
   assert.equal(summarize([pr(), pr()]).unavailableText, "");
   assert.equal(caption([pr(), { ok: false, denied: true }]), "The token cannot read some of these pull requests");
