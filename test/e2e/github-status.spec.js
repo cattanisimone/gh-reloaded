@@ -135,9 +135,12 @@ test("the badge looks like a native round control: hover darkens, keyboard focus
   await setup(context, page);
   await expect(dot(page)).toBeVisible();
   const mark = dot(page).locator(".ghgs-dot-mark");
-  expect(await mark.evaluate((m) => getComputedStyle(m).filter)).toBe("none");
+  const ringBefore = await mark.evaluate((m) => getComputedStyle(m).boxShadow);
+  expect(await mark.evaluate((m) => getComputedStyle(m).backgroundImage)).toBe("none");
   await dot(page).hover();
-  expect(await mark.evaluate((m) => getComputedStyle(m).filter)).toBe("brightness(0.9)");
+  expect(await mark.evaluate((m) => getComputedStyle(m).backgroundImage)).toContain("rgba(0, 0, 0, 0.1)");
+  // Hover darkens the fill only: the ring keeps matching the header.
+  expect(await mark.evaluate((m) => getComputedStyle(m).boxShadow)).toBe(ringBefore);
   await page.mouse.move(5, 400);
   await page.keyboard.press("Tab");
   await dot(page).focus();
@@ -434,6 +437,10 @@ test("old header naming (role=banner, AppHeader, aria-label=Homepage logo) still
   });
   await expect(dot(page)).toHaveAttribute("data-state", "minor");
   expect(await page.locator('header a[aria-label="Homepage"]').evaluate((a) => a.nextElementSibling.id)).toBe("ghgs-dot");
+  const l = await box(page, 'header a[aria-label="Homepage"]');
+  const m = await box(page, "#ghgs-dot .ghgs-dot-mark");
+  expect(Math.hypot(m.cx - l.right, m.cy - l.bottom), JSON.stringify({ l, m })).toBeLessThanOrEqual(6);
+  expect(await dot(page).evaluate((d) => getComputedStyle(d).position)).toBe("absolute");
   await expect(pill(page)).toBeVisible();
 });
 
@@ -798,4 +805,10 @@ test("a tab that becomes visible on a stale snapshot repaints gray before the re
   await expect(dot(page)).toHaveAttribute("data-state", "unknown", { timeout: 1500 });
   // The refresh is still out (answers after 4 s): gray came from the repaint, not from the answer.
   expect(log).toHaveLength(2);
+});
+
+test("a header transparent all the way up gets no ring instead of a wrong colour", async ({ page, context }) => {
+  await setup(context, page, { fixture: "header-signed-out.html", transform: (h) => h.replace("</head>", "<style>header, header * { background-color: transparent !important; } body, html { background: transparent !important; }</style></head>") });
+  await expect(dot(page)).toBeVisible();
+  await expect.poll(() => dot(page).locator(".ghgs-dot-mark").evaluate((m) => getComputedStyle(m).boxShadow), { timeout: 8000 }).toMatch(/rgba\(0, 0, 0, 0\)|none/);
 });

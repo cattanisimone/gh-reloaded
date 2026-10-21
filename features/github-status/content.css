@@ -103,9 +103,9 @@ html[data-color-mode="dark"] {
   }
   .ghgs-dot:hover, .ghgs-dot:active { background: transparent; }
   .ghgs-dot:focus-visible { outline-offset: 1px; }
-  .ghgs-dot .ghgs-dot-mark { box-shadow: 0 0 0 2px var(--ghgs-ring, var(--ghgs-surface)); }
-  .ghgs-dot:hover .ghgs-dot-mark { filter: brightness(0.9); }
-  .ghgs-dot:active .ghgs-dot-mark { filter: brightness(0.85); }
+  .ghgs-dot .ghgs-dot-mark { box-shadow: 0 0 0 2px var(--ghgs-ring, transparent); }
+  .ghgs-dot:hover .ghgs-dot-mark { background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)); }
+  .ghgs-dot:active .ghgs-dot-mark { background-image: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15)); }
 }
 [data-state="ok"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="ok"] { background: var(--ghgs-ok); }
 [data-state="minor"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="minor"],
@@ -114,7 +114,7 @@ html[data-color-mode="dark"] {
 [data-state="unknown"] > .ghgs-dot-mark, .ghgs-dot-mark[data-state="unknown"] { background: transparent; border: 2px solid var(--ghgs-unknown); }
 /* Unavailable: a hollow ring, filled with the header colour so the logo does not show through. */
 @supports (anchor-name: --a) {
-  .ghgs-dot[data-state="unknown"] > .ghgs-dot-mark { background: var(--ghgs-ring, var(--ghgs-surface)); }
+  .ghgs-dot[data-state="unknown"] > .ghgs-dot-mark { background: var(--ghgs-ring, transparent); }
 }
 
 /* --- pill --- */

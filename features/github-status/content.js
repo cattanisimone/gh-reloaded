@@ -196,7 +196,7 @@
       if (m && m.length >= 3 && (m.length < 4 || Number(m[3]) === 1)) return dot.style.setProperty("--ghgs-ring", c);
       if (n === header) break;
     }
-    dot.style.removeProperty("--ghgs-ring"); // transparent all the way: the CSS falls back to the surface token
+    dot.style.removeProperty("--ghgs-ring"); // transparent all the way (a hero shows behind the header): no ring rather than a wrong colour
   }
 
   // --- pill ---------------------------------------------------------------------
