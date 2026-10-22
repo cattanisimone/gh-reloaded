@@ -11,8 +11,9 @@
   gap: 8px;
   box-sizing: border-box;
   margin-top: 8px;
-  /* A muted band instead of a divider line. Same inner padding as the card's
-     own text (12px); content.js widens it to the card's edges and corners. */
+  /* A muted band under a thin divider. Same inner padding as the card's own
+     text (12px); content.js widens it to the frame's inner edges and corners. */
+  border-top: 1px solid var(--borderColor-muted, #d1d9e0b3);
   padding: 6px 12px;
   background: var(--bgColor-muted, #f6f8fa);
   font-size: 12px;

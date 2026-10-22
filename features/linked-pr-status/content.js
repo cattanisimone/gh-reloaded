@@ -261,6 +261,35 @@
       ro.observe(card);
       ro.observe(row);
     }
+    fitters.set(row, fit);
+    armRefit();
+  }
+
+  // Browser zoom changes the device pixel ratio without resizing the boxes the
+  // observers watch: refit every row when the ratio changes (a resolution query
+  // fires exactly then) and on the window's resize, which zoom also fires. One
+  // shared pair of listeners serves all rows; detached rows are dropped on each
+  // pass, so nothing retains a removed card.
+  const fitters = new Map();
+  let refitArmed = false;
+  let mq = null;
+  function refitAll() {
+    for (const [row, fit] of fitters) {
+      if (row.isConnected) fit();
+      else fitters.delete(row);
+    }
+    watchRatio();
+  }
+  function watchRatio() {
+    mq?.removeEventListener("change", refitAll);
+    mq = typeof matchMedia === "function" ? matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`) : null;
+    mq?.addEventListener("change", refitAll);
+  }
+  function armRefit() {
+    if (refitArmed) return;
+    refitArmed = true;
+    window.addEventListener("resize", refitAll);
+    watchRatio();
   }
 
   // GitHub's cards end with 1px screen-reader-only spans: they take no room.
@@ -281,13 +310,27 @@
     if (row.clientWidth && c.scrollWidth > c.clientWidth) c.hidden = true;
   }
 
-  // Make the band reach the card's inner edges and, when nothing follows it,
+  // The element that draws the card's outline: the nearest ancestor of the row
+  // (up to the card) with a border, found by computed style so no class name
+  // is needed. GitHub draws it on an inner box, with the card itself borderless.
+  function frameOf(card, row) {
+    for (let n = row.parentElement; n && n !== card; n = n.parentElement) {
+      const cs = getComputedStyle(n);
+      if (["Left", "Right", "Bottom"].some((s) => parseFloat(cs[`border${s}Width`]) > 0)) return n;
+    }
+    return card;
+  }
+
+  // Make the band reach the frame's inner edges and, when nothing follows it,
   // the bottom corners, whatever padding the card has: measured, not assumed.
+  // Gaps snap down to whole device pixels: never half a pixel off, and never
+  // past the frame's border (rounding up would paint over it at 80% zoom).
   function fitRow(card, row) {
     row.style.margin = "";
     row.style.borderRadius = "";
-    const cs = getComputedStyle(card);
-    const c = card.getBoundingClientRect();
+    const frame = frameOf(card, row);
+    const cs = getComputedStyle(frame);
+    const c = frame.getBoundingClientRect();
     const r = row.getBoundingClientRect();
     if (!r.width) return;
     const bw = (side) => parseFloat(cs[`border${side}Width`]) || 0;
@@ -298,7 +341,8 @@
       for (let k = n.nextElementSibling; k; k = k.nextElementSibling) if (!visuallyHidden(k)) last = false;
     }
     const bottom = last ? c.bottom - bw("Bottom") - r.bottom : 0;
-    const px = (v) => `${Math.max(0, Math.round(v * 100) / 100)}px`;
+    const dpr = window.devicePixelRatio || 1;
+    const px = (v) => `${Math.max(0, Math.floor(v * dpr + 1e-6) / dpr)}px`;
     row.style.marginInline = `-${px(left)} -${px(right)}`;
     if (last) {
       row.style.marginBottom = `-${px(bottom)}`;
