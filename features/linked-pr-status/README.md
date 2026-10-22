@@ -1,6 +1,6 @@
 # Linked PR status
 
-On a GitHub Projects **Board** view, an issue card with explicitly linked pull requests gets a one-line muted band at the bottom of the card, `Linked PRs:` followed by `PR #N` plus one text signal, or a neutral aggregate for several. A modal gives the details per PR.
+On a GitHub Projects **Board** view, an issue card with explicitly linked pull requests gets a one-line muted band at the bottom of the card, under a thin divider and inside its outline, `Linked PRs:` followed by `PR #N` plus one text signal, or a neutral aggregate for several. A modal gives the details per PR.
 
 ![Linked PR status mockup](../../screenshots/linked-pr-status.svg)
 

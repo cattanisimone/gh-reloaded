@@ -20,14 +20,17 @@
     <title>Board · acme</title>
     <style>
       :root { --fgColor-default:#1f2328; --fgColor-muted:#59636e; --fgColor-accent:#0969da; --fgColor-danger:#d1242f; --fgColor-attention:#9a6700; --fgColor-done:#8250df; --borderColor-default:#d1d9e0; --borderColor-muted:#d1d9e0; --overlay-bgColor:#fff; --bgColor-muted:#f6f8fa; --button-default-bgColor-rest:#f6f8fa; --button-default-borderColor-rest:#d1d9e0; }
-      html[data-color-mode="dark"] { --fgColor-default:#f0f6fc; --fgColor-muted:#9198a1; --fgColor-accent:#4493f8; --fgColor-danger:#f85149; --fgColor-attention:#d29922; --fgColor-done:#ab7df8; --borderColor-default:#3d444d; --borderColor-muted:#3d444db3; --overlay-bgColor:#151b23; --bgColor-muted:#151b23; --button-default-bgColor-rest:#212830; --button-default-borderColor-rest:#3d444d; }
+      html[data-color-mode="dark"] { --colBg:#010409; --cardBg:#0d1117; --fgColor-default:#f0f6fc; --fgColor-muted:#9198a1; --fgColor-accent:#4493f8; --fgColor-danger:#f85149; --fgColor-attention:#d29922; --fgColor-done:#ab7df8; --borderColor-default:#3d444d; --borderColor-muted:#3d444db3; --overlay-bgColor:#151b23; --bgColor-muted:#151b23; --button-default-bgColor-rest:#212830; --button-default-borderColor-rest:#3d444d; }
       body { font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; margin: 0; color: var(--fgColor-default); background: var(--overlay-bgColor); }
       nav[aria-label="Select view"] { display: flex; padding: 4px 16px; border-bottom: 1px solid var(--borderColor-default); }
       [role="tab"] { display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px; }
       .boardContainer__xD7rX8 { display: flex; gap: 16px; padding: 16px; align-items: flex-start; }
-      .board-view-column { width: calc(var(--card-w, 320px) + 24px); flex: none; }
+      .board-view-column { width: var(--card-w, 320px); flex: none; }
       .board-view-column h3 { margin: 0 0 8px; font-size: 14px; }
-      .board-view-column-card { width: var(--card-w, 320px); box-sizing: border-box; margin: 0 0 8px; padding: 8px 0; border: 1px solid var(--borderColor-default); border-radius: 6px; background: var(--overlay-bgColor); cursor: grab; user-select: none; }
+      .board-view-column { padding: 8px; background: var(--colBg, #f6f8fa); border: 1px solid var(--borderColor-default); border-radius: 6px; }
+      .board-view-column-card { width: var(--card-w, 320px); box-sizing: border-box; margin: 0 0 8px; padding: 0; border: 0; background: transparent; box-shadow: 0 1px 1px rgba(31,35,40,.04); cursor: grab; user-select: none; }
+      /* The inner box draws the outline, as on the live board (older markup: ?cardborder puts it on the card). */
+      .board-view-column-card > :first-child { box-sizing: border-box; padding: 8px 0 12px; border: 1px solid var(--borderColor-default); border-radius: 6px; background: var(--cardBg, #fff); }
       .Header__h4 { padding: 0 12px; display: flex; align-items: center; gap: 6px; color: var(--fgColor-muted); font-size: 12px; }
       .Title__h2 { display: block; margin: 2px 12px 6px; line-height: 1.35; color: var(--fgColor-default); text-decoration: none; }
       .Fields__h3 { list-style: none; display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0 12px; }
@@ -48,19 +51,19 @@
       <div class="board-view-column" data-board-column="Todo">
         <h3>Todo</h3>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="207">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open issue" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #207</span></div>
           <a href="/acme/web/issues/207" class="Title__h2">Add preview support for the settings panel</a>
           <ul aria-label="Fields" class="Fields__h3"><li><span class="tok">enhancement</span></li><li><span class="tok">P1</span></li></ul>
         </div></div>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="208">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open issue" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #208</span></div>
           <a href="/acme/web/issues/208" class="Title__h2">Improve settings cache</a>
           <ul aria-label="Fields" class="Fields__h3"><li><span class="tok">enhancement</span></li></ul>
         </div></div>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="209">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open issue" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #209</span></div>
           <a href="/acme/web/issues/209" class="Title__h2">No linked PR here</a>
           <ul aria-label="Fields" class="Fields__h3"><li><span class="tok">bug</span></li></ul>
@@ -69,19 +72,19 @@
       <div class="board-view-column" data-board-column="In progress">
         <h3>In progress</h3>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="211">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open issue" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #211</span></div>
           <a href="/acme/web/issues/211" class="Title__h2">Update activity view</a>
           <ul aria-label="Fields" class="Fields__h3"><li><span class="tok">enhancement</span></li></ul>
         </div></div>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="212">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open issue" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #212</span></div>
           <a href="/acme/web/issues/212" class="Title__h2">Fix keyboard navigation in the long multi-line titled dialog component that keeps wrapping over several lines</a>
           <ul aria-label="Fields" class="Fields__h3"><li><span class="tok">a11y</span></li></ul>
         </div></div>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="213">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open issue" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #213</span></div>
           <a href="/acme/web/issues/213" class="Title__h2">Cache headers</a>
           <ul aria-label="Fields" class="Fields__h3"><li><span class="tok">infra</span></li></ul>
@@ -90,24 +93,24 @@
       <div class="board-view-column" data-board-column="In review">
         <h3>In review</h3>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="214">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open issue" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #214</span></div>
           <a href="/acme/web/issues/214" class="Title__h2">Polish the native field</a>
           <ul aria-label="Fields" class="Fields__h3"><li><span class="tok">chore</span></li><li><a href="/acme/web/pull/330" aria-label="Linked pull requests: #330" class="LinkedPr__h">PR #330</a></li></ul>
         </div></div>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="215">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open pull request" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #215</span></div>
           <a href="/acme/web/pull/215" class="Title__h2">A pull request item on the board</a>
           <ul aria-label="Fields" class="Fields__h3"><li><span class="tok">review</span></li></ul>
         </div></div>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="216">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open pull request" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #216</span></div>
           <span class="Title__h2">Draft item: plan the offsite</span>
         </div></div>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="217">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open issue" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #217</span></div>
           <a href="/acme/web/issues/217" class="Title__h2">Card without a fields list</a>
         </div></div>
@@ -115,7 +118,7 @@
       <div class="board-view-column" data-board-column="Later" style="margin-top:3000px">
         <h3>Later</h3>
         <div class="board-view-column-card" role="button" tabindex="0" data-num="218">
-        <div class="Box_1__h1">
+        <div class="Box__v-wiAm">
           <div class="Header__h4"><svg aria-label="Open issue" class="octicon octicon-issue-opened" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2"></circle></svg><span class="meta">web #218</span></div>
           <a href="/acme/web/issues/218" class="Title__h2">Far below the viewport</a>
           <ul aria-label="Fields" class="Fields__h3"><li><span class="tok">later</span></li></ul>
