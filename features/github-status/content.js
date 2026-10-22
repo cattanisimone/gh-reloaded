@@ -283,18 +283,22 @@
     keepGap(pill, search);
   }
 
-  // Shows as much of the pill as its row has room for. The pill shrinks inside the row; its natural width
-  // (measured with shrinking off) says whether the content fits what the row gave it.
+  // Shows as much of the pill as its row has room for. The pill is measured at its natural width (shrinking
+  // off): it fits when that does not overflow the row and does not squeeze its neighbours. The room is the
+  // row's, never the width the pill was shrunk to.
   function fitPill(pill) {
+    const row = pill.parentElement;
     const fits = () => {
-      const room = pill.getBoundingClientRect().width;
+      const others = [...row.children].filter((n) => n !== pill);
+      const before = others.map((n) => n.getBoundingClientRect().width);
       pill.classList.add("ghgs-measure");
-      const need = pill.getBoundingClientRect().width;
+      const overflow = row.scrollWidth - row.clientWidth;
+      const squeezed = others.some((n, i) => n.getBoundingClientRect().width < before[i] - 0.5);
       pill.classList.remove("ghgs-measure");
-      return !room || need <= room + 0.5;
+      return overflow <= 0.5 && !squeezed;
     };
     pill.classList.remove("ghgs-nolink", "ghgs-nodetail");
-    if (fits()) return;
+    if (!row || fits()) return;
     pill.classList.add("ghgs-nolink");
     if (fits()) return;
     pill.classList.add("ghgs-nodetail");

@@ -651,6 +651,26 @@ for (const [fixture, widths] of [["header-signed-in.html", [1280, 1012, 768, 640
   }
 }
 
+test("on a wide two-row header the pill keeps its natural width with the full name, detail and Details", async ({ page, context }) => {
+  for (const width of [1500, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
+    await expect(pill(page)).toBeVisible();
+    const m = await parts(page);
+    const w = await page.evaluate(() => {
+      const p = document.getElementById("ghgs-pill");
+      const room = p.getBoundingClientRect().width;
+      p.classList.add("ghgs-measure");
+      const need = p.getBoundingClientRect().width;
+      p.classList.remove("ghgs-measure");
+      return { room, need };
+    });
+    expect(m, JSON.stringify({ m, w, width })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+    expect(w.room, JSON.stringify({ w, width })).toBeGreaterThanOrEqual(w.need - 0.5);
+    expect(w.room, JSON.stringify({ w, width })).toBeGreaterThan(200);
+  }
+});
+
 test("with room at 640px the pill keeps Details even though the old breakpoint hid it", async ({ page, context }) => {
   await page.setViewportSize({ width: 640, height: 800 });
   await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
