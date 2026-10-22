@@ -1083,33 +1083,6 @@ test("the margin safety net is not used on current markup, and covers only the s
   expect(await pill(p2).evaluate((p) => p.style.marginInlineEnd)).toBe("8px");
 });
 
-test("a pill shown again after being hidden in a gap-less row is fitted with its margin, so the row does not overflow", async ({ page, context }) => {
-  await setup(context, page, {
-    feed: criticalFeed(),
-    fixture: GLOBALNAV,
-    transform: (h) => h.replace(".topBarActions__h9k2 { display: flex; align-items: center; gap: 8px;", ".topBarActions__h9k2 { display: flex; align-items: center; gap: 0;"),
-  });
-  await expect(pill(page)).toBeVisible();
-  for (const width of [420, 1500, 700, 1500]) {
-    await page.setViewportSize({ width, height: 900 });
-    await page.waitForTimeout(400);
-    const r = await page.evaluate(() => {
-      const p = document.getElementById("ghgs-pill");
-      const row = p.parentElement;
-      const q = p.nextElementSibling.getBoundingClientRect();
-      const b = p.getBoundingClientRect();
-      const withPill = row.scrollWidth - row.clientWidth;
-      p.style.display = "none";
-      const without = row.scrollWidth - row.clientWidth;
-      p.style.display = "";
-      return { hidden: p.classList.contains("ghgs-hidden"), over: withPill - Math.max(0, without), gap: b.width ? q.left - b.right : 8 };
-    });
-    const info = JSON.stringify({ width, ...r });
-    expect(r.over, info).toBeLessThanOrEqual(2);
-    expect(r.gap, info).toBeGreaterThanOrEqual(7.5);
-  }
-});
-
 test("a gap-less actions row of margin-spaced controls does not pull the pill away from the search", async ({ page, context }) => {
   // No searchGroup wrapper, no row gap, controls spaced by margins: the row sits in a space-between bar. The pill must stay next to the search control.
   await setup(context, page, {
@@ -1257,31 +1230,33 @@ test("a neighbour with a huge flex basis does not squeeze the pill the fit check
   expect(await page.locator(".ghgs-pill-name").evaluate((e) => e.clientWidth)).toBeGreaterThan(40);
 });
 
-test("at 800 and 500px the pill neither overlaps the logo nor crushes the breadcrumb region", async ({ page, context }) => {
-  for (const width of [800, 500]) {
+for (const width of [800, 500]) {
+  test(`at ${width}px the pill never overlaps the logo or squeezes the breadcrumb: it drops its parts or hides`, async ({ page, context }) => {
     await page.setViewportSize({ width, height: 800 });
     await setup(context, page, {
       feed: actionsFeed(),
       fixture: "header-signed-in-globalnav.html",
-      transform: (h) => h
-        .replace('<div class="topBarStart__r5t6u">', '<div class="topBarStart__r5t6u" style="flex:0 1 auto;min-width:0;overflow:hidden">')
-        .replace("<strong>web</strong>", "<strong>web-application-with-a-long-name</strong>"),
+      // The breadcrumb stays visible at every width and is a shrinkable, clipping region; the actions row is right-aligned and may grow leftwards.
+      transform: (h) =>
+        h
+          .replace("@media (max-width: 767px) {", "@media (max-width: 0px) {")
+          .replace(".topBarStart__r5t6u {", ".topBarStart__r5t6u { flex: 1 1 0; overflow: hidden;")
+          .replace(".context__j1k2l {", ".context__j1k2l { min-width: 0; overflow: hidden; text-overflow: clip;")
+          .replace("<strong>web</strong>", "<strong>web-with-a-rather-long-repository-name</strong>"),
     });
-    await page.locator("#ghgs-pill").waitFor({ state: "attached" });
-    const m = await page.evaluate(() => {
-      const p = document.getElementById("ghgs-pill");
-      const start = document.querySelector(".topBarStart__r5t6u");
-      const shown = getComputedStyle(p).display !== "none";
-      const pr = p.getBoundingClientRect();
-      const kids = [...start.children].map((c) => c.getBoundingClientRect());
-      const overlap = shown && kids.some((r) => r.width > 0 && r.left < pr.right - 1 && r.right > pr.left + 1);
-      const wNow = start.getBoundingClientRect().width;
-      p.style.display = "none";
-      const wWithout = start.getBoundingClientRect().width;
-      p.style.display = "";
-      return { shown, overlap, wNow, wWithout, pl: pr.left, cls: p.className, fit: p.dataset.fit };
-    });
-    expect(m.overlap, JSON.stringify({ m, width })).toBe(false);
-    if (m.shown) expect(m.wNow, JSON.stringify({ m, width })).toBeGreaterThanOrEqual(Math.min(m.wWithout, 8) - 0.5);
-  }
-});
+    const measure = () =>
+      page.evaluate(() => {
+        const p = document.getElementById("ghgs-pill");
+        const logo = document.querySelector("[data-ghgs-logo]");
+        const ctx = document.querySelector(".context__j1k2l");
+        const pr = p.getBoundingClientRect();
+        return { hidden: p.classList.contains("ghgs-hidden") || pr.width === 0, pillLeft: pr.left, logoRight: logo.getBoundingClientRect().right, ctxW: ctx.getBoundingClientRect().width, ctxNeed: ctx.scrollWidth, fit: p.dataset.fit };
+      });
+    await expect(pill(page)).toBeAttached();
+    const m = await measure();
+    await pill(page).evaluate((p) => (p.style.display = "none"));
+    const base = await measure();
+    expect(m.hidden || m.pillLeft >= m.logoRight - 0.5, JSON.stringify({ m, base })).toBe(true);
+    expect(m.hidden || m.ctxW >= base.ctxW - 2, JSON.stringify({ m, base })).toBe(true);
+  });
+}

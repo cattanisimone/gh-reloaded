@@ -296,7 +296,8 @@
     const fits = () => {
       // The row's siblings count too: the header's start region (logo, breadcrumb) shrinks when the actions grow.
       const regions = [...(row.parentElement?.children || [])].filter((n) => n !== row);
-      const others = [...[...row.children].filter((n) => n !== pill), ...regions];
+      // Their children count as well: the breadcrumb is a child of the start region and is what gets emptied.
+      const others = [...[...row.children].filter((n) => n !== pill), ...regions, ...regions.flatMap((n) => [...n.children])];
       // The baseline is taken with the pill out of the layout, or a neighbour it already squeezed would count as clipped.
       pill.style.display = "none";
       const before = others.map((n) => ({ clip: clip(n), w: n.getBoundingClientRect().width }));
