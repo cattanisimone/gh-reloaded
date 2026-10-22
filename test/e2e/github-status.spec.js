@@ -1320,3 +1320,20 @@ test("a contextCrumb__hash breadcrumb keeps its repo name with the pill at 800 a
     }
   }
 });
+
+test("a flex-growing breadcrumb container does not hide the pill at 1500 and 1100px", async ({ page, context }) => {
+  for (const width of [1500, 1100]) {
+    await page.setViewportSize({ width, height: 800 });
+    const region = `<nav class="contextRegion__q1w2e prc-Breadcrumbs-BreadcrumbsBase" style="display:flex;flex:1 1 0;min-width:0;overflow:hidden"><div class="contextCrumb__a1b2c" style="flex:0 0 auto;white-space:nowrap"><a href="/acme/web">acme-playground</a></div></nav>`;
+    await setup(context, page, {
+      feed: actionsFeed(),
+      fixture: "header-signed-in-globalnav.html",
+      transform: (h) => h.replace('<div class="context__j1k2l">', `<div class="context__j1k2l" style="min-width:0;display:flex;flex:1 1 auto">${region}<div hidden>`).replace("</strong></a></div>", "</strong></a></div></div>"),
+    });
+    await expect(pill(page)).toBeAttached();
+    const m = await pill(page).evaluate((p) => ({ cls: p.className, w: p.getBoundingClientRect().width, fit: p.dataset.fit }));
+    expect(m.cls, JSON.stringify({ m, width })).not.toContain("ghgs-hidden");
+    expect(m.cls, JSON.stringify({ m, width })).not.toContain("ghgs-noname");
+    expect(m.w).toBeGreaterThan(200);
+  }
+});

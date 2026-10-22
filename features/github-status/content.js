@@ -315,7 +315,12 @@
         if (t.textContent.trim().length > 1 && !pill.contains(t) && !t.parentElement?.closest('[id^="ghgs-"]')) words.push(t);
       }
       // The breadcrumb group itself (matched on the stable middle of its class) must keep its width as well.
-      const crumbs = [...root.querySelectorAll('[class*="ontextCrumb"], [class*="readcrumb"]')].filter((c) => !pill.contains(c));
+      // Only real items: a container that grows to fill its row (flex-grow) gives its width back when the pill takes room
+      // without any word being cut, and the words themselves are covered by the text check below.
+      const crumbSel = '[class*="ontextCrumb"], [class*="readcrumb"]';
+      const crumbs = [...root.querySelectorAll(crumbSel)].filter(
+        (c) => !pill.contains(c) && !c.querySelector(crumbSel) && !(parseFloat(getComputedStyle(c).flexGrow) > 0),
+      );
       const crumbW = crumbs.map((c) => c.getBoundingClientRect().width);
       const seen = (t) => {
         const range = document.createRange();
