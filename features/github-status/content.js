@@ -293,40 +293,49 @@
   // spacer or a flexible group) is not crushed: only one whose content starts to overflow its box is.
   function fitPill(pill) {
     const row = pill.parentElement;
-    // scrollWidth and clientWidth are rounded to whole pixels: a flexible box with a fractional width reads 1px "clipped"
-    // and its clip amount jumps by 1 when the pill changes its width, so anything under 2px is rounding, not clipping.
-    const ROUNDING = 1.5;
-    const clipped = (n) => n.scrollWidth - n.clientWidth > ROUNDING;
+    const TOL = 2; // scrollWidth and clientWidth are rounded separately, so 1px of "overflow" can be rounding alone
     const clip = (n) => Math.max(0, n.scrollWidth - n.clientWidth);
     const fits = () => {
       const others = [...row.children].filter((n) => n !== pill);
       // The baseline is taken with the pill out of the layout, or a neighbour it already squeezed would count as clipped.
       pill.style.display = "none";
-      const before = others.map(clip);
+      const before = others.map((n) => ({ clip: clip(n), w: n.getBoundingClientRect().width }));
       const base = row.scrollWidth - row.clientWidth; // a row can overflow without us (a hidden or positioned child)
       pill.style.display = "";
       pill.classList.add("ghgs-measure");
       const overflow = row.scrollWidth - row.clientWidth - Math.max(0, base);
-      const crushed = others.some((n, i) => clip(n) > before[i] + ROUNDING); // more clipped than without the pill, even if already clipped
+      // Crushed: the pill made the neighbour both narrower and more clipped. A neighbour whose width did not
+      // change is not squeezed by us, whatever its scrollWidth does (positioned or hidden children).
+      const crushed = others.findIndex((n, i) => clip(n) > before[i].clip + TOL && n.getBoundingClientRect().width < before[i].w - TOL);
       pill.classList.remove("ghgs-measure");
-      if (overflow > ROUNDING || crushed) return false;
+      if (overflow > TOL) return `overflow ${overflow}`;
+      if (crushed >= 0) return `crushed ${others[crushed].className || others[crushed].tagName}`;
       // The row may still squeeze the pill itself (live: the name collapsed to 0px and "Details" painted over the close button), so
       // the pill as laid out must show the whole name and have nothing clipped in its main button.
-      if (pill.classList.contains("ghgs-noname")) return true; // icon and close only: nothing left to drop inside the pill
+      if (pill.classList.contains("ghgs-noname")) return ""; // icon and close only: nothing left to drop inside the pill
       const main = pill.querySelector(".ghgs-pill-main");
       const name = pill.querySelector(".ghgs-pill-name");
-      const nameOk = !name || (name.clientWidth > 0 && name.scrollWidth - name.clientWidth <= ROUNDING);
-      return nameOk && !(main && clipped(main)) && !clipped(pill);
+      if (name && !(name.clientWidth > 0 && clip(name) <= TOL)) return `name ${name.clientWidth}/${name.scrollWidth}`;
+      if (main && clip(main) > TOL) return `main ${main.clientWidth}/${main.scrollWidth}`;
+      if (clip(pill) > TOL) return `pill ${pill.clientWidth}/${pill.scrollWidth}`;
+      return "";
     };
     pill.classList.remove("ghgs-nolink", "ghgs-nodetail", "ghgs-noname", "ghgs-hidden");
     if (!row) return;
     // Parts go in order: the "Details" link, the detail word, the name (icon and close stay, the aria-labels keep the text).
     // A row where even that overflows or crushes a native control gets no pill at all; the
-    // next scan tries again.
+    // next scan tries again. The first check that failed at each step is kept in data-fit, to read what a real header does.
+    const why = [];
     for (const step of ["", "ghgs-nolink", "ghgs-nodetail", "ghgs-noname"]) {
       if (step) pill.classList.add(step);
-      if (fits()) return;
+      const reason = fits();
+      why.push(reason || "ok");
+      if (!reason) {
+        pill.dataset.fit = why.join(" | ");
+        return;
+      }
     }
+    pill.dataset.fit = why.join(" | ");
     pill.classList.add("ghgs-hidden");
   }
 

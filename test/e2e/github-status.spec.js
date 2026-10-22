@@ -1192,3 +1192,25 @@ test("a pill the row squeezes drops Details, then the detail, so no part is clip
     expect(m.nameW, JSON.stringify({ m, width })).toBeGreaterThan(0);
   }
 });
+
+test("on a wide header the first fit step passes and data-fit says so", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1500, height: 800 });
+  await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
+  await expect(pill(page)).toBeVisible();
+  const fit = await pill(page).getAttribute("data-fit");
+  expect(fit, String(fit)).toBe("ok");
+  const m = await parts(page);
+  expect(m, JSON.stringify(m)).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+});
+
+test("a neighbour whose scrollable overflow moves without getting narrower does not make the pill drop its text", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1500, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="wob__w1" style="flex:none;width:120px;overflow:hidden"><span style="display:block;width:122px;height:1px"></span></div><div class="searchGroup__a1b2c">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  const m = await parts(page);
+  expect(m, JSON.stringify({ m, fit: await pill(page).getAttribute("data-fit") })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+});
