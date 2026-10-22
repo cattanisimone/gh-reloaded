@@ -307,11 +307,11 @@
       // Crushed: the pill made the neighbour both narrower and more clipped. A neighbour whose width did not
       // change is not squeezed by us, whatever its scrollWidth does (positioned or hidden children).
       const crushed = others.findIndex((n, i) => clip(n) > before[i].clip + TOL && n.getBoundingClientRect().width < before[i].w - TOL);
-      pill.classList.remove("ghgs-measure");
       if (overflow > TOL) return `overflow ${overflow}`;
       if (crushed >= 0) return `crushed ${others[crushed].className || others[crushed].tagName}`;
       // The row may still squeeze the pill itself (live: the name collapsed to 0px and "Details" painted over the close button), so
       // the pill as laid out must show the whole name and have nothing clipped in its main button.
+      // Checked at the natural width (ghgs-measure still on): the shrinkable pill would be sized by the neighbours' spare room.
       if (pill.classList.contains("ghgs-noname")) return ""; // icon and close only: nothing left to drop inside the pill
       const main = pill.querySelector(".ghgs-pill-main");
       const name = pill.querySelector(".ghgs-pill-name");
@@ -320,7 +320,7 @@
       if (clip(pill) > TOL) return `pill ${pill.clientWidth}/${pill.scrollWidth}`;
       return "";
     };
-    pill.classList.remove("ghgs-nolink", "ghgs-nodetail", "ghgs-noname", "ghgs-hidden");
+    pill.classList.remove("ghgs-nolink", "ghgs-nodetail", "ghgs-noname", "ghgs-hidden", "ghgs-measure");
     if (!row) return;
     // Parts go in order: the "Details" link, the detail word, the name (icon and close stay, the aria-labels keep the text).
     // A row where even that overflows or crushes a native control gets no pill at all; the
@@ -331,11 +331,13 @@
       const reason = fits();
       why.push(reason || "ok");
       if (!reason) {
+        // A pill that fits at its natural width keeps it: ghgs-measure stays on so the row cannot shrink it later.
         pill.dataset.fit = why.join(" | ");
         return;
       }
     }
     pill.dataset.fit = why.join(" | ");
+    pill.classList.remove("ghgs-measure");
     pill.classList.add("ghgs-hidden");
   }
 

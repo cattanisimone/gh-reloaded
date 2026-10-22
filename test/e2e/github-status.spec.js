@@ -636,12 +636,14 @@ for (const [fixture, widths] of [["header-signed-in.html", [1280, 1012, 768, 640
       const roomy = await page.evaluate(() => {
         const p = document.getElementById("ghgs-pill");
         const kept = ["ghgs-nolink", "ghgs-nodetail"].filter((c) => p.classList.contains(c));
-        p.classList.remove(...kept);
+        const pinned = p.classList.contains("ghgs-measure"); // a fitted pill keeps its natural width
+        p.classList.remove(...kept, "ghgs-measure");
         const room = p.getBoundingClientRect().width;
         p.classList.add("ghgs-measure");
         const need = p.getBoundingClientRect().width;
         p.classList.remove("ghgs-measure");
         p.classList.add(...kept);
+        if (pinned) p.classList.add("ghgs-measure");
         return room >= need - 0.5;
       });
       // the room decides, never the viewport: with room all parts show, otherwise they leave in order
@@ -1213,4 +1215,17 @@ test("a neighbour whose scrollable overflow moves without getting narrower does 
   await expect(pill(page)).toBeVisible();
   const m = await parts(page);
   expect(m, JSON.stringify({ m, fit: await pill(page).getAttribute("data-fit") })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+});
+
+test("a neighbour with a huge flex basis does not squeeze the pill the fit check accepted", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1500, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="spare__s1" style="flex:1 1 3000px;min-width:0"></div><div class="searchGroup__a1b2c">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  const m = await parts(page);
+  expect(m, JSON.stringify({ m, fit: await pill(page).getAttribute("data-fit") })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+  expect(await page.locator(".ghgs-pill-name").evaluate((e) => e.clientWidth)).toBeGreaterThan(40);
 });
