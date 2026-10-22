@@ -685,6 +685,22 @@ test("a growing neighbour and an already overflowing row do not shrink the pill:
   expect(w).toBeGreaterThan(200);
 });
 
+test("a neighbour the full pill would squeeze is not left clipped: Details and the detail word go first", async ({ page, context }) => {
+  await page.setViewportSize({ width: 900, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="squeeze__q1" style="flex:0 1 auto;min-width:0;overflow:hidden;white-space:nowrap"><span style="display:inline-block;width:200px">Recent</span></div><div class="searchGroup__a1b2c">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  const r = await page.evaluate(() => {
+    const n = document.querySelector(".squeeze__q1");
+    return n ? { clipped: n.scrollWidth - n.clientWidth, pillW: document.getElementById("ghgs-pill").getBoundingClientRect().width } : null;
+  });
+  expect(r, JSON.stringify(r)).not.toBeNull();
+  expect(r.clipped, JSON.stringify(r)).toBeLessThanOrEqual(0.5);
+});
+
 test("with room at 640px the pill keeps Details even though the old breakpoint hid it", async ({ page, context }) => {
   await page.setViewportSize({ width: 640, height: 800 });
   await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });

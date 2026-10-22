@@ -292,8 +292,11 @@
     const clipped = (n) => n.scrollWidth - n.clientWidth > 0.5;
     const fits = () => {
       const others = [...row.children].filter((n) => n !== pill);
+      // The baseline is taken with the pill out of the layout, or a neighbour it already squeezed would count as clipped.
+      pill.style.display = "none";
       const before = others.map(clipped);
       const base = row.scrollWidth - row.clientWidth; // a row can overflow without us (a hidden or positioned child)
+      pill.style.display = "";
       pill.classList.add("ghgs-measure");
       const overflow = row.scrollWidth - row.clientWidth - Math.max(0, base);
       const crushed = others.some((n, i) => !before[i] && clipped(n));
