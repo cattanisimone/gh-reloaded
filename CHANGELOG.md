@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/cattanisimone/gh-reloaded/compare/v1.4.0...v1.4.1) (2026-10-22)
+
+
+### Bug Fixes
+
+* keep the card outline around the linked PR status row and add its divider ([#99](https://github.com/cattanisimone/gh-reloaded/issues/99)) ([2d4e06f](https://github.com/cattanisimone/gh-reloaded/commit/2d4e06f6b0f3cda2ba19e08c6598754b08319381))
+* keep the GitHub Status dot, pill and header consistent during an incident ([#97](https://github.com/cattanisimone/gh-reloaded/issues/97)) ([c079639](https://github.com/cattanisimone/gh-reloaded/commit/c079639a121442603d1567e96e765a52c853a3e6))
+
 ## [1.4.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.3.0...v1.4.0) (2026-10-21)
 
 
