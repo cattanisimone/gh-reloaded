@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="430" viewBox="0 0 1120 430" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<rect width="1120" height="430" fill="#ffffff"/>
+<text x="30" y="44" font-size="16" font-weight="600" fill="#1f2328">Observed</text>
+<text x="30" y="64" font-size="12" fill="#59636e">Footer band and board column share the same grey; the card looks open at the bottom</text>
+<rect x="30" y="84" width="520" height="290" rx="6" fill="#f6f8fa" stroke="#d1d9e0" stroke-opacity="0.0"/>
+<clipPath id="clip58"><rect x="58" y="110" width="464" height="142" rx="6"/></clipPath>
+<rect x="58" y="110" width="464" height="142" rx="6" fill="#ffffff"/>
+<rect x="58" y="222" width="464" height="30" fill="#f6f8fa" clip-path="url(#clip58)"/>
+<rect x="58.5" y="110.5" width="463" height="141" rx="6" fill="none" stroke="#d1d9e0" stroke-opacity="0.55"/>
+<circle cx="76" cy="132" r="6" fill="none" stroke="#1a7f37" stroke-width="1.6"/>
+<circle cx="76" cy="132" r="1.6" fill="#1a7f37"/>
+<text x="90" y="136" font-size="12" fill="#59636e">acme-labs/export #214</text>
+<text x="70" y="164" font-size="14" font-weight="600" fill="#1f2328">Retry failed export jobs with</text>
+<text x="70" y="183" font-size="14" font-weight="600" fill="#1f2328">exponential backoff</text>
+<rect x="70" y="194" width="52" height="20" rx="10" fill="#dff7e9" stroke="#8ddba8"/>
+<text x="96" y="208" font-size="12" font-weight="600" fill="#1a7f37" text-anchor="middle">bug</text>
+<rect x="130" y="194" width="22" height="20" rx="10" fill="#eaeef2" stroke="#d1d9e0"/>
+<text x="141" y="208" font-size="12" fill="#59636e" text-anchor="middle">2</text>
+<text x="70" y="242" font-size="12" fill="#59636e">PRs:</text>
+<text x="102" y="242" font-size="12" font-weight="600" fill="#0969da">PR #318</text>
+<rect x="162.5" y="227.5" width="118" height="19" rx="9.5" fill="none" stroke="#d1d9e0"/>
+<text x="171" y="242" font-size="12" font-weight="500" fill="#59636e">Status unavailable</text>
+<rect x="58" y="266" width="464" height="70" rx="6" fill="#ffffff" stroke="#d1d9e0" stroke-opacity="0.55"/>
+<text x="70" y="292" font-size="12" fill="#59636e">acme-labs/export #207</text>
+<text x="70" y="312" font-size="14" font-weight="600" fill="#1f2328">Document the export schema</text>
+<text x="570" y="44" font-size="16" font-weight="600" fill="#1f2328">Expected</text>
+<text x="570" y="64" font-size="12" fill="#59636e">A thin divider and a visible card outline keep the footer distinct</text>
+<rect x="570" y="84" width="520" height="290" rx="6" fill="#f6f8fa" stroke="#d1d9e0" stroke-opacity="0.0"/>
+<clipPath id="clip598"><rect x="598" y="110" width="464" height="142" rx="6"/></clipPath>
+<rect x="598" y="110" width="464" height="142" rx="6" fill="#ffffff"/>
+<rect x="598" y="222" width="464" height="30" fill="#f6f8fa" clip-path="url(#clip598)"/>
+<rect x="598" y="222" width="464" height="1" fill="#d1d9e0" clip-path="url(#clip598)"/>
+<rect x="598.5" y="110.5" width="463" height="141" rx="6" fill="none" stroke="#d1d9e0" stroke-opacity="1"/>
+<circle cx="616" cy="132" r="6" fill="none" stroke="#1a7f37" stroke-width="1.6"/>
+<circle cx="616" cy="132" r="1.6" fill="#1a7f37"/>
+<text x="630" y="136" font-size="12" fill="#59636e">acme-labs/export #214</text>
+<text x="610" y="164" font-size="14" font-weight="600" fill="#1f2328">Retry failed export jobs with</text>
+<text x="610" y="183" font-size="14" font-weight="600" fill="#1f2328">exponential backoff</text>
+<rect x="610" y="194" width="52" height="20" rx="10" fill="#dff7e9" stroke="#8ddba8"/>
+<text x="636" y="208" font-size="12" font-weight="600" fill="#1a7f37" text-anchor="middle">bug</text>
+<rect x="670" y="194" width="22" height="20" rx="10" fill="#eaeef2" stroke="#d1d9e0"/>
+<text x="681" y="208" font-size="12" fill="#59636e" text-anchor="middle">2</text>
+<text x="610" y="242" font-size="12" fill="#59636e">PRs:</text>
+<text x="642" y="242" font-size="12" font-weight="600" fill="#0969da">PR #318</text>
+<rect x="702.5" y="227.5" width="118" height="19" rx="9.5" fill="none" stroke="#d1d9e0"/>
+<text x="711" y="242" font-size="12" font-weight="500" fill="#59636e">Status unavailable</text>
+<rect x="598" y="266" width="464" height="70" rx="6" fill="#ffffff" stroke="#d1d9e0" stroke-opacity="0.55"/>
+<text x="610" y="292" font-size="12" fill="#59636e">acme-labs/export #207</text>
+<text x="610" y="312" font-size="14" font-weight="600" fill="#1f2328">Document the export schema</text>
+<text x="30" y="416" font-size="11" fill="#59636e">Exploratory mockup, not a real screenshot. Fictional data. Light theme.</text>
+</svg>
