@@ -1083,6 +1083,33 @@ test("the margin safety net is not used on current markup, and covers only the s
   expect(await pill(p2).evaluate((p) => p.style.marginInlineEnd)).toBe("8px");
 });
 
+test("a pill shown again after being hidden in a gap-less row is fitted with its margin, so the row does not overflow", async ({ page, context }) => {
+  await setup(context, page, {
+    feed: criticalFeed(),
+    fixture: GLOBALNAV,
+    transform: (h) => h.replace(".topBarActions__h9k2 { display: flex; align-items: center; gap: 8px;", ".topBarActions__h9k2 { display: flex; align-items: center; gap: 0;"),
+  });
+  await expect(pill(page)).toBeVisible();
+  for (const width of [420, 1500, 700, 1500]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.waitForTimeout(400);
+    const r = await page.evaluate(() => {
+      const p = document.getElementById("ghgs-pill");
+      const row = p.parentElement;
+      const q = p.nextElementSibling.getBoundingClientRect();
+      const b = p.getBoundingClientRect();
+      const withPill = row.scrollWidth - row.clientWidth;
+      p.style.display = "none";
+      const without = row.scrollWidth - row.clientWidth;
+      p.style.display = "";
+      return { hidden: p.classList.contains("ghgs-hidden"), over: withPill - Math.max(0, without), gap: b.width ? q.left - b.right : 8 };
+    });
+    const info = JSON.stringify({ width, ...r });
+    expect(r.over, info).toBeLessThanOrEqual(2);
+    expect(r.gap, info).toBeGreaterThanOrEqual(7.5);
+  }
+});
+
 test("a gap-less actions row of margin-spaced controls does not pull the pill away from the search", async ({ page, context }) => {
   // No searchGroup wrapper, no row gap, controls spaced by margins: the row sits in a space-between bar. The pill must stay next to the search control.
   await setup(context, page, {

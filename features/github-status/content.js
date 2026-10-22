@@ -282,16 +282,14 @@
       pill = buildPill(notice);
     }
     if (search.previousElementSibling !== pill) search.before(pill);
-    keepGap(pill, search);
-    fitPill(pill);
-    keepGap(pill, search);
+    fitPill(pill, search);
   }
 
   // Shows as much of the pill as its row has room for. The pill is measured at its natural width (shrinking
   // off): it fits when that adds no overflow to the row and does not crush a neighbour's content. The room is
   // the row's, never the width the pill was shrunk to. A neighbour that only gives up spare room (a growing
   // spacer or a flexible group) is not crushed: only one whose content starts to overflow its box is.
-  function fitPill(pill) {
+  function fitPill(pill, search) {
     const row = pill.parentElement;
     const TOL = 2; // scrollWidth and clientWidth are rounded separately, so 1px of "overflow" can be rounding alone
     const clip = (n) => Math.max(0, n.scrollWidth - n.clientWidth);
@@ -305,6 +303,8 @@
       const base = row.scrollWidth - row.clientWidth; // a row can overflow without us (a hidden or positioned child)
       pill.style.display = "";
       pill.classList.add("ghgs-measure");
+      // The gap-less fallback margin is part of what the pill needs, so it is measured with the pill, not added after.
+      keepGap(pill, search);
       const overflow = row.scrollWidth - row.clientWidth - Math.max(0, base);
       // Crushed: the pill made the neighbour both narrower and more clipped. A neighbour whose width did not
       // change is not squeezed by us, whatever its scrollWidth does (positioned or hidden children).
@@ -352,6 +352,7 @@
     pill.dataset.fit = why.join(" | ");
     pill.classList.remove("ghgs-measure");
     pill.classList.add("ghgs-hidden");
+    pill.style.marginInlineEnd = "";
   }
 
   // The row's own gap spaces the pill from the search control. Only when the row has none (the pill sits
