@@ -1263,3 +1263,35 @@ for (const width of [800, 500]) {
     expect(m.hidden || m.leaves.every((w, i) => w >= base.leaves[i] - 2), JSON.stringify({ m, base })).toBe(true);
   });
 }
+
+for (const width of [800, 500]) {
+  test(`at ${width}px a breadcrumb that sits beside an outer wrapper of the row keeps its visible text, or the pill hides`, async ({ page, context }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, page, {
+      feed: actionsFeed(),
+      fixture: "header-signed-in-globalnav.html",
+      // The actions row is nested one level deeper, so the start region is a sibling of its wrapper, not of the row; the crumb text keeps its own box and is clipped by an ancestor.
+      transform: (h) =>
+        h
+          .replace("@media (max-width: 767px) {", "@media (max-width: 0px) {")
+          .replace(".topBarStart__r5t6u {", ".topBarStart__r5t6u { flex: 1 1 0; min-width: 0; overflow: hidden;")
+          .replace('<div class="topBarActions__h9k2">', '<div class="outer__o1" style="display:flex;flex:none"><div class="topBarActions__h9k2">')
+          .replace('<button type="button" class="iconButton__d4e5f" aria-label="Open user navigation menu">M</button>\n      </div>', '<button type="button" class="iconButton__d4e5f" aria-label="Open user navigation menu">M</button>\n      </div></div>')
+          .replace("<strong>web</strong>", "<strong>web-with-a-rather-long-repository-name</strong>"),
+    });
+    await expect(pill(page)).toBeAttached();
+    const visible = () =>
+      page.evaluate(() => {
+        const start = document.querySelector(".topBarStart__r5t6u").getBoundingClientRect();
+        const r = document.createRange();
+        r.selectNodeContents(document.querySelector(".context__j1k2l strong"));
+        const b = r.getBoundingClientRect();
+        return Math.max(0, Math.min(b.right, start.right) - Math.max(b.left, start.left));
+      });
+    const withPill = await visible();
+    const hidden = await pill(page).evaluate((p) => p.classList.contains("ghgs-hidden") || p.getBoundingClientRect().width === 0);
+    await pill(page).evaluate((p) => (p.style.display = "none"));
+    const base = await visible();
+    expect(hidden || withPill >= base - 2, JSON.stringify({ withPill, base, fit: await pill(page).getAttribute("data-fit") })).toBe(true);
+  });
+}

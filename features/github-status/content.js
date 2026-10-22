@@ -291,19 +291,41 @@
   // spacer or a flexible group) is not crushed: only one whose content starts to overflow its box is.
   function fitPill(pill, search) {
     const row = pill.parentElement;
+    const header = findHeader();
     const TOL = 2; // scrollWidth and clientWidth are rounded separately, so 1px of "overflow" can be rounding alone
     const clip = (n) => Math.max(0, n.scrollWidth - n.clientWidth);
     const fits = () => {
-      // The row's siblings count too: the header's start region (logo, breadcrumb) shrinks when the actions grow.
-      const regions = [...(row.parentElement?.children || [])].filter((n) => n !== row);
+      // The row's siblings count too, and so do those of every ancestor up to the header: the start region
+      // (logo, breadcrumb) can sit in another row of a two-row header and shrinks when the actions grow.
+      const regions = [];
+      for (let n = row; n && n !== header && n.parentElement; n = n.parentElement) regions.push(...[...n.parentElement.children].filter((c) => c !== n));
       // Their children count as well: the breadcrumb is a child of the start region and is what gets emptied.
       const others = [...[...row.children].filter((n) => n !== pill), ...regions, ...regions.flatMap((n) => [...n.children])];
       // The baseline is taken with the pill out of the layout, or a neighbour it already squeezed would count as clipped.
       pill.style.display = "none";
       const before = others.map((n) => ({ clip: clip(n), w: n.getBoundingClientRect().width }));
       // Every word of the other regions (each breadcrumb item; a one-glyph icon button may flex): none may lose width to the pill.
-      const leaves = regions.flatMap((n) => [...n.querySelectorAll("*")]).filter((n) => [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim().length > 1));
-      const leafW = leaves.map((n) => n.getBoundingClientRect().width);
+      // Measured on the text itself, as far as it is visible: a clipping ancestor can cut a word whose own box keeps its width.
+      const words = [];
+      for (const r of regions) {
+        const walker = document.createTreeWalker(r, NodeFilter.SHOW_TEXT);
+        for (let t = walker.nextNode(); t; t = walker.nextNode()) if (t.textContent.trim().length > 1) words.push(t);
+      }
+      const seen = (t) => {
+        const range = document.createRange();
+        range.selectNodeContents(t);
+        const box = range.getBoundingClientRect();
+        let left = box.left;
+        let right = box.right;
+        for (let n = t.parentElement; n && n !== header?.parentElement; n = n.parentElement) {
+          if (getComputedStyle(n).overflowX === "visible") continue;
+          const r = n.getBoundingClientRect();
+          left = Math.max(left, r.left);
+          right = Math.min(right, r.right);
+        }
+        return Math.max(0, right - left);
+      };
+      const leafW = words.map(seen);
       const base = row.scrollWidth - row.clientWidth; // a row can overflow without us (a hidden or positioned child)
       pill.style.display = "";
       pill.classList.add("ghgs-measure");
@@ -319,8 +341,8 @@
       });
       if (overflow > TOL) return `overflow ${overflow}`;
       if (crushed >= 0) return `crushed ${others[crushed].className || others[crushed].tagName}`;
-      const lost = leaves.findIndex((n, i) => leafW[i] > 0 && n.getBoundingClientRect().width < leafW[i] - TOL);
-      if (lost >= 0) return `lost ${leaves[lost].className || leaves[lost].tagName}`;
+      const lost = words.findIndex((t, i) => leafW[i] > 0 && seen(t) < leafW[i] - TOL);
+      if (lost >= 0) return `lost ${words[lost].parentElement.className || words[lost].parentElement.tagName}`;
       // Overflowing to the left does not show in the row's scrollWidth: the pill must not sit over the logo or breadcrumb.
       const pr = pill.getBoundingClientRect();
       const over = regions.flatMap((n) => [...n.children]).find((c) => {
