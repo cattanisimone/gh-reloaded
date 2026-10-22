@@ -685,6 +685,21 @@ test("a growing neighbour and an already overflowing row do not shrink the pill:
   expect(w).toBeGreaterThan(200);
 });
 
+test("flexible neighbours with fractional widths are rounding, not clipping: the full pill stays at 1500 and 1100px", async ({ page, context }) => {
+  for (const width of [1500, 1100]) {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, page, {
+      feed: actionsFeed(),
+      fixture: "header-signed-in-globalnav.html",
+      transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="frac__a1" style="flex:1 1 0;min-width:0;overflow:hidden;white-space:nowrap;padding:0 0.37px"><span style="display:inline-block;width:100%;margin-left:0.43px">Recent</span></div><div class="frac__b2" style="flex:2.7 1 0;min-width:0;overflow:hidden;white-space:nowrap"><span style="display:inline-block;width:99.7%">Pinned</span></div><div class="searchGroup__a1b2c">'),
+    });
+    await expect(pill(page)).toBeVisible();
+    const m = await parts(page);
+    const cls = await pill(page).evaluate((p) => p.className);
+    expect(m, JSON.stringify({ m, cls, width })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+  }
+});
+
 test("a neighbour the full pill would squeeze is not left clipped: Details and the detail word go first", async ({ page, context }) => {
   await page.setViewportSize({ width: 900, height: 800 });
   await setup(context, page, {

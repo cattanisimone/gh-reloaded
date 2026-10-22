@@ -293,7 +293,10 @@
   // spacer or a flexible group) is not crushed: only one whose content starts to overflow its box is.
   function fitPill(pill) {
     const row = pill.parentElement;
-    const clipped = (n) => n.scrollWidth - n.clientWidth > 0.5;
+    // scrollWidth and clientWidth are rounded to whole pixels: a flexible box with a fractional width reads 1px "clipped"
+    // and its clip amount jumps by 1 when the pill changes its width, so anything under 2px is rounding, not clipping.
+    const ROUNDING = 1.5;
+    const clipped = (n) => n.scrollWidth - n.clientWidth > ROUNDING;
     const clip = (n) => Math.max(0, n.scrollWidth - n.clientWidth);
     const fits = () => {
       const others = [...row.children].filter((n) => n !== pill);
@@ -304,15 +307,15 @@
       pill.style.display = "";
       pill.classList.add("ghgs-measure");
       const overflow = row.scrollWidth - row.clientWidth - Math.max(0, base);
-      const crushed = others.some((n, i) => clip(n) > before[i] + 0.5); // more clipped than without the pill, even if already clipped
+      const crushed = others.some((n, i) => clip(n) > before[i] + ROUNDING); // more clipped than without the pill, even if already clipped
       pill.classList.remove("ghgs-measure");
-      if (overflow > 0.5 || crushed) return false;
+      if (overflow > ROUNDING || crushed) return false;
       // The row may still squeeze the pill itself (live: the name collapsed to 0px and "Details" painted over the close button), so
       // the pill as laid out must show the whole name and have nothing clipped in its main button.
       if (pill.classList.contains("ghgs-noname")) return true; // icon and close only: nothing left to drop inside the pill
       const main = pill.querySelector(".ghgs-pill-main");
       const name = pill.querySelector(".ghgs-pill-name");
-      const nameOk = !name || (name.clientWidth > 0 && name.scrollWidth - name.clientWidth <= 0.5);
+      const nameOk = !name || (name.clientWidth > 0 && name.scrollWidth - name.clientWidth <= ROUNDING);
       return nameOk && !(main && clipped(main)) && !clipped(pill);
     };
     pill.classList.remove("ghgs-nolink", "ghgs-nodetail", "ghgs-noname", "ghgs-hidden");
