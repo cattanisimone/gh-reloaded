@@ -281,13 +281,26 @@
     if (row.clientWidth && c.scrollWidth > c.clientWidth) c.hidden = true;
   }
 
-  // Make the band reach the card's inner edges and, when nothing follows it,
+  // The element that draws the card's outline: the nearest ancestor of the row
+  // (up to the card) with a border, found by computed style so no class name
+  // is needed. GitHub draws it on an inner box, with the card itself borderless.
+  function frameOf(card, row) {
+    for (let n = row.parentElement; n && n !== card; n = n.parentElement) {
+      const cs = getComputedStyle(n);
+      if (["Left", "Right", "Bottom"].some((s) => parseFloat(cs[`border${s}Width`]) > 0)) return n;
+    }
+    return card;
+  }
+
+  // Make the band reach the frame's inner edges and, when nothing follows it,
   // the bottom corners, whatever padding the card has: measured, not assumed.
+  // Gaps snap to whole device pixels so the band never lands half a pixel off.
   function fitRow(card, row) {
     row.style.margin = "";
     row.style.borderRadius = "";
-    const cs = getComputedStyle(card);
-    const c = card.getBoundingClientRect();
+    const frame = frameOf(card, row);
+    const cs = getComputedStyle(frame);
+    const c = frame.getBoundingClientRect();
     const r = row.getBoundingClientRect();
     if (!r.width) return;
     const bw = (side) => parseFloat(cs[`border${side}Width`]) || 0;
@@ -298,7 +311,8 @@
       for (let k = n.nextElementSibling; k; k = k.nextElementSibling) if (!visuallyHidden(k)) last = false;
     }
     const bottom = last ? c.bottom - bw("Bottom") - r.bottom : 0;
-    const px = (v) => `${Math.max(0, Math.round(v * 100) / 100)}px`;
+    const dpr = window.devicePixelRatio || 1;
+    const px = (v) => `${Math.max(0, Math.round(v * dpr) / dpr)}px`;
     row.style.marginInline = `-${px(left)} -${px(right)}`;
     if (last) {
       row.style.marginBottom = `-${px(bottom)}`;

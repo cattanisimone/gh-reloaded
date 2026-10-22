@@ -126,7 +126,7 @@ test("cards without links keep exactly their height; switching the feature on ad
 
 for (const [name, transform] of [
   ["current naming (Name__hash)", undefined],
-  ["previous naming (Name-module__x--hash)", (h) => h.replace(/Box_1__h1/g, "Card-module__box--h1").replace(/Header__h4/g, "Card-module__header--h4").replace(/Fields__h3/g, "Card-module__fields--h3").replace(/Title__h2/g, "Card-module__title--h2")],
+  ["previous naming (Name-module__x--hash)", (h) => h.replace(/Box__v-wiAm/g, "Card-module__box--h1").replace(/Header__h4/g, "Card-module__header--h4").replace(/Fields__h3/g, "Card-module__fields--h3").replace(/Title__h2/g, "Card-module__title--h2")],
 ]) {
   test(`the row sits right after the Fields list on ${name}`, async ({ context, page }) => {
     await setup(context, page, { transform });
@@ -543,34 +543,105 @@ test("a swapped <main> after a soft navigation gets its rows without waiting for
   await expect(row(page, 207)).toBeVisible();
 });
 
-test("the row is a muted band flush with the card edges, with no divider, and its text is inset like the card's", async ({ context, page }) => {
+// Older markup: the card itself draws the outline and the inner box has none.
+const cardBorder = (h) =>
+  h
+    .replace("padding: 0; border: 0; background: transparent;", "padding: 0; border: 1px solid var(--borderColor-default); border-radius: 6px; background: var(--cardBg, #fff);")
+    .replace("padding: 8px 0 12px; border: 1px solid var(--borderColor-default); border-radius: 6px; background: var(--cardBg, #fff); }", "padding: 8px 0 12px; }");
+
+// What the band is measured against: the box that draws the outline.
+const frameGeometry = (c) => {
+  const row = c.querySelector(".ghlps-row");
+  const frame = [...c.querySelectorAll("*"), c].find((n) => n === c ? parseFloat(getComputedStyle(n).borderLeftWidth) > 0 : n.contains(row) && parseFloat(getComputedStyle(n).borderLeftWidth) > 0) || c;
+  const r = row.getBoundingClientRect();
+  const t = c.querySelector("a.Title__h2").getBoundingClientRect();
+  const lead = c.querySelector(".ghlps-label-static").getBoundingClientRect();
+  const b = frame.getBoundingClientRect();
+  const cs = getComputedStyle(frame);
+  const rs = getComputedStyle(row);
+  const col = c.closest(".board-view-column");
+  return {
+    isCard: frame === c,
+    leftGap: r.left - b.left - parseFloat(cs.borderLeftWidth),
+    rightGap: b.right - parseFloat(cs.borderRightWidth) - r.right,
+    bottomGap: b.bottom - parseFloat(cs.borderBottomWidth) - r.bottom,
+    textLeft: t.left - b.left,
+    leadLeft: lead.left - b.left,
+    frameBorder: cs.borderLeftWidth,
+    frameBorderColor: cs.borderLeftColor,
+    frameBg: cs.backgroundColor,
+    colBg: getComputedStyle(col).backgroundColor,
+    bg: rs.backgroundColor,
+    dividerWidth: rs.borderTopWidth,
+    dividerColor: rs.borderTopColor,
+    dividerVar: getComputedStyle(document.documentElement).getPropertyValue("--borderColor-muted").trim(),
+    radius: rs.borderBottomLeftRadius,
+  };
+};
+
+for (const [name, transform, isCard] of [["inner box draws the outline (live markup)", undefined, false], ["the card itself draws the outline (older markup)", cardBorder, true]]) {
+  for (const mode of ["light", "dark"]) {
+    test(`the band sits inside the card's bordered box and leaves its border visible, with a 1px divider: ${name}, ${mode}`, async ({ context, page }) => {
+      await setup(context, page, { transform });
+      await page.evaluate((m) => (document.documentElement.dataset.colorMode = m), mode);
+      await expect(row(page, 207)).toBeVisible();
+      for (const w of [443, 320, 280]) {
+        await page.evaluate((cw) => document.documentElement.style.setProperty("--card-w", `${cw}px`), w);
+        await expect.poll(() => card(page, 207).evaluate(frameGeometry).then((g) => [g.leftGap, g.rightGap, g.bottomGap].map(Math.abs).every((v) => v < 0.5)), { message: `${mode} ${w}` }).toBe(true);
+        const g = await card(page, 207).evaluate(frameGeometry);
+        const msg = JSON.stringify(g);
+        // The measured frame is the inner box on live markup, never the borderless card.
+        expect(g.isCard, msg).toBe(isCard);
+        expect(g.leftGap, msg).toBeGreaterThanOrEqual(0);
+        expect(g.rightGap, msg).toBeGreaterThanOrEqual(0);
+        expect(g.bottomGap, msg).toBeGreaterThanOrEqual(0);
+        expect(g.leadLeft, msg).toBe(g.textLeft);
+        expect(g.radius, msg).toBe("5px");
+        expect(g.frameBorder, msg).toBe("1px");
+        expect(g.dividerWidth, msg).toBe("1px");
+        expect(g.bg, msg).not.toBe("rgba(0, 0, 0, 0)");
+        expect(g.bg, msg).not.toBe(g.frameBg); // footer set apart from the card body
+        expect(g.dividerColor, msg).not.toBe(g.bg);
+        if (!isCard) expect(g.frameBorderColor, msg).not.toBe(g.colBg); // the outline still shows against the column
+      }
+    });
+  }
+}
+
+test("the divider uses the page's --borderColor-muted", async ({ context, page }) => {
   await setup(context, page);
   await expect(row(page, 207)).toBeVisible();
-  const g = await card(page, 207).evaluate((c) => {
-    const row = c.querySelector(".ghlps-row");
-    const r = row.getBoundingClientRect();
-    const t = c.querySelector("a.Title__h2").getBoundingClientRect();
-    const lead = c.querySelector(".ghlps-label-static").getBoundingClientRect();
-    const b = c.getBoundingClientRect();
-    const cs = getComputedStyle(c);
-    const rs = getComputedStyle(row);
-    const rule = getComputedStyle(row, "::before");
-    return {
-      leftGap: r.left - b.left - parseFloat(cs.borderLeftWidth),
-      rightGap: b.right - parseFloat(cs.borderRightWidth) - r.right,
-      bottomGap: b.bottom - parseFloat(cs.borderBottomWidth) - r.bottom,
-      textLeft: t.left - b.left,
-      leadLeft: lead.left - b.left,
-      bg: rs.backgroundColor,
-      radius: rs.borderBottomLeftRadius,
-      ruleContent: rule.content,
-      ruleBorder: rule.borderTopWidth,
-    };
-  });
-  expect(g, JSON.stringify(g)).toMatchObject({ leftGap: 0, rightGap: 0, bottomGap: 0, leadLeft: g.textLeft, radius: "5px" });
-  expect(g.bg).not.toBe("rgba(0, 0, 0, 0)");
-  expect(["none", "normal"]).toContain(g.ruleContent);
+  for (const mode of ["light", "dark"]) {
+    await page.evaluate((m) => (document.documentElement.dataset.colorMode = m), mode);
+    const colour = await row(page, 207).evaluate((el) => {
+      const probe = document.createElement("i");
+      probe.style.color = "var(--borderColor-muted)";
+      document.body.append(probe);
+      const c = getComputedStyle(probe).color;
+      probe.remove();
+      return { divider: getComputedStyle(el).borderTopColor, muted: c };
+    });
+    expect(colour.divider, mode).toBe(colour.muted);
+  }
 });
+
+for (const dpr of [1, 2]) {
+  for (const width of [443, 320, 280, 301]) {
+    test(`band offsets land on whole device pixels at ${dpr}x and ${width}px`, async ({ context, page }) => {
+      await setup(context, page, { go: false });
+      await (await context.newCDPSession(page)).send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 800, deviceScaleFactor: dpr, mobile: false });
+      await page.addInitScript((w) => document.addEventListener("DOMContentLoaded", () => document.documentElement.style.setProperty("--card-w", `${w}px`)), width);
+      await page.goto(URL);
+      await expect(row(page, 207)).toBeVisible();
+      // Fractional layout: a fractional column padding makes the raw gaps fractional.
+      await page.evaluate(() => { for (const b of document.querySelectorAll(".board-view-column-card > :first-child")) b.style.paddingLeft = "0.3px"; });
+      await page.evaluate(() => document.documentElement.style.setProperty("--card-w", "299px")); // refit via ResizeObserver
+      await page.evaluate((w) => document.documentElement.style.setProperty("--card-w", `${w}px`), width);
+      const m = await row(page, 207).evaluate((el) => ({ dpr: devicePixelRatio, v: ((cs) => [cs.marginLeft, cs.marginRight, cs.marginBottom])(getComputedStyle(el)).map(parseFloat) }));
+      for (const v of m.v) expect(Math.abs(v * m.dpr - Math.round(v * m.dpr)), JSON.stringify(m)).toBeLessThan(0.001);
+    });
+  }
+}
 
 test("the band starts with a static 'Linked PRs:' label and stays on one line at wide and narrow widths, with every caption case", async ({ context, page }) => {
   await setup(context, page);
@@ -592,7 +663,7 @@ test("the band starts with a static 'Linked PRs:' label and stays on one line at
         };
       });
       expect(g.text, `card ${n} at ${w}`).toMatch(/^(Linked PRs:|PRs:)/);
-      expect(g.height, JSON.stringify(g)).toBeLessThanOrEqual(32);
+      expect(g.height, JSON.stringify(g)).toBeLessThanOrEqual(33); // 32 plus the 1px divider
       expect(g.overflow, JSON.stringify(g)).toBe(false);
       expect(g.sameLine, JSON.stringify(g)).toBe(true);
     }
@@ -647,10 +718,11 @@ test("a trailing visually-hidden span does not stop the band reaching the card's
   await expect(row(page, 207)).toBeVisible();
   const g = await card(page, 207).evaluate((c) => {
     const row = c.querySelector(".ghlps-row");
-    const cs = getComputedStyle(c);
+    const frame = c.firstElementChild;
+    const cs = getComputedStyle(frame);
     return {
       sr: !!row.nextElementSibling?.classList.contains("sr-only"),
-      bottomGap: c.getBoundingClientRect().bottom - parseFloat(cs.borderBottomWidth) - row.getBoundingClientRect().bottom,
+      bottomGap: frame.getBoundingClientRect().bottom - parseFloat(cs.borderBottomWidth) - row.getBoundingClientRect().bottom,
       radius: getComputedStyle(row).borderBottomLeftRadius,
     };
   });
@@ -692,8 +764,9 @@ test("the band keeps the card border and radius in both themes and at 280 and 32
       await page.evaluate((cw) => document.documentElement.style.setProperty("--card-w", `${cw}px`), w);
       for (const n of [207, 211]) {
         await expect.poll(() => card(page, n).evaluate((c) => {
-          const cs = getComputedStyle(c);
-          const b = c.getBoundingClientRect();
+          const f = c.firstElementChild;
+          const cs = getComputedStyle(f);
+          const b = f.getBoundingClientRect();
           const row = c.querySelector(".ghlps-row");
           if (!row) return false;
           const r = row.getBoundingClientRect();
