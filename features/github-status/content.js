@@ -301,6 +301,9 @@
       // The baseline is taken with the pill out of the layout, or a neighbour it already squeezed would count as clipped.
       pill.style.display = "none";
       const before = others.map((n) => ({ clip: clip(n), w: n.getBoundingClientRect().width }));
+      // Every word of the other regions (each breadcrumb item; a one-glyph icon button may flex): none may lose width to the pill.
+      const leaves = regions.flatMap((n) => [...n.querySelectorAll("*")]).filter((n) => [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim().length > 1));
+      const leafW = leaves.map((n) => n.getBoundingClientRect().width);
       const base = row.scrollWidth - row.clientWidth; // a row can overflow without us (a hidden or positioned child)
       pill.style.display = "";
       pill.classList.add("ghgs-measure");
@@ -316,6 +319,8 @@
       });
       if (overflow > TOL) return `overflow ${overflow}`;
       if (crushed >= 0) return `crushed ${others[crushed].className || others[crushed].tagName}`;
+      const lost = leaves.findIndex((n, i) => leafW[i] > 0 && n.getBoundingClientRect().width < leafW[i] - TOL);
+      if (lost >= 0) return `lost ${leaves[lost].className || leaves[lost].tagName}`;
       // Overflowing to the left does not show in the row's scrollWidth: the pill must not sit over the logo or breadcrumb.
       const pr = pill.getBoundingClientRect();
       const over = regions.flatMap((n) => [...n.children]).find((c) => {

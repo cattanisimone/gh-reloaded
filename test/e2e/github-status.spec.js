@@ -1250,7 +1250,8 @@ for (const width of [800, 500]) {
         const logo = document.querySelector("[data-ghgs-logo]");
         const ctx = document.querySelector(".context__j1k2l");
         const pr = p.getBoundingClientRect();
-        return { hidden: p.classList.contains("ghgs-hidden") || pr.width === 0, pillLeft: pr.left, logoRight: logo.getBoundingClientRect().right, ctxW: ctx.getBoundingClientRect().width, ctxNeed: ctx.scrollWidth, fit: p.dataset.fit };
+        const leaves = [...document.querySelectorAll(".context__j1k2l, .context__j1k2l *")].map((e) => Math.round(e.getBoundingClientRect().width));
+        return { leaves, hidden: p.classList.contains("ghgs-hidden") || pr.width === 0, pillLeft: pr.left, logoRight: logo.getBoundingClientRect().right, ctxW: ctx.getBoundingClientRect().width, ctxNeed: ctx.scrollWidth, fit: p.dataset.fit };
       });
     await expect(pill(page)).toBeAttached();
     const m = await measure();
@@ -1258,5 +1259,7 @@ for (const width of [800, 500]) {
     const base = await measure();
     expect(m.hidden || m.pillLeft >= m.logoRight - 0.5, JSON.stringify({ m, base })).toBe(true);
     expect(m.hidden || m.ctxW >= base.ctxW - 2, JSON.stringify({ m, base })).toBe(true);
+    // No breadcrumb item loses width to the pill either (live: the crumb went from 194px to 28px with the region still "fitting").
+    expect(m.hidden || m.leaves.every((w, i) => w >= base.leaves[i] - 2), JSON.stringify({ m, base })).toBe(true);
   });
 }
