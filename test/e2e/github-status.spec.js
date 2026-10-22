@@ -724,6 +724,30 @@ test("a neighbour already clipped without the pill makes the pill drop Details a
   expect(r.cls, JSON.stringify(r)).toContain("ghgs-nodetail");
 });
 
+test("a row that cannot hold even the minimal pill gets no pill instead of a clipped one", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="squeeze__q1" style="flex:0 1 auto;min-width:0;overflow:hidden;white-space:nowrap"><span style="display:inline-block;width:5000px">Recent</span></div><div class="searchGroup__a1b2c">'),
+  });
+  await page.locator("#ghgs-pill").waitFor({ state: "attached" });
+  const r = await page.evaluate(() => {
+    const p = document.getElementById("ghgs-pill");
+    const n = document.querySelector(".squeeze__q1");
+    const clip = () => n.scrollWidth - n.clientWidth;
+    const withPill = clip();
+    p.style.display = "none";
+    const without = clip();
+    p.style.display = "";
+    return { cls: p.className, shown: getComputedStyle(p).display !== "none", withPill, without };
+  });
+  expect(r.cls, JSON.stringify(r)).toContain("ghgs-noname");
+  expect(r.cls, JSON.stringify(r)).toContain("ghgs-hidden");
+  expect(r.shown, JSON.stringify(r)).toBe(false);
+  expect(r.withPill, JSON.stringify(r)).toBeLessThanOrEqual(r.without + 0.5);
+});
+
 test("with room at 640px the pill keeps Details even though the old breakpoint hid it", async ({ page, context }) => {
   await page.setViewportSize({ width: 640, height: 800 });
   await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });

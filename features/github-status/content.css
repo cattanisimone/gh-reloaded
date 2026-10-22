@@ -155,7 +155,8 @@ html[data-color-mode="dark"] {
 .ghgs-pill-detail, .ghgs-pill-link { white-space: nowrap; }
 .ghgs-pill-link { text-decoration: underline; }
 /* content.js drops parts only when the row has no room for them: the "Details" link first, then the detail word. */
-.ghgs-pill.ghgs-nolink .ghgs-pill-link, .ghgs-pill.ghgs-nodetail .ghgs-pill-detail { display: none; }
+.ghgs-pill.ghgs-nolink .ghgs-pill-link, .ghgs-pill.ghgs-nodetail .ghgs-pill-detail, .ghgs-pill.ghgs-noname .ghgs-pill-name { display: none; }
+.ghgs-pill.ghgs-hidden { display: none; }
 .ghgs-pill.ghgs-measure { flex: none; max-width: none; }
 
 /* --- panel (top layer) --- */

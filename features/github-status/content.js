@@ -309,16 +309,22 @@
       if (overflow > 0.5 || crushed) return false;
       // The row may still squeeze the pill itself (live: the name collapsed to 0px and "Details" painted over the close button), so
       // the pill as laid out must show the whole name and have nothing clipped in its main button.
+      if (pill.classList.contains("ghgs-noname")) return true; // icon and close only: nothing left to drop inside the pill
       const main = pill.querySelector(".ghgs-pill-main");
       const name = pill.querySelector(".ghgs-pill-name");
       const nameOk = !name || (name.clientWidth > 0 && name.scrollWidth - name.clientWidth <= 0.5);
       return nameOk && !(main && clipped(main)) && !clipped(pill);
     };
-    pill.classList.remove("ghgs-nolink", "ghgs-nodetail");
-    if (!row || fits()) return;
-    pill.classList.add("ghgs-nolink");
-    if (fits()) return;
-    pill.classList.add("ghgs-nodetail");
+    pill.classList.remove("ghgs-nolink", "ghgs-nodetail", "ghgs-noname", "ghgs-hidden");
+    if (!row) return;
+    // Parts go in order: the "Details" link, the detail word, the name (icon and close stay, the aria-labels keep the text).
+    // A row where even that overflows or crushes a native control gets no pill at all; the
+    // next scan tries again.
+    for (const step of ["", "ghgs-nolink", "ghgs-nodetail", "ghgs-noname"]) {
+      if (step) pill.classList.add(step);
+      if (fits()) return;
+    }
+    pill.classList.add("ghgs-hidden");
   }
 
   // The row's own gap spaces the pill from the search control. Only when the row has none (the pill sits
