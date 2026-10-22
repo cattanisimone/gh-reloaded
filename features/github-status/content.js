@@ -296,7 +296,9 @@
     const TOL = 2; // scrollWidth and clientWidth are rounded separately, so 1px of "overflow" can be rounding alone
     const clip = (n) => Math.max(0, n.scrollWidth - n.clientWidth);
     const fits = () => {
-      const others = [...row.children].filter((n) => n !== pill);
+      // The row's siblings count too: the header's start region (logo, breadcrumb) shrinks when the actions grow.
+      const regions = [...(row.parentElement?.children || [])].filter((n) => n !== row);
+      const others = [...[...row.children].filter((n) => n !== pill), ...regions];
       // The baseline is taken with the pill out of the layout, or a neighbour it already squeezed would count as clipped.
       pill.style.display = "none";
       const before = others.map((n) => ({ clip: clip(n), w: n.getBoundingClientRect().width }));
@@ -306,9 +308,20 @@
       const overflow = row.scrollWidth - row.clientWidth - Math.max(0, base);
       // Crushed: the pill made the neighbour both narrower and more clipped. A neighbour whose width did not
       // change is not squeezed by us, whatever its scrollWidth does (positioned or hidden children).
-      const crushed = others.findIndex((n, i) => clip(n) > before[i].clip + TOL && n.getBoundingClientRect().width < before[i].w - TOL);
+      // A neighbour that collapses to nothing is crushed too, even when it hides its content without clipping it.
+      const crushed = others.findIndex((n, i) => {
+        const w = n.getBoundingClientRect().width;
+        return w < before[i].w - TOL && (clip(n) > before[i].clip + TOL || (w < 8 && before[i].w >= 8 + TOL));
+      });
       if (overflow > TOL) return `overflow ${overflow}`;
       if (crushed >= 0) return `crushed ${others[crushed].className || others[crushed].tagName}`;
+      // Overflowing to the left does not show in the row's scrollWidth: the pill must not sit over the logo or breadcrumb.
+      const pr = pill.getBoundingClientRect();
+      const over = regions.flatMap((n) => [...n.children]).find((c) => {
+        const r = c.getBoundingClientRect();
+        return r.width > 0 && r.height > 0 && r.left < pr.right - TOL && r.right > pr.left + TOL && r.top < pr.bottom - TOL && r.bottom > pr.top + TOL;
+      });
+      if (over) return `over ${over.className || over.tagName}`;
       // The row may still squeeze the pill itself (live: the name collapsed to 0px and "Details" painted over the close button), so
       // the pill as laid out must show the whole name and have nothing clipped in its main button.
       // Checked at the natural width (ghgs-measure still on): the shrinkable pill would be sized by the neighbours' spare room.

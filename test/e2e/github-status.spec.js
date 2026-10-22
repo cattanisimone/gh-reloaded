@@ -1229,3 +1229,32 @@ test("a neighbour with a huge flex basis does not squeeze the pill the fit check
   expect(m, JSON.stringify({ m, fit: await pill(page).getAttribute("data-fit") })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
   expect(await page.locator(".ghgs-pill-name").evaluate((e) => e.clientWidth)).toBeGreaterThan(40);
 });
+
+test("at 800 and 500px the pill neither overlaps the logo nor crushes the breadcrumb region", async ({ page, context }) => {
+  for (const width of [800, 500]) {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, page, {
+      feed: actionsFeed(),
+      fixture: "header-signed-in-globalnav.html",
+      transform: (h) => h
+        .replace('<div class="topBarStart__r5t6u">', '<div class="topBarStart__r5t6u" style="flex:0 1 auto;min-width:0;overflow:hidden">')
+        .replace("<strong>web</strong>", "<strong>web-application-with-a-long-name</strong>"),
+    });
+    await page.locator("#ghgs-pill").waitFor({ state: "attached" });
+    const m = await page.evaluate(() => {
+      const p = document.getElementById("ghgs-pill");
+      const start = document.querySelector(".topBarStart__r5t6u");
+      const shown = getComputedStyle(p).display !== "none";
+      const pr = p.getBoundingClientRect();
+      const kids = [...start.children].map((c) => c.getBoundingClientRect());
+      const overlap = shown && kids.some((r) => r.width > 0 && r.left < pr.right - 1 && r.right > pr.left + 1);
+      const wNow = start.getBoundingClientRect().width;
+      p.style.display = "none";
+      const wWithout = start.getBoundingClientRect().width;
+      p.style.display = "";
+      return { shown, overlap, wNow, wWithout, pl: pr.left, cls: p.className, fit: p.dataset.fit };
+    });
+    expect(m.overlap, JSON.stringify({ m, width })).toBe(false);
+    if (m.shown) expect(m.wNow, JSON.stringify({ m, width })).toBeGreaterThanOrEqual(Math.min(m.wWithout, 8) - 0.5);
+  }
+});
