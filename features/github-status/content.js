@@ -284,18 +284,21 @@
   }
 
   // Shows as much of the pill as its row has room for. The pill is measured at its natural width (shrinking
-  // off): it fits when that does not overflow the row and does not squeeze its neighbours. The room is the
-  // row's, never the width the pill was shrunk to.
+  // off): it fits when that adds no overflow to the row and does not crush a neighbour's content. The room is
+  // the row's, never the width the pill was shrunk to. A neighbour that only gives up spare room (a growing
+  // spacer or a flexible group) is not crushed: only one whose content starts to overflow its box is.
   function fitPill(pill) {
     const row = pill.parentElement;
+    const clipped = (n) => n.scrollWidth - n.clientWidth > 0.5;
     const fits = () => {
       const others = [...row.children].filter((n) => n !== pill);
-      const before = others.map((n) => n.getBoundingClientRect().width);
+      const before = others.map(clipped);
+      const base = row.scrollWidth - row.clientWidth; // a row can overflow without us (a hidden or positioned child)
       pill.classList.add("ghgs-measure");
-      const overflow = row.scrollWidth - row.clientWidth;
-      const squeezed = others.some((n, i) => n.getBoundingClientRect().width < before[i] - 0.5);
+      const overflow = row.scrollWidth - row.clientWidth - Math.max(0, base);
+      const crushed = others.some((n, i) => !before[i] && clipped(n));
       pill.classList.remove("ghgs-measure");
-      return overflow <= 0.5 && !squeezed;
+      return overflow <= 0.5 && !crushed;
     };
     pill.classList.remove("ghgs-nolink", "ghgs-nodetail");
     if (!row || fits()) return;

@@ -671,6 +671,20 @@ test("on a wide two-row header the pill keeps its natural width with the full na
   }
 });
 
+test("a growing neighbour and an already overflowing row do not shrink the pill: the pill still shows everything at 1500px", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1500, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('.topBarActions__h9k2 {', '.topBarActions__h9k2 { position: relative;').replace('<div class="searchGroup__a1b2c">', '<div class="grow__z9" style="flex:1 1 0;min-width:0;overflow:hidden;white-space:nowrap">Recent</div><span style="position:absolute;left:0;width:4000px;height:1px;visibility:hidden"></span><div class="searchGroup__a1b2c">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  const m = await parts(page);
+  const w = await pill(page).evaluate((p) => p.getBoundingClientRect().width);
+  expect(m, JSON.stringify({ m, w })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+  expect(w).toBeGreaterThan(200);
+});
+
 test("with room at 640px the pill keeps Details even though the old breakpoint hid it", async ({ page, context }) => {
   await page.setViewportSize({ width: 640, height: 800 });
   await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
