@@ -618,13 +618,59 @@ for (const width of [1280, 768, 640, 375, 320]) {
   });
 }
 
-test("below 400px the pill keeps the icon and the dismiss button; its accessible name keeps the full text", async ({ page, context }) => {
+const parts = (page) => page.evaluate(() => {
+  const p = document.getElementById("ghgs-pill");
+  const vis = (c) => { const n = p.querySelector(c); return !!n && n.getClientRects().length > 0 && n.getBoundingClientRect().width > 0; };
+  const name = p.querySelector(".ghgs-pill-name");
+  const r = p.getBoundingClientRect();
+  return { link: vis(".ghgs-pill-link"), detail: vis(".ghgs-pill-detail"), name: vis(".ghgs-pill-name"), truncated: name.scrollWidth > name.clientWidth, inside: r.left >= 0 && r.right <= window.innerWidth, w: window.innerWidth };
+});
+
+for (const [fixture, widths] of [["header-signed-in.html", [1280, 1012, 768, 640]], ["header-signed-in-globalnav.html", [1280, 1012, 768, 640]]]) {
+  for (const width of widths) {
+    test(`pill shows everything while its row has room: ${fixture} at ${width}px`, async ({ page, context }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await setup(context, page, { feed: actionsFeed(), fixture });
+      await expect(pill(page)).toBeVisible();
+      const m = await parts(page);
+      const roomy = await page.evaluate(() => {
+        const p = document.getElementById("ghgs-pill");
+        const kept = ["ghgs-nolink", "ghgs-nodetail"].filter((c) => p.classList.contains(c));
+        p.classList.remove(...kept);
+        const room = p.getBoundingClientRect().width;
+        p.classList.add("ghgs-measure");
+        const need = p.getBoundingClientRect().width;
+        p.classList.remove("ghgs-measure");
+        p.classList.add(...kept);
+        return room >= need - 0.5;
+      });
+      // the room decides, never the viewport: with room all parts show, otherwise they leave in order
+      if (roomy) expect(m, JSON.stringify(m)).toMatchObject({ link: true, detail: true, name: true, truncated: false, inside: true });
+      else { expect(m.inside, JSON.stringify(m)).toBe(true); if (m.link) expect(m.detail, JSON.stringify(m)).toBe(true); }
+    });
+  }
+}
+
+test("with room at 640px the pill keeps Details even though the old breakpoint hid it", async ({ page, context }) => {
+  await page.setViewportSize({ width: 640, height: 800 });
+  await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
+  await expect(pill(page)).toBeVisible();
+  const m = await parts(page);
+  expect(m, JSON.stringify(m)).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+});
+
+test("a narrow row drops Details, then the detail word, and the pill stays inside the window", async ({ page, context }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await setup(context, page, { feed: actionsFeed() });
   await expect(pill(page)).toBeVisible();
-  await expect(pill(page).locator(".ghgs-pill-link")).toBeHidden();
+  let m = await parts(page);
+  expect(m.link, JSON.stringify(m)).toBe(false);
+  expect(m.inside, JSON.stringify(m)).toBe(true);
   await page.setViewportSize({ width: 320, height: 800 });
-  await expect(pill(page).locator(".ghgs-pill-name")).toBeHidden();
+  await expect.poll(async () => (await parts(page)).detail).toBe(false);
+  m = await parts(page);
+  expect(m.link, JSON.stringify(m)).toBe(false);
+  expect(m.inside, JSON.stringify(m)).toBe(true);
   await expect(pill(page).getByRole("button", { name: "GitHub Status: Actions, degraded performance. Open details" })).toBeVisible();
 });
 

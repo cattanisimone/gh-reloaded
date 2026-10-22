@@ -279,6 +279,25 @@
     }
     if (search.previousElementSibling !== pill) search.before(pill);
     keepGap(pill, search);
+    fitPill(pill);
+    keepGap(pill, search);
+  }
+
+  // Shows as much of the pill as its row has room for. The pill shrinks inside the row; its natural width
+  // (measured with shrinking off) says whether the content fits what the row gave it.
+  function fitPill(pill) {
+    const fits = () => {
+      const room = pill.getBoundingClientRect().width;
+      pill.classList.add("ghgs-measure");
+      const need = pill.getBoundingClientRect().width;
+      pill.classList.remove("ghgs-measure");
+      return !room || need <= room + 0.5;
+    };
+    pill.classList.remove("ghgs-nolink", "ghgs-nodetail");
+    if (fits()) return;
+    pill.classList.add("ghgs-nolink");
+    if (fits()) return;
+    pill.classList.add("ghgs-nodetail");
   }
 
   // The row's own gap spaces the pill from the search control. Only when the row has none (the pill sits

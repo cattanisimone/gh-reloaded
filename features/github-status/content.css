@@ -154,17 +154,9 @@ html[data-color-mode="dark"] {
 .ghgs-pill-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
 .ghgs-pill-detail, .ghgs-pill-link { white-space: nowrap; }
 .ghgs-pill-link { text-decoration: underline; }
-@media (max-width: 767px) {
-  .ghgs-pill-link { display: none; }
-}
-@media (max-width: 399px) {
-  .ghgs-pill-name, .ghgs-pill-detail { display: none; }
-  .ghgs-pill-main { padding: 0 6px 0 8px; }
-  .ghgs-pill-close { padding: 0 6px; }
-}
-@media (max-width: 599px) {
-  .ghgs-pill-detail { display: none; }
-}
+/* content.js drops parts only when the row has no room for them: the "Details" link first, then the detail word. */
+.ghgs-pill.ghgs-nolink .ghgs-pill-link, .ghgs-pill.ghgs-nodetail .ghgs-pill-detail { display: none; }
+.ghgs-pill.ghgs-measure { flex: none; max-width: none; }
 
 /* --- panel (top layer) --- */
 .ghgs-panel {
