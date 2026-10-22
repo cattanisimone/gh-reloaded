@@ -701,6 +701,29 @@ test("a neighbour the full pill would squeeze is not left clipped: Details and t
   expect(r.clipped, JSON.stringify(r)).toBeLessThanOrEqual(0.5);
 });
 
+test("a neighbour already clipped without the pill makes the pill drop Details and the detail word", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="squeeze__q1" style="flex:0 1 auto;min-width:0;max-width:250px;overflow:hidden;white-space:nowrap"><span style="display:inline-block;width:330px">Recent</span></div><div class="searchGroup__a1b2c">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  const r = await page.evaluate(() => {
+    const n = document.querySelector(".squeeze__q1");
+    const p = document.getElementById("ghgs-pill");
+    const clip = () => n.scrollWidth - n.clientWidth;
+    const withPill = clip();
+    p.style.display = "none";
+    const without = clip();
+    p.style.display = "";
+    return { withPill, without, cls: p.className };
+  });
+  expect(r.without, JSON.stringify(r)).toBeGreaterThan(0.5); // clipped already, before the pill
+  expect(r.cls, JSON.stringify(r)).toContain("ghgs-nolink");
+  expect(r.cls, JSON.stringify(r)).toContain("ghgs-nodetail");
+});
+
 test("with room at 640px the pill keeps Details even though the old breakpoint hid it", async ({ page, context }) => {
   await page.setViewportSize({ width: 640, height: 800 });
   await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
@@ -1041,6 +1064,16 @@ test("a component-only problem names the dot as degraded service, not as an inci
   feed.components = [{ name: "Actions", status: "degraded_performance" }];
   await setup(context, page, { feed, fixture: GLOBALNAV });
   await expect(dot(page)).toHaveAttribute("aria-label", /Degraded service/);
+});
+
+test("a component outage beside a minor incident and a calm indicator is not called a major incident", async ({ page, context }) => {
+  const feed = statusFeed({
+    status: { indicator: "none", description: "All Systems Operational" },
+    components: statusFeed().components.map((c) => (c.name === "Actions" ? { ...c, status: "major_outage" } : c)),
+    incidents: [statusIncident({ impact: "minor" })],
+  });
+  await setup(context, page, { feed, fixture: GLOBALNAV });
+  await expect(dot(page)).toHaveAttribute("aria-label", /Service outage/);
 });
 
 test("both class namings of the two-row header give the same placement", async ({ page, context }) => {

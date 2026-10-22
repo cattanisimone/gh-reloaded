@@ -178,7 +178,11 @@
   // A dot raised only by a component status (no incident, indicator calm) must not claim an incident.
   function stateText(s) {
     const snap = state.view.snapshot;
-    if ((s === "minor" || s === "major") && snap && !(snap.incidents || []).length && !["minor", "major", "critical"].includes(snap.indicator)) return s === "major" ? "Service outage" : "Degraded service";
+    const rank = { none: 0, minor: 1, major: 2, critical: 3 };
+    if ((s === "minor" || s === "major") && snap) {
+      const fromIncident = Math.max(rank[snap.indicator] || 0, ...(snap.incidents || []).map((i) => rank[i.impact] || 0));
+      if (fromIncident < rank[s]) return s === "major" ? "Service outage" : "Degraded service";
+    }
     return STATE_TEXT[s];
   }
 
@@ -290,16 +294,17 @@
   function fitPill(pill) {
     const row = pill.parentElement;
     const clipped = (n) => n.scrollWidth - n.clientWidth > 0.5;
+    const clip = (n) => Math.max(0, n.scrollWidth - n.clientWidth);
     const fits = () => {
       const others = [...row.children].filter((n) => n !== pill);
       // The baseline is taken with the pill out of the layout, or a neighbour it already squeezed would count as clipped.
       pill.style.display = "none";
-      const before = others.map(clipped);
+      const before = others.map(clip);
       const base = row.scrollWidth - row.clientWidth; // a row can overflow without us (a hidden or positioned child)
       pill.style.display = "";
       pill.classList.add("ghgs-measure");
       const overflow = row.scrollWidth - row.clientWidth - Math.max(0, base);
-      const crushed = others.some((n, i) => !before[i] && clipped(n));
+      const crushed = others.some((n, i) => clip(n) > before[i] + 0.5); // more clipped than without the pill, even if already clipped
       pill.classList.remove("ghgs-measure");
       if (overflow > 0.5 || crushed) return false;
       // The row may still squeeze the pill itself (live: the name collapsed to 0px and "Details" painted over the close button), so
