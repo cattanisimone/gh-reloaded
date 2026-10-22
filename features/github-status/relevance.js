@@ -38,6 +38,7 @@
     for (const c of s.components || []) worst = Math.max(worst, COMPONENT_RANK[c.status] || 0);
     if (worst > 0) return DOT_BY_RANK[worst];
     if (s.indicator === "maintenance" || (s.maintenances && s.maintenances.length)) return "maintenance";
+    if ((s.components || []).some((c) => c.status === "under_maintenance")) return "maintenance";
     return "ok";
   }
 

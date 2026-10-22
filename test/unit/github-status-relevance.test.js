@@ -41,6 +41,8 @@ test("dot state takes the worst of the indicator, the open incidents and the com
   assert.equal(R.dotState(v(snap({ maintenances: [inc()], incidents: [inc({ impact: "major" })] })), NOW), "major");
   assert.equal(R.dotState(v(snap({ maintenances: [inc()], incidents: [inc({ impact: "minor" })] })), NOW), "minor");
   assert.equal(R.dotState(v(snap({ maintenances: [inc()] })), NOW), "maintenance");
+  assert.equal(R.dotState(v(snap({ components: comp("under_maintenance") })), NOW), "maintenance");
+  assert.equal(R.dotState(v(snap({ components: comp("major_outage") })), NOW), "major");
   assert.equal(R.dotState({ snapshot: snap({ incidents: [inc({ impact: "critical" })] }), fetchedAt: NOW - 16 * 60_000 }, NOW), "unknown");
 });
 
