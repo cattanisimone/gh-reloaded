@@ -339,7 +339,7 @@ test("an Actions incident on an Actions page shows the pill before the search co
   await expect(pill(page)).toContainText("Actions");
   await expect(pill(page)).toContainText("degraded performance");
   expect(await pill(page).evaluate((p) => p.nextElementSibling.tagName.toLowerCase())).toBe("qbsearch-input");
-  await expect(page.locator("#ghgs-line")).toHaveCount(1);
+  await expect(page.locator("#ghgs-line")).toHaveCount(0);
   await expect(pill(page).getByRole("button", { name: "GitHub Status: Actions, degraded performance. Open details" })).toBeVisible();
   await pill(page).locator(".ghgs-pill-main").click();
   await expect(panel(page)).toContainText("Incident with Actions");
@@ -618,13 +618,173 @@ for (const width of [1280, 768, 640, 375, 320]) {
   });
 }
 
-test("below 400px the pill keeps the icon and the dismiss button; its accessible name keeps the full text", async ({ page, context }) => {
+const parts = (page) => page.evaluate(() => {
+  const p = document.getElementById("ghgs-pill");
+  const vis = (c) => { const n = p.querySelector(c); return !!n && n.getClientRects().length > 0 && n.getBoundingClientRect().width > 0; };
+  const name = p.querySelector(".ghgs-pill-name");
+  const r = p.getBoundingClientRect();
+  return { link: vis(".ghgs-pill-link"), detail: vis(".ghgs-pill-detail"), name: vis(".ghgs-pill-name"), truncated: name.scrollWidth > name.clientWidth, inside: r.left >= 0 && r.right <= window.innerWidth, w: window.innerWidth };
+});
+
+for (const [fixture, widths] of [["header-signed-in.html", [1280, 1012, 768, 640]], ["header-signed-in-globalnav.html", [1280, 1012, 768, 640]]]) {
+  for (const width of widths) {
+    test(`pill shows everything while its row has room: ${fixture} at ${width}px`, async ({ page, context }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await setup(context, page, { feed: actionsFeed(), fixture });
+      await expect(pill(page)).toBeVisible();
+      const m = await parts(page);
+      const roomy = await page.evaluate(() => {
+        const p = document.getElementById("ghgs-pill");
+        const kept = ["ghgs-nolink", "ghgs-nodetail"].filter((c) => p.classList.contains(c));
+        const pinned = p.classList.contains("ghgs-measure"); // a fitted pill keeps its natural width
+        p.classList.remove(...kept, "ghgs-measure");
+        const room = p.getBoundingClientRect().width;
+        p.classList.add("ghgs-measure");
+        const need = p.getBoundingClientRect().width;
+        p.classList.remove("ghgs-measure");
+        p.classList.add(...kept);
+        if (pinned) p.classList.add("ghgs-measure");
+        return room >= need - 0.5;
+      });
+      // the room decides, never the viewport: with room all parts show, otherwise they leave in order
+      if (roomy) expect(m, JSON.stringify(m)).toMatchObject({ link: true, detail: true, name: true, truncated: false, inside: true });
+      else { expect(m.inside, JSON.stringify(m)).toBe(true); if (m.link) expect(m.detail, JSON.stringify(m)).toBe(true); }
+    });
+  }
+}
+
+test("on a wide two-row header the pill keeps its natural width with the full name, detail and Details", async ({ page, context }) => {
+  for (const width of [1500, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
+    await expect(pill(page)).toBeVisible();
+    const m = await parts(page);
+    const w = await page.evaluate(() => {
+      const p = document.getElementById("ghgs-pill");
+      const room = p.getBoundingClientRect().width;
+      p.classList.add("ghgs-measure");
+      const need = p.getBoundingClientRect().width;
+      p.classList.remove("ghgs-measure");
+      return { room, need };
+    });
+    expect(m, JSON.stringify({ m, w, width })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+    expect(w.room, JSON.stringify({ w, width })).toBeGreaterThanOrEqual(w.need - 0.5);
+    expect(w.room, JSON.stringify({ w, width })).toBeGreaterThan(200);
+  }
+});
+
+test("a growing neighbour and an already overflowing row do not shrink the pill: the pill still shows everything at 1500px", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1500, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('.topBarActions__h9k2 {', '.topBarActions__h9k2 { position: relative;').replace('<div class="searchGroup__a1b2c">', '<div class="grow__z9" style="flex:1 1 0;min-width:0;overflow:hidden;white-space:nowrap">Recent</div><span style="position:absolute;left:0;width:4000px;height:1px;visibility:hidden"></span><div class="searchGroup__a1b2c">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  const m = await parts(page);
+  const w = await pill(page).evaluate((p) => p.getBoundingClientRect().width);
+  expect(m, JSON.stringify({ m, w })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+  expect(w).toBeGreaterThan(200);
+});
+
+test("flexible neighbours with fractional widths are rounding, not clipping: the full pill stays at 1500 and 1100px", async ({ page, context }) => {
+  for (const width of [1500, 1100]) {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, page, {
+      feed: actionsFeed(),
+      fixture: "header-signed-in-globalnav.html",
+      transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="frac__a1" style="flex:1 1 0;min-width:0;overflow:hidden;white-space:nowrap;padding:0 0.37px"><span style="display:inline-block;width:100%;margin-left:0.43px">Recent</span></div><div class="frac__b2" style="flex:2.7 1 0;min-width:0;overflow:hidden;white-space:nowrap"><span style="display:inline-block;width:99.7%">Pinned</span></div><div class="searchGroup__a1b2c">'),
+    });
+    await expect(pill(page)).toBeVisible();
+    const m = await parts(page);
+    const cls = await pill(page).evaluate((p) => p.className);
+    expect(m, JSON.stringify({ m, cls, width })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+  }
+});
+
+test("a neighbour the full pill would squeeze is not left clipped: Details and the detail word go first", async ({ page, context }) => {
+  await page.setViewportSize({ width: 900, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="squeeze__q1" style="flex:0 1 auto;min-width:0;overflow:hidden;white-space:nowrap"><span style="display:inline-block;width:200px">Recent</span></div><div class="searchGroup__a1b2c">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  const r = await page.evaluate(() => {
+    const n = document.querySelector(".squeeze__q1");
+    return n ? { clipped: n.scrollWidth - n.clientWidth, pillW: document.getElementById("ghgs-pill").getBoundingClientRect().width } : null;
+  });
+  expect(r, JSON.stringify(r)).not.toBeNull();
+  expect(r.clipped, JSON.stringify(r)).toBeLessThanOrEqual(0.5);
+});
+
+test("a neighbour already clipped without the pill makes the pill drop Details and the detail word", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="squeeze__q1" style="flex:0 1 auto;min-width:0;max-width:250px;overflow:hidden;white-space:nowrap"><span style="display:inline-block;width:330px">Recent</span></div><div class="searchGroup__a1b2c">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  const r = await page.evaluate(() => {
+    const n = document.querySelector(".squeeze__q1");
+    const p = document.getElementById("ghgs-pill");
+    const clip = () => n.scrollWidth - n.clientWidth;
+    const withPill = clip();
+    p.style.display = "none";
+    const without = clip();
+    p.style.display = "";
+    return { withPill, without, cls: p.className };
+  });
+  expect(r.without, JSON.stringify(r)).toBeGreaterThan(0.5); // clipped already, before the pill
+  expect(r.cls, JSON.stringify(r)).toContain("ghgs-nolink");
+  expect(r.cls, JSON.stringify(r)).toContain("ghgs-nodetail");
+});
+
+test("a row that cannot hold even the minimal pill gets no pill instead of a clipped one", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="squeeze__q1" style="flex:0 1 auto;min-width:0;overflow:hidden;white-space:nowrap"><span style="display:inline-block;width:5000px">Recent</span></div><div class="searchGroup__a1b2c">'),
+  });
+  await page.locator("#ghgs-pill").waitFor({ state: "attached" });
+  const r = await page.evaluate(() => {
+    const p = document.getElementById("ghgs-pill");
+    const n = document.querySelector(".squeeze__q1");
+    const clip = () => n.scrollWidth - n.clientWidth;
+    const withPill = clip();
+    p.style.display = "none";
+    const without = clip();
+    p.style.display = "";
+    return { cls: p.className, shown: getComputedStyle(p).display !== "none", withPill, without };
+  });
+  expect(r.cls, JSON.stringify(r)).toContain("ghgs-noname");
+  expect(r.cls, JSON.stringify(r)).toContain("ghgs-hidden");
+  expect(r.shown, JSON.stringify(r)).toBe(false);
+  expect(r.withPill, JSON.stringify(r)).toBeLessThanOrEqual(r.without + 0.5);
+});
+
+test("with room at 640px the pill keeps Details even though the old breakpoint hid it", async ({ page, context }) => {
+  await page.setViewportSize({ width: 640, height: 800 });
+  await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
+  await expect(pill(page)).toBeVisible();
+  const m = await parts(page);
+  expect(m, JSON.stringify(m)).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+});
+
+test("a narrow row drops Details, then the detail word, and the pill stays inside the window", async ({ page, context }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await setup(context, page, { feed: actionsFeed() });
   await expect(pill(page)).toBeVisible();
-  await expect(pill(page).locator(".ghgs-pill-link")).toBeHidden();
+  let m = await parts(page);
+  expect(m.link, JSON.stringify(m)).toBe(false);
+  expect(m.inside, JSON.stringify(m)).toBe(true);
   await page.setViewportSize({ width: 320, height: 800 });
-  await expect(pill(page).locator(".ghgs-pill-name")).toBeHidden();
+  await expect.poll(async () => (await parts(page)).detail).toBe(false);
+  m = await parts(page);
+  expect(m.link, JSON.stringify(m)).toBe(false);
+  expect(m.inside, JSON.stringify(m)).toBe(true);
   await expect(pill(page).getByRole("button", { name: "GitHub Status: Actions, degraded performance. Open details" })).toBeVisible();
 });
 
@@ -739,17 +899,11 @@ test("the panel stays inside a narrow window", async ({ page, context }) => {
 
 const LOCAL_BAR = '<div class="AppHeader-localBar" style="height:48px;border-top:1px solid #d1d9e0"><nav class="AppHeader-nav"><a href="/acme/web/actions" aria-current="page" style="border-bottom:2px solid #fd8c73">Actions</a></nav></div></header>';
 
-test("the severity line closes the global bar and leaves the repository tab bar alone", async ({ page, context }) => {
-  await setup(context, page, { feed: actionsFeed(), transform: (h) => h.replace("</header>", LOCAL_BAR) });
-  await expect(page.locator("#ghgs-line")).toHaveCount(1);
-  const r = await page.evaluate(() => {
-    const line = document.getElementById("ghgs-line").getBoundingClientRect();
-    const bar = document.querySelector(".AppHeader-globalBar").getBoundingClientRect();
-    const local = document.querySelector(".AppHeader-localBar").getBoundingClientRect();
-    return { lineBottom: line.bottom, barBottom: bar.bottom, localTop: local.top, localBottom: local.bottom };
-  });
-  expect(r.lineBottom, JSON.stringify(r)).toBeCloseTo(r.barBottom, 0);
-  expect(r.lineBottom).toBeLessThanOrEqual(r.localTop + 1);
+test("an incident adds no line and leaves the header's position alone, on the two-row header", async ({ page, context }) => {
+  await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
+  await expect(pill(page)).toBeVisible();
+  await expect(page.locator("#ghgs-line, .ghgs-line")).toHaveCount(0);
+  expect(await page.locator("header").evaluate((h) => [h.style.position, getComputedStyle(h).position, h.dataset.ghgsPositioned || ""])).toEqual(["", "static", ""]);
 });
 
 test("a running maintenance reported by the page indicator is amber, not Unverified", async ({ page, context }) => {
@@ -838,4 +992,348 @@ test("a header transparent all the way up gets no ring instead of a wrong colour
   await setup(context, page, { fixture: "header-signed-out.html", transform: (h) => h.replace("</head>", "<style>header, header * { background-color: transparent !important; } body, html { background: transparent !important; }</style></head>") });
   await expect(dot(page)).toBeVisible();
   await expect.poll(() => dot(page).locator(".ghgs-dot-mark").evaluate((m) => getComputedStyle(m).boxShadow), { timeout: 8000 }).toMatch(/rgba\(0, 0, 0, 0\)|none/);
+});
+
+// --- #96: the dot follows the worst open incident; the pill keeps the row's gap -----------------------
+
+const GLOBALNAV = "header-signed-in-globalnav.html";
+// The live summary on 2026-10-21: the page indicator said "none" while a critical incident was open.
+const criticalFeed = () =>
+  statusFeed({
+    status: { indicator: "none", description: "All Systems Operational" },
+    incidents: [statusIncident({ id: "crit", name: "Delays for Pull Requests and Webhook deliveries", impact: "critical", components: [{ name: "Pull Requests" }, { name: "Webhooks" }] })],
+  });
+
+test("indicator none with a critical incident open: the dot is red and named Critical incident, like the pill", async ({ page, context }) => {
+  await setup(context, page, { feed: criticalFeed(), fixture: GLOBALNAV });
+  await expect(pill(page)).toBeVisible();
+  await expect(pill(page)).toContainText("critical incident");
+  await expect(dot(page)).toHaveAttribute("data-state", "critical");
+  await expect(dot(page).locator(".ghgs-dot-mark")).toHaveCSS("background-color", "rgb(207, 34, 46)");
+  await expect(dot(page)).toHaveAttribute("aria-label", "GitHub Status: Critical incident. Open details");
+  await dot(page).click();
+  await expect(panel(page).locator(".ghgs-state")).toHaveText("Critical incident");
+});
+
+const rects = (page) =>
+  page.evaluate(() => {
+    const r = (n) => n && n.getBoundingClientRect();
+    const pillEl = document.getElementById("ghgs-pill");
+    const p = r(pillEl);
+    const group = pillEl.nextElementSibling;
+    const g = r(group);
+    const row = pillEl.parentElement;
+    const cs = getComputedStyle(row);
+    return {
+      pill: { left: p.left, right: p.right, width: p.width },
+      next: { left: g.left, tag: group.tagName, cls: group.className },
+      gap: g.left - p.right,
+      rowGap: cs.columnGap,
+      rowCls: row.className,
+      margin: pillEl.style.marginInlineEnd || getComputedStyle(pillEl).marginInlineEnd,
+      header: r(document.querySelector("header")).height,
+      bar: r(document.querySelector("header > div, header > *")).height,
+      scrollW: document.documentElement.scrollWidth,
+      clientW: document.documentElement.clientWidth,
+      innerW: window.innerWidth,
+    };
+  });
+
+for (const width of [1280, 1012, 768, 375]) {
+  test(`two-row header at ${width}px: the pill sits before the search group with the row's 8px gap and changes no height`, async ({ context }) => {
+    const page = await context.newPage();
+    await page.setViewportSize({ width, height: 800 });
+    let feed = statusFeed();
+    await routeStatus(context, { json: () => feed });
+    await routeGithub(context, GLOBALNAV);
+    await page.goto(ACTIONS);
+    await expect(dot(page)).toBeVisible();
+    const h0 = await page.locator("header").evaluate((h) => [h.getBoundingClientRect().height, h.firstElementChild.getBoundingClientRect().height]);
+    const worker = await backgroundWorker(context);
+    feed = criticalFeed();
+    await worker.evaluate(() => chrome.storage.session.remove("ghgsCache"));
+    await page.reload();
+    await expect(pill(page)).toBeVisible();
+    const m = await rects(page);
+    const hs = await page.locator("header").evaluate((h) => [h.getBoundingClientRect().height, h.firstElementChild.getBoundingClientRect().height]);
+    const info = JSON.stringify({ width, ...m });
+    expect(m.rowGap, info).toBe("8px");
+    expect(m.rowCls, info).toContain("topBarActions__");
+    expect(m.next.cls, info).toContain("searchGroup__");
+    expect(m.gap, info).toBeCloseTo(8, 0);
+    expect(m.margin, info).toMatch(/^0(px)?$/);
+    expect(m.pill.right, info).toBeLessThanOrEqual(m.innerW);
+    expect(m.pill.left, info).toBeGreaterThanOrEqual(0);
+    expect(m.scrollW, info).toBeLessThanOrEqual(m.clientW);
+    expect(hs, info).toEqual(h0);
+  });
+}
+
+test("the margin safety net is not used on current markup, and covers only the shortfall of a row with no gap", async ({ page, context }) => {
+  await setup(context, page, { feed: criticalFeed(), fixture: GLOBALNAV });
+  await expect(pill(page)).toBeVisible();
+  expect(await pill(page).evaluate((p) => p.style.marginInlineEnd)).toBe("");
+  // The row and the group both have no gap: the pill stays next to the search control and the missing space is added to it, to 8px.
+  const p2 = await context.newPage();
+  await routeGithub(context, GLOBALNAV, { transform: (h) => h.replace(".topBarActions__h9k2 { display: flex; align-items: center; gap: 8px;", ".topBarActions__h9k2 { display: flex; align-items: center; gap: 0;") });
+  await p2.goto(ACTIONS);
+  await expect(pill(p2)).toBeVisible();
+  const m = await rects(p2);
+  expect(m.gap, JSON.stringify(m)).toBeCloseTo(8, 0);
+  expect(await pill(p2).evaluate((p) => p.style.marginInlineEnd)).toBe("8px");
+});
+
+test("a gap-less actions row of margin-spaced controls does not pull the pill away from the search", async ({ page, context }) => {
+  // No searchGroup wrapper, no row gap, controls spaced by margins: the row sits in a space-between bar. The pill must stay next to the search control.
+  await setup(context, page, {
+    feed: criticalFeed(),
+    fixture: GLOBALNAV,
+    transform: (h) => h
+      .replace(".topBarActions__h9k2 { display: flex; align-items: center; gap: 8px;", ".topBarActions__h9k2 { display: flex; align-items: center; gap: 0;")
+      .replace("</style>", ".topBarActions__h9k2 > * + * { margin-left: 8px; }</style>")
+      .replace('<div class="searchGroup__a1b2c">', "").replace(/(<button type="button" class="iconButton__d4e5f joined"[^>]*>✦<\/button>\s*)<\/div>/, "$1"),
+  });
+  await expect(pill(page)).toBeVisible();
+  const m = await rects(page);
+  // The pill stays in the actions row, right before the search control, not between the bar's two groups.
+  expect(await pill(page).evaluate((p) => ({ inActions: !!p.closest("[class*=topBarActions]"), next: p.nextElementSibling.tagName }))).toEqual({ inActions: true, next: "QBSEARCH-INPUT" });
+  expect(m.pill.right, JSON.stringify(m)).toBeLessThanOrEqual(m.next.left + 0.5);
+});
+
+test("a component-only problem names the dot as degraded service, not as an incident", async ({ page, context }) => {
+  const feed = statusFeed();
+  feed.components = [{ name: "Actions", status: "degraded_performance" }];
+  await setup(context, page, { feed, fixture: GLOBALNAV });
+  await expect(dot(page)).toHaveAttribute("aria-label", /Degraded service/);
+});
+
+test("a component outage beside a minor incident and a calm indicator is not called a major incident", async ({ page, context }) => {
+  const feed = statusFeed({
+    status: { indicator: "none", description: "All Systems Operational" },
+    components: statusFeed().components.map((c) => (c.name === "Actions" ? { ...c, status: "major_outage" } : c)),
+    incidents: [statusIncident({ impact: "minor" })],
+  });
+  await setup(context, page, { feed, fixture: GLOBALNAV });
+  await expect(dot(page)).toHaveAttribute("aria-label", /Service outage/);
+});
+
+test("both class namings of the two-row header give the same placement", async ({ page, context }) => {
+  await setup(context, page, {
+    feed: criticalFeed(),
+    fixture: GLOBALNAV,
+    transform: (h) => h.replace(/(\w+)__(?:k3j9a|m2p4q|r5t6u|h9k2|a1b2c|d4e5f|g7h8i|j1k2l|n3o4p)/g, (_, n) => `GlobalNav-module__${n}--x1y2z`).replace(/GlobalNav-module__root__x1y2z/, "GlobalNav-module__root--x"),
+  });
+  await expect(pill(page)).toBeVisible();
+  const m = await rects(page);
+  expect(m.rowCls, JSON.stringify(m)).toContain("topBarActions");
+  expect(m.next.cls, JSON.stringify(m)).toContain("searchGroup");
+  expect(m.gap, JSON.stringify(m)).toBeCloseTo(8, 0);
+});
+
+test("the signed-out header: a hidden sibling next to the search is ignored and the pill stays outside the search slot", async ({ page, context }) => {
+  await setup(context, page, {
+    feed: criticalFeed(),
+    fixture: "header-signed-out.html",
+    transform: (h) => h.replace('<div class="mobileActions__8F9jkX">', '<div class="searchSlot__x9" style="display:flex;gap:0"><button type="button" aria-label="Search or jump to…">Search</button><div class="d-none" style="display:none">more</div></div><div class="mobileActions__8F9jkX">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  expect(await pill(page).evaluate((p) => ({ inside: !!p.closest(".searchSlot__x9"), next: p.nextElementSibling.className }))).toEqual({ inside: false, next: "searchSlot__x9" });
+});
+
+test("SPA /pull/1 -> /actions -> back -> forward: one pill in the same place, no line", async ({ page, context }) => {
+  await setup(context, page, { feed: criticalFeed(), fixture: GLOBALNAV, url: ACTIONS });
+  await expect(pill(page)).toHaveCount(1);
+  const where = async () => { const m = await rects(page); return [Math.round(m.pill.left), Math.round(m.gap)]; };
+  const first = await where();
+  await page.evaluate(() => history.pushState({}, "", "/acme/web/pull/1"));
+  await page.evaluate(() => history.pushState({}, "", "/acme/web/actions"));
+  await page.goBack();
+  await page.goForward();
+  await expect(pill(page)).toHaveCount(1);
+  expect(await where()).toEqual(first);
+  await expect(page.locator("#ghgs-line")).toHaveCount(0);
+  expect(await page.locator("header").evaluate((h) => h.style.position)).toBe("");
+});
+
+test("a rule and a position override left by an older version are cleaned up", async ({ page, context }) => {
+  await setup(context, page, { feed: criticalFeed(), fixture: GLOBALNAV });
+  await expect(pill(page)).toBeVisible();
+  await page.evaluate(() => {
+    const h = document.querySelector("header");
+    h.dataset.ghgsPositioned = "1";
+    h.style.position = "relative";
+    const l = document.createElement("div");
+    l.id = "ghgs-line";
+    h.append(l);
+  });
+  await expect(page.locator("#ghgs-line")).toHaveCount(0);
+  expect(await page.locator("header").evaluate((h) => h.style.position)).toBe("");
+});
+
+test("a pill the row squeezes drops Details, then the detail, so no part is clipped or overlaps", async ({ page, context }) => {
+  for (const width of [1440, 1100, 800]) {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, page, {
+      feed: actionsFeed(),
+      fixture: "header-signed-in-globalnav.html",
+      transform: (h) => h.replace("</head>", "<style>.ghgs-pill{max-width:190px !important}</style></head>"),
+    });
+    await expect(pill(page)).toBeVisible();
+    const m = await page.evaluate(() => {
+      const p = document.getElementById("ghgs-pill");
+      const box = (s) => { const e = p.querySelector(s); const cs = e && getComputedStyle(e); return e && cs.display !== "none" ? e.getBoundingClientRect() : null; };
+      const pr = p.getBoundingClientRect();
+      const parts = [".ghgs-pill-name", ".ghgs-pill-detail", ".ghgs-pill-link", ".ghgs-pill-close"].map(box).filter(Boolean);
+      const inside = parts.every((r) => r.left >= pr.left - 0.5 && r.right <= pr.right + 0.5);
+      const overlap = parts.some((a, i) => parts.some((b, j) => j > i && a.left < b.right - 0.5 && b.left < a.right - 0.5));
+      const main = p.querySelector(".ghgs-pill-main");
+      const name = p.querySelector(".ghgs-pill-name");
+      return { inside, overlap, nameW: name.clientWidth, nameClipped: name.scrollWidth > name.clientWidth, mainClipped: main.scrollWidth > main.clientWidth, pw: pr.width, cls: p.className };
+    });
+    expect(m, JSON.stringify({ m, width })).toMatchObject({ inside: true, overlap: false, nameClipped: false, mainClipped: false });
+    expect(m.nameW, JSON.stringify({ m, width })).toBeGreaterThan(0);
+  }
+});
+
+test("on a wide header the first fit step passes and data-fit says so", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1500, height: 800 });
+  await setup(context, page, { feed: actionsFeed(), fixture: "header-signed-in-globalnav.html" });
+  await expect(pill(page)).toBeVisible();
+  const fit = await pill(page).getAttribute("data-fit");
+  expect(fit, String(fit)).toBe("ok");
+  const m = await parts(page);
+  expect(m, JSON.stringify(m)).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+});
+
+test("a neighbour whose scrollable overflow moves without getting narrower does not make the pill drop its text", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1500, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="wob__w1" style="flex:none;width:120px;overflow:hidden"><span style="display:block;width:122px;height:1px"></span></div><div class="searchGroup__a1b2c">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  const m = await parts(page);
+  expect(m, JSON.stringify({ m, fit: await pill(page).getAttribute("data-fit") })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+});
+
+test("a neighbour with a huge flex basis does not squeeze the pill the fit check accepted", async ({ page, context }) => {
+  await page.setViewportSize({ width: 1500, height: 800 });
+  await setup(context, page, {
+    feed: actionsFeed(),
+    fixture: "header-signed-in-globalnav.html",
+    transform: (h) => h.replace('<div class="searchGroup__a1b2c">', '<div class="spare__s1" style="flex:1 1 3000px;min-width:0"></div><div class="searchGroup__a1b2c">'),
+  });
+  await expect(pill(page)).toBeVisible();
+  const m = await parts(page);
+  expect(m, JSON.stringify({ m, fit: await pill(page).getAttribute("data-fit") })).toMatchObject({ link: true, detail: true, name: true, truncated: false });
+  expect(await page.locator(".ghgs-pill-name").evaluate((e) => e.clientWidth)).toBeGreaterThan(40);
+});
+
+for (const width of [800, 500]) {
+  test(`at ${width}px the pill never overlaps the logo or squeezes the breadcrumb: it drops its parts or hides`, async ({ page, context }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, page, {
+      feed: actionsFeed(),
+      fixture: "header-signed-in-globalnav.html",
+      // The breadcrumb stays visible at every width and is a shrinkable, clipping region; the actions row is right-aligned and may grow leftwards.
+      transform: (h) =>
+        h
+          .replace("@media (max-width: 767px) {", "@media (max-width: 0px) {")
+          .replace(".topBarStart__r5t6u {", ".topBarStart__r5t6u { flex: 1 1 0; overflow: hidden;")
+          .replace(".context__j1k2l {", ".context__j1k2l { min-width: 0; overflow: hidden; text-overflow: clip;")
+          .replace("<strong>web</strong>", "<strong>web-with-a-rather-long-repository-name</strong>"),
+    });
+    const measure = () =>
+      page.evaluate(() => {
+        const p = document.getElementById("ghgs-pill");
+        const logo = document.querySelector("[data-ghgs-logo]");
+        const ctx = document.querySelector(".context__j1k2l");
+        const pr = p.getBoundingClientRect();
+        const leaves = [...document.querySelectorAll(".context__j1k2l, .context__j1k2l *")].map((e) => Math.round(e.getBoundingClientRect().width));
+        return { leaves, hidden: p.classList.contains("ghgs-hidden") || pr.width === 0, pillLeft: pr.left, logoRight: logo.getBoundingClientRect().right, ctxW: ctx.getBoundingClientRect().width, ctxNeed: ctx.scrollWidth, fit: p.dataset.fit };
+      });
+    await expect(pill(page)).toBeAttached();
+    const m = await measure();
+    await pill(page).evaluate((p) => (p.style.display = "none"));
+    const base = await measure();
+    expect(m.hidden || m.pillLeft >= m.logoRight - 0.5, JSON.stringify({ m, base })).toBe(true);
+    expect(m.hidden || m.ctxW >= base.ctxW - 2, JSON.stringify({ m, base })).toBe(true);
+    // No breadcrumb item loses width to the pill either (live: the crumb went from 194px to 28px with the region still "fitting").
+    expect(m.hidden || m.leaves.every((w, i) => w >= base.leaves[i] - 2), JSON.stringify({ m, base })).toBe(true);
+  });
+}
+
+for (const width of [800, 500]) {
+  test(`at ${width}px a breadcrumb that sits beside an outer wrapper of the row keeps its visible text, or the pill hides`, async ({ page, context }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, page, {
+      feed: actionsFeed(),
+      fixture: "header-signed-in-globalnav.html",
+      // The actions row is nested one level deeper, so the start region is a sibling of its wrapper, not of the row; the crumb text keeps its own box and is clipped by an ancestor.
+      transform: (h) =>
+        h
+          .replace("@media (max-width: 767px) {", "@media (max-width: 0px) {")
+          .replace(".topBarStart__r5t6u {", ".topBarStart__r5t6u { flex: 1 1 0; min-width: 0; overflow: hidden;")
+          .replace('<div class="topBarActions__h9k2">', '<div class="outer__o1" style="display:flex;flex:none"><div class="topBarActions__h9k2">')
+          .replace('<button type="button" class="iconButton__d4e5f" aria-label="Open user navigation menu">M</button>\n      </div>', '<button type="button" class="iconButton__d4e5f" aria-label="Open user navigation menu">M</button>\n      </div></div>')
+          .replace("<strong>web</strong>", "<strong>web-with-a-rather-long-repository-name</strong>"),
+    });
+    await expect(pill(page)).toBeAttached();
+    const visible = () =>
+      page.evaluate(() => {
+        const start = document.querySelector(".topBarStart__r5t6u").getBoundingClientRect();
+        const r = document.createRange();
+        r.selectNodeContents(document.querySelector(".context__j1k2l strong"));
+        const b = r.getBoundingClientRect();
+        return Math.max(0, Math.min(b.right, start.right) - Math.max(b.left, start.left));
+      });
+    const withPill = await visible();
+    const hidden = await pill(page).evaluate((p) => p.classList.contains("ghgs-hidden") || p.getBoundingClientRect().width === 0);
+    await pill(page).evaluate((p) => (p.style.display = "none"));
+    const base = await visible();
+    expect(hidden || withPill >= base - 2, JSON.stringify({ withPill, base, fit: await pill(page).getAttribute("data-fit") })).toBe(true);
+  });
+}
+
+test("a contextCrumb__hash breadcrumb keeps its repo name with the pill at 800 and 500px, on both class namings", async ({ page, context }) => {
+  for (const cls of ["contextCrumb__a1b2c", "AppHeader-module__contextCrumb--x9"]) {
+    for (const width of [800, 500]) {
+      await page.setViewportSize({ width, height: 800 });
+      const crumb = `<div class="${cls}" style="display:block;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="/acme/web">acme-long-repository-name-playground</a></div>`;
+      await setup(context, page, {
+        feed: actionsFeed(),
+        fixture: "header-signed-in-globalnav.html",
+        transform: (h) => h.replace("</head>", "<style>.context__j1k2l{display:flex !important;min-width:0}.topBarStart__r5t6u{flex:0 1 auto}</style></head>").replace('<div class="context__j1k2l">', `<div class="context__j1k2l" style="min-width:0">${crumb}<div hidden>`).replace("</strong></a></div>", "</strong></a></div></div>"),
+      });
+      const m = await page.evaluate(() => {
+        const c = document.querySelector('[class*="contextCrumb"]');
+        const p = document.getElementById("ghgs-pill");
+        const withPill = c.getBoundingClientRect().width;
+        const shown = p && !p.classList.contains("ghgs-hidden") && getComputedStyle(p).display !== "none";
+        if (p) p.style.display = "none";
+        const without = c.getBoundingClientRect().width;
+        if (p) p.style.display = "";
+        return { withPill, without, shown, fit: p?.dataset.fit };
+      });
+      expect(m.withPill, JSON.stringify({ m, cls, width })).toBeGreaterThanOrEqual(m.without - 2);
+    }
+  }
+});
+
+test("a flex-growing breadcrumb container does not hide the pill at 1500 and 1100px", async ({ page, context }) => {
+  for (const width of [1500, 1100]) {
+    await page.setViewportSize({ width, height: 800 });
+    const region = `<nav class="contextRegion__q1w2e prc-Breadcrumbs-BreadcrumbsBase" style="display:flex;flex:1 1 0;min-width:0;overflow:hidden"><div class="contextCrumb__a1b2c" style="flex:0 0 auto;white-space:nowrap"><a href="/acme/web">acme-playground</a></div></nav>`;
+    await setup(context, page, {
+      feed: actionsFeed(),
+      fixture: "header-signed-in-globalnav.html",
+      transform: (h) => h.replace('<div class="context__j1k2l">', `<div class="context__j1k2l" style="min-width:0;display:flex;flex:1 1 auto">${region}<div hidden>`).replace("</strong></a></div>", "</strong></a></div></div>"),
+    });
+    await expect(pill(page)).toBeAttached();
+    const m = await pill(page).evaluate((p) => ({ cls: p.className, w: p.getBoundingClientRect().width, fit: p.dataset.fit }));
+    expect(m.cls, JSON.stringify({ m, width })).not.toContain("ghgs-hidden");
+    expect(m.cls, JSON.stringify({ m, width })).not.toContain("ghgs-noname");
+    expect(m.w).toBeGreaterThan(200);
+  }
 });

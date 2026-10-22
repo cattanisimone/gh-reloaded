@@ -22,13 +22,23 @@
 
   const lower = (s) => String(s || "").toLowerCase();
 
-  // "ok" | "minor" | "major" | "maintenance" | "unknown".
+  const COMPONENT_RANK = { degraded_performance: 1, partial_outage: 1, major_outage: 2 };
+  const DOT_BY_RANK = ["ok", "minor", "major", "critical"];
+
+  // "ok" | "minor" | "major" | "critical" | "maintenance" | "unknown". The worst
+  // of the page indicator, the open incidents' impact and the components'
+  // status, so the dot is never calmer than the pill (the summary's indicator
+  // can say "none" while a critical incident is open). Maintenance only wins
+  // when nothing is worse.
   function dotState(view, now) {
     const s = view && view.snapshot;
     if (!s || view.error || !view.fetchedAt || now - view.fetchedAt > STALE_MS) return "unknown";
-    if (s.indicator === "major" || s.indicator === "critical") return "major";
-    if (s.indicator === "minor") return "minor";
+    let worst = RANK[s.indicator] || 0;
+    for (const i of s.incidents || []) worst = Math.max(worst, RANK[i.impact] || 0);
+    for (const c of s.components || []) worst = Math.max(worst, COMPONENT_RANK[c.status] || 0);
+    if (worst > 0) return DOT_BY_RANK[worst];
     if (s.indicator === "maintenance" || (s.maintenances && s.maintenances.length)) return "maintenance";
+    if ((s.components || []).some((c) => c.status === "under_maintenance")) return "maintenance";
     return "ok";
   }
 

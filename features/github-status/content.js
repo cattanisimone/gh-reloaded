@@ -16,7 +16,7 @@
   const R = globalThis.GHGS_RELEVANCE;
   const DOT_ID = "ghgs-dot";
   const PILL_ID = "ghgs-pill";
-  const LINE_ID = "ghgs-line";
+  const LINE_ID = "ghgs-line"; // drawn by older versions: only removed now
   const PANEL_ID = "ghgs-panel";
   const MESSAGE_TYPE = "GITHUB_STATUS_GET"; // matches background/github-status.js
   const REFRESH_MS = 5 * 60_000;
@@ -109,6 +109,34 @@
     );
   }
 
+  // Climbs from the search control to the wrapper that sits in the header's row: past parents whose other
+  // children are not rendered (a hidden or joined sibling), and past a gap-less group when the row above
+  // spaces its children with a gap. Layout facts only, never a class name. A gap-less row with no gapped row
+  // above it is left alone: the pill stays next to the control and ensurePill adds the missing space.
+  // True when the rendered children of a row touch each other (a joined group, not controls spaced by margins).
+  function joined(parent) {
+    const rects = [...parent.children].map((c) => c.getBoundingClientRect()).filter((r) => r.width > 0 && r.height > 0).sort((a, b) => a.left - b.left);
+    return rects.every((r, i) => i === 0 || r.left - rects[i - 1].right <= 1);
+  }
+
+  function outermostSearchWrapper(node, header, rendered) {
+    const gapOf = (n) => parseFloat(getComputedStyle(n).columnGap) || 0;
+    const isRow = (n) => /flex|grid/.test(getComputedStyle(n).display);
+    for (let parent = node.parentElement; parent && parent !== header; parent = node.parentElement) {
+      if ([...parent.children].filter(rendered).length === 1) {
+        node = parent;
+        continue;
+      }
+      const above = parent.parentElement;
+      if (isRow(parent) && gapOf(parent) === 0 && joined(parent) && above && above !== header && isRow(above) && gapOf(above) > 0) {
+        node = parent;
+        continue;
+      }
+      break;
+    }
+    return node;
+  }
+
   // The header's search control: a search landmark, the search element or a
   // control whose accessible name or text says "search".
   function findSearch(header) {
@@ -126,7 +154,7 @@
     const named = [...header.querySelectorAll("button, input")].filter((n) => !n.closest(own) && /search/i.test(n.getAttribute("aria-label") || n.getAttribute("placeholder") || ""));
     for (let node of [...landmarks, ...named]) {
       if (!rendered(node)) continue;
-      while (node.parentElement && node.parentElement !== header && node.parentElement.children.length === 1) node = node.parentElement;
+      node = outermostSearchWrapper(node, header, rendered);
       if (node.parentElement) return node;
     }
     return null;
@@ -142,9 +170,21 @@
     ok: "No incident reported",
     minor: "Minor incident",
     major: "Major incident",
+    critical: "Critical incident",
     maintenance: "Maintenance in progress",
     unknown: "Unverified",
   };
+
+  // A dot raised only by a component status (no incident, indicator calm) must not claim an incident.
+  function stateText(s) {
+    const snap = state.view.snapshot;
+    const rank = { none: 0, minor: 1, major: 2, critical: 3 };
+    if ((s === "minor" || s === "major") && snap) {
+      const fromIncident = Math.max(rank[snap.indicator] || 0, ...(snap.incidents || []).map((i) => rank[i.impact] || 0));
+      if (fromIncident < rank[s]) return s === "major" ? "Service outage" : "Degraded service";
+    }
+    return STATE_TEXT[s];
+  }
 
   function agoText(at) {
     const min = Math.floor((Date.now() - at) / 60_000);
@@ -172,7 +212,7 @@
   function paintDot(dot) {
     const s = dotState();
     dot.dataset.state = s;
-    dot.setAttribute("aria-label", `GitHub Status: ${STATE_TEXT[s]}. Open details`);
+    dot.setAttribute("aria-label", `GitHub Status: ${stateText(s)}. Open details`);
   }
 
   function ensureDot(header) {
@@ -231,10 +271,8 @@
     const notice = currentNotice();
     const search = notice ? findSearch(header) : null;
     const old = document.getElementById(PILL_ID);
-    const line = document.getElementById(LINE_ID);
     if (!notice || !search) {
       old?.remove();
-      removeLine(line, header);
       return;
     }
     const fresh = !old || old.dataset.incident !== notice.id || old.dataset.at !== notice.updatedAt || old.dataset.path !== location.pathname;
@@ -244,35 +282,136 @@
       pill = buildPill(notice);
     }
     if (search.previousElementSibling !== pill) search.before(pill);
-    paintLine(header, notice.impact === "minor" ? "minor" : "major");
+    fitPill(pill, search);
   }
 
-  function paintLine(header, sev) {
-    let line = document.getElementById(LINE_ID);
-    if (!line) {
-      line = el("div", { id: LINE_ID, class: "ghgs-line", "aria-hidden": "true" });
-      if (getComputedStyle(header).position === "static") {
-        header.dataset.ghgsPositioned = "1";
-        header.style.position = "relative";
+  // Shows as much of the pill as its row has room for. The pill is measured at its natural width (shrinking
+  // off): it fits when that adds no overflow to the row and does not crush a neighbour's content. The room is
+  // the row's, never the width the pill was shrunk to. A neighbour that only gives up spare room (a growing
+  // spacer or a flexible group) is not crushed: only one whose content starts to overflow its box is.
+  function fitPill(pill, search) {
+    const row = pill.parentElement;
+    const header = findHeader();
+    const TOL = 2; // scrollWidth and clientWidth are rounded separately, so 1px of "overflow" can be rounding alone
+    const clip = (n) => Math.max(0, n.scrollWidth - n.clientWidth);
+    const fits = () => {
+      // The row's siblings count too, and so do those of every ancestor up to the header: the start region
+      // (logo, breadcrumb) can sit in another row of a two-row header and shrinks when the actions grow.
+      const regions = [];
+      for (let n = row; n && n !== header && n.parentElement; n = n.parentElement) regions.push(...[...n.parentElement.children].filter((c) => c !== n));
+      // Their children count as well: the breadcrumb is a child of the start region and is what gets emptied.
+      const others = [...[...row.children].filter((n) => n !== pill), ...regions, ...regions.flatMap((n) => [...n.children])];
+      // The baseline is taken with the pill out of the layout, or a neighbour it already squeezed would count as clipped.
+      pill.style.display = "none";
+      const before = others.map((n) => ({ clip: clip(n), w: n.getBoundingClientRect().width }));
+      // Every word of the other regions (each breadcrumb item; a one-glyph icon button may flex): none may lose width to the pill.
+      // Measured on the text itself, as far as it is visible: a clipping ancestor can cut a word whose own box keeps its width.
+      const words = [];
+      // The whole header is walked, not only the regions found from the row: whichever way the live markup nests the
+      // breadcrumb, its words are measured. Our own elements (pill, dot, panel) are skipped.
+      const root = header || row.closest("header") || row;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let t = walker.nextNode(); t; t = walker.nextNode()) {
+        if (t.textContent.trim().length > 1 && !pill.contains(t) && !t.parentElement?.closest('[id^="ghgs-"]')) words.push(t);
       }
-      header.append(line);
+      // The breadcrumb group itself (matched on the stable middle of its class) must keep its width as well.
+      // Only real items: a container that grows to fill its row (flex-grow) gives its width back when the pill takes room
+      // without any word being cut, and the words themselves are covered by the text check below.
+      const crumbSel = '[class*="ontextCrumb"], [class*="readcrumb"]';
+      const crumbs = [...root.querySelectorAll(crumbSel)].filter(
+        (c) => !pill.contains(c) && !c.querySelector(crumbSel) && !(parseFloat(getComputedStyle(c).flexGrow) > 0),
+      );
+      const crumbW = crumbs.map((c) => c.getBoundingClientRect().width);
+      const seen = (t) => {
+        const range = document.createRange();
+        range.selectNodeContents(t);
+        const box = range.getBoundingClientRect();
+        let left = box.left;
+        let right = box.right;
+        for (let n = t.parentElement; n && n !== header?.parentElement; n = n.parentElement) {
+          if (getComputedStyle(n).overflowX === "visible") continue;
+          const r = n.getBoundingClientRect();
+          left = Math.max(left, r.left);
+          right = Math.min(right, r.right);
+        }
+        return Math.max(0, right - left);
+      };
+      const leafW = words.map(seen);
+      const base = row.scrollWidth - row.clientWidth; // a row can overflow without us (a hidden or positioned child)
+      pill.style.display = "";
+      pill.classList.add("ghgs-measure");
+      // The gap-less fallback margin is part of what the pill needs, so it is measured with the pill, not added after.
+      keepGap(pill, search);
+      const overflow = row.scrollWidth - row.clientWidth - Math.max(0, base);
+      // Crushed: the pill made the neighbour both narrower and more clipped. A neighbour whose width did not
+      // change is not squeezed by us, whatever its scrollWidth does (positioned or hidden children).
+      // A neighbour that collapses to nothing is crushed too, even when it hides its content without clipping it.
+      const crushed = others.findIndex((n, i) => {
+        const w = n.getBoundingClientRect().width;
+        return w < before[i].w - TOL && (clip(n) > before[i].clip + TOL || (w < 8 && before[i].w >= 8 + TOL));
+      });
+      if (overflow > TOL) return `overflow ${overflow}`;
+      if (crushed >= 0) return `crushed ${others[crushed].className || others[crushed].tagName}`;
+      const shrunk = crumbs.findIndex((c, i) => crumbW[i] > 0 && c.getBoundingClientRect().width < crumbW[i] - TOL);
+      if (shrunk >= 0) return `crumb ${crumbs[shrunk].className || crumbs[shrunk].tagName}`;
+      const lost = words.findIndex((t, i) => leafW[i] > 0 && seen(t) < leafW[i] - TOL);
+      if (lost >= 0) return `lost ${words[lost].parentElement.className || words[lost].parentElement.tagName}`;
+      // Overflowing to the left does not show in the row's scrollWidth: the pill must not sit over the logo or breadcrumb.
+      const pr = pill.getBoundingClientRect();
+      const over = regions.flatMap((n) => [...n.children]).find((c) => {
+        const r = c.getBoundingClientRect();
+        return r.width > 0 && r.height > 0 && r.left < pr.right - TOL && r.right > pr.left + TOL && r.top < pr.bottom - TOL && r.bottom > pr.top + TOL;
+      });
+      if (over) return `over ${over.className || over.tagName}`;
+      // The row may still squeeze the pill itself (live: the name collapsed to 0px and "Details" painted over the close button), so
+      // the pill as laid out must show the whole name and have nothing clipped in its main button.
+      // Checked at the natural width (ghgs-measure still on): the shrinkable pill would be sized by the neighbours' spare room.
+      if (pill.classList.contains("ghgs-noname")) return ""; // icon and close only: nothing left to drop inside the pill
+      const main = pill.querySelector(".ghgs-pill-main");
+      const name = pill.querySelector(".ghgs-pill-name");
+      if (name && !(name.clientWidth > 0 && clip(name) <= TOL)) return `name ${name.clientWidth}/${name.scrollWidth}`;
+      if (main && clip(main) > TOL) return `main ${main.clientWidth}/${main.scrollWidth}`;
+      if (clip(pill) > TOL) return `pill ${pill.clientWidth}/${pill.scrollWidth}`;
+      return "";
+    };
+    pill.classList.remove("ghgs-nolink", "ghgs-nodetail", "ghgs-noname", "ghgs-hidden", "ghgs-measure");
+    if (!row) return;
+    // Parts go in order: the "Details" link, the detail word, the name (icon and close stay, the aria-labels keep the text).
+    // A row where even that overflows or crushes a native control gets no pill at all; the
+    // next scan tries again. The first check that failed at each step is kept in data-fit, to read what a real header does.
+    const why = [];
+    for (const step of ["", "ghgs-nolink", "ghgs-nodetail", "ghgs-noname"]) {
+      if (step) pill.classList.add(step);
+      const reason = fits();
+      why.push(reason || "ok");
+      if (!reason) {
+        // A pill that fits at its natural width keeps it: ghgs-measure stays on so the row cannot shrink it later.
+        pill.dataset.fit = why.join(" | ");
+        return;
+      }
     }
-    line.className = `ghgs-line ghgs-${sev}`;
-    // The line closes the global bar (logo row), never the repository tab bar below it.
-    const logo = findLogo(header);
-    const bar = logo && [...header.children].find((c) => c.contains(logo));
-    if (bar) {
-      const top = bar.getBoundingClientRect().bottom - header.getBoundingClientRect().top - 2;
-      line.style.top = `${Math.max(0, Math.round(top))}px`;
-      line.style.bottom = "auto";
-    } else {
-      line.style.top = "";
-      line.style.bottom = "";
-    }
+    pill.dataset.fit = why.join(" | ");
+    pill.classList.remove("ghgs-measure");
+    pill.classList.add("ghgs-hidden");
+    pill.style.marginInlineEnd = "";
   }
 
-  function removeLine(line, header) {
-    line?.remove();
+  // The row's own gap spaces the pill from the search control. Only when the row has none (the pill sits
+  // in a gap-less group) is the shortfall to the header's 8px added as a margin on the pill.
+  const WANTED_GAP = 8;
+  function keepGap(pill, search) {
+    pill.style.marginInlineEnd = "";
+    const p = pill.getBoundingClientRect();
+    const q = search.getBoundingClientRect();
+    if (!p.width || !q.width) return;
+    const rtl = getComputedStyle(pill).direction === "rtl";
+    const space = rtl ? p.left - q.right : q.left - p.right;
+    if (space < WANTED_GAP - 0.5) pill.style.marginInlineEnd = `${Math.round((WANTED_GAP - space) * 100) / 100}px`;
+  }
+
+  // Older versions drew a 2px rule across the header and made it position: relative.
+  function removeLegacyLine(header) {
+    document.getElementById(LINE_ID)?.remove();
     if (header && header.dataset.ghgsPositioned) {
       header.style.position = "";
       delete header.dataset.ghgsPositioned;
@@ -299,7 +438,7 @@
     const snap = state.view.snapshot;
     panel.dataset.sig = panelSig();
     panel.replaceChildren();
-    const head = el("div", { class: "ghgs-head" }, el("span", { class: "ghgs-dot-mark", "data-state": s, "aria-hidden": "true" }), el("strong", { text: "GitHub Status" }), el("span", { class: "ghgs-state", text: STATE_TEXT[s] }));
+    const head = el("div", { class: "ghgs-head" }, el("span", { class: "ghgs-dot-mark", "data-state": s, "aria-hidden": "true" }), el("strong", { text: "GitHub Status" }), el("span", { class: "ghgs-state", text: stateText(s) }));
     const meta = el("p", { class: "ghgs-meta" });
     // The ages are rewritten in place by refreshPanel, so the text comes from a function.
     meta.ageText = () => (snap && s !== "unknown" ? `Checked ${agoText(state.view.fetchedAt)}${snap.updatedAt && clock(snap.updatedAt) ? ` · Updated by GitHub ${clock(snap.updatedAt)}` : ""}` : "");
@@ -416,7 +555,7 @@
     document.getElementById(DOT_ID)?.remove();
     for (const l of document.querySelectorAll("[data-ghgs-logo]")) l.removeAttribute("data-ghgs-logo");
     document.getElementById(PILL_ID)?.remove();
-    removeLine(document.getElementById(LINE_ID), header);
+    removeLegacyLine(header);
     const panel = document.getElementById(PANEL_ID);
     if (panel) {
       try { panel.hidePopover(); } catch {}
@@ -430,6 +569,7 @@
     const header = findHeader();
     if (!header) return;
     state.path = location.pathname;
+    removeLegacyLine(header);
     ensureDot(header);
     ensurePill(header);
     const panel = ensurePanel();
