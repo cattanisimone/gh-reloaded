@@ -623,19 +623,40 @@ for (const dpr of [0.8, 0.9, 1.1, 1.25, 1.5, 1.65]) {
   });
 }
 
-test("the band refits when the device pixel ratio changes after render", async ({ context, page }) => {
+// A stale marker on the row (border-radius moves no box, so no ResizeObserver
+// fires) is cleared only when fitRow runs again.
+const STALE = "13px";
+const markStale = (loc) => loc.evaluate((el, v) => { el.style.borderRadius = v; }, STALE);
+const radius = (loc) => loc.evaluate((el) => el.style.borderRadius);
+
+test("the band refits when only the device pixel ratio changes", async ({ context, page }) => {
   await setup(context, page, { go: false });
   const cdp = await context.newCDPSession(page);
   const metrics = (dpr) => cdp.send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 800, deviceScaleFactor: dpr, mobile: false });
   await metrics(1);
   await page.goto(URL);
   await expect(row(page, 207)).toBeVisible();
-  await page.evaluate(() => { for (const b of document.querySelectorAll(".board-view-column-card > :first-child")) b.style.paddingLeft = "0.3px"; });
-  await metrics(0.8);
-  await expect.poll(async () => {
-    const g = await card(page, 207).evaluate(frameGeometry);
-    return [g.leftGap, g.rightGap, g.bottomGap].every((v) => v >= -0.001 && v < 1 / 0.8 + 0.01);
-  }).toBe(true);
+  await markStale(row(page, 207));
+  await metrics(1.25);
+  await page.screenshot(); // headless fires resize and resolution events only once a frame is produced
+  await expect.poll(() => radius(row(page, 207))).not.toBe(STALE);
+});
+
+test("a window resize refits the rows and a detached row is dropped from the refit", async ({ context, page }) => {
+  await setup(context, page);
+  await expect(row(page, 207)).toBeVisible();
+  expect(await page.locator(".ghlps-row").count()).toBeGreaterThan(1);
+  // Detach the first row's card (keeping a handle), mark both rows, then resize.
+  await page.evaluate(() => {
+    const rows = [...document.querySelectorAll(".ghlps-row")];
+    window.__detached = rows[0];
+    window.__kept = rows[1];
+    for (const r of rows) r.style.borderRadius = "13px";
+    rows[0].closest(".board-view-column-card").remove();
+    window.dispatchEvent(new Event("resize"));
+  });
+  await expect.poll(() => page.evaluate(() => window.__kept.style.borderRadius)).not.toBe(STALE);
+  expect(await page.evaluate(() => window.__detached.style.borderRadius)).toBe(STALE);
 });
 
 test("the divider uses the page's --borderColor-muted", async ({ context, page }) => {
