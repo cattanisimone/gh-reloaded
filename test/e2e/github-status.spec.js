@@ -1295,3 +1295,28 @@ for (const width of [800, 500]) {
     expect(hidden || withPill >= base - 2, JSON.stringify({ withPill, base, fit: await pill(page).getAttribute("data-fit") })).toBe(true);
   });
 }
+
+test("a contextCrumb__hash breadcrumb keeps its repo name with the pill at 800 and 500px, on both class namings", async ({ page, context }) => {
+  for (const cls of ["contextCrumb__a1b2c", "AppHeader-module__contextCrumb--x9"]) {
+    for (const width of [800, 500]) {
+      await page.setViewportSize({ width, height: 800 });
+      const crumb = `<div class="${cls}" style="display:block;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="/acme/web">acme-long-repository-name-playground</a></div>`;
+      await setup(context, page, {
+        feed: actionsFeed(),
+        fixture: "header-signed-in-globalnav.html",
+        transform: (h) => h.replace("</head>", "<style>.context__j1k2l{display:flex !important;min-width:0}.topBarStart__r5t6u{flex:0 1 auto}</style></head>").replace('<div class="context__j1k2l">', `<div class="context__j1k2l" style="min-width:0">${crumb}<div hidden>`).replace("</strong></a></div>", "</strong></a></div></div>"),
+      });
+      const m = await page.evaluate(() => {
+        const c = document.querySelector('[class*="contextCrumb"]');
+        const p = document.getElementById("ghgs-pill");
+        const withPill = c.getBoundingClientRect().width;
+        const shown = p && !p.classList.contains("ghgs-hidden") && getComputedStyle(p).display !== "none";
+        if (p) p.style.display = "none";
+        const without = c.getBoundingClientRect().width;
+        if (p) p.style.display = "";
+        return { withPill, without, shown, fit: p?.dataset.fit };
+      });
+      expect(m.withPill, JSON.stringify({ m, cls, width })).toBeGreaterThanOrEqual(m.without - 2);
+    }
+  }
+});

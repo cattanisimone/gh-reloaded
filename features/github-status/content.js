@@ -307,10 +307,16 @@
       // Every word of the other regions (each breadcrumb item; a one-glyph icon button may flex): none may lose width to the pill.
       // Measured on the text itself, as far as it is visible: a clipping ancestor can cut a word whose own box keeps its width.
       const words = [];
-      for (const r of regions) {
-        const walker = document.createTreeWalker(r, NodeFilter.SHOW_TEXT);
-        for (let t = walker.nextNode(); t; t = walker.nextNode()) if (t.textContent.trim().length > 1) words.push(t);
+      // The whole header is walked, not only the regions found from the row: whichever way the live markup nests the
+      // breadcrumb, its words are measured. Our own elements (pill, dot, panel) are skipped.
+      const root = header || row.closest("header") || row;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let t = walker.nextNode(); t; t = walker.nextNode()) {
+        if (t.textContent.trim().length > 1 && !pill.contains(t) && !t.parentElement?.closest('[id^="ghgs-"]')) words.push(t);
       }
+      // The breadcrumb group itself (matched on the stable middle of its class) must keep its width as well.
+      const crumbs = [...root.querySelectorAll('[class*="ontextCrumb"], [class*="readcrumb"]')].filter((c) => !pill.contains(c));
+      const crumbW = crumbs.map((c) => c.getBoundingClientRect().width);
       const seen = (t) => {
         const range = document.createRange();
         range.selectNodeContents(t);
@@ -341,6 +347,8 @@
       });
       if (overflow > TOL) return `overflow ${overflow}`;
       if (crushed >= 0) return `crushed ${others[crushed].className || others[crushed].tagName}`;
+      const shrunk = crumbs.findIndex((c, i) => crumbW[i] > 0 && c.getBoundingClientRect().width < crumbW[i] - TOL);
+      if (shrunk >= 0) return `crumb ${crumbs[shrunk].className || crumbs[shrunk].tagName}`;
       const lost = words.findIndex((t, i) => leafW[i] > 0 && seen(t) < leafW[i] - TOL);
       if (lost >= 0) return `lost ${words[lost].parentElement.className || words[lost].parentElement.tagName}`;
       // Overflowing to the left does not show in the row's scrollWidth: the pill must not sit over the logo or breadcrumb.
