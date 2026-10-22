@@ -261,6 +261,26 @@
       ro.observe(card);
       ro.observe(row);
     }
+    // Browser zoom changes the device pixel ratio without resizing the boxes
+    // the observers watch: refit when the ratio changes (a resolution query
+    // fires exactly then) and on the window's resize, which zoom also fires.
+    let mq = null;
+    const refit = () => {
+      if (!row.isConnected) return stop();
+      fit();
+      watchRatio();
+    };
+    const watchRatio = () => {
+      mq?.removeEventListener("change", refit);
+      mq = typeof matchMedia === "function" ? matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`) : null;
+      mq?.addEventListener("change", refit);
+    };
+    const stop = () => {
+      mq?.removeEventListener("change", refit);
+      window.removeEventListener("resize", refit);
+    };
+    window.addEventListener("resize", refit);
+    watchRatio();
   }
 
   // GitHub's cards end with 1px screen-reader-only spans: they take no room.

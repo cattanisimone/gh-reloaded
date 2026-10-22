@@ -623,6 +623,21 @@ for (const dpr of [0.8, 0.9, 1.1, 1.25, 1.5, 1.65]) {
   });
 }
 
+test("the band refits when the device pixel ratio changes after render", async ({ context, page }) => {
+  await setup(context, page, { go: false });
+  const cdp = await context.newCDPSession(page);
+  const metrics = (dpr) => cdp.send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 800, deviceScaleFactor: dpr, mobile: false });
+  await metrics(1);
+  await page.goto(URL);
+  await expect(row(page, 207)).toBeVisible();
+  await page.evaluate(() => { for (const b of document.querySelectorAll(".board-view-column-card > :first-child")) b.style.paddingLeft = "0.3px"; });
+  await metrics(0.8);
+  await expect.poll(async () => {
+    const g = await card(page, 207).evaluate(frameGeometry);
+    return [g.leftGap, g.rightGap, g.bottomGap].every((v) => v >= -0.001 && v < 1 / 0.8 + 0.01);
+  }).toBe(true);
+});
+
 test("the divider uses the page's --borderColor-muted", async ({ context, page }) => {
   await setup(context, page);
   await expect(row(page, 207)).toBeVisible();
