@@ -294,7 +294,8 @@
 
   // Make the band reach the frame's inner edges and, when nothing follows it,
   // the bottom corners, whatever padding the card has: measured, not assumed.
-  // Gaps snap to whole device pixels so the band never lands half a pixel off.
+  // Gaps snap down to whole device pixels: never half a pixel off, and never
+  // past the frame's border (rounding up would paint over it at 80% zoom).
   function fitRow(card, row) {
     row.style.margin = "";
     row.style.borderRadius = "";
@@ -312,7 +313,7 @@
     }
     const bottom = last ? c.bottom - bw("Bottom") - r.bottom : 0;
     const dpr = window.devicePixelRatio || 1;
-    const px = (v) => `${Math.max(0, Math.round(v * dpr) / dpr)}px`;
+    const px = (v) => `${Math.max(0, Math.floor(v * dpr + 1e-6) / dpr)}px`;
     row.style.marginInline = `-${px(left)} -${px(right)}`;
     if (last) {
       row.style.marginBottom = `-${px(bottom)}`;

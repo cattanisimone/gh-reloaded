@@ -608,6 +608,21 @@ for (const [name, transform, isCard] of [["inner box draws the outline (live mar
   }
 }
 
+for (const dpr of [0.8, 0.9, 1.1, 1.25, 1.5, 1.65]) {
+  test(`the band never covers the frame's border at a device pixel ratio of ${dpr}`, async ({ context, page }) => {
+    await setup(context, page, { go: false });
+    await (await context.newCDPSession(page)).send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 800, deviceScaleFactor: dpr, mobile: false });
+    await page.goto(URL);
+    await expect(row(page, 207)).toBeVisible();
+    const g = await card(page, 207).evaluate(frameGeometry);
+    const msg = JSON.stringify({ dpr, ...g });
+    for (const v of [g.leftGap, g.rightGap, g.bottomGap]) {
+      expect(v, msg).toBeGreaterThanOrEqual(-0.001);
+      expect(v, msg).toBeLessThan(1 / dpr + 0.01);
+    }
+  });
+}
+
 test("the divider uses the page's --borderColor-muted", async ({ context, page }) => {
   await setup(context, page);
   await expect(row(page, 207)).toBeVisible();
