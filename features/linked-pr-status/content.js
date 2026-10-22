@@ -261,25 +261,34 @@
       ro.observe(card);
       ro.observe(row);
     }
-    // Browser zoom changes the device pixel ratio without resizing the boxes
-    // the observers watch: refit when the ratio changes (a resolution query
-    // fires exactly then) and on the window's resize, which zoom also fires.
-    let mq = null;
-    const refit = () => {
-      if (!row.isConnected) return stop();
-      fit();
-      watchRatio();
-    };
-    const watchRatio = () => {
-      mq?.removeEventListener("change", refit);
-      mq = typeof matchMedia === "function" ? matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`) : null;
-      mq?.addEventListener("change", refit);
-    };
-    const stop = () => {
-      mq?.removeEventListener("change", refit);
-      window.removeEventListener("resize", refit);
-    };
-    window.addEventListener("resize", refit);
+    fitters.set(row, fit);
+    armRefit();
+  }
+
+  // Browser zoom changes the device pixel ratio without resizing the boxes the
+  // observers watch: refit every row when the ratio changes (a resolution query
+  // fires exactly then) and on the window's resize, which zoom also fires. One
+  // shared pair of listeners serves all rows; detached rows are dropped on each
+  // pass, so nothing retains a removed card.
+  const fitters = new Map();
+  let refitArmed = false;
+  let mq = null;
+  function refitAll() {
+    for (const [row, fit] of fitters) {
+      if (row.isConnected) fit();
+      else fitters.delete(row);
+    }
+    watchRatio();
+  }
+  function watchRatio() {
+    mq?.removeEventListener("change", refitAll);
+    mq = typeof matchMedia === "function" ? matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`) : null;
+    mq?.addEventListener("change", refitAll);
+  }
+  function armRefit() {
+    if (refitArmed) return;
+    refitArmed = true;
+    window.addEventListener("resize", refitAll);
     watchRatio();
   }
 
