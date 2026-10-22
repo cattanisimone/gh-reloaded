@@ -1095,3 +1095,28 @@ test("a rule and a position override left by an older version are cleaned up", a
   await expect(page.locator("#ghgs-line")).toHaveCount(0);
   expect(await page.locator("header").evaluate((h) => h.style.position)).toBe("");
 });
+
+test("a pill the row squeezes drops Details, then the detail, so no part is clipped or overlaps", async ({ page, context }) => {
+  for (const width of [1440, 1100, 800]) {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, page, {
+      feed: actionsFeed(),
+      fixture: "header-signed-in-globalnav.html",
+      transform: (h) => h.replace("</head>", "<style>.ghgs-pill{max-width:190px !important}</style></head>"),
+    });
+    await expect(pill(page)).toBeVisible();
+    const m = await page.evaluate(() => {
+      const p = document.getElementById("ghgs-pill");
+      const box = (s) => { const e = p.querySelector(s); const cs = e && getComputedStyle(e); return e && cs.display !== "none" ? e.getBoundingClientRect() : null; };
+      const pr = p.getBoundingClientRect();
+      const parts = [".ghgs-pill-name", ".ghgs-pill-detail", ".ghgs-pill-link", ".ghgs-pill-close"].map(box).filter(Boolean);
+      const inside = parts.every((r) => r.left >= pr.left - 0.5 && r.right <= pr.right + 0.5);
+      const overlap = parts.some((a, i) => parts.some((b, j) => j > i && a.left < b.right - 0.5 && b.left < a.right - 0.5));
+      const main = p.querySelector(".ghgs-pill-main");
+      const name = p.querySelector(".ghgs-pill-name");
+      return { inside, overlap, nameW: name.clientWidth, nameClipped: name.scrollWidth > name.clientWidth, mainClipped: main.scrollWidth > main.clientWidth, pw: pr.width, cls: p.className };
+    });
+    expect(m, JSON.stringify({ m, width })).toMatchObject({ inside: true, overlap: false, nameClipped: false, mainClipped: false });
+    expect(m.nameW, JSON.stringify({ m, width })).toBeGreaterThan(0);
+  }
+});

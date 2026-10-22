@@ -301,7 +301,13 @@
       const overflow = row.scrollWidth - row.clientWidth - Math.max(0, base);
       const crushed = others.some((n, i) => !before[i] && clipped(n));
       pill.classList.remove("ghgs-measure");
-      return overflow <= 0.5 && !crushed;
+      if (overflow > 0.5 || crushed) return false;
+      // The row may still squeeze the pill itself (live: the name collapsed to 0px and "Details" painted over the close button), so
+      // the pill as laid out must show the whole name and have nothing clipped in its main button.
+      const main = pill.querySelector(".ghgs-pill-main");
+      const name = pill.querySelector(".ghgs-pill-name");
+      const nameOk = !name || (name.clientWidth > 0 && name.scrollWidth - name.clientWidth <= 0.5);
+      return nameOk && !(main && clipped(main)) && !clipped(pill);
     };
     pill.classList.remove("ghgs-nolink", "ghgs-nodetail");
     if (!row || fits()) return;
