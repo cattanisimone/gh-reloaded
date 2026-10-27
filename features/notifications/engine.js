@@ -36,6 +36,9 @@
     }
 
     function publish(next) {
+      // Identical state is not news: a module that renders on publish would
+      // otherwise re-trigger the page observer and loop.
+      if (JSON.stringify(next) === JSON.stringify(state)) return;
       state = next;
       for (const fn of [...listeners]) {
         try {

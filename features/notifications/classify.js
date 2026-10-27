@@ -102,7 +102,9 @@
     }
 
     if (complete && !pendingMe) {
-      const removedMe = events.some((e) => e.type === "removed" && e.target === "User" && same(e.name, me));
+      // Any request event naming me as a User proves I came in directly: an answered
+      // direct request must not turn into a team request when another team is added.
+      const removedMe = events.some((e) => e.target === "User" && same(e.name, me));
       const everTeams = new Set([...events.filter((e) => e.type === "added" && e.target === "Team").map((e) => e.name), ...pendingTeams]);
       const allPending = [...everTeams].every((t) => pendingTeams.includes(t));
       if (!removedMe && pendingTeams.length && allPending) {

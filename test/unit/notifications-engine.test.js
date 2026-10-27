@@ -177,3 +177,13 @@ test("the request carries no more than the page rows and never a write", async (
   assert.deepEqual(Object.keys(env.sent[0]).sort(), ["api", "rows"]);
   assert.ok(env.sent[0].rows.every((r) => r.kind === "pull" || r.kind === "issue"));
 });
+
+test("an unchanged scan does not publish again", async () => {
+  const env = setup();
+  await env.engine.start();
+  let n = 0;
+  env.engine.subscribe(() => n++);
+  await env.engine.scan();
+  await env.engine.scan();
+  assert.equal(n, 0);
+});
