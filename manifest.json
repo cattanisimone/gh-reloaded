@@ -140,6 +140,20 @@
         "https://github.com/*"
       ],
       "js": [
+        "features/notifications/route.js",
+        "features/notifications/classify.js",
+        "features/notifications/registry.js",
+        "features/notifications/collect.js",
+        "features/notifications/engine.js",
+        "features/notifications/content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://github.com/*"
+      ],
+      "js": [
         "features/github-status/relevance.js",
         "features/github-status/content.js"
       ],
