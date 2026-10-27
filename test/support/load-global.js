@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 export function loadGlobals(files, extra = {}) {
-  const context = { ...extra };
+  const context = { URL, ...extra };
   context.globalThis = context;
   vm.createContext(context);
   for (const file of files) vm.runInContext(readFileSync(file, "utf8"), context, { filename: file });

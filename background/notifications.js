@@ -149,7 +149,8 @@ export async function handleMessage({ rows, api } = {}) {
 
   if (api) {
     const read = await readApi();
-    result.api = { state: read.state, items: read.items.map((i) => ({ id: i.id, reason: i.reason, type: i.subject?.type || "", url: i.subject?.url || "", title: i.subject?.title || "", repository: i.repository?.full_name || "", unread: !!i.unread })) };
+    // Only the fields the page needs, in the REST shape collect.fromApiItem reads.
+    result.api = { state: read.state, items: read.items.map((i) => ({ id: i.id, reason: i.reason, unread: !!i.unread, subject: { url: i.subject?.url || "", type: i.subject?.type || "", title: i.subject?.title || "" }, repository: { full_name: i.repository?.full_name || "" } })) };
     if (read.state === "rate-limited") note({ retryAt: read.retryAt });
   }
 
@@ -214,7 +215,7 @@ export async function handleMessage({ rows, api } = {}) {
 
 function apiRows(items) {
   return items
-    .map((i) => ({ i, k: subjectKey({ subject: { url: i.url } }) }))
+    .map((i) => ({ i, k: subjectKey(i) }))
     .filter((x) => x.k)
     .map((x) => ({ ...x.k, reason: x.i.reason || "unknown", inPage: false }));
 }

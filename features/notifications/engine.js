@@ -69,12 +69,8 @@
       return { phase, items, coverage: { loaded: merged.length, total: null, partial: true }, capabilities: { ...capabilities, "api:notifications": api.state }, rateLimited: rate.limited, retryAt: rate.retryAt, me: page.me };
     }
 
-    async function scan() {
-      if (!active) return;
-      if (inflight) {
-        rescan = true;
-        return;
-      }
+    // One pass: collect, ask the background for what is missing, classify.
+    async function pass() {
       const page = collect();
       if (!page.rows.length) {
         publish({ ...emptyState(), phase: "ready", me: page.me });
@@ -83,32 +79,41 @@
       const rateBlocked = rate.limited && rate.retryAt != null && now() < rate.retryAt;
       const apiStale = now() - api.at >= TTL_MS;
       const wanted = page.rows.filter((r) => (r.kind === "pull" || r.kind === "issue") && !fresh(r.key));
-      const mustFetch = !rateBlocked && (wanted.length > 0 || apiStale);
-      if (!mustFetch) {
+      if (rateBlocked || (!wanted.length && !apiStale)) {
         publish(build(page, "ready"));
         return;
       }
       publish(build(page, "loading"));
-      inflight = (async () => {
-        let res = null;
-        try {
-          res = await send({ rows: wanted.map(({ key, kind, owner, repo, number, reason }) => ({ key, kind, owner, repo, number, reason })), api: apiStale });
-        } catch {
-          res = null;
-        }
-        if (!active) return;
-        apply(res, wanted);
-        publish(build(collect(), "ready"));
-      })();
+      let res = null;
       try {
-        await inflight;
-      } finally {
-        inflight = null;
+        res = await send({ rows: wanted.map(({ key, kind, owner, repo, number, reason }) => ({ key, kind, owner, repo, number, reason })), api: apiStale });
+      } catch {
+        res = null;
       }
-      if (rescan) {
-        rescan = false;
-        scan();
+      if (!active) return;
+      apply(res, wanted);
+      publish(build(collect(), "ready"));
+    }
+
+    // Passes never overlap: a scan asked for while one runs makes it run once
+    // more when it ends, and every caller awaits the same promise.
+    function scan() {
+      if (!active) return Promise.resolve();
+      if (inflight) {
+        rescan = true;
+        return inflight;
       }
+      inflight = (async () => {
+        try {
+          do {
+            rescan = false;
+            await pass();
+          } while (rescan && active);
+        } finally {
+          inflight = null;
+        }
+      })();
+      return inflight;
     }
 
     function apply(res, wanted) {
@@ -145,7 +150,7 @@
       start() {
         if (active) return;
         active = true;
-        scan();
+        return scan();
       },
       stop() {
         active = false;
