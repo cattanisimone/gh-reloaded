@@ -1,0 +1,90 @@
+<!doctype html>
+<!--
+  Fixture: github.com/notifications (the inbox list), fictional data, signed in as mira.
+  Markup shape reported by the reviewer from a logged-in inbox (shape only, no data):
+  li.notifications-list-item[data-notification-id] rows, unread class notification-unread,
+  an ABSOLUTE subject href with ?notification_referrer_id=…&notifications_query=…, the
+  reason as lowercase text, and a nav[aria-label="Pagination"]. No hashed CSS-module class
+  is used or needed. The reason label sits in a leaf <span class="reason-label"> here; its
+  real wrapper is UNVERIFIED (see the PR): the collector finds a known label by its text.
+  Anchors to keep: meta[name="user-login"], the rows above, the pagination nav.
+
+  One page, three routes (the tests serve it for every github.com navigation):
+    /notifications …… the inbox (page 1; ?after=p2 is page 2; #relative = relative hrefs; #empty = no rows)
+    /notifications/subscriptions …… the subscriptions page; it still carries rows, so a test can prove the
+                                   engine's route gate and not the absence of rows
+    anything else …… a repository page with a bell link that soft-navigates to the inbox (pushState + turbo:load)
+-->
+<html lang="en" data-color-mode="auto" data-light-theme="light" data-dark-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="user-login" content="mira">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notifications</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; background: #fff; color: #1f2328; }
+  @media (prefers-color-scheme: dark) { body { background: #0d1117; color: #e6edf3; } a { color: #58a6ff; } }
+  header { height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 16px; border-bottom: 1px solid #d1d9e0; }
+  main { max-width: 1012px; margin: 0 auto; padding: 24px 16px; }
+  ul { list-style: none; margin: 0; padding: 0; border: 1px solid #d1d9e0; border-radius: 6px; }
+  li.notifications-list-item { display: flex; gap: 8px; padding: 8px 16px; border-top: 1px solid #d1d9e0; }
+  li.notifications-list-item:first-child { border-top: 0; }
+  li.notification-unread { font-weight: 600; }
+  .reason-label { color: #59636e; }
+  nav[aria-label="Pagination"] { display: flex; gap: 12px; padding: 12px 0; }
+</style>
+</head>
+<body>
+<header><a href="/" id="logo">GitHub</a><a href="/notifications" id="bell" aria-label="Notifications">Inbox</a></header>
+<main id="main"></main>
+<script>
+  const row = (id, href, title, repoLabel, reason, unread) =>
+    '<li class="notifications-list-item' + (unread ? ' notification-unread' : '') + '" data-notification-id="NT_' + id + '">' +
+    '<a class="notification-list-item-link" href="' + href + '"><p class="markdown-title" style="margin:0">' + title + '</p></a>' +
+    '<span class="repo-ref">' + repoLabel + '</span><span class="reason-label">' + reason + '</span></li>';
+  const abs = (path, id) => 'https://github.com' + path + '?notification_referrer_id=NT_' + id + '&notifications_query=is%3Aunread';
+  function rows(page, relative) {
+    const href = (path, id) => (relative ? path : abs(path, id));
+    if (page === 'p2') {
+      return [
+        row(7, href('/acme/web/pull/300', 7), 'Rework the cache', 'acme/web #300', 'review requested', true),
+        row(8, href('/acme/web/issues/299', 8), 'Crash on empty list', 'acme/web #299', 'mentioned', true),
+      ];
+    }
+    return [
+      row(1, href('/acme/web/pull/412', 1), 'Add retry to uploads', 'acme/web #412', 'review requested', true),
+      row(2, href('/acme/web/pull/409', 2), 'Fix the flaky spec', 'acme/web #409', 'mentioned', true),
+      row(3, href('/acme/web/issues/401', 3), 'Docs typo', 'acme/web #401', 'commented', false),
+      row(4, href('/acme/web/actions/runs/99', 4), 'CI: build failed', 'acme/web', 'ci activity', false),
+      row(5, href('/acme/web/pull/390', 5), 'Bump the toolchain', 'acme/web #390', 'subscribed', false),
+      row(6, href('/acme/web/pull/380', 6), 'Rename the helper', 'acme/web #380', 'review wanted', false),
+    ];
+  }
+  function render() {
+    const main = document.getElementById('main');
+    const path = location.pathname.replace(/\/+$/, '');
+    if (path === '/notifications' || path === '/notifications/subscriptions') {
+      const empty = location.hash === '#empty';
+      const page = new URLSearchParams(location.search).get('after') === 'p2' ? 'p2' : 'p1';
+      main.innerHTML = '<h1>' + (path === '/notifications' ? 'Notifications' : 'Subscriptions') + '</h1>' +
+        '<ul>' + (empty ? '' : rows(page, location.hash === '#relative').join('')) + '</ul>' +
+        '<nav aria-label="Pagination">' + (page === 'p1' ? '<a id="next" href="/notifications?after=p2">Next</a>' : '<a id="prev" href="/notifications">Previous</a>') + '</nav>';
+    } else {
+      main.innerHTML = '<h1>acme/web</h1><p>Code · Issues · Pull requests</p>';
+    }
+  }
+  // Soft navigation, like Turbo: no document load, history.pushState and turbo:load.
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a#bell, a#next, a#prev');
+    if (!a) return;
+    e.preventDefault();
+    history.pushState({}, '', a.getAttribute('href'));
+    render();
+    document.dispatchEvent(new Event('turbo:load'));
+  });
+  window.addEventListener('popstate', render);
+  render();
+</script>
+</body>
+</html>
