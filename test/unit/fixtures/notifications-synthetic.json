@@ -1,0 +1,1669 @@
+{
+ "now": "2026-10-27T12:00:00Z",
+ "cases": [
+  {
+   "name": "direct request, no review",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 3,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "direct request, only a stale review of mine",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1,
+    "reviews": [
+     {
+      "author": "mira",
+      "bot": false,
+      "state": "COMMENTED",
+      "oid": "h1",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 3,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "direct request, user login in other case",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "MIRA"
+    ],
+    "requestsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 3,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "re-request, my review already on head",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1,
+    "reviews": [
+     {
+      "author": "mira",
+      "bot": false,
+      "state": "APPROVED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 4
+   }
+  },
+  {
+   "name": "pending (unsubmitted) review of mine on head, request pending",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1,
+    "reviews": [
+     {
+      "author": "mira",
+      "bot": false,
+      "state": "PENDING",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 3,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "dismissed review of mine on head, request pending",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1,
+    "reviews": [
+     {
+      "author": "mira",
+      "bot": false,
+      "state": "DISMISSED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 3,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "not pending, my review on head",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "reviews": [
+     {
+      "author": "mira",
+      "bot": false,
+      "state": "APPROVED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "waiting",
+    "rule": 5
+   }
+  },
+  {
+   "name": "not pending, dismissed review of mine on head, no team",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "reviews": [
+     {
+      "author": "mira",
+      "bot": false,
+      "state": "DISMISSED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "team pending, nobody reviewed",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "teams": [
+     "acme/web"
+    ],
+    "requestsTotal": 1,
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 6,
+    "scope": "team"
+   }
+  },
+  {
+   "name": "team pending, others reviewed (does not satisfy)",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "teams": [
+     "acme/web"
+    ],
+    "requestsTotal": 1,
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 1,
+    "reviews": [
+     {
+      "author": "sam",
+      "bot": false,
+      "state": "APPROVED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 6,
+    "scope": "team"
+   }
+  },
+  {
+   "name": "team pending, stale review of mine",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "teams": [
+     "acme/web"
+    ],
+    "requestsTotal": 1,
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 1,
+    "reviews": [
+     {
+      "author": "mira",
+      "bot": false,
+      "state": "COMMENTED",
+      "oid": "h1",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 6,
+    "scope": "team"
+   }
+  },
+  {
+   "name": "stale review of mine after a new push, no pending request, no team ever requested",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "reviews": [
+     {
+      "author": "mira",
+      "bot": false,
+      "state": "APPROVED",
+      "oid": "h1",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "my direct request removed by hand, another team pending",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "teams": [
+     "acme/web"
+    ],
+    "requestsTotal": 1,
+    "events": [
+     {
+      "type": "added",
+      "target": "User",
+      "name": "mira",
+      "at": "2026-10-23T12:00:00Z"
+     },
+     {
+      "type": "removed",
+      "target": "User",
+      "name": "mira",
+      "at": "2026-10-24T12:00:00Z"
+     },
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 3
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "team request answered by another member",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 1,
+    "reviews": [
+     {
+      "author": "sam",
+      "bot": false,
+      "state": "APPROVED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "waiting",
+    "rule": 7
+   }
+  },
+  {
+   "name": "team satisfied only by the PR author's reply",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 1,
+    "reviews": [
+     {
+      "author": "lee",
+      "bot": false,
+      "state": "COMMENTED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "team satisfied only by a bot review",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 1,
+    "reviews": [
+     {
+      "author": "ci-bot",
+      "bot": true,
+      "state": "COMMENTED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "team satisfied only by a dismissed review",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 1,
+    "reviews": [
+     {
+      "author": "sam",
+      "bot": false,
+      "state": "DISMISSED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "team satisfied only by a pending review",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 1,
+    "reviews": [
+     {
+      "author": "sam",
+      "bot": false,
+      "state": "PENDING",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "review before the team request does not satisfy it",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 1,
+    "reviews": [
+     {
+      "author": "sam",
+      "bot": false,
+      "state": "APPROVED",
+      "oid": "h2",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "several teams, one satisfied",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "teams": [
+     "acme/web"
+    ],
+    "requestsTotal": 1,
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     },
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/design",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 2
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "team request removed by hand",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     },
+     {
+      "type": "removed",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-25T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 2,
+    "reviews": [
+     {
+      "author": "sam",
+      "bot": false,
+      "state": "APPROVED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "no request and no counted review",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "merged PR with a request still listed",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1,
+    "state": "MERGED"
+   },
+   "ctx": {},
+   "expect": {
+    "section": "informational",
+    "rule": 2
+   }
+  },
+  {
+   "name": "closed PR with a request still listed",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1,
+    "state": "CLOSED"
+   },
+   "ctx": {},
+   "expect": {
+    "section": "informational",
+    "rule": 2
+   }
+  },
+  {
+   "name": "more than 50 reviews, my review on head is the oldest",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1,
+    "reviews": [
+     {
+      "author": "sam",
+      "bot": false,
+      "state": "COMMENTED",
+      "oid": "h2",
+      "at": "2026-10-26T12:00:00Z"
+     }
+    ],
+    "reviewsTotal": 60
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "review-request timeline over 100 events",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "teams": [
+     "acme/web"
+    ],
+    "requestsTotal": 1,
+    "events": [
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/web",
+      "at": "2026-10-24T12:00:00Z"
+     }
+    ],
+    "eventsTotal": 150
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "more than 100 requested reviewers",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 150
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  },
+  {
+   "name": "token belongs to another account",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1,
+    "viewer": "someone-else"
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 1
+   }
+  },
+  {
+   "name": "token login in another letter case",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1,
+    "viewer": "Mira"
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 3,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "signed-in login unknown",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1
+   },
+   "ctx": {
+    "me": ""
+   },
+   "expect": {
+    "section": "unverifiable",
+    "rule": 1
+   }
+  },
+  {
+   "name": "token login unknown",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "users": [
+     "mira"
+    ],
+    "requestsTotal": 1,
+    "viewer": ""
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 1
+   }
+  },
+  {
+   "name": "no token / facts unreadable",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 1
+   }
+  },
+  {
+   "name": "rate limited, facts unavailable",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {
+    "rateLimited": true
+   },
+   "expect": {
+    "section": "unverifiable",
+    "rule": 1
+   }
+  },
+  {
+   "name": "review request on an issue subject",
+   "row": {
+    "reason": "review_requested",
+    "kind": "issue",
+    "rawLabel": "review_requested"
+   },
+   "facts": "mention-issue",
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 12
+   }
+  },
+  {
+   "name": "fresh mention in a comment",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira could you look?",
+      "at": "2026-10-26T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 9,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "fresh mention in an issue body",
+   "row": {
+    "reason": "mention",
+    "kind": "issue",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-issue",
+   "over": {
+    "texts": [
+     {
+      "source": "body",
+      "text": "@mira could you look?",
+      "at": "2026-10-25T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ]
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 9,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "mention 10 days old, complete read set",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira could you look?",
+      "at": "2026-10-17T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "informational",
+    "rule": 10
+   }
+  },
+  {
+   "name": "mention 10 days old with a 14-day window",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira could you look?",
+      "at": "2026-10-17T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {
+    "windowDays": 14
+   },
+   "expect": {
+    "section": "attention",
+    "rule": 9,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "thread updated today but the mention is old",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira could you look?",
+      "at": "2026-10-17T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     },
+     {
+      "source": "comment",
+      "text": "thanks",
+      "at": "2026-10-27T12:00:00Z",
+      "editedAt": "",
+      "author": "sam",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 2
+   },
+   "ctx": {},
+   "expect": {
+    "section": "informational",
+    "rule": 10
+   }
+  },
+  {
+   "name": "@mira-bot is not a mention",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira-bot please",
+      "at": "2026-10-26T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "@miraX is not a mention",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@miraX please",
+      "at": "2026-10-26T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "name@mira.example is not a mention",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "mail me at x@mira.example",
+      "at": "2026-10-26T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "mention only in a code span",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "use `@mira` here",
+      "at": "2026-10-26T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "mention only in a fenced block",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "```\n@mira\n```",
+      "at": "2026-10-26T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "mention only in a block quote",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "> @mira said so",
+      "at": "2026-10-26T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "mention authored by me",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira could you look?",
+      "at": "2026-10-26T12:00:00Z",
+      "editedAt": "",
+      "author": "mira",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "created inside the window, edited later",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira could you look?",
+      "at": "2026-10-24T12:00:00Z",
+      "editedAt": "2026-10-27T12:00:00Z",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 9,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "created before the window, edited inside it",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira could you look?",
+      "at": "2026-10-17T12:00:00Z",
+      "editedAt": "2026-10-26T12:00:00Z",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "recent mention only in an inline thread, old mention in the body",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "body",
+      "text": "@mira could you look?",
+      "at": "2026-10-17T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "threadsTotal": 2
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "old mention with more than 50 comments",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira could you look?",
+      "at": "2026-10-17T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 60
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "fresh mention on a merged PR",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "state": "MERGED",
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira could you look?",
+      "at": "2026-10-26T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "attention",
+    "rule": 9,
+    "scope": "direct"
+   }
+  },
+  {
+   "name": "old mention on a merged PR",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {
+    "state": "MERGED",
+    "texts": [
+     {
+      "source": "comment",
+      "text": "@mira could you look?",
+      "at": "2026-10-17T12:00:00Z",
+      "editedAt": "",
+      "author": "lee",
+      "url": "https://github.com/acme/web/pull/1#c1"
+     }
+    ],
+    "commentsTotal": 1
+   },
+   "ctx": {},
+   "expect": {
+    "section": "informational",
+    "rule": 10
+   }
+  },
+  {
+   "name": "no mention in what was read",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "mention-pull",
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 11
+   }
+  },
+  {
+   "name": "mention row with unreadable facts",
+   "row": {
+    "reason": "mention",
+    "kind": "pull",
+    "rawLabel": "mention"
+   },
+   "facts": "bad",
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 1
+   }
+  },
+  {
+   "name": "subscribed, no token",
+   "row": {
+    "reason": "subscribed",
+    "kind": "pull",
+    "rawLabel": "subscribed"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "informational",
+    "rule": 13
+   }
+  },
+  {
+   "name": "subscribed while rate limited",
+   "row": {
+    "reason": "subscribed",
+    "kind": "pull",
+    "rawLabel": "subscribed"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {
+    "rateLimited": true
+   },
+   "expect": {
+    "section": "informational",
+    "rule": 13
+   }
+  },
+  {
+   "name": "CI activity on a workflow run",
+   "row": {
+    "reason": "ci_activity",
+    "kind": "run",
+    "rawLabel": "ci_activity"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "informational",
+    "rule": 13
+   }
+  },
+  {
+   "name": "team mention",
+   "row": {
+    "reason": "team_mention",
+    "kind": "pull",
+    "rawLabel": "team_mention"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "informational",
+    "rule": 13
+   }
+  },
+  {
+   "name": "state change",
+   "row": {
+    "reason": "state_change",
+    "kind": "pull",
+    "rawLabel": "state_change"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "informational",
+    "rule": 13
+   }
+  },
+  {
+   "name": "mention on a discussion",
+   "row": {
+    "reason": "mention",
+    "kind": "discussion",
+    "rawLabel": "mention"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 12
+   }
+  },
+  {
+   "name": "mention on a commit",
+   "row": {
+    "reason": "mention",
+    "kind": "commit",
+    "rawLabel": "mention"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 12
+   }
+  },
+  {
+   "name": "review request on a non-PR subject",
+   "row": {
+    "reason": "review_requested",
+    "kind": "release",
+    "rawLabel": "review_requested"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 12
+   }
+  },
+  {
+   "name": "unknown reason label",
+   "row": {
+    "reason": "unknown",
+    "kind": "pull",
+    "rawLabel": "review wanted"
+   },
+   "facts": null,
+   "over": {},
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 12
+   }
+  },
+  {
+   "name": "my direct request was answered, then an unrelated team was requested",
+   "row": {
+    "reason": "review_requested",
+    "kind": "pull",
+    "rawLabel": "review_requested"
+   },
+   "facts": "pull",
+   "over": {
+    "teams": [
+     "acme/docs"
+    ],
+    "requestsTotal": 1,
+    "headOid": "h3",
+    "reviews": [
+     {
+      "author": "mira",
+      "bot": false,
+      "state": "APPROVED",
+      "oid": "h2",
+      "at": "2026-10-25T10:00:00Z"
+     }
+    ],
+    "reviewsTotal": 1,
+    "events": [
+     {
+      "type": "added",
+      "target": "User",
+      "name": "mira",
+      "at": "2026-10-24T10:00:00Z"
+     },
+     {
+      "type": "added",
+      "target": "Team",
+      "name": "acme/docs",
+      "at": "2026-10-26T10:00:00Z"
+     }
+    ],
+    "eventsTotal": 2
+   },
+   "ctx": {},
+   "expect": {
+    "section": "unverifiable",
+    "rule": 8
+   }
+  }
+ ]
+}
