@@ -15,13 +15,12 @@
   <h1>#101 · Read-only classification engine and module registry for Notifications</h1>
   <p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/101">cattanisimone/gh-reloaded#101</a> · Size: <b>normal</b> · Goal: a dormant, read-only engine on <code>github.com/notifications</code> that classifies each loaded notification into exactly one section, with evidence, for the later modules to display.</p>
 
-  <div class="pending" id="open-decisions"><b>Open product decisions (asked to the maintainer, not decided by this plan):</b>
+  <div class="box" id="decisions"><b>Product decisions confirmed by the maintainer on the issue (2026-10-27):</b>
     <ol>
-      <li><b>“Recent” direct mention:</b> the issue does not define the window that makes a <code>mention</code> “Needs attention”.</li>
-      <li><b>Team request, nobody has reviewed yet:</b> no row of the issue's table covers it (not direct → not Needs attention; no review by another member → not Waiting).</li>
-      <li><b>Banners vs “no visible change”:</b> the plan reads the partial-data, missing-permission and rate-limit banners as <i>state the engine exposes</i> (text + retry time) for later modules to render, so this issue renders nothing.</li>
-    </ol>
-    The cells that depend on them are marked <b>PENDING</b> below.</div>
+      <li><b>Recent direct mention:</b> rolling <b>7-day window by default, configurable by the user</b>. The mention itself must be proven inside the window: an unrelated thread update is not proof. Older proven mentions → Informational; insufficient evidence → Unverifiable.</li>
+      <li><b>Team review requested, nobody has reviewed yet:</b> <b>Needs attention</b>, flagged <code>scope: "team"</code> (shared attention, not a personal obligation) as opposed to <code>scope: "direct"</code>. A review by someone else does not by itself make it Waiting: only PR/review evidence that the request was satisfied does.</li>
+      <li><b>Headless:</b> #101 renders nothing. It exposes classification, loading, partial-data, missing-permission and rate-limit <i>state</i>; downstream modules render banners, labels and controls. The acceptance criteria are read accordingly (see the test plan); the issue text itself was left for the maintainer to reword.</li>
+    </ol></div>
 
   <h2>What changes for users</h2>
   <ul>
@@ -34,24 +33,29 @@
   <p>Exactly one section per notification; rules evaluated top to bottom; first match wins. <b>Never “Needs attention” without evidence; when in doubt, “Unverifiable”.</b></p>
   <div class="scroll"><table>
     <tr><th>#</th><th>Input (reason · PR facts)</th><th>Section</th><th>Evidence kept</th></tr>
-    <tr><td>1</td><td>Data needed by rules 2–6 missing: PR facts unreadable (no token for the owner, denied, null repo, per-PR error), rate limited, unknown subject</td><td><span class="tag unv">Unverifiable</span></td><td>why (capability state)</td></tr>
-    <tr><td>2</td><td><code>review_requested</code> · me in <code>reviewRequests</code> as a <b>User</b> · no review of mine on <code>headRefOid</code></td><td><span class="tag na">Needs attention</span></td><td>“Direct review request”, head sha</td></tr>
-    <tr><td>3</td><td><code>review_requested</code> · I am not a pending reviewer, and a review of mine on head exists or the request is gone (already satisfied)</td><td><span class="tag wt">Waiting</span></td><td>who reviewed, when</td></tr>
-    <tr><td>4</td><td><code>review_requested</code> · only a <b>Team</b> is pending · a review by someone else exists</td><td><span class="tag wt">Waiting</span></td><td>team, other reviewer</td></tr>
-    <tr><td>5</td><td><code>review_requested</code> · only a Team pending · <b>no review yet</b></td><td><b>PENDING (Q2)</b></td><td>team</td></tr>
-    <tr><td>6</td><td><code>mention</code> (direct, not <code>team_mention</code>) · updated within <b>PENDING (Q1)</b></td><td><span class="tag na">Needs attention</span></td><td>“Direct mention”, time</td></tr>
-    <tr><td>7</td><td>every other reason: <code>subscribed</code>, <code>ci_activity</code>, <code>state_change</code>, <code>comment</code>, <code>author</code>, <code>assign</code>, <code>team_mention</code>, <code>manual</code>, <code>security_alert</code>, <code>approval_requested</code>, <code>invitation</code>, older mentions, unknown reason</td><td><span class="tag inf">Informational</span></td><td>native reason</td></tr>
+    <tr><td>1</td><td>Data needed by rules 2–8 missing: PR / thread facts unreadable (no token for the owner, denied, null repo, per-item error), viewer login unknown, rate limited, unknown subject</td><td><span class="tag unv">Unverifiable</span></td><td>why (capability state)</td></tr>
+    <tr><td>2</td><td><code>review_requested</code> · me in <code>reviewRequests</code> as a <b>User</b> · no review of mine on <code>headRefOid</code></td><td><span class="tag na">Needs attention</span> <code>scope: direct</code></td><td>“Direct review request”, head sha</td></tr>
+    <tr><td>3</td><td><code>review_requested</code> · I am not a pending reviewer · a review of mine on head exists</td><td><span class="tag wt">Waiting</span></td><td>my review, when</td></tr>
+    <tr><td>4</td><td><code>review_requested</code> · I am not a pending User · <b>every team ever requested</b> (review-request timeline) <b>is still pending</b> · reviews by others: none or some</td><td><span class="tag na">Needs attention</span> <code>scope: team</code></td><td>team(s), other reviews listed (they do not satisfy a still-pending request)</td></tr>
+    <tr><td>5</td><td><code>review_requested</code> · no request pending for me or any of the requested teams · the team requests were <b>not removed by hand</b> (no <code>ReviewRequestRemovedEvent</code>) · a review by another member after the request exists → <b>satisfied</b></td><td><span class="tag wt">Waiting</span></td><td>team, who reviewed, when</td></tr>
+    <tr><td>6</td><td><code>review_requested</code> · anything else: several teams with some satisfied (my team is unknown), request removed by hand, no request and no review, timeline truncated</td><td><span class="tag unv">Unverifiable</span></td><td>what is missing</td></tr>
+    <tr><td>7</td><td><code>mention</code> (direct, not <code>team_mention</code>) · a comment, PR/issue body or review body containing <code>@&lt;my login&gt;</code> was <b>created</b> within the window (default 7 days; not edited later from outside the window)</td><td><span class="tag na">Needs attention</span> <code>scope: direct</code></td><td>“Direct mention”, comment link, time</td></tr>
+    <tr><td>8</td><td><code>mention</code> · the newest proven mention is older than the window</td><td><span class="tag inf">Informational</span></td><td>mention time</td></tr>
+    <tr><td>9</td><td><code>mention</code> · no mention of me found in the read items (body, last 50 comments, last 50 reviews), or found only in an item edited inside the window but created outside it</td><td><span class="tag unv">Unverifiable</span></td><td>what was read</td></tr>
+    <tr><td>10</td><td>every other reason: <code>subscribed</code>, <code>ci_activity</code>, <code>state_change</code>, <code>comment</code>, <code>author</code>, <code>assign</code>, <code>team_mention</code>, <code>manual</code>, <code>security_alert</code>, <code>approval_requested</code>, <code>invitation</code>, unknown reason</td><td><span class="tag inf">Informational</span></td><td>native reason</td></tr>
   </table></div>
-  <p class="meta">Team membership is not checked (it would need an org permission the issue does not grant), exactly as PR triage already does. A COMMENTED review counts as “a review”, so the query reads <code>latestReviews</code>, not only opinionated ones.</p>
+  <p class="meta">Team membership is not checked (it would need an org permission the issue does not grant). Instead, rule 4 requires that <i>every</i> team ever requested on the PR is still pending, so whichever team brought me in is outstanding; when that cannot be shown, rule 6 says Unverifiable. A COMMENTED review counts as “a review”, so the query reads <code>latestReviews</code>, not only opinionated ones. The notification's <code>updated_at</code> is never used as the mention time.</p>
+  <p class="meta"><b>Mention window setting:</b> stored as <code>ghntMentionWindowDays</code> (positive integer days, default <code>7</code>; a missing or invalid value means 7). The engine reads it and re-classifies on change; the control that edits it belongs to the later configuration-panel issue.</p>
 
   <h2>Observable states (engine output, rendered later)</h2>
+  <p class="meta">The engine renders nothing. The texts below are the issue's wording for the modules that will render these states; the engine only exposes the data they need.</p>
   <div class="scroll"><table>
     <tr><th>State</th><th>Engine exposes</th><th>Guarantee</th></tr>
     <tr><td>Progressive loading</td><td><code>phase: "loading"</code>, <code>classified/loaded</code></td><td>a classified row keeps its section until new data arrives; unclassified rows are <code>pending</code></td></tr>
-    <tr><td>Partial data</td><td><code>coverage: {loaded, total|null, partial:true}</code>, banner <i>“Classified N loaded notifications · other pages not loaded”</i></td><td>always declared; <code>total</code> stays <code>null</code> unless the API proved the last page was read</td></tr>
+    <tr><td>Partial data</td><td><code>coverage: {loaded, total|null, partial:true}</code> (modules render <i>“Classified N loaded notifications · other pages not loaded”</i>)</td><td>always declared; <code>total</code> stays <code>null</code> unless the API proved the last page was read</td></tr>
     <tr><td>No access to PRs (per owner)</td><td><code>capabilities["pr:&lt;owner&gt;"]</code></td><td>native reason only; rows → Unverifiable; no error shown</td></tr>
-    <tr><td>Notifications API unavailable</td><td><code>capabilities["api:notifications"] = "unavailable"</code> + partial banner</td><td>no cause named unless GitHub proves it</td></tr>
-    <tr><td>Rate limit</td><td>banner <i>“GitHub rate limit reached · retrying at HH:MM”</i>, <code>retryAt</code></td><td>classified rows stay; the rest Unverifiable; one retry timer at <code>retryAt</code>; nothing hidden</td></tr>
+    <tr><td>Notifications API unavailable</td><td><code>capabilities["api:notifications"] = "unavailable"</code> + <code>coverage.partial</code></td><td>no cause named unless GitHub proves it</td></tr>
+    <tr><td>Rate limit</td><td><code>rateLimited: true</code>, <code>retryAt</code> (modules render the mockup's rate-limit banner)</td><td>classified rows stay; the rest Unverifiable; one retry timer at <code>retryAt</code>; nothing hidden</td></tr>
   </table></div>
 
   <h2>How it works</h2>
@@ -83,7 +87,7 @@
     <tr><td><code>features/notifications/collect.js</code></td><td>new: reads loaded rows by subject links <code>/o/r/(pull|issues)/n</code>, visible reason text, unread state</td><td>no CSS-module classes; roles, hrefs and text only</td></tr>
     <tr><td><code>features/notifications/classify.js</code></td><td>new: pure rules above, returns <code>{section, evidence}</code></td><td>unit-testable on the synthetic set</td></tr>
     <tr><td><code>features/notifications/engine.js</code>, <code>content.js</code></td><td>new: lifecycle, observers, 60 s page cache, capability map, state events for modules</td><td>progressive, stable results</td></tr>
-    <tr><td><code>background/notifications.js</code></td><td>new <code>GHNT_FETCH</code>: PR facts per owner/repo (25 per GraphQL batch, 2 in flight, reuse <code>chunk</code>/query shape of pr-triage); <code>GET /notifications</code> with the default token, ≤ 2 pages of 50</td><td>controlled request volume</td></tr>
+    <tr><td><code>background/notifications.js</code></td><td>new <code>GHNT_FETCH</code>: <code>viewer.login</code>, PR facts (<code>reviewRequests</code>, <code>latestReviews</code>, review-request timeline events) and, for <code>mention</code> rows only, body + last 50 comments/reviews with <code>createdAt</code>/<code>lastEditedAt</code>, per owner/repo (25 per GraphQL batch, 2 in flight, reuse <code>chunk</code>/query shape of pr-triage); <code>GET /notifications</code> with the default token, ≤ 2 pages of 50</td><td>controlled request volume</td></tr>
     <tr><td><code>lib/github-api.js</code> <b>(shared)</b></td><td>errors carry <code>retryAt</code> (from <code>x-ratelimit-reset</code>/<code>retry-after</code>), <code>rateLimited</code> and GitHub's <code>message</code></td><td>tell denial, incomplete data and rate limit apart; existing callers unaffected</td></tr>
     <tr><td><code>background.js</code>, <code>manifest.json</code> <b>(shared)</b></td><td>add the module to <code>FEATURES</code>; new content script for <code>https://github.com/notifications*</code></td><td>wiring</td></tr>
     <tr><td><code>test/…</code></td><td>unit + e2e below; fixture <code>notifications.html</code> + <code>notifications-synthetic.json</code></td><td>acceptance</td></tr>
@@ -92,23 +96,25 @@
 
   <h2>Data, permissions, privacy</h2>
   <ul>
-    <li><b>Reads:</b> loaded rows of the page; PR <code>reviewRequests</code>, <code>latestReviews</code>, <code>headRefOid</code> (Pull requests: Read, already documented); <code>GET /notifications</code> (new, optional).</li>
+    <li><b>Reads:</b> loaded rows of the page; PR <code>reviewRequests</code>, <code>latestReviews</code>, <code>headRefOid</code>, review-request timeline events (Pull requests: Read, already documented); for mention rows, comment/review bodies and times (Pull requests: Read / Issues: Read, the same read access the PR and board features use); <code>GET /notifications</code> (new, optional).</li>
     <li><b>New optional permission:</b> classic PAT scope <code>notifications</code> (fine-grained tokens are not accepted by that endpoint). Used through the <b>default token</b>, per the existing “no owner → default token, never try every token” rule. Missing → capability <code>unavailable</code>, partial banner state, everything else unchanged.</li>
-    <li><b>Stored (chrome.storage.local):</b> <code>ghntModules</code> (<code>{id: boolean}</code>) and <code>ghntNativeInbox</code> (boolean). No notification data is stored; caches are in memory (60 s).</li>
+    <li><b>Stored (chrome.storage.local):</b> <code>ghntModules</code> (<code>{id: boolean}</code>), <code>ghntNativeInbox</code> (boolean) and <code>ghntMentionWindowDays</code> (integer, default 7). No notification data or comment text is stored; caches are in memory (60 s).</li>
     <li><b>Writes to GitHub:</b> none. No PATCH/PUT/DELETE exists in the code path (asserted by test).</li>
   </ul>
 
   <h2>Test plan</h2>
   <div class="scroll"><table>
     <tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
-    <tr><td>Zero false “Needs attention” on ≥ 30 synthetic notifications</td><td>unit</td><td><code>notifications-classify.test.js</code> over <code>notifications-synthetic.json</code> (≥ 36 cases: every reason, direct/team, reviews by me/others, stale head, missing data, errors, rate limit); also counts requests per load</td></tr>
+    <tr><td>Zero false “Needs attention” on ≥ 30 synthetic notifications</td><td>unit</td><td><code>notifications-classify.test.js</code> over <code>notifications-synthetic.json</code> (≥ 40 cases: every reason, direct/team, team pending with and without others' reviews, team satisfied vs removed by hand, several teams, reviews by me/others, stale head, mentions inside/outside 7 days and with a custom window, edited-later mentions, thread updated but mention old, missing data, errors, rate limit); also counts requests per load</td></tr>
+    <tr><td>Team vs direct attention distinguished</td><td>unit</td><td><code>› team request is scope team, never direct</code></td></tr>
+    <tr><td>Mention window: default 7 days, configurable, unrelated update not proof</td><td>unit</td><td><code>› mention window</code> (default, stored value, invalid value → 7, change → re-classify)</td></tr>
     <tr><td>No token / insufficient permission → Unverifiable, no visible error</td><td>unit + e2e harness</td><td><code>notifications-capabilities.test.js</code>; <code>notifications-engine.spec.js › no token</code></td></tr>
-    <tr><td>Rate limit: banner state, retry at indicated time, classified rows kept</td><td>unit (fake clock) + e2e harness</td><td><code>notifications-background.test.js › rate limit retryAt</code>; <code>› rate limit keeps classified</code></td></tr>
+    <tr><td>Rate limit: state exposed (<code>rateLimited</code>, <code>retryAt</code>) for the banner, retry at indicated time, classified rows kept; the engine itself renders nothing</td><td>unit (fake clock) + e2e harness</td><td><code>notifications-background.test.js › rate limit retryAt</code>; <code>› rate limit keeps classified</code></td></tr>
     <tr><td>Any module combination coherent; all disabled → identical page (filters, search, pagination)</td><td>unit + e2e (real extension)</td><td><code>notifications-registry.test.js</code> (all 2³ combos of dummy modules, Native inbox overrides); <code>notifications-engine.spec.js › untouched page</code>: <code>outerHTML</code> before = after, 0 api.github.com calls</td></tr>
     <tr><td>No write to GitHub</td><td>unit + e2e</td><td>every mocked call is GET/POST-graphql-query; no <code>mutation</code>; DOM never removes/hides a row</td></tr>
     <tr><td>Partial data always declared</td><td>unit</td><td><code>› coverage never claims total</code></td></tr>
     <tr><td>Capability detection: denial vs incomplete vs rate limit, from real responses</td><td>unit</td><td>401, 403 “Resource not accessible”, ambiguous 403/404, 200 with null repo, 429, 403 + <code>x-ratelimit-remaining: 0</code>, GraphQL <code>RATE_LIMITED</code></td></tr>
-    <tr><td>Missing <code>notifications</code> scope state</td><td>unit + e2e harness</td><td>fine-grained default token → <code>unavailable</code>, partial banner text, no cause named</td></tr>
+    <tr><td>Missing <code>notifications</code> scope state</td><td>unit + e2e harness</td><td>fine-grained default token → <code>unavailable</code>, <code>coverage.partial</code> with the loaded count, no cause named, nothing rendered</td></tr>
     <tr><td>SPA navigation, pagination, light/dark, narrow viewport</td><td>e2e harness</td><td>Inbox → Saved → Inbox and back/forward re-scan; page 2 via “Next”; same results at 400px and in dark mode</td></tr>
     <tr><td>Anchors</td><td>e2e</td><td>fixture with current <code>Name__hash</code> and older <code>Prefix-module__name--hash</code> classes; collector uses hrefs/text, asserted on both</td></tr>
   </table></div>
@@ -116,7 +122,8 @@
 
   <h2>Risks and open questions</h2>
   <ul>
-    <li>Q1–Q3 above (asked; nothing implemented on those rows until answered).</li>
+    <li>Several team requests on one PR with only some satisfied → Unverifiable (membership unknown); conservative by design.</li>
+    <li>Mentions only in inline review-thread comments or beyond the last 50 items are not read → Unverifiable rather than Needs attention.</li>
     <li>Notifications markup unseen: collector may miss rows (default: a missing anchor yields no rows and no requests, retried on the next scan; never a fallback container).</li>
     <li>Classic token may not be the default token (default: only the default token is used, per the existing rule; a later options issue can map it).</li>
     <li>API coverage cap (default: at most 2 pages × 50 threads per load, in-memory cache 60 s).</li>
