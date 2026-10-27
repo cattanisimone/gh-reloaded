@@ -76,3 +76,17 @@ test("stopping the engine stops modules; a throwing module does not break the ot
 test("a module without an id is refused", () => {
   assert.throws(() => R.createRegistry().register({}), /id/);
 });
+
+test("unregistering a started module stops it, an unstarted one is not stopped", () => {
+  const { reg, log } = setup();
+  const off = reg.register({ id: "d", start: () => log.push("+d"), stop: () => log.push("-d") });
+  reg.setRunning(true);
+  reg.setConfig({ modules: { d: true } });
+  assert.deepEqual(log, ["+d"]);
+  off();
+  assert.deepEqual(log, ["+d", "-d"]);
+  assert.equal(reg.list().some((m) => m.id === "d"), false);
+  const off2 = reg.register({ id: "e", stop: () => log.push("-e") });
+  off2();
+  assert.deepEqual(log, ["+d", "-d"]);
+});

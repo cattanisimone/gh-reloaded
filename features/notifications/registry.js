@@ -64,7 +64,13 @@
         notify();
         reconcile();
         return () => {
-          started.delete(id);
+          if (started.delete(id)) {
+            try {
+              modules.get(id)?.stop?.();
+            } catch {
+              /* ignore */
+            }
+          }
           modules.delete(id);
           notify();
         };
