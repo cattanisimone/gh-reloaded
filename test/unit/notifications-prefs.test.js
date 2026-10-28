@@ -77,7 +77,7 @@ test("availability keeps its reason, and a module declares its layouts", () => {
 });
 
 test("layout copy budget: one-line descriptions and two-word-per-line titles fit the cards", () => {
-  for (const l of prefs.LAYOUTS) {
+  for (const l of P.LAYOUTS) {
     assert.ok(l.description.length <= 18, `${l.id} description is ${l.description.length} characters`);
     assert.ok(l.label.split(" ").length <= 2, `${l.id} title has more than two words`);
   }
