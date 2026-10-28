@@ -31,7 +31,7 @@
   line-height: 1.5;
   container-type: inline-size;
 }
-.ghnt-panel h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.ghnt-panel h2 { margin: 0; font-size: 16px; font-weight: 600; line-height: 24px; color: var(--fgColor-default, #1f2328); }
 .ghnt-panel h3 { margin: 0 0 4px; font-size: 12px; font-weight: 600; color: var(--fgColor-muted, #59636e); text-transform: uppercase; letter-spacing: 0.04em; }
 .ghnt-panel p { margin: 0; }
 .ghnt-section { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--borderColor-default, #d1d9e0); }
