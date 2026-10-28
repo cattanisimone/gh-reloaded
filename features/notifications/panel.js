@@ -180,7 +180,7 @@
           const radio = el("input", { type: "radio", name: "ghnt-layout", value: l.id, checked, "data-ghnt-focus": `layout-${l.id}` });
           radio.checked = checked;
           radio.addEventListener("change", () => writeLayout(l.id));
-          group.append(el("label", { class: "ghnt-card" + (checked ? " is-selected" : "") }, thumb(l.id), el("span", { class: "ghnt-card-text" }, el("span", { class: "ghnt-card-title" }, radio, el("span", { class: "ghnt-card-name", text: l.label })), l.id === prefs.DEFAULT_LAYOUT ? el("span", { class: "ghnt-default", text: "\u2713 Default" }) : null, el("span", { class: "ghnt-hint", text: l.description }))));
+          group.append(el("label", { class: "ghnt-card" }, radio, el("span", { class: "ghnt-thumbbox" }, thumb(l.id), el("span", { class: "ghnt-badge", "aria-hidden": "true", text: "\u2713" })), el("span", { class: "ghnt-card-text" }, el("span", { class: "ghnt-card-title", text: l.label }), el("span", { class: "ghnt-card-desc", text: l.description }), l.id === prefs.DEFAULT_LAYOUT ? el("span", { class: "ghnt-default", text: "\u2713 Default" }) : null)));
         }
         layoutSection.append(group);
       }
@@ -219,7 +219,7 @@
       if (!panel || !button.isConnected) return;
       const vw = document.documentElement.clientWidth;
       const vh = window.innerHeight;
-      const width = Math.min(380, vw - 2 * GUTTER);
+      const width = Math.min(440, vw - 2 * GUTTER);
       panel.style.width = `${width}px`;
       panel.style.maxHeight = `${vh - 2 * GUTTER}px`;
       const rect = button.getBoundingClientRect();

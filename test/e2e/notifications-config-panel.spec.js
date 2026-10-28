@@ -5,7 +5,9 @@
 // ships later. Covers: anchor and native look of the button, the panel
 // (keyboard, Esc, outside click, width, viewport), switches, layouts, Show
 // native inbox, Restore defaults, the idle engine, reasons, SPA navigation.
-import { test, expect, routeGithub, seedStorage, backgroundWorker } from "./support/extension.js";
+import fs from "node:fs";
+import path from "node:path";
+import { test, expect, routeGithub, FIXTURES_DIR, seedStorage, backgroundWorker } from "./support/extension.js";
 import { isolatedWorld } from "./support/isolated-world.js";
 
 const INBOX = "https://github.com/notifications";
@@ -203,8 +205,8 @@ test("hover darkens the button and keyboard focus draws a 2px ring", async ({ co
   expect(await button(page).evaluate((e) => getComputedStyle(e).outlineWidth)).toBe("2px");
 });
 
-test("panel width: 380px from 1012px, min(380, 100vw - 32) below, always inside the viewport", async ({ context, page }) => {
-  for (const [width, want] of [[1280, 380], [1012, 380], [800, 380], [420, 380], [360, 328]]) {
+test("panel width: min(440, 100vw - 32), always inside the viewport", async ({ context, page }) => {
+  for (const [width, want] of [[1280, 440], [1012, 440], [800, 440], [472, 440], [420, 388], [360, 328]]) {
     if (width === 1280) await boot(context, page, { viewport: { width, height: 1400 } });
     await page.setViewportSize({ width, height: 1400 });
     await open(page);
@@ -357,50 +359,147 @@ test("soft navigation inbox -> subscriptions -> inbox and back/forward: one butt
   expect((await stored(context, "ghntLayout")).ghntLayout).toBe("quickbar");
 });
 
+// ---- layout cards: one matrix over width x theme x font, with GitHub's global rules in the fixture ----
+const FONT_DIR = path.join(FIXTURES_DIR, "fonts");
+const b64 = (f) => fs.readFileSync(path.join(FONT_DIR, f)).toString("base64");
+const WIDE_CSS = () => `@font-face{font-family:"GHR Wide Test";font-weight:400;src:url(data:font/ttf;base64,${b64("DejaVuSans.ttf")})}@font-face{font-family:"GHR Wide Test";font-weight:600;src:url(data:font/ttf;base64,${b64("DejaVuSans-Bold.ttf")})}#ghnt-panel,#ghnt-panel *{font-family:"GHR Wide Test" !important}`;
+const WIDTHS = [320, 360, 439, 440, 456, 457, 471, 472, 600, 800, 1011, 1012, 1280, 1500];
+
+// Everything the cards must satisfy at the current viewport; returns plain data.
+const measureCards = (page) =>
+  page.evaluate(() => {
+    const p = document.getElementById("ghnt-panel");
+    const r = (e) => e.getBoundingClientRect();
+    const lum = (c) => { const [a, b, d] = c.match(/[\d.]+/g).slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * a + 0.7152 * b + 0.0722 * d; };
+    const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+    const probe = document.createElement("i");
+    document.body.append(probe);
+    const resolve = (v) => { probe.style.color = `var(${v})`; return getComputedStyle(probe).color; };
+    const accent = resolve("--fgColor-accent"), muted = resolve("--fgColor-muted");
+    probe.remove();
+    const bg = getComputedStyle(p).backgroundColor;
+    const pr = r(p);
+    const cs = getComputedStyle(p);
+    const cards = [...p.querySelectorAll(".ghnt-card")].map((c) => {
+      const cr = r(c);
+      const title = c.querySelector(".ghnt-card-title"), desc = c.querySelector(".ghnt-card-desc"), mark = c.querySelector(".ghnt-default");
+      const text = c.querySelector(".ghnt-card-text"), thumb = c.querySelector(".ghnt-thumb"), badge = c.querySelector(".ghnt-badge");
+      const outside = [...c.querySelectorAll("*")].filter((e) => { const er = r(e); return er.width && (er.right > cr.right + 0.5 || er.left < cr.left - 0.5 || er.bottom > cr.bottom + 0.5 || er.top < cr.top - 0.5); }).map((e) => e.className);
+      const d = getComputedStyle(desc), t = getComputedStyle(title);
+      return {
+        outside, w: cr.width, h: cr.height, thumbRatio: r(thumb).width / r(thumb).height, thumbH: r(thumb).height, thumbHtml: thumb.innerHTML, thumbHidden: thumb.getAttribute("aria-hidden"),
+        titleH: r(title).height, titleLine: parseFloat(t.lineHeight), descH: r(desc).height, descLine: parseFloat(d.lineHeight), descClipped: desc.scrollWidth > desc.clientWidth + 0.5,
+        descWeight: d.fontWeight, descColor: d.color, descRatio: ratio(d.color, bg), titleRatio: ratio(t.color, bg),
+        textW: r(text).width, textH: r(text).height, marker: mark ? { top: r(mark).top, descBottom: r(desc).bottom, color: getComputedStyle(mark).color, ratio: ratio(getComputedStyle(mark).color, bg), weight: getComputedStyle(mark).fontWeight } : null,
+        checked: c.querySelector("input").checked, border: getComputedStyle(c).borderTopWidth + " " + getComputedStyle(c).borderTopColor, badge: getComputedStyle(badge).display, name: title.textContent,
+      };
+    });
+    const resets = [...p.querySelectorAll("h2, p, label")].map((e) => getComputedStyle(e).marginTop + "/" + getComputedStyle(e).marginBottom).filter((m) => m !== "0px/0px");
+    return {
+      accent, muted, cards, resets, panelW: pr.width, content: pr.width - (parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)) - (p.offsetWidth - p.clientWidth - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth)),
+      scrollbar: p.offsetWidth - p.clientWidth - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth), panelOverflow: p.scrollWidth - p.clientWidth, docOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      h2: getComputedStyle(p.querySelector("h2")).fontSize, vw: document.documentElement.clientWidth,
+    };
+  });
+
+function assertCards(m, { width, cols, label }) {
+  const ctx = (extra) => `${label} @${width}: ${extra} ${JSON.stringify({ panelW: m.panelW, content: m.content, scrollbar: m.scrollbar, cards: m.cards.map((c) => [c.w, c.h, c.textW, c.titleH, c.descH]) })}`;
+  expect(Math.round(m.panelW), ctx("panel width")).toBe(Math.min(440, width - 32));
+  expect(m.cards.length).toBe(3);
+  expect(m.content >= 380 ? 3 : 1, ctx("columns follow the container width")).toBe(cols);
+  const columns = new Set(m.cards.map((c) => Math.round(c.w))).size === 1 && m.cards[0].w < m.content - 1 ? 3 : 1;
+  expect(columns, ctx("rendered columns")).toBe(cols);
+  for (const c of m.cards) {
+    expect(c.outside, ctx(`${c.name} children outside the card`)).toEqual([]);
+    expect(Math.abs(c.thumbRatio - 16 / 9), ctx("thumb 16:9")).toBeLessThan(0.05);
+    expect(c.thumbHidden).toBe("true");
+    expect(c.descH, ctx(`${c.name} description on one line`)).toBeLessThanOrEqual(c.descLine + 0.5);
+    expect(c.descClipped, ctx(`${c.name} description clipped`)).toBe(false);
+    expect(c.descWeight, ctx("description weight")).toBe("400");
+    expect(c.descColor, ctx("description colour")).toBe(m.muted);
+    expect(Math.min(c.descRatio, c.titleRatio), ctx("contrast")).toBeGreaterThanOrEqual(4.5);
+    expect(c.titleH, ctx("title lines")).toBeLessThanOrEqual(cols === 3 ? 2 * c.titleLine + 0.5 : 4 * c.titleLine + 0.5);
+    if (cols === 3) expect(c.textW, ctx("text column")).toBeGreaterThanOrEqual(101);
+    if (width >= 360 || cols === 3) expect(c.titleH, ctx(`${c.name} title on one line`)).toBeLessThanOrEqual(cols === 3 ? 2 * c.titleLine + 0.5 : c.titleLine + 0.5);
+    if (cols === 1) {
+      expect(Math.abs(c.h - (Math.max(c.thumbH, c.textH) + 18)), ctx(`${c.name} row height = max(thumb, text)`)).toBeLessThanOrEqual(0.5);
+      if (width >= 360) expect(Math.abs(c.h - 72), ctx("row height at 360+")).toBeLessThanOrEqual(0.5);
+    }
+  }
+  if (cols === 3) {
+    expect(Math.max(...m.cards.map((c) => c.w)) - Math.min(...m.cards.map((c) => c.w)), ctx("equal widths")).toBeLessThanOrEqual(0.5);
+    expect(Math.max(...m.cards.map((c) => c.h)) - Math.min(...m.cards.map((c) => c.h)), ctx("equal heights")).toBeLessThanOrEqual(0.5);
+  }
+  expect(new Set(m.cards.map((c) => c.thumbHtml)).size, "three different thumbnails").toBe(3);
+  expect(m.cards.filter((c) => c.checked).length).toBe(1);
+  const sel = m.cards.find((c) => c.checked);
+  expect(sel.border, ctx("selected border")).toMatch(/^2px /);
+  expect(sel.badge, ctx("selected badge")).not.toBe("none");
+  expect(m.cards.filter((c) => c.badge !== "none").length).toBe(1);
+  const marked = m.cards.filter((c) => c.marker);
+  expect(marked.map((c) => c.name)).toEqual(["Integrated navigation"]);
+  expect(marked[0].marker.top, ctx("Default below the description")).toBeGreaterThanOrEqual(marked[0].marker.descBottom - 0.5);
+  expect(marked[0].marker.color, ctx("Default is accent")).toBe(m.accent);
+  expect(marked[0].marker.weight).toBe("400");
+  expect(marked[0].marker.ratio, ctx("Default contrast")).toBeGreaterThanOrEqual(4.5);
+  expect(m.resets, ctx("margins reset in the panel")).toEqual([]);
+  expect(m.h2, "panel heading keeps its own size").toBe("16px");
+  expect(m.panelOverflow, ctx("panel scrolls sideways")).toBeLessThanOrEqual(0);
+  expect(m.docOverflow, ctx("page scrolls sideways")).toBeLessThanOrEqual(0);
+}
+
 for (const scheme of ["light", "dark"]) {
-  test(`${scheme}: panel text contrast, card sizes and thumbnails at 360, 600 and 1280px`, async ({ context, page }) => {
-    await page.emulateMedia({ colorScheme: scheme });
+  for (const font of ["github", "wide"]) {
+    test(`layout cards: every constraint at 14 widths, ${scheme}, ${font} font`, async ({ context, page }) => {
+      test.setTimeout(120000);
+      await page.emulateMedia({ colorScheme: scheme });
+      await boot(context, page, { modules: "all", viewport: { width: 1280, height: 1400 } });
+      if (font === "wide") {
+        await page.addStyleTag({ content: WIDE_CSS() });
+        const w = await page.evaluate(async () => { await document.fonts.load('12px "GHR Wide Test"'); await document.fonts.load('600 13px "GHR Wide Test"'); const s = document.createElement("span"); s.style.cssText = 'font:12px/18px "GHR Wide Test";position:absolute;white-space:nowrap'; s.textContent = "Collapsible list"; document.body.append(s); const n = s.getBoundingClientRect().width; s.remove(); return n; });
+        expect(w, "the bundled wide font must render (Collapsible list at 12px)").toBeGreaterThanOrEqual(85);
+      }
+      for (const width of WIDTHS) {
+        await page.setViewportSize({ width, height: 1400 });
+        await open(page);
+        assertCards(await measureCards(page), { width, cols: width >= 440 ? 3 : 1, label: `${scheme}/${font}` });
+        await page.keyboard.press("Escape");
+      }
+    });
+  }
+}
+
+for (const [bar, cases] of [[17, [[456, 1], [457, 3], [472, 3], [1500, 3]]], [15, [[472, 3], [1500, 3]]]]) {
+  test(`layout cards with a classic ${bar}px panel scrollbar: the breakpoint moves only as planned`, async ({ context, page }) => {
     await boot(context, page, { modules: "all", viewport: { width: 1280, height: 1400 } });
-    for (const width of [1280, 600, 360]) {
+    await page.addStyleTag({ content: `#ghnt-panel{overflow-y:scroll !important}#ghnt-panel::-webkit-scrollbar{width:${bar}px}` + WIDE_CSS() });
+    await page.evaluate(() => document.fonts.load('12px "GHR Wide Test"'));
+    for (const [width, cols] of cases) {
       await page.setViewportSize({ width, height: 1400 });
       await open(page);
-      const res = await page.evaluate(() => {
-        const lum = (c) => { const [r, g, b] = c.match(/[\d.]+/g).slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
-        const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
-        const p = document.getElementById("ghnt-panel");
-        p.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif';
-        const bg = getComputedStyle(p).backgroundColor;
-        const overflow = [...p.querySelectorAll(".ghnt-card")].flatMap((c) => { const cr = c.getBoundingClientRect(); return [...c.querySelectorAll("*")].filter((e) => e.getBoundingClientRect().right > cr.right + 0.5).map((e) => e.className + ":" + Math.round(e.getBoundingClientRect().right - cr.right)); });
-        const text = [...p.querySelectorAll(".ghnt-hint, .ghnt-row-title, .ghnt-card-title")].map((e) => ratio(getComputedStyle(e).color, bg));
-        const cards = [...p.querySelectorAll(".ghnt-card")].map((c) => { const r = c.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; });
-        const thumbs = [...p.querySelectorAll(".ghnt-thumb")].map((t) => { const r = t.getBoundingClientRect(); return r.width / r.height; });
-        const sel = getComputedStyle(p.querySelector(".ghnt-card.is-selected")).borderTopColor;
-        const marks = [...p.querySelectorAll(".ghnt-thumb")].map((t) => t.querySelectorAll("i").length);
-        const defaultMarker = p.querySelector(".ghnt-default")?.textContent;
-        const cardLines = [...p.querySelectorAll(".ghnt-card .ghnt-hint, .ghnt-card-title")].map((c) => Math.round(c.getBoundingClientRect().height / 18));
-        return { overflow, panelScroll: p.scrollWidth - p.clientWidth, marks, defaultMarker, cardLines, min: Math.min(...text), cards, thumbs, selected: ratio(sel, bg), scroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth };
-      });
-      expect(res.min, `${scheme} ${width}`).toBeGreaterThanOrEqual(4.5);
-      expect(res.selected, `${scheme} ${width} selected border`).toBeGreaterThanOrEqual(3);
-      expect(res.scroll).toBe(true);
-      expect(res.overflow, `${scheme} ${width} card overflow`).toEqual([]);
-      expect(res.panelScroll, `${scheme} ${width} panel scroll`).toBeLessThanOrEqual(0);
-      expect(new Set(res.cards.map((c) => c.join("x"))).size, JSON.stringify(res.cards)).toBe(1);
-      for (const t of res.thumbs) expect(Math.abs(t - 16 / 9)).toBeLessThan(0.05);
-      expect(res.marks, `${scheme} ${width} thumbnails`).toEqual([6, 7, 3].concat([6, 7, 3]).slice(0, 3));
-      expect(res.defaultMarker).toBe("\u2713 Default");
-      expect(res.cardLines.every((n) => n <= 3), JSON.stringify(res.cardLines)).toBe(true);
+      const m = await measureCards(page);
+      expect(m.scrollbar, `scrollbar guard at ${width}`).toBe(bar);
+      assertCards(m, { width, cols, label: `scrollbar ${bar}` });
       await page.keyboard.press("Escape");
     }
   });
 }
 
-test("three layout cards share one row on desktop", async ({ context, page }) => {
+test("layout cards: the whole card is clickable (title, thumbnail), the focus ring and the radiogroup name", async ({ context, page }) => {
   await boot(context, page, { modules: "all", viewport: { width: 1280, height: 1400 } });
   await open(page);
-  const ys = await panel(page).locator(".ghnt-card").evaluateAll((c) => c.map((e) => Math.round(e.getBoundingClientRect().top)));
-  expect(new Set(ys).size, JSON.stringify(ys)).toBe(1);
+  await panel(page).locator(".ghnt-card-title", { hasText: "Quick bar" }).click();
+  await expect.poll(async () => (await stored(context, "ghntLayout")).ghntLayout).toBe("quickbar");
+  await panel(page).locator(".ghnt-card", { hasText: "Grouped sections" }).locator(".ghnt-thumb").click();
+  await expect.poll(async () => (await stored(context, "ghntLayout")).ghntLayout).toBe("grouped");
+  await expect(panel(page).getByRole("radiogroup", { name: "Triage layout" })).toHaveCount(1);
+  await panel(page).getByRole("radio", { name: "Grouped sections" }).focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  const ring = await panel(page).locator(".ghnt-card", { hasText: "Grouped sections" }).evaluate((c) => { const s = getComputedStyle(c); return s.outlineWidth + " " + s.outlineStyle; });
+  expect(ring).toBe("2px solid");
 });
+
 
 test("a Turbo snapshot restore leaves one working button", async ({ context, page }) => {
   await boot(context, page);

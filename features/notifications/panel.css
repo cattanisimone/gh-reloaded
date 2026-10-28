@@ -36,7 +36,7 @@
 .ghnt-panel p { margin: 0; }
 .ghnt-section { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--borderColor-default, #d1d9e0); }
 .ghnt-head + .ghnt-section { margin-top: 12px; }
-.ghnt-hint { color: var(--fgColor-muted, #59636e); font-size: 12px; }
+.ghnt-hint { color: var(--fgColor-muted, #59636e); font-size: 12px; font-weight: 400; }
 .ghnt-note { color: var(--fgColor-muted, #59636e); font-size: 12px; font-style: italic; }
 .ghnt-warn { margin-top: 6px; padding: 6px 8px; font-size: 12px; border-radius: 6px; border: 1px solid var(--borderColor-attention-emphasis, #9a6700); background: var(--bgColor-attention-muted, #fff8c5); color: var(--fgColor-default, #1f2328); }
 .ghnt-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; }
@@ -47,19 +47,25 @@
 .ghnt-switch[aria-checked="true"] { background: var(--bgColor-accent-emphasis, #0969da); border-color: var(--bgColor-accent-emphasis, #0969da); }
 .ghnt-switch[aria-checked="true"]::after { transform: translateX(16px); background: var(--fgColor-onEmphasis, #fff); }
 .ghnt-switch:disabled { opacity: 0.5; cursor: not-allowed; }
-.ghnt-switch:focus-visible, .ghnt-link:focus-visible, .ghnt-card input:focus-visible { outline: 2px solid #0969da; outline-offset: 2px; }
+.ghnt-switch:focus-visible, .ghnt-link:focus-visible { outline: 2px solid #0969da; outline-offset: 2px; }
 
-.ghnt-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; grid-auto-rows: 1fr; }
-.ghnt-card { display: flex; flex-direction: column; gap: 4px; padding: 8px; border: 1px solid var(--borderColor-default, #d1d9e0); border-radius: 6px; cursor: pointer; }
-.ghnt-card.is-selected { border: 2px solid var(--borderColor-accent-emphasis, #0969da); padding: 7px; }
-.ghnt-thumb { display: block; aspect-ratio: 16 / 9; border-radius: 4px; background: var(--bgColor-neutral-muted, #818b981f); border: 1px solid var(--borderColor-default, #d1d9e0); }
-.ghnt-card-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.ghnt-card-title { display: flex; align-items: flex-start; gap: 6px; font-weight: 600; font-size: 12px; min-width: 0; }
-.ghnt-card-name { min-width: 0; overflow-wrap: anywhere; }
-.ghnt-hint { overflow-wrap: anywhere; }
-.ghnt-card-title input { margin: 0; }
-.ghnt-default { font-size: 12px; font-weight: 400; color: var(--fgColor-muted, #59636e); }
-.ghnt-thumb { display: flex; gap: 3px; padding: 4px; overflow: hidden; box-sizing: border-box; }
+/* Layout cards. Base = one row per card (thumbnail left, text right); from a panel
+   content width of 380px the cards are three fixed-row columns. Every text element
+   sets its own size, weight, line height, colour and margin, so GitHub's global
+   label (600), p (margin-bottom) and h2 rules cannot leak in. */
+.ghnt-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 8px; }
+.ghnt-card { position: relative; box-sizing: border-box; display: flex; flex-direction: row; align-items: center; gap: 8px; min-width: 0; margin: 0; padding: 8px; border: 1px solid var(--borderColor-default, #d1d9e0); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 400; line-height: 18px; color: var(--fgColor-default, #1f2328); }
+.ghnt-card:has(input:checked) { border: 2px solid var(--borderColor-accent-emphasis, #0969da); padding: 7px; background: var(--bgColor-accent-muted, #ddf4ff); }
+.ghnt-card:has(input:focus-visible) { outline: 2px solid #0969da; outline-offset: 2px; }
+.ghnt-card input { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; opacity: 0; }
+.ghnt-thumbbox { position: relative; flex: none; width: 96px; }
+.ghnt-badge { display: none; position: absolute; top: 4px; right: 4px; width: 16px; height: 16px; border-radius: 50%; background: var(--bgColor-accent-emphasis, #0969da); color: var(--fgColor-onEmphasis, #fff); font-size: 11px; font-weight: 600; line-height: 16px; text-align: center; }
+.ghnt-card:has(input:checked) .ghnt-badge { display: block; }
+.ghnt-card-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.ghnt-card-title { margin: 0; font-size: 13px; font-weight: 600; line-height: 18px; color: var(--fgColor-default, #1f2328); overflow-wrap: anywhere; }
+.ghnt-card-desc { margin: 0; font-size: 12px; font-weight: 400; line-height: 18px; color: var(--fgColor-muted, #59636e); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ghnt-default { margin: 0; font-size: 12px; font-weight: 400; line-height: 18px; color: var(--fgColor-accent, #0969da); }
+.ghnt-thumb { display: flex; gap: 3px; padding: 4px; overflow: hidden; box-sizing: border-box; width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; background: var(--bgColor-neutral-muted, #818b981f); border: 1px solid var(--borderColor-default, #d1d9e0); }
 .ghnt-thumb b { display: flex; flex-direction: column; gap: 3px; font-weight: normal; }
 .ghnt-thumb i { display: block; flex: none; height: 4px; border-radius: 2px; background: var(--fgColor-muted, #59636e); opacity: 0.55; }
 .ghnt-t-rail { width: 24%; }
@@ -70,10 +76,12 @@
 .ghnt-thumb-quickbar .ghnt-t-pills i { width: 20%; height: 6px; border-radius: 3px; background: var(--bgColor-accent-emphasis, #0969da); opacity: 0.6; }
 .ghnt-thumb-grouped .ghnt-t-heads { gap: 6px; }
 .ghnt-thumb-grouped i.ghnt-t-head { height: 6px; background: var(--fgColor-default, #1f2328); opacity: 0.45; box-shadow: 0 7px 0 -1px var(--fgColor-muted, #59636e); }
-@container (max-width: 351px) {
-  .ghnt-cards { grid-template-columns: minmax(0, 1fr); }
-  .ghnt-card { flex-direction: row; align-items: center; gap: 8px; min-width: 0; }
-  .ghnt-thumb { width: 96px; flex: none; }
+@container (min-width: 380px) {
+  .ghnt-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ghnt-card { flex-direction: column; align-items: stretch; gap: 6px; }
+  .ghnt-thumbbox { width: auto; }
+  .ghnt-card-text { flex: none; min-height: 72px; }
+  .ghnt-card-title { min-height: 36px; }
 }
 
 .ghnt-link { padding: 0; border: 0; background: none; color: var(--fgColor-accent, #0969da); font: inherit; cursor: pointer; text-decoration: underline; }

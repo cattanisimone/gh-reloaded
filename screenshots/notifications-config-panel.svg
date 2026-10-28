@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="640" viewBox="0 0 1200 640" font-family="DejaVu Sans, sans-serif">
-<rect x="0" y="0" width="1200" height="640" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" font-family="DejaVu Sans, sans-serif">
+<rect x="0" y="0" width="1200" height="700" fill="#fff"/>
 <rect x="0" y="0" width="1200" height="64" fill="#f6f8fa" stroke="#d1d9e0"/>
 <text x="32" y="38" font-size="15" font-weight="600" fill="#1f2328">Notifications</text>
 <rect x="32" y="88" width="132" height="32" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
@@ -16,24 +16,39 @@
 <g fill="#fff" stroke="#d1d9e0"><rect x="32" y="140" width="1136" height="44"/><rect x="32" y="184" width="1136" height="44"/><rect x="32" y="228" width="1136" height="44"/></g>
 <g font-size="13" fill="#1f2328"><text x="48" y="167">Review requested on #204 · acme/web</text><text x="48" y="211">Fix rendering notifications · acme/api</text><text x="48" y="255">Dependency update · acme/web</text></g>
 <g>
-<rect x="694" y="130" width="380" height="490" rx="12" fill="#fff" stroke="#d1d9e0"/>
-<rect x="692" y="128" width="384" height="494" rx="13" fill="none" stroke="#54aeff" stroke-dasharray="4 3"/>
-<text x="712" y="160" font-size="15" font-weight="600" fill="#1f2328">Triage · Settings</text>
-<text x="712" y="180" font-size="11" fill="#59636e">Preferences are saved in this browser.</text>
-<text x="712" y="210" font-size="11" font-weight="600" fill="#59636e">ORIGINAL VIEW</text>
-<text x="712" y="232" font-size="13" font-weight="600" fill="#1f2328">Show native inbox</text>
-<rect x="1018" y="216" width="40" height="24" rx="12" fill="#f6f8fa" stroke="#d1d9e0"/><circle cx="1030" cy="228" r="8" fill="#59636e"/>
-<text x="712" y="274" font-size="11" font-weight="600" fill="#59636e">MODULES</text>
-<g font-size="13" font-weight="600" fill="#1f2328"><text x="712" y="298">Triage</text><text x="712" y="334">Tags</text><text x="712" y="370">"Why is this here?"</text></g>
-<g fill="#0969da"><rect x="1018" y="282" width="40" height="24" rx="12"/><rect x="1018" y="318" width="40" height="24" rx="12"/><rect x="1018" y="354" width="40" height="24" rx="12"/></g>
-<g fill="#fff"><circle cx="1046" cy="294" r="8"/><circle cx="1046" cy="330" r="8"/><circle cx="1046" cy="366" r="8"/></g>
-<text x="712" y="412" font-size="11" font-weight="600" fill="#59636e">TRIAGE LAYOUT</text>
-<g stroke="#d1d9e0" fill="#fff"><rect x="712" y="424" width="108" height="110" rx="6" stroke="#0969da" stroke-width="2"/><rect x="826" y="424" width="108" height="110" rx="6"/><rect x="940" y="424" width="118" height="110" rx="6"/></g>
-<g fill="#eef1f4" stroke="#d1d9e0"><rect x="720" y="432" width="92" height="52" rx="4"/><rect x="834" y="432" width="92" height="52" rx="4"/><rect x="948" y="432" width="102" height="52" rx="4"/></g>
-<g font-size="10" font-weight="600" fill="#1f2328"><text x="720" y="504">Integrated</text><text x="834" y="504">Quick bar</text><text x="948" y="504">Grouped</text></g>
-<g font-size="9" fill="#59636e"><text x="720" y="520">Default</text></g>
-<line x1="712" y1="552" x2="1058" y2="552" stroke="#d1d9e0"/>
-<rect x="944" y="570" width="114" height="32" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
-<text x="962" y="591" font-size="13" font-weight="500" fill="#1f2328">Restore defaults</text>
+<rect x="634" y="130" width="440" height="550" rx="12" fill="#fff" stroke="#d1d9e0"/>
+<rect x="632" y="128" width="444" height="554" rx="13" fill="none" stroke="#54aeff" stroke-dasharray="4 3"/>
+<text x="648" y="160" font-size="15" font-weight="600" fill="#1f2328">Triage · Settings</text>
+<text x="648" y="180" font-size="11" fill="#59636e">Preferences are saved in this browser.</text>
+<text x="648" y="210" font-size="11" font-weight="600" fill="#59636e">ORIGINAL VIEW</text>
+<text x="648" y="232" font-size="13" font-weight="600" fill="#1f2328">Show native inbox</text>
+<rect x="1006" y="216" width="40" height="24" rx="12" fill="#f6f8fa" stroke="#d1d9e0"/><circle cx="1018" cy="228" r="8" fill="#59636e"/>
+<text x="648" y="274" font-size="11" font-weight="600" fill="#59636e">MODULES</text>
+<g font-size="13" font-weight="600" fill="#1f2328"><text x="648" y="298">Triage</text><text x="648" y="334">Tags</text><text x="648" y="370">"Why is this here?"</text></g>
+<g fill="#0969da"><rect x="1006" y="282" width="40" height="24" rx="12"/><rect x="1006" y="318" width="40" height="24" rx="12"/><rect x="1006" y="354" width="40" height="24" rx="12"/></g>
+<g fill="#fff"><circle cx="1034" cy="294" r="8"/><circle cx="1034" cy="330" r="8"/><circle cx="1034" cy="366" r="8"/></g>
+<text x="648" y="412" font-size="11" font-weight="600" fill="#59636e">TRIAGE LAYOUT</text>
+<rect x="648" y="424" width="132" height="157" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="2"/>
+<rect x="657" y="433" width="114" height="64" rx="4" fill="#eef1f4" stroke="#d1d9e0"/>
+<rect x="663" y="439" width="26" height="52" fill="#59636e" opacity=".25"/><g fill="#59636e" opacity=".55"><rect x="695" y="441" width="70" height="4" rx="2"/><rect x="695" y="450" width="70" height="4" rx="2"/><rect x="695" y="459" width="70" height="4" rx="2"/></g>
+<circle cx="761" cy="443" r="8" fill="#0969da"/><text x="761" y="447" font-size="11" font-weight="600" text-anchor="middle" fill="#fff">✓</text>
+<text x="658" y="516" font-size="13" font-weight="600" fill="#1f2328">Integrated</text>
+<text x="658" y="534" font-size="13" font-weight="600" fill="#1f2328">navigation</text>
+<text x="658" y="552" font-size="12" fill="#59636e">In the sidebar</text>
+<text x="658" y="570" font-size="12" fill="#0969da">✓ Default</text>
+<rect x="788" y="424" width="132" height="157" rx="6" fill="#fff" stroke="#d1d9e0" stroke-width="1"/>
+<rect x="797" y="433" width="114" height="64" rx="4" fill="#eef1f4" stroke="#d1d9e0"/>
+<g fill="#0969da" opacity=".6"><rect x="803" y="439" width="20" height="6" rx="3"/><rect x="827" y="439" width="20" height="6" rx="3"/><rect x="851" y="439" width="20" height="6" rx="3"/></g><g fill="#59636e" opacity=".55"><rect x="803" y="452" width="102" height="4" rx="2"/><rect x="803" y="461" width="102" height="4" rx="2"/><rect x="803" y="470" width="102" height="4" rx="2"/></g>
+<text x="798" y="516" font-size="13" font-weight="600" fill="#1f2328">Quick bar</text>
+<text x="798" y="552" font-size="12" fill="#59636e">Filter pills</text>
+<rect x="928" y="424" width="132" height="157" rx="6" fill="#fff" stroke="#d1d9e0" stroke-width="1"/>
+<rect x="937" y="433" width="114" height="64" rx="4" fill="#eef1f4" stroke="#d1d9e0"/>
+<g fill="#1f2328" opacity=".45"><rect x="943" y="439" width="102" height="6" rx="3"/><rect x="943" y="462" width="102" height="6" rx="3"/></g><g fill="#59636e" opacity=".55"><rect x="943" y="449" width="102" height="4" rx="2"/><rect x="943" y="472" width="102" height="4" rx="2"/></g>
+<text x="938" y="516" font-size="13" font-weight="600" fill="#1f2328">Grouped</text>
+<text x="938" y="534" font-size="13" font-weight="600" fill="#1f2328">sections</text>
+<text x="938" y="552" font-size="12" fill="#59636e">Collapsible list</text>
+<line x1="648" y1="600" x2="1060" y2="600" stroke="#d1d9e0"/>
+<rect x="946" y="618" width="114" height="32" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+<text x="964" y="639" font-size="13" font-weight="500" fill="#1f2328">Restore defaults</text>
 </g>
 </svg>

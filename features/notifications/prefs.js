@@ -20,9 +20,9 @@
   ];
 
   const LAYOUTS = [
-    { id: "integrated", label: "Integrated navigation", description: "Side navigation" },
+    { id: "integrated", label: "Integrated navigation", description: "In the sidebar" },
     { id: "quickbar", label: "Quick bar", description: "Filter pills" },
-    { id: "grouped", label: "Grouped sections", description: "Collapsible groups" },
+    { id: "grouped", label: "Grouped sections", description: "Collapsible list" },
   ];
   const DEFAULT_LAYOUT = "integrated";
 

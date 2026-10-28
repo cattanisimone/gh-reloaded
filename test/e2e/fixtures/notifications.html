@@ -54,7 +54,11 @@
   .filters-row .f-item > .Button { width: 100%; }
   @media (min-width: 1012px) { .filters-row .f-item > .Button { width: auto; } }
   notification-recent-alerts { display: block; width: 0; height: 0; }
-  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; background: #fff; color: #1f2328; }
+  /* Global rules measured on the live inbox that reach an injected panel: the body font stack at 14px/21px, label 600, p with a bottom margin, h2 24px/36px. */
+  body { margin: 0; font: 14px/21px "Mona Sans VF", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif; background: #fff; color: #1f2328; }
+  label { font-weight: 600; font-size: 14px; line-height: 21px; display: inline; }
+  p { margin: 0 0 10px; }
+  h2 { font-size: 24px; line-height: 36px; font-weight: 600; }
   @media (prefers-color-scheme: dark) { body { background: #0d1117; color: #e6edf3; } a { color: #58a6ff; } }
   header { height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 16px; border-bottom: 1px solid #d1d9e0; }
   main { max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
