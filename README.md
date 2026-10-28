@@ -192,6 +192,15 @@ A small status badge on the corner of the GitHub logo on every github.com page, 
 - Data comes only from the official Status API: one anonymous `summary.json` request, made by the extension's service worker and shared by all tabs (cached in memory for 5 minutes, one request at a time, 10 second timeout, backoff after a failure). Nothing about you, the page or your repositories is sent, and no token is used. An unreachable or unexpected response shows the gray "Unverified" state, never a stale green. No new permission: the Status API allows cross-origin reads.
 - The badge is overlaid on the logo link's bottom-right corner with CSS anchor positioning (Chrome 125 and later; older versions keep a plain dot beside the logo) and takes no room in the header, and the pill right before the header's search control, found by their accessible names and icons, never CSS-module classes; if an anchor is missing nothing is inserted until the next scan.
 
+### Notifications settings panel — [features/notifications](features/notifications)
+
+A **Triage ▾** button on the inbox at `github.com/notifications`, right after GitHub's own **Group by** control and styled like it (it joins the filter row from 1012px wide and becomes a full-width row below, as GitHub's own controls do). It opens a compact panel anchored to the button (Esc, a click outside or the button close it) with **Show native inbox**, one switch each for **Triage**, **Tags** and **"Why is this here?"**, a choice of one **Triage layout** (Integrated navigation by default, Quick bar, Grouped sections), a note on missing data or token access while the engine runs, and **Restore defaults**. **Show native inbox** pauses every GH Reloaded enrichment at once without touching the saved switches or layout. Modules that are not available in this version, and the layout until Triage is, are shown disabled with the reason, never as selectable. The button is shown on every inbox route whenever the Group by control is found, even when no module runs, so the native inbox is always one click away; if the control is missing nothing is inserted until the next scan.
+
+![The Triage button after Group by on the inbox and its settings panel with Show native inbox, the module switches, the three layouts and Restore defaults, fictional data.](screenshots/notifications-config-panel.svg)
+
+- The panel only saves preferences in this browser (`ghntModules`, `ghntNativeInbox`, `ghntLayout`, each control writing only its own value); the notifications engine decides what runs. It reads nothing from GitHub and needs no new token permission. Restore defaults removes only those three keys.
+- A link to **Settings → GitHub tokens** appears with the note on missing data; there is no dedicated Notifications permissions page in this version.
+
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
 ## Known limitations
