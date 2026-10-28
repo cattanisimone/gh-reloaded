@@ -201,6 +201,18 @@ A **Triage ▾** button on the inbox at `github.com/notifications`, right after 
 - The panel only saves preferences in this browser (`ghntModules`, `ghntNativeInbox`, `ghntLayout`, each control writing only its own value); the notifications engine decides what runs. It reads nothing from GitHub and needs no new token permission. Restore defaults removes only those three keys.
 - A link to **Settings → GitHub tokens** appears with the note on missing data; there is no dedicated Notifications permissions page in this version.
 
+### Notifications triage view — [features/notifications](features/notifications)
+
+On the inbox at `github.com/notifications`, the loaded notifications are sorted into four categories: **Needs attention**, **Waiting**, **Informational** and **Unverifiable** (the same classification as the engine, never "Needs attention" without evidence). The category counts are shown in the layout you pick in the **Triage ▾** panel, one at a time, and GitHub's native inbox stays one click away. On by default.
+
+- **Integrated navigation** (default) adds a **Triage** group as the first item of GitHub's own sidebar; below 768px, where GitHub hides its sidebar, it becomes one horizontally scrollable row above the list. **Quick bar** shows four pills under the filter row. Both only hide rows: pick a category to see its rows, **Clear triage** (or the same click) shows them all again. **Grouped sections** re-orders the rows into four collapsible sections inside GitHub's own list (rows are never moved into a new list, so the unread background, select-all and GitHub's own row actions and keys keep working); which sections are collapsed is remembered, and leaving the layout puts every row back in its original place. A row that changes category is highlighted for a moment.
+- Counts cover only the rows loaded on the page, and the page says so ("Counts cover the 25 loaded notifications; more pages not loaded."). An empty category reads "No match among the loaded notifications", never "all clear". Rows still being classified are counted nowhere and shown as "Classifying N…". GitHub's inbox only paginates, so loading more means following its own **Next** link.
+- **Show native inbox** or switching Triage off removes everything and restores the original list and order. The view anchors on ARIA landmarks (`nav[aria-label="Notifications"]`, the filter row) and does nothing, retrying on the next scan, when an anchor is missing.
+
+![The Triage view in its three layouts: Integrated navigation in GitHub's sidebar, the Quick bar and Grouped sections, with the narrow, empty and loading states, fictional data.](screenshots/notifications-triage.svg)
+
+- No new token permission and nothing is written to GitHub. The only value stored is which Grouped sections are collapsed, in this browser (`ghntTriageCollapsed`); the selected category is kept in memory only. **Restore defaults** in the panel keeps removing exactly its three keys.
+
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
 ## Known limitations

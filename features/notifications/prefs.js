@@ -5,6 +5,9 @@
 //   ghntModules      {moduleId: boolean}  per-module switches (other ids are kept)
 //   ghntNativeInbox  boolean              pauses every module, keeps the rest
 //   ghntLayout       "integrated" | "quickbar" | "grouped"
+// The Grouped sections layout also keeps ghntTriageCollapsed
+//   {attention|waiting|informational|unverifiable: boolean}
+// (which sections are collapsed; written by triage.js, not part of Restore defaults).
 // An unset key means the default; a stored value of the wrong type is read
 // as unset. Each control writes only its own value.
 

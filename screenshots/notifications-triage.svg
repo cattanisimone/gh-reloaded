@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" font-family="DejaVu Sans, sans-serif">
+<rect width="1200" height="760" fill="#fff"/>
+<text x="32" y="30" font-size="15" font-weight="600" fill="#1f2328">Triage view: Integrated navigation (default), Quick bar, Grouped sections. Fictional data; dashed outline = new.</text>
+<!-- 1 Integrated navigation -->
+<text x="32" y="62" font-size="12" font-weight="600" fill="#59636e">1 · INTEGRATED NAVIGATION</text>
+<rect x="32" y="72" width="360" height="300" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<rect x="44" y="84" width="150" height="150" rx="6" fill="#f6f8fa" stroke="#54aeff" stroke-dasharray="4 3"/>
+<text x="54" y="102" font-size="11" font-weight="600" fill="#59636e">Triage</text>
+<rect x="48" y="108" width="142" height="30" rx="6" fill="#818b9826"/>
+<circle cx="60" cy="123" r="4" fill="#d1242f"/><text x="72" y="127" font-size="13" font-weight="600" fill="#1f2328">Needs attention</text><text x="174" y="127" font-size="11" fill="#1f2328">3</text>
+<circle cx="60" cy="153" r="4" fill="#9a6700"/><text x="72" y="157" font-size="13" fill="#1f2328">Waiting</text><text x="174" y="157" font-size="11" fill="#1f2328">5</text>
+<circle cx="60" cy="183" r="4" fill="#0969da"/><text x="72" y="187" font-size="13" fill="#1f2328">Informational</text><text x="170" y="187" font-size="11" fill="#1f2328">17</text>
+<circle cx="60" cy="213" r="4" fill="#8250df"/><text x="72" y="217" font-size="13" fill="#1f2328">Unverifiable</text><text x="174" y="217" font-size="11" fill="#1f2328">0</text>
+<text x="52" y="258" font-size="13" fill="#1f2328">Inbox</text><text x="52" y="282" font-size="13" fill="#1f2328">Saved</text><text x="52" y="306" font-size="13" fill="#1f2328">Done</text>
+<text x="212" y="102" font-size="12" font-weight="600" fill="#1f2328">Needs attention · 3 of 25 loaded</text>
+<text x="212" y="120" font-size="12" fill="#0969da">Clear triage</text>
+<g fill="#fff" stroke="#d1d9e0"><rect x="208" y="132" width="174" height="34"/><rect x="208" y="166" width="174" height="34"/><rect x="208" y="200" width="174" height="34"/></g>
+<g font-size="11" fill="#1f2328"><text x="216" y="153">#412 Add retry · review req.</text><text x="216" y="187">#409 Fix flaky spec · mention</text><text x="216" y="221">#77 Rate limit headers</text></g>
+<text x="212" y="256" font-size="10" fill="#59636e">Counts cover the 25 loaded</text><text x="212" y="270" font-size="10" fill="#59636e">notifications; more pages not loaded.</text>
+<!-- 2 Quick bar -->
+<text x="420" y="62" font-size="12" font-weight="600" fill="#59636e">2 · QUICK BAR</text>
+<rect x="420" y="72" width="360" height="300" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<rect x="432" y="84" width="336" height="32" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="444" y="105" font-size="12" fill="#59636e">All | Unread · Filter · Sort by · Group by · Triage ▾</text>
+<g stroke="#54aeff" stroke-dasharray="4 3" fill="none"><rect x="428" y="122" width="344" height="44" rx="8"/></g>
+<rect x="432" y="128" width="112" height="32" rx="6" fill="#ddf4ff" stroke="#0969da"/><circle cx="446" cy="144" r="4" fill="#d1242f"/><text x="456" y="148" font-size="11" font-weight="500" fill="#0969da">Needs attention 3</text>
+<rect x="550" y="128" width="64" height="32" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><circle cx="562" cy="144" r="4" fill="#9a6700"/><text x="570" y="148" font-size="11" fill="#1f2328">Wait 5</text>
+<rect x="620" y="128" width="72" height="32" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><circle cx="632" cy="144" r="4" fill="#0969da"/><text x="640" y="148" font-size="11" fill="#1f2328">Info 17</text>
+<rect x="698" y="128" width="64" height="32" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><circle cx="710" cy="144" r="4" fill="#8250df"/><text x="718" y="148" font-size="11" fill="#1f2328">Unv. 0</text>
+<text x="432" y="188" font-size="12" font-weight="600" fill="#1f2328">Needs attention · 3 of 25 loaded</text><text x="640" y="188" font-size="12" fill="#0969da">Clear triage</text>
+<g fill="#fff" stroke="#d1d9e0"><rect x="432" y="200" width="336" height="34"/><rect x="432" y="234" width="336" height="34"/></g>
+<g font-size="11" fill="#1f2328"><text x="440" y="221">#412 Add retry to uploads · review requested</text><text x="440" y="255">#409 Fix the flaky spec · mentioned</text></g>
+<text x="432" y="294" font-size="10" fill="#59636e">Counts cover the 25 loaded notifications; more pages not loaded.</text>
+<!-- 3 Grouped sections -->
+<text x="808" y="62" font-size="12" font-weight="600" fill="#59636e">3 · GROUPED SECTIONS</text>
+<rect x="808" y="72" width="360" height="300" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<g stroke="#54aeff" stroke-dasharray="4 3" fill="#f6f8fa"><rect x="816" y="80" width="344" height="30"/><rect x="816" y="178" width="344" height="30"/><rect x="816" y="214" width="344" height="30"/><rect x="816" y="250" width="344" height="30"/></g>
+<circle cx="830" cy="95" r="4" fill="#d1242f"/><text x="842" y="99" font-size="12" font-weight="600" fill="#1f2328">Needs attention</text><text x="1130" y="99" font-size="11" fill="#59636e">3 ▾</text>
+<g fill="#fff" stroke="#d1d9e0"><rect x="816" y="110" width="344" height="34"/><rect x="816" y="144" width="344" height="34"/></g>
+<g font-size="11" fill="#1f2328"><text x="824" y="131">#412 Add retry to uploads · review requested</text><text x="824" y="165">#409 Fix the flaky spec · mentioned</text></g>
+<circle cx="830" cy="193" r="4" fill="#9a6700"/><text x="842" y="197" font-size="12" font-weight="600" fill="#1f2328">Waiting</text><text x="1130" y="197" font-size="11" fill="#59636e">5 ▸</text>
+<circle cx="830" cy="229" r="4" fill="#0969da"/><text x="842" y="233" font-size="12" font-weight="600" fill="#1f2328">Informational</text><text x="1126" y="233" font-size="11" fill="#59636e">17 ▸</text>
+<circle cx="830" cy="265" r="4" fill="#8250df"/><text x="842" y="269" font-size="12" font-weight="600" fill="#1f2328">Unverifiable</text><text x="1130" y="269" font-size="11" fill="#59636e">0 ▸</text>
+<text x="816" y="304" font-size="10" fill="#59636e">Sections live inside GitHub's own list; leaving the layout</text><text x="816" y="318" font-size="10" fill="#59636e">puts every row back in its place.</text>
+<!-- 4 states -->
+<text x="32" y="412" font-size="12" font-weight="600" fill="#59636e">4 · STATES</text>
+<rect x="32" y="422" width="360" height="150" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<text x="44" y="446" font-size="12" font-weight="600" fill="#59636e">Narrow (&lt; 768px): GitHub hides its sidebar</text>
+<rect x="44" y="456" width="336" height="32" rx="6" fill="#f6f8fa" stroke="#54aeff" stroke-dasharray="4 3"/><text x="54" y="476" font-size="11" fill="#1f2328">● Needs attention 3   ● Waiting 5   ● Info… →</text>
+<text x="44" y="512" font-size="12" font-weight="600" fill="#1f2328">Unverifiable · 0 of 25 loaded</text><text x="44" y="532" font-size="12" fill="#59636e">No match among the loaded notifications.</text>
+<text x="44" y="552" font-size="10" fill="#59636e">An empty filter is never "all clear": it covers only the loaded rows.</text>
+<rect x="420" y="422" width="360" height="150" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<text x="432" y="446" font-size="12" font-weight="600" fill="#59636e">Loading</text>
+<text x="432" y="470" font-size="12" fill="#59636e">Classifying 4 notifications…</text>
+<text x="432" y="494" font-size="11" fill="#1f2328">Counts show "…" until the engine answers; pending rows are in no category.</text>
+<text x="432" y="520" font-size="12" font-weight="600" fill="#59636e">Native inbox / Triage off</text>
+<text x="432" y="540" font-size="11" fill="#1f2328">Everything above is removed, every row is back in its native place.</text>
+<rect x="808" y="422" width="360" height="150" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<text x="820" y="446" font-size="12" font-weight="600" fill="#59636e">Sidebar widths on the live inbox</text>
+<text x="820" y="470" font-size="11" fill="#1f2328">184px at 768 · 245px at 1011 · 163px at 1012 · 208px at 1280</text>
+<text x="820" y="494" font-size="11" fill="#1f2328">The label ellipsizes before the counter is ever cut.</text>
+</svg>
