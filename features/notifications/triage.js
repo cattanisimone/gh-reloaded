@@ -80,7 +80,8 @@
   function nativeLists() {
     const lists = [];
     for (const li of rowEls()) {
-      const ul = li.closest("ul");
+      // A moved row counts for the list its native slot is in.
+      const ul = (slots.get(li)?.parentElement || li).closest("ul");
       if (ul && !lists.includes(ul)) lists.push(ul);
     }
     return lists;
@@ -284,6 +285,8 @@
     const lists = nativeLists();
     if (!lists.length) return;
     const target = lists[0];
+    // Rows move under the reader: the browser's own scroll anchoring would fight the compensation below.
+    target.classList.add("ghnt-grouped");
     // A row's native slot is remembered the first time it moves.
     const classified = list.filter((r) => M.categoryOf(r.item));
     for (const r of classified) {
@@ -325,7 +328,11 @@
     const current = [...target.children].slice(0, desired.length);
     const same = current.length === desired.length && current.every((n, i) => n === desired[i]);
     if (!same) {
-      const ref = [...document.querySelectorAll("li.notifications-list-item, li.ghnt-sec")].find((n) => n.getBoundingClientRect().bottom > 0);
+      // The scroll anchor is a visible node that stays in its section: moving
+      // the rows around it must not move it on screen.
+      const stay = new Set(classified.filter((r) => lastSection.get(r.key) === M.categoryOf(r.item)).map((r) => r.li));
+      const onScreen = (n) => n.getBoundingClientRect().bottom > 0 && n.getBoundingClientRect().top < window.innerHeight;
+      const ref = [...stay].filter((n) => n.isConnected).sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1)).find(onScreen) || [...document.querySelectorAll("li.ghnt-sec")].find(onScreen);
       const before = ref ? ref.getBoundingClientRect().top : 0;
       let cursor = target.firstChild;
       for (const node of desired) {
@@ -370,6 +377,7 @@
       live.get(`sec-${id}`)?.remove();
       live.delete(`sec-${id}`);
     }
+    document.querySelectorAll("ul.ghnt-grouped").forEach((ul) => ul.classList.remove("ghnt-grouped"));
     for (const li of collapsedRows) li.removeAttribute("hidden");
     collapsedRows.clear();
     for (const li of rowEls()) {

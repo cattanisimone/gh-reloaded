@@ -49,3 +49,4 @@ li.ghnt-sec:first-child { border-top: 0; }
 .ghnt-chevron { flex: none; margin-left: 4px; color: var(--fgColor-muted, #59636e); }
 li.notifications-list-item.ghnt-moved { background: var(--bgColor-attention-muted, #fff8c5); transition: background-color 3s ease-out; }
 @media (prefers-reduced-motion: reduce) { li.notifications-list-item.ghnt-moved { transition: none; } }
+ul.ghnt-grouped { overflow-anchor: none; }
