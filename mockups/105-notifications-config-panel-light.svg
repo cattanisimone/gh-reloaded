@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="920" viewBox="0 0 1500 920" aria-label="Fictional GitHub notifications inbox with the Triage settings panel open and three schematic 16:9 layout previews">
+<rect x="0" y="0" width="1500" height="920" fill="#ffffff" stroke="none" stroke-width="1" rx="6"/>
+<rect x="0" y="0" width="1500" height="65" fill="#f6f8fa" stroke="none" stroke-width="1" rx="6"/>
+<text x="26" y="42" fill="#24292f" font-family="Arial, sans-serif" font-size="18" font-weight="700">● GitHub</text>
+<text x="170" y="42" fill="#57606a" font-family="Arial, sans-serif" font-size="14" font-weight="400">Pull requests       Issues       Notifications</text>
+<rect x="0" y="65" width="248" height="855" fill="#f6f8fa" stroke="none" stroke-width="1" rx="6"/>
+<line x1="248" y1="65" x2="248" y2="920" stroke="#d0d7de" stroke-width="1"/>
+<text x="20" y="108" fill="#24292f" font-family="Arial, sans-serif" font-size="20" font-weight="700">Notifications</text>
+<text x="20" y="150" fill="#57606a" font-family="Arial, sans-serif" font-size="11" font-weight="700">TRIAGE</text>
+<rect x="9" y="160" width="230" height="35" fill="#ddf4ff" stroke="none" stroke-width="1" rx="6"/>
+<text x="24" y="183" fill="#0969da" font-family="Arial, sans-serif" font-size="13" font-weight="700">•  Needs attention</text>
+<text x="24" y="226" fill="#24292f" font-family="Arial, sans-serif" font-size="13" font-weight="400">•  Waiting</text>
+<text x="24" y="269" fill="#24292f" font-family="Arial, sans-serif" font-size="13" font-weight="400">•  Informational</text>
+<text x="24" y="312" fill="#24292f" font-family="Arial, sans-serif" font-size="13" font-weight="400">•  Unverifiable</text>
+<line x1="18" y1="342" x2="229" y2="342" stroke="#d0d7de" stroke-width="1"/>
+<text x="20" y="371" fill="#57606a" font-family="Arial, sans-serif" font-size="11" font-weight="700">GITHUB FILTERS</text>
+<text x="26" y="408" fill="#24292f" font-family="Arial, sans-serif" font-size="14" font-weight="400">Inbox</text>
+<text x="26" y="452" fill="#24292f" font-family="Arial, sans-serif" font-size="14" font-weight="400">Participating</text>
+<text x="26" y="496" fill="#24292f" font-family="Arial, sans-serif" font-size="14" font-weight="400">Saved</text>
+<text x="26" y="540" fill="#24292f" font-family="Arial, sans-serif" font-size="14" font-weight="400">Done</text>
+<text x="273" y="113" fill="#24292f" font-family="Arial, sans-serif" font-size="24" font-weight="700">Notifications</text>
+<text x="273" y="143" fill="#57606a" font-family="Arial, sans-serif" font-size="13" font-weight="400">Your GitHub inbox with GH Reloaded triage</text>
+<rect x="270" y="167" width="745" height="56" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="6"/>
+<text x="285" y="200" fill="#24292f" font-family="Arial, sans-serif" font-size="13" font-weight="400">Unread       All        Repository ▾       Filter ▾</text>
+<rect x="871" y="176" width="130" height="38" fill="#ddf4ff" stroke="#0969da" stroke-width="1" rx="6"/>
+<text x="889" y="201" fill="#0969da" font-family="Arial, sans-serif" font-size="14" font-weight="700">⚙ Triage ▾</text>
+<line x1="1001" y1="194" x2="1027" y2="194" stroke="#0969da" stroke-width="2"/>
+<text x="275" y="255" fill="#24292f" font-family="Arial, sans-serif" font-size="15" font-weight="700">Recent</text>
+<text x="940" y="255" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">38 loaded</text>
+<rect x="270" y="271" width="745" height="78" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="6"/>
+<text x="297" y="300" fill="#24292f" font-family="Arial, sans-serif" font-size="15" font-weight="700">Review requested on #204</text>
+<text x="297" y="321" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">gh-reloaded · GitHub</text>
+<rect x="270" y="362" width="745" height="78" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="6"/>
+<text x="297" y="391" fill="#24292f" font-family="Arial, sans-serif" font-size="15" font-weight="700">Fix rendering notifications</text>
+<text x="297" y="412" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">gh-reloaded · GitHub</text>
+<rect x="270" y="453" width="745" height="78" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="6"/>
+<text x="297" y="482" fill="#24292f" font-family="Arial, sans-serif" font-size="15" font-weight="700">Documentation update</text>
+<text x="297" y="503" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">gh-reloaded · GitHub</text>
+<rect x="270" y="544" width="745" height="78" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="6"/>
+<text x="297" y="573" fill="#24292f" font-family="Arial, sans-serif" font-size="15" font-weight="700">Check repository permissions</text>
+<text x="297" y="594" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">gh-reloaded · GitHub</text>
+<rect x="270" y="635" width="745" height="78" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="6"/>
+<text x="297" y="664" fill="#24292f" font-family="Arial, sans-serif" font-size="15" font-weight="700">New comments on #197</text>
+<text x="297" y="685" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">gh-reloaded · GitHub</text>
+<rect x="270" y="726" width="745" height="78" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="6"/>
+<text x="297" y="755" fill="#24292f" font-family="Arial, sans-serif" font-size="15" font-weight="700">Dependency update</text>
+<text x="297" y="776" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">gh-reloaded · GitHub</text>
+<rect x="270" y="833" width="745" height="47" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="6"/>
+<text x="288" y="861" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">Counts cover the loaded notifications only · Load more</text>
+<rect x="1028" y="75" width="455" height="805" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="10"/>
+<text x="1049" y="112" fill="#24292f" font-family="Arial, sans-serif" font-size="20" font-weight="700">Triage · Settings</text>
+<text x="1049" y="139" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">Preferences are saved in this browser.</text>
+<line x1="1049" y1="154" x2="1460" y2="154" stroke="#d0d7de" stroke-width="1"/>
+<text x="1050" y="177" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="700">Original view</text>
+<text x="1050" y="209" fill="#24292f" font-family="Arial, sans-serif" font-size="14" font-weight="700">Show native inbox</text>
+<text x="1050" y="228" fill="#57606a" font-family="Arial, sans-serif" font-size="11" font-weight="400">Temporarily shows GitHub's original UI</text>
+<rect x="1400" y="193" width="52" height="28" fill="#d0d7de" stroke="none" stroke-width="1" rx="14"/>
+<rect x="1404" y="196" width="20" height="20" fill="#ffffff" stroke="none" stroke-width="1" rx="10"/>
+<line x1="1049" y1="253" x2="1460" y2="253" stroke="#d0d7de" stroke-width="1"/>
+<text x="1050" y="279" fill="#24292f" font-family="Arial, sans-serif" font-size="14" font-weight="700">Modules</text>
+<text x="1050" y="309" fill="#24292f" font-family="Arial, sans-serif" font-size="14" font-weight="700">Triage</text>
+<text x="1050" y="328" fill="#57606a" font-family="Arial, sans-serif" font-size="11" font-weight="400">Sorts notifications into categories</text>
+<rect x="1400" y="293" width="52" height="28" fill="#1a7f37" stroke="none" stroke-width="1" rx="14"/>
+<rect x="1427" y="296" width="20" height="20" fill="#ffffff" stroke="none" stroke-width="1" rx="10"/>
+<text x="1050" y="358" fill="#24292f" font-family="Arial, sans-serif" font-size="14" font-weight="700">Tags</text>
+<text x="1050" y="377" fill="#57606a" font-family="Arial, sans-serif" font-size="11" font-weight="400">Reason labels on notifications</text>
+<rect x="1400" y="342" width="52" height="28" fill="#1a7f37" stroke="none" stroke-width="1" rx="14"/>
+<rect x="1427" y="345" width="20" height="20" fill="#ffffff" stroke="none" stroke-width="1" rx="10"/>
+<text x="1050" y="406" fill="#24292f" font-family="Arial, sans-serif" font-size="14" font-weight="700">"Why is this here?"</text>
+<text x="1050" y="425" fill="#57606a" font-family="Arial, sans-serif" font-size="11" font-weight="400">Shows the evidence behind a classification</text>
+<rect x="1400" y="390" width="52" height="28" fill="#1a7f37" stroke="none" stroke-width="1" rx="14"/>
+<rect x="1427" y="393" width="20" height="20" fill="#ffffff" stroke="none" stroke-width="1" rx="10"/>
+<line x1="1049" y1="447" x2="1460" y2="447" stroke="#d0d7de" stroke-width="1"/>
+<text x="1050" y="475" fill="#24292f" font-family="Arial, sans-serif" font-size="16" font-weight="700">Triage layout</text>
+<text x="1050" y="496" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">Pick one mode. Only one at a time.</text>
+<rect x="1050" y="511" width="132" height="144" fill="#ddf4ff" stroke="#0969da" stroke-width="2" rx="8"/>
+<rect x="1060" y="519" width="112" height="63" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="3"/>
+<rect x="1065" y="525" width="102" height="6" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="2"/>
+<rect x="1065" y="536" width="30" height="40" fill="#ddf4ff" stroke="#d0d7de" stroke-width="1" rx="2"/>
+<rect x="1071" y="540" width="18" height="3" fill="#0969da" stroke="none" stroke-width="1" rx="1"/>
+<rect x="1071" y="549" width="18" height="3" fill="#d0d7de" stroke="none" stroke-width="1" rx="1"/>
+<rect x="1071" y="558" width="18" height="3" fill="#d0d7de" stroke="none" stroke-width="1" rx="1"/>
+<rect x="1071" y="567" width="18" height="3" fill="#d0d7de" stroke="none" stroke-width="1" rx="1"/>
+<rect x="1101" y="538" width="65" height="7" fill="#d0d7de" stroke="none" stroke-width="1" rx="2"/>
+<rect x="1101" y="550" width="65" height="7" fill="#d0d7de" stroke="none" stroke-width="1" rx="2"/>
+<rect x="1101" y="562" width="65" height="7" fill="#d0d7de" stroke="none" stroke-width="1" rx="2"/>
+<text x="1059" y="602" fill="#24292f" font-family="Arial, sans-serif" font-size="13" font-weight="700">Integrated</text>
+<text x="1059" y="618" fill="#24292f" font-family="Arial, sans-serif" font-size="13" font-weight="700">navigation</text>
+<text x="1059" y="646" fill="#0969da" font-family="Arial, sans-serif" font-size="10" font-weight="400">✓ Default</text>
+<rect x="1187" y="511" width="132" height="144" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="8"/>
+<rect x="1197" y="519" width="112" height="63" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="3"/>
+<rect x="1202" y="525" width="102" height="6" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="2"/>
+<rect x="1202" y="536" width="22" height="8" fill="#0969da" stroke="none" stroke-width="1" rx="3"/>
+<rect x="1228" y="536" width="22" height="8" fill="#d0d7de" stroke="none" stroke-width="1" rx="3"/>
+<rect x="1254" y="536" width="22" height="8" fill="#d0d7de" stroke="none" stroke-width="1" rx="3"/>
+<rect x="1280" y="536" width="22" height="8" fill="#d0d7de" stroke="none" stroke-width="1" rx="3"/>
+<rect x="1203" y="551" width="100" height="5" fill="#d0d7de" stroke="none" stroke-width="1" rx="2"/>
+<rect x="1203" y="560" width="100" height="5" fill="#d0d7de" stroke="none" stroke-width="1" rx="2"/>
+<rect x="1203" y="569" width="100" height="5" fill="#d0d7de" stroke="none" stroke-width="1" rx="2"/>
+<text x="1196" y="602" fill="#24292f" font-family="Arial, sans-serif" font-size="13" font-weight="700">Quick bar</text>
+<text x="1196" y="646" fill="#57606a" font-family="Arial, sans-serif" font-size="10" font-weight="400">Horizontal filters</text>
+<rect x="1324" y="511" width="132" height="144" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="8"/>
+<rect x="1334" y="519" width="112" height="63" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1" rx="3"/>
+<rect x="1339" y="525" width="102" height="6" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="2"/>
+<rect x="1339" y="536" width="102" height="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="2"/>
+<rect x="1348" y="540" width="67" height="3" fill="#0969da" stroke="none" stroke-width="1" rx="1"/>
+<rect x="1339" y="549" width="102" height="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="2"/>
+<rect x="1348" y="553" width="67" height="3" fill="#57606a" stroke="none" stroke-width="1" rx="1"/>
+<rect x="1339" y="562" width="102" height="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="2"/>
+<rect x="1348" y="566" width="67" height="3" fill="#57606a" stroke="none" stroke-width="1" rx="1"/>
+<text x="1333" y="602" fill="#24292f" font-family="Arial, sans-serif" font-size="13" font-weight="700">Grouped</text>
+<text x="1333" y="618" fill="#24292f" font-family="Arial, sans-serif" font-size="13" font-weight="700">sections</text>
+<text x="1333" y="646" fill="#57606a" font-family="Arial, sans-serif" font-size="10" font-weight="400">Collapsible groups</text>
+<text x="1050" y="685" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">The categories are the same in all three modes.</text>
+<line x1="1049" y1="705" x2="1460" y2="705" stroke="#d0d7de" stroke-width="1"/>
+<text x="1050" y="731" fill="#24292f" font-family="Arial, sans-serif" font-size="14" font-weight="700">Coverage and permissions</text>
+<text x="1050" y="753" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">Counts cover the loaded notifications only.</text>
+<text x="1050" y="777" fill="#57606a" font-family="Arial, sans-serif" font-size="12" font-weight="400">When data is missing: "Unverifiable".</text>
+<line x1="1049" y1="801" x2="1460" y2="801" stroke="#d0d7de" stroke-width="1"/>
+<rect x="1050" y="816" width="180" height="39" fill="#ffffff" stroke="#d0d7de" stroke-width="1" rx="6"/>
+<text x="1064" y="841" fill="#24292f" font-family="Arial, sans-serif" font-size="13" font-weight="700">Restore defaults</text>
+<text x="1288" y="867" fill="#57606a" font-family="Arial, sans-serif" font-size="10" font-weight="400">Mockup · fictional data</text>
+</svg>
