@@ -180,7 +180,7 @@
           const radio = el("input", { type: "radio", name: "ghnt-layout", value: l.id, checked, "data-ghnt-focus": `layout-${l.id}` });
           radio.checked = checked;
           radio.addEventListener("change", () => writeLayout(l.id));
-          group.append(el("label", { class: "ghnt-card" + (checked ? " is-selected" : "") }, thumb(l.id), el("span", { class: "ghnt-card-title" }, radio, el("span", { text: l.label }), l.id === prefs.DEFAULT_LAYOUT ? el("span", { class: "ghnt-default", text: "\u2713 Default" }) : null), el("span", { class: "ghnt-hint", text: l.description })));
+          group.append(el("label", { class: "ghnt-card" + (checked ? " is-selected" : "") }, thumb(l.id), el("span", { class: "ghnt-card-text" }, el("span", { class: "ghnt-card-title" }, radio, el("span", { class: "ghnt-card-name", text: l.label })), l.id === prefs.DEFAULT_LAYOUT ? el("span", { class: "ghnt-default", text: "\u2713 Default" }) : null, el("span", { class: "ghnt-hint", text: l.description }))));
         }
         layoutSection.append(group);
       }

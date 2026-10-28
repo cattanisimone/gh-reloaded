@@ -368,7 +368,9 @@ for (const scheme of ["light", "dark"]) {
         const lum = (c) => { const [r, g, b] = c.match(/[\d.]+/g).slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
         const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
         const p = document.getElementById("ghnt-panel");
+        p.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif';
         const bg = getComputedStyle(p).backgroundColor;
+        const overflow = [...p.querySelectorAll(".ghnt-card")].flatMap((c) => { const cr = c.getBoundingClientRect(); return [...c.querySelectorAll("*")].filter((e) => e.getBoundingClientRect().right > cr.right + 0.5).map((e) => e.className + ":" + Math.round(e.getBoundingClientRect().right - cr.right)); });
         const text = [...p.querySelectorAll(".ghnt-hint, .ghnt-row-title, .ghnt-card-title")].map((e) => ratio(getComputedStyle(e).color, bg));
         const cards = [...p.querySelectorAll(".ghnt-card")].map((c) => { const r = c.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; });
         const thumbs = [...p.querySelectorAll(".ghnt-thumb")].map((t) => { const r = t.getBoundingClientRect(); return r.width / r.height; });
@@ -376,11 +378,13 @@ for (const scheme of ["light", "dark"]) {
         const marks = [...p.querySelectorAll(".ghnt-thumb")].map((t) => t.querySelectorAll("i").length);
         const defaultMarker = p.querySelector(".ghnt-default")?.textContent;
         const cardLines = [...p.querySelectorAll(".ghnt-card .ghnt-hint, .ghnt-card-title")].map((c) => Math.round(c.getBoundingClientRect().height / 18));
-        return { marks, defaultMarker, cardLines, min: Math.min(...text), cards, thumbs, selected: ratio(sel, bg), scroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth };
+        return { overflow, panelScroll: p.scrollWidth - p.clientWidth, marks, defaultMarker, cardLines, min: Math.min(...text), cards, thumbs, selected: ratio(sel, bg), scroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth };
       });
       expect(res.min, `${scheme} ${width}`).toBeGreaterThanOrEqual(4.5);
       expect(res.selected, `${scheme} ${width} selected border`).toBeGreaterThanOrEqual(3);
       expect(res.scroll).toBe(true);
+      expect(res.overflow, `${scheme} ${width} card overflow`).toEqual([]);
+      expect(res.panelScroll, `${scheme} ${width} panel scroll`).toBeLessThanOrEqual(0);
       expect(new Set(res.cards.map((c) => c.join("x"))).size, JSON.stringify(res.cards)).toBe(1);
       for (const t of res.thumbs) expect(Math.abs(t - 16 / 9)).toBeLessThan(0.05);
       expect(res.marks, `${scheme} ${width} thumbnails`).toEqual([6, 7, 3].concat([6, 7, 3]).slice(0, 3));
