@@ -65,3 +65,12 @@ test("mergeApi: REST reason wins in both directions, API-only items are inPage f
   assert.equal(merged.find((r) => r.key === "acme/web#1").inPage, true);
   assert.equal(merged.find((r) => r.key === "acme/web#3").inPage, false);
 });
+
+test("keyOf: the same key readPage uses, null without a subject link", async () => {
+  const { GHNT_COLLECT: C } = loadGlobals(["features/notifications/collect.js"]);
+  const link = (href) => ({ href });
+  const li = (hrefs) => ({ querySelectorAll: () => hrefs.map(link) });
+  assert.equal(C.keyOf(li(["https://github.com/Acme/Web/pull/412?notification_referrer_id=1"])), "acme/web#412");
+  assert.equal(C.keyOf(li(["https://github.com/acme/web/actions/runs/99"])), "run:/acme/web/actions/runs/99");
+  assert.equal(C.keyOf(li([])), null);
+});

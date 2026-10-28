@@ -17,6 +17,17 @@
   dropdowns stack above the input. The Primer pieces used here are inlined (a few utilities and the
   medium secondary Button) with Primer's own variable names, light and dark.
 
+  Sidebar, rows and pagination (added for the Triage view, shape measured on the live inbox, no data):
+  - sidebar: nav[aria-label="Notifications"] > nav[aria-label="Inbox"] (ActionList, items 33px high), hr, nav[aria-label="Filters"];
+    shown from 768px and not rendered below it; its width follows the live one: 184px at 768 growing 0.25px per px to 245 at 1011,
+    163px at 1012 growing 0.168px per px to 245 at 1500 (208 at 1280).
+  - rows: div.js-check-all-container > div.Box > div.Box-body > ul.list-style-none.color-bg-subtle.js-navigation-container >
+    li.notifications-list-item > div.d-flex (title link, note, AvatarStack) + ul.notification-list-item-actions +
+    ul.notification-list-item-actions-responsive + tool-tip; rows are js-navigation-item.
+  - pagination: div.paginate-container with Previous / Next.
+  - the filter row spans the full width above the sidebar and the list (the sidebar's own placement is measured, the filter row's is kept as the #105 fixture had it).
+  - variants by hash: #many = 32 rows, #repo = Group by Repository (a Box per repository), #relative, #empty.
+
   One page, three routes (the tests serve it for every github.com navigation):
     /notifications …… the inbox (page 1; ?after=p2 is page 2; #relative = relative hrefs; #empty = no rows)
     /notifications/subscriptions …… the subscriptions page; it still carries rows, so a test can prove the
@@ -62,12 +73,32 @@
   @media (prefers-color-scheme: dark) { body { background: #0d1117; color: #e6edf3; } a { color: #58a6ff; } }
   header { height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 16px; border-bottom: 1px solid #d1d9e0; }
   main { max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
-  ul { list-style: none; margin: 0; padding: 0; border: 1px solid #d1d9e0; border-radius: 6px; }
-  li.notifications-list-item { display: flex; gap: 8px; padding: 8px 16px; border-top: 1px solid #d1d9e0; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  .layout { display: flex; gap: 24px; align-items: flex-start; }
+  .layout > .sidebar { display: none; flex: none; width: calc(184px + (100vw - 768px) * 0.25); }
+  @media (min-width: 768px) { .layout > .sidebar { display: block; } }
+  @media (min-width: 1012px) { .layout > .sidebar { width: calc(163px + (100vw - 1012px) * 0.168); } }
+  .layout > .content { flex: 1 1 auto; min-width: 0; }
+  .sidebar nav[aria-label="Inbox"] a, .sidebar nav[aria-label="Filters"] a { display: flex; align-items: center; gap: 8px; box-sizing: border-box; height: 33px; padding: 0 8px; border-radius: 6px; color: inherit; text-decoration: none; }
+  .sidebar nav a[aria-current="page"] { background: #818b9826; font-weight: 600; }
+  .sidebar hr { border: 0; border-top: 1px solid #d1d9e0; margin: 8px 0; }
+  .Box { border: 1px solid #d1d9e0; border-radius: 6px; margin-bottom: 16px; overflow: hidden; }
+  .Box-header { padding: 8px 16px; background: #f6f8fa; border-bottom: 1px solid #d1d9e0; font-weight: 600; }
+  ul.color-bg-subtle { background: #f6f8fa; }
+  li.notifications-list-item { display: block; padding: 8px 16px; border-top: 1px solid #d1d9e0; background: #fff; }
+  li.notifications-list-item.notification-unread { background: #ddf4ff; }
   li.notifications-list-item:first-child { border-top: 0; }
+  li.notifications-list-item > .d-flex { gap: 8px; align-items: center; }
+  li.notifications-list-item .AvatarStack { margin-left: auto; display: inline-flex; gap: 2px; }
+  li.notifications-list-item .AvatarStack i { width: 16px; height: 16px; border-radius: 50%; background: #d1d9e0; }
+  ul.notification-list-item-actions, ul.notification-list-item-actions-responsive { display: flex; gap: 4px; margin-top: 4px; }
+  ul.notification-list-item-actions-responsive { display: none; }
   li.notification-unread { font-weight: 600; }
+  tool-tip { display: none; }
+  @media (prefers-color-scheme: dark) { li.notifications-list-item { background: #0d1117; } li.notifications-list-item.notification-unread { background: #388bfd1a; } .Box, .Box-header, .sidebar hr { border-color: #3d444d; } .Box-header, ul.color-bg-subtle { background: #151b23; } }
   .reason-label { color: #59636e; }
   nav[aria-label="Pagination"] { display: flex; gap: 12px; padding: 12px 0; }
+  .paginate-container { margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -75,11 +106,27 @@
 <main id="main"></main>
 <script>
   const row = (id, href, title, repoLabel, reason, unread) =>
-    '<li class="notifications-list-item' + (unread ? ' notification-unread' : '') + '" data-notification-id="NT_' + id + '">' +
+    '<li class="notifications-list-item js-navigation-item' + (unread ? ' notification-unread' : '') + '" data-notification-id="NT_' + id + '">' +
+    '<div class="d-flex"><input type="checkbox" class="js-notifications-list-item-check" aria-label="Select ' + id + '">' +
     '<a class="notification-list-item-link" href="' + href + '"><p class="markdown-title" style="margin:0">' + title + '</p></a>' +
-    '<span class="repo-ref">' + repoLabel + '</span><span class="reason-label">' + reason + '</span></li>';
+    '<span class="repo-ref">' + repoLabel + '</span><span class="reason-label">' + reason + '</span>' +
+    '<span class="AvatarStack"><i></i><i></i></span></div>' +
+    '<ul class="notification-list-item-actions"><li><button type="button" class="btn-sm" data-action="done">Done</button></li><li><button type="button" class="btn-sm" data-action="save">Save</button></li></ul>' +
+    '<ul class="notification-list-item-actions-responsive"><li><button type="button" class="btn-sm" data-action="more">More</button></li></ul>' +
+    '<tool-tip>Mark as done</tool-tip></li>';
   const abs = (path, id) => 'https://github.com' + path + '?notification_referrer_id=NT_' + id + '&notifications_query=is%3Aunread';
+  // 32 rows: the reason follows the number so a test can compute the categories it expects.
+  function manyRows(relative) {
+    const reasons = ['review requested', 'mentioned', 'subscribed', 'commented', 'review requested', 'mentioned', 'ci activity', 'subscribed'];
+    const out = [];
+    for (let n = 1; n <= 32; n++) {
+      const path = '/acme/web/pull/' + (100 + n);
+      out.push(row(n, relative ? path : abs(path, n), 'Change number ' + n, 'acme/web #' + (100 + n), reasons[(n - 1) % 8], n % 3 !== 0));
+    }
+    return out;
+  }
   function rows(page, relative) {
+    if (location.hash === '#many' || location.hash === '#repo') return manyRows(relative);
     const href = (path, id) => (relative ? path : abs(path, id));
     if (page === 'p2') {
       return [
@@ -113,10 +160,22 @@
     if (path === '/notifications' || path === '/notifications/subscriptions') {
       const empty = location.hash === '#empty';
       const page = new URLSearchParams(location.search).get('after') === 'p2' ? 'p2' : 'p1';
+      const all = empty ? [] : rows(page, location.hash === '#relative');
+      let list;
+      if (location.hash === '#repo') {
+        const half = Math.ceil(all.length / 2);
+        const box = (name, items) => '<div class="Box"><div class="Box-header">' + name + '</div><div class="Box-body"><ul class="list-style-none color-bg-subtle js-navigation-container">' + items.join('') + '</ul></div></div>';
+        list = box('acme/web', all.slice(0, half)) + box('acme/api', all.slice(half));
+      } else {
+        list = '<div class="Box"><div class="Box-body"><ul class="list-style-none color-bg-subtle js-navigation-container">' + all.join('') + '</ul></div></div>';
+      }
+      const link = (label, current) => '<li><a href="/notifications"' + (current ? ' aria-current="page"' : '') + '>' + label + '</a></li>';
+      const sidebar = '<div class="sidebar"><nav aria-label="Notifications"><nav aria-label="Inbox"><ul>' + link('Inbox', true) + link('Saved') + link('Done') + '</ul></nav><hr><nav aria-label="Filters"><ul>' + link('Assigned') + link('Participating') + '</ul></nav></nav></div>';
       main.innerHTML = '<h1>' + (path === '/notifications' ? 'Notifications' : 'Subscriptions') + '</h1>' +
         (path === '/notifications' ? FILTERS : '') +
-        '<ul>' + (empty ? '' : rows(page, location.hash === '#relative').join('')) + '</ul>' +
-        '<nav aria-label="Pagination">' + (page === 'p1' ? '<a id="next" href="/notifications?after=p2">Next</a>' : '<a id="prev" href="/notifications">Previous</a>') + '</nav>';
+        '<div class="layout">' + (path === '/notifications' ? sidebar : '') + '<div class="content">' +
+        '<div class="js-check-all-container"><label><input type="checkbox" class="js-check-all" aria-label="Select all"> Select all</label>' + list + '</div>' +
+        '<div class="paginate-container"><nav aria-label="Pagination">' + (page === 'p1' ? '<a id="next" rel="next" href="/notifications?after=p2">Next</a>' : '<a id="prev" rel="prev" href="/notifications">Previous</a>') + '</nav></div></div></div>';
     } else {
       main.innerHTML = '<h1>acme/web</h1><p>Code · Issues · Pull requests</p>';
     }

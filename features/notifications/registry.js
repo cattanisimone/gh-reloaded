@@ -12,7 +12,9 @@
 (function (global) {
   // Which modules should be running. Pure, so every combination is testable.
   function wantedModules(modules, config, running) {
-    if (!running || config.nativeInbox) return [];
+    // Stored preferences not read yet: starting a default-on module now could
+    // run it (and its requests) against a switch the user turned off.
+    if (!running || config.nativeInbox || config.loaded === false) return [];
     return modules.filter((m) => enabled(m, config) && m.availability === "available").map((m) => m.id);
   }
 
@@ -31,7 +33,7 @@
     const modules = new Map(); // id -> { id, label, start, stop, availability, reason, defaultOn, layouts }
     const started = new Set();
     const listeners = new Set();
-    const config = { modules: {}, nativeInbox: false, layout: normalizeLayout() };
+    const config = { loaded: false, modules: {}, nativeInbox: false, layout: normalizeLayout() };
     let running = false;
     let api = null;
 
@@ -86,6 +88,22 @@
           notify();
         };
       },
+      // Removes a module (stopping it first). The function register() returns
+      // does the same for the caller that kept it.
+      unregister(id) {
+        if (!modules.has(id)) return false;
+        if (started.delete(id)) {
+          try {
+            modules.get(id)?.stop?.();
+          } catch {
+            /* ignore */
+          }
+        }
+        modules.delete(id);
+        notify();
+        reconcile();
+        return true;
+      },
       setAvailability(id, availability, reason) {
         const m = modules.get(id);
         if (!m) return;
@@ -95,6 +113,7 @@
         reconcile();
       },
       setConfig({ modules: flags, nativeInbox, layout } = {}) {
+        config.loaded = true;
         config.modules = flags && typeof flags === "object" ? { ...flags } : {};
         config.nativeInbox = nativeInbox === true;
         config.layout = normalizeLayout(layout);
