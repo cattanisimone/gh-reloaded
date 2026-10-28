@@ -278,3 +278,13 @@ test("no write: the module source contains no mutation, PATCH, PUT or DELETE", a
   const src = readFileSync("background/notifications.js", "utf8");
   assert.doesNotMatch(src, /mutation|"PATCH"|"PUT"|"DELETE"|method:/i);
 });
+
+test("the panel's Settings link opens the tokens section of the options page", async () => {
+  const { settings } = await import("../../background/notifications.js");
+  assert.equal(settings.MESSAGE_TYPE, "GHNT_OPEN_SETTINGS");
+  const created = [];
+  globalThis.chrome.tabs = { create: async (o) => created.push(o.url) };
+  globalThis.chrome.runtime = { ...globalThis.chrome.runtime, getURL: (p) => `chrome-extension://abc/${p}` };
+  assert.deepEqual(await settings.handleMessage(), {});
+  assert.deepEqual(created, ["chrome-extension://abc/options/options.html#tokens-section"]);
+});

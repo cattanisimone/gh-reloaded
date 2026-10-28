@@ -219,3 +219,13 @@ function apiRows(items) {
     .filter((x) => x.k)
     .map((x) => ({ ...x.k, reason: x.i.reason || "unknown", inPage: false }));
 }
+
+// The panel's "Settings → GitHub tokens" link: a content script cannot open
+// the options page at a section itself.
+export const settings = {
+  MESSAGE_TYPE: "GHNT_OPEN_SETTINGS",
+  handleMessage: async () => {
+    await chrome.tabs.create({ url: chrome.runtime.getURL("options/options.html#tokens-section") });
+    return {};
+  },
+};
