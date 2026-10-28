@@ -23,7 +23,7 @@
   z-index: 100;
   box-sizing: border-box;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 14px;
   color: var(--fgColor-default, #1f2328);
   background: var(--bgColor-default, #fff);
   border-radius: 12px;
@@ -56,7 +56,7 @@
 .ghnt-thumb { display: block; aspect-ratio: 16 / 9; border-radius: 4px; background: var(--bgColor-neutral-muted, #818b981f); border: 1px solid var(--borderColor-default, #d1d9e0); }
 .ghnt-card-title { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12px; }
 .ghnt-card-title input { margin: 0; }
-@container (max-width: 400px) {
+@container (max-width: 351px) {
   .ghnt-cards { grid-template-columns: minmax(0, 1fr); }
   .ghnt-card { flex-direction: row; align-items: center; gap: 8px; }
   .ghnt-thumb { width: 96px; flex: none; }

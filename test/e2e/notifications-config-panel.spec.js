@@ -361,3 +361,43 @@ for (const scheme of ["light", "dark"]) {
     }
   });
 }
+
+test("three layout cards share one row on desktop", async ({ context, page }) => {
+  await boot(context, page, { modules: "all", viewport: { width: 1280, height: 1400 } });
+  await open(page);
+  const ys = await panel(page).locator(".ghnt-card").evaluateAll((c) => c.map((e) => Math.round(e.getBoundingClientRect().top)));
+  expect(new Set(ys).size, JSON.stringify(ys)).toBe(1);
+});
+
+test("a Turbo snapshot restore leaves one working button", async ({ context, page }) => {
+  await boot(context, page);
+  await expect(button(page)).toHaveCount(1);
+  await page.evaluate(() => {
+    window.__snap = document.getElementById("main").cloneNode(true);
+    history.pushState({}, "", "/notifications/subscriptions");
+    document.dispatchEvent(new Event("turbo:load"));
+  });
+  await expect(button(page)).toHaveCount(0);
+  await page.evaluate(() => {
+    history.pushState({}, "", "/notifications");
+    document.getElementById("main").replaceWith(window.__snap);
+    document.dispatchEvent(new Event("turbo:load"));
+  });
+  await expect(button(page)).toHaveCount(1);
+  await open(page);
+});
+
+test("a registered module without defaultOn is shown off, like the registry runs it", async ({ context, page }) => {
+  const { world } = await boot(context, page);
+  await world.evaluate(`GHNotifications.registry.register({ id: "reasonTags" })`);
+  await open(page);
+  await expect(sw(page, "Tags")).toHaveAttribute("aria-checked", "false");
+});
+
+test("engine running with no token: a note and the Settings link, not a clean look", async ({ context, page }) => {
+  const { world } = await boot(context, page, { modules: "all" });
+  await expect.poll(() => world.evaluate("GHNotifications.engine.getState().phase")).toBe("ready");
+  await open(page);
+  await expect(panel(page)).toContainText("No GitHub token is configured");
+  await expect(panel(page).getByRole("button", { name: /GitHub tokens/ })).toBeVisible();
+});

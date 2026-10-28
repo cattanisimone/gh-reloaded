@@ -60,7 +60,8 @@
     const caps = state.capabilities || {};
     const notes = [];
     const api = caps["api:notifications"];
-    if (api === "missing-scope") notes.push("The Notifications API needs the notifications scope of a classic token: some reasons are shown as “Unverifiable”.");
+    if (api === "not-tried" && state.phase === "ready") notes.push("No GitHub token is configured: reasons that need GitHub data are shown as \u201cUnverifiable\u201d.");
+    else if (api === "missing-scope") notes.push("The Notifications API needs the notifications scope of a classic token: some reasons are shown as “Unverifiable”.");
     else if (api === "unavailable") notes.push("The Notifications API could not be read with your token: some reasons are shown as “Unverifiable”.");
     else if (api === "rate-limited") notes.push("GitHub's rate limit was reached: classifications update when it resets.");
     const owners = Object.entries(caps).filter(([k, v]) => k.startsWith("pr:") && (v === "no-token" || v === "denied")).map(([k]) => k.slice(3));
@@ -102,6 +103,8 @@
     }
 
     function ensureButton() {
+      // A Turbo snapshot restore brings back a dead clone of an earlier button.
+      for (const stray of document.querySelectorAll(".ghnt-triage")) if (stray !== wrap) stray.remove();
       if (wrap && wrap.isConnected) {
         const anchor = findAnchor(document);
         if (anchor && anchor.nextElementSibling === wrap) return;
@@ -139,8 +142,8 @@
         if (!reg) note = "Not available in this version.";
         else if (!available) note = reg.reason || "Not available right now.";
         else if (native) note = "Kept, paused while the native inbox is shown.";
-        else if (def.id === "reasonWhy" && !prefs.moduleOn(current.modules, "reasonTags")) note = "Opens from a reason tag: turn Tags on to use it.";
-        const on = prefs.moduleOn(current.modules, def.id);
+        else if (def.id === "reasonWhy" && !(list.get("reasonTags") ? list.get("reasonTags").enabled : prefs.moduleOn(current.modules, "reasonTags"))) note = "Opens from a reason tag: turn Tags on to use it.";
+        const on = reg ? reg.enabled : prefs.moduleOn(current.modules, def.id);
         const r = switchRow(def.id, def.label, def.description, on, { disabled: !available, note });
         r.sw.addEventListener("click", () => writeModule(def.id, !on));
         mods.push(r.row);
