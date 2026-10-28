@@ -7,10 +7,11 @@
 // the inbox is often reached by soft navigation (the bell icon).
 //
 // The registry and the engine are exposed on GHNotifications for the modules
-// that later register themselves; this script renders nothing.
+// that register themselves. The only thing rendered here is the settings
+// panel's button (panel.js), which follows the route, not the engine.
 
 (function () {
-  const KEYS = { modules: "ghntModules", nativeInbox: "ghntNativeInbox", windowDays: "ghntMentionWindowDays" };
+  const KEYS = { ...globalThis.GHNT_PREFS.KEYS, windowDays: "ghntMentionWindowDays" };
   const MESSAGE_TYPE = "GHNT_FETCH"; // matches background/notifications.js
 
   const registry = globalThis.GHNT_REGISTRY.createRegistry();
@@ -41,8 +42,21 @@
     },
   });
 
+  const panel = globalThis.GHNT_PANEL.create({
+    registry,
+    engine,
+    prefs: globalThis.GHNT_PREFS,
+    route: globalThis.GHNT_ROUTE,
+    storage: chrome.storage.local,
+    openSettings: () => {
+      if (extensionAlive()) chrome.runtime.sendMessage({ type: "GHNT_OPEN_SETTINGS" });
+    },
+  });
+
   function sync() {
     if (!extensionAlive()) return;
+    // The panel's button follows the route and the page's own header, never the engine.
+    panel.sync();
     const run = globalThis.GHNT_ROUTE.isInboxRoute(location.href) && registry.hasActive();
     if (run && !engine.isActive()) {
       engine.start();
@@ -64,7 +78,9 @@
       return;
     }
     windowDays = parseWindow(stored[KEYS.windowDays]);
-    registry.setConfig({ modules: stored[KEYS.modules], nativeInbox: stored[KEYS.nativeInbox] === true });
+    const prefs = globalThis.GHNT_PREFS.normalize(stored);
+    registry.setConfig({ modules: stored[KEYS.modules], nativeInbox: prefs.nativeInbox, layout: prefs.layout });
+    panel.setPrefs(stored);
     sync();
   }
 
@@ -78,7 +94,7 @@
 
   chrome.storage.onChanged.addListener((changes) => {
     if (!extensionAlive()) return;
-    if (changes[KEYS.modules] || changes[KEYS.nativeInbox]) loadPrefs();
+    if (changes[KEYS.modules] || changes[KEYS.nativeInbox] || changes[KEYS.layout]) loadPrefs();
     if (changes[KEYS.windowDays]) {
       windowDays = parseWindow(changes[KEYS.windowDays].newValue);
       engine.reclassify();
@@ -90,7 +106,7 @@
   let pending = false;
   const observer = new MutationObserver(() => {
     if (!extensionAlive()) return observer.disconnect();
-    if (pending || !engine.isActive()) return;
+    if (pending || !(engine.isActive() || globalThis.GHNT_ROUTE.isInboxRoute(location.href))) return;
     pending = true;
     setTimeout(() => {
       pending = false;

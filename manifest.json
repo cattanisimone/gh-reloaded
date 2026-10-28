@@ -142,10 +142,15 @@
       "js": [
         "features/notifications/route.js",
         "features/notifications/classify.js",
+        "features/notifications/prefs.js",
         "features/notifications/registry.js",
         "features/notifications/collect.js",
         "features/notifications/engine.js",
+        "features/notifications/panel.js",
         "features/notifications/content.js"
+      ],
+      "css": [
+        "features/notifications/panel.css"
       ],
       "run_at": "document_idle"
     },

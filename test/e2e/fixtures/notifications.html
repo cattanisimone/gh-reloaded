@@ -9,6 +9,14 @@
   real wrapper is UNVERIFIED (see the PR): the collector finds a known label by its text.
   Anchors to keep: meta[name="user-login"], the rows above, the pagination nav.
 
+  Filter header (measured on the signed-in live inbox, structure and geometry only): a flex row
+  d-flex flex-column flex-lg-row with NO gap, whose direct children are wrappers that space
+  themselves with an 8px margin-left from the Primer lg breakpoint (1012px) and are full width,
+  8px apart, below it: [All | Unread] [query input] [Sort by: …] [Group by: …] and an empty
+  notification-recent-alerts node (0px). Below 1012px the Manage notifications / Inbox / Filter
+  dropdowns stack above the input. The Primer pieces used here are inlined (a few utilities and the
+  medium secondary Button) with Primer's own variable names, light and dark.
+
   One page, three routes (the tests serve it for every github.com navigation):
     /notifications …… the inbox (page 1; ?after=p2 is page 2; #relative = relative hrefs; #empty = no rows)
     /notifications/subscriptions …… the subscriptions page; it still carries rows, so a test can prove the
@@ -22,11 +30,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Notifications</title>
 <style>
-  :root { color-scheme: light dark; }
+  :root { color-scheme: light dark; --bgColor-default: #fff; --bgColor-muted: #f6f8fa; --bgColor-neutral-muted: #818b981f; --borderColor-default: #d1d9e0; --fgColor-default: #1f2328; --fgColor-muted: #59636e; --bgColor-accent-muted: #ddf4ff; --borderColor-accent-emphasis: #0969da; --fgColor-accent: #0969da; --bgColor-accent-emphasis: #0969da; --fgColor-onEmphasis: #fff; --shadow-floating-small: 0 0 0 1px #d1d9e0, 0 6px 12px -3px #25292e0a, 0 6px 18px 0 #25292e1f; }
+  @media (prefers-color-scheme: dark) { :root { --bgColor-default: #0d1117; --bgColor-muted: #151b23; --bgColor-neutral-muted: #656c7633; --borderColor-default: #3d444d; --fgColor-default: #f0f6fc; --fgColor-muted: #9198a1; --bgColor-accent-muted: #388bfd1a; --borderColor-accent-emphasis: #1f6feb; --fgColor-accent: #4493f8; --bgColor-accent-emphasis: #1f6feb; --fgColor-onEmphasis: #fff; --shadow-floating-small: 0 0 0 1px #3d444d, 0 8px 16px -4px #01040966, 0 4px 32px -8px #01040966; } }
+  .d-flex { display: flex; } .flex-column { flex-direction: column; } .flex-auto { flex: 1 1 auto; } .min-width-0 { min-width: 0; }
+  .filters-row { margin-bottom: 16px; }
+  .filters-row > .f-item { width: 100%; margin-bottom: 8px; }
+  .filters-row > .f-item.f-dd { display: block; }
+  .filters-row > .f-item.f-dd-lg { display: block; }
+  @media (min-width: 1012px) {
+    .flex-lg-row { flex-direction: row; }
+    .filters-row > .f-item { width: auto; flex-shrink: 0; margin-left: 8px; margin-bottom: 0; }
+    .filters-row > .f-item.f-first { margin-left: 0; }
+    .filters-row > .f-item.f-query { flex: 1 1 auto; min-width: 200px; flex-shrink: 1; }
+    .filters-row > .f-item.f-dd { display: none; }
+  }
+  .filters-row input[type=search] { box-sizing: border-box; width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--borderColor-default); border-radius: 6px; background: var(--bgColor-default); color: var(--fgColor-default); font: inherit; }
+  .BtnGroup { display: flex; } .BtnGroup .Button { border-radius: 0; margin-left: -1px; } .BtnGroup .Button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; } .BtnGroup .Button:last-child { border-radius: 0 6px 6px 0; }
+  .Button { box-sizing: border-box; position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 0 12px; border: 1px solid var(--borderColor-default); border-radius: 6px; font: inherit; font-size: 14px; font-weight: 500; line-height: 21px; cursor: pointer; white-space: nowrap; }
+  .Button--secondary { background: var(--bgColor-muted); color: var(--fgColor-default); box-shadow: 0 1px 0 rgba(31,35,40,.04); transition: background-color .08s; }
+  .Button--secondary:hover { background: var(--bgColor-neutral-muted); }
+  .Button:focus-visible { outline: 2px solid #0969da; outline-offset: -2px; }
+  .Button--medium { min-width: 0; } .Button-content, .Button-label { display: inline-flex; align-items: center; } .Button-trailingVisual { display: inline-flex; color: var(--fgColor-muted); }
+  .filters-row .f-item > .Button { width: 100%; }
+  @media (min-width: 1012px) { .filters-row .f-item > .Button { width: auto; } }
+  notification-recent-alerts { display: block; width: 0; height: 0; }
   body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; background: #fff; color: #1f2328; }
   @media (prefers-color-scheme: dark) { body { background: #0d1117; color: #e6edf3; } a { color: #58a6ff; } }
   header { height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 16px; border-bottom: 1px solid #d1d9e0; }
-  main { max-width: 1012px; margin: 0 auto; padding: 24px 16px; }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
   ul { list-style: none; margin: 0; padding: 0; border: 1px solid #d1d9e0; border-radius: 6px; }
   li.notifications-list-item { display: flex; gap: 8px; padding: 8px 16px; border-top: 1px solid #d1d9e0; }
   li.notifications-list-item:first-child { border-top: 0; }
@@ -61,6 +92,17 @@
       row(6, href('/acme/web/pull/380', 6), 'Rename the helper', 'acme/web #380', 'review wanted', false),
     ];
   }
+  const caret = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="m4.427 7.427 3.396 3.396a.25.25 0 0 0 .354 0l3.396-3.396A.25.25 0 0 0 11.396 7H4.604a.25.25 0 0 0-.177.427Z"/></svg>';
+  const btn = (label, extra) => '<button type="button" class="Button Button--secondary Button--medium"' + (extra || '') + '><span class="Button-content"><span class="Button-label">' + label + '</span></span><span class="Button-visual Button-trailingVisual">' + caret + '</span></button>';
+  const FILTERS = '<div class="filters-row d-flex flex-column flex-lg-row" id="filters">' +
+    '<div class="f-item f-dd f-first">' + btn('Manage notifications') + '</div>' +
+    '<div class="f-item f-dd">' + btn('Inbox') + '</div>' +
+    '<div class="f-item f-dd">' + btn('Filter') + '</div>' +
+    '<div class="f-item f-first"><div class="BtnGroup"><button type="button" class="Button Button--secondary Button--medium">All</button><button type="button" class="Button Button--secondary Button--medium">Unread</button></div></div>' +
+    '<div class="f-item f-query min-width-0"><input type="search" aria-label="Filter notifications" placeholder="Filter notifications"></div>' +
+    '<div class="f-item" id="sort-wrap">' + btn('Sort by: Newest to oldest') + '</div>' +
+    '<div class="f-item" id="group-wrap">' + btn('Group by: Date') + '</div>' +
+    '<notification-recent-alerts></notification-recent-alerts></div>';
   function render() {
     const main = document.getElementById('main');
     const path = location.pathname.replace(/\/+$/, '');
@@ -68,6 +110,7 @@
       const empty = location.hash === '#empty';
       const page = new URLSearchParams(location.search).get('after') === 'p2' ? 'p2' : 'p1';
       main.innerHTML = '<h1>' + (path === '/notifications' ? 'Notifications' : 'Subscriptions') + '</h1>' +
+        (path === '/notifications' ? FILTERS : '') +
         '<ul>' + (empty ? '' : rows(page, location.hash === '#relative').join('')) + '</ul>' +
         '<nav aria-label="Pagination">' + (page === 'p1' ? '<a id="next" href="/notifications?after=p2">Next</a>' : '<a id="prev" href="/notifications">Previous</a>') + '</nav>';
     } else {
