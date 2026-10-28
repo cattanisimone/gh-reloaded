@@ -63,18 +63,35 @@ test("the button is the next sibling of the Group by wrapper, before the alerts 
   expect(where).toEqual({ next: true, before: "notification-recent-alerts", parentIsRow: true, label: "Triage" });
 });
 
-test("Group by missing: no button anywhere, it appears when the control is added", async ({ context, page }) => {
+test("Group by wins over Sort by; Sort by is the designed fallback only while Group by is absent", async ({ context, page }) => {
+  await boot(context, page);
+  await expect(button(page)).toHaveCount(1);
+  const after = () => page.evaluate(() => document.querySelector(".ghnt-triage")?.previousElementSibling?.id ?? null);
+  expect(await after()).toBe("group-wrap");
+  await page.evaluate(() => {
+    window.__g = document.getElementById("group-wrap");
+    window.__g.remove();
+  });
+  await expect.poll(after).toBe("sort-wrap");
+  await expect(button(page)).toHaveCount(1);
+  await page.evaluate(() => document.getElementById("sort-wrap").after(window.__g));
+  await expect.poll(after).toBe("group-wrap");
+  await expect(button(page)).toHaveCount(1);
+});
+
+test("neither Group by nor Sort by: no button anywhere, it appears when one is added", async ({ context, page }) => {
   await boot(context, page);
   await expect(button(page)).toHaveCount(1);
   await page.evaluate(() => {
-    const g = document.getElementById("group-wrap");
-    window.__g = g;
-    g.remove();
+    window.__g = document.getElementById("group-wrap");
+    window.__s = document.getElementById("sort-wrap");
+    window.__g.remove();
+    window.__s.remove();
     document.querySelector(".ghnt-triage")?.remove();
   });
   await page.waitForTimeout(800);
   await expect(button(page)).toHaveCount(0);
-  await page.evaluate(() => document.getElementById("sort-wrap").after(window.__g));
+  await page.evaluate(() => document.getElementById("filters").prepend(window.__s));
   await expect(button(page)).toHaveCount(1);
 });
 
@@ -137,6 +154,12 @@ for (const width of [1500, 1100, 1020, 1011, 800, 360]) {
     const mine = await metrics(button(page));
     const theirs = await metrics(group);
     expect({ ...mine, w: 0 }).toEqual({ ...theirs, w: 0 });
+    // The label sits where Group by's does: the content grows (flex 1 0 auto), it is not left-packed.
+    const content = (loc) => loc.evaluate((b) => { const c = b.querySelector(".Button-content"); const r = c.getBoundingClientRect(), br = b.getBoundingClientRect(); return { grow: getComputedStyle(c).flexGrow, left: Math.round(r.left - br.left), fill: Math.abs(r.width - (br.width - 2 - 12 - (b.querySelector(".Button-trailingVisual")?.getBoundingClientRect().width || 0))) < 40 }; });
+    const myContent = await content(button(page));
+    const theirContent = await content(group);
+    expect(myContent.grow).toBe(theirContent.grow);
+    expect(myContent.fill, JSON.stringify([myContent, theirContent])).toBe(theirContent.fill);
     const geo = await page.evaluate(() => {
       const r = (e) => e.getBoundingClientRect();
       const wrap = document.querySelector(".ghnt-triage");
@@ -350,13 +373,19 @@ for (const scheme of ["light", "dark"]) {
         const cards = [...p.querySelectorAll(".ghnt-card")].map((c) => { const r = c.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; });
         const thumbs = [...p.querySelectorAll(".ghnt-thumb")].map((t) => { const r = t.getBoundingClientRect(); return r.width / r.height; });
         const sel = getComputedStyle(p.querySelector(".ghnt-card.is-selected")).borderTopColor;
-        return { min: Math.min(...text), cards, thumbs, selected: ratio(sel, bg), scroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth };
+        const marks = [...p.querySelectorAll(".ghnt-thumb")].map((t) => t.querySelectorAll("i").length);
+        const defaultMarker = p.querySelector(".ghnt-default")?.textContent;
+        const cardLines = [...p.querySelectorAll(".ghnt-card .ghnt-hint, .ghnt-card-title")].map((c) => Math.round(c.getBoundingClientRect().height / 18));
+        return { marks, defaultMarker, cardLines, min: Math.min(...text), cards, thumbs, selected: ratio(sel, bg), scroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth };
       });
       expect(res.min, `${scheme} ${width}`).toBeGreaterThanOrEqual(4.5);
       expect(res.selected, `${scheme} ${width} selected border`).toBeGreaterThanOrEqual(3);
       expect(res.scroll).toBe(true);
       expect(new Set(res.cards.map((c) => c.join("x"))).size, JSON.stringify(res.cards)).toBe(1);
       for (const t of res.thumbs) expect(Math.abs(t - 16 / 9)).toBeLessThan(0.05);
+      expect(res.marks, `${scheme} ${width} thumbnails`).toEqual([6, 7, 3].concat([6, 7, 3]).slice(0, 3));
+      expect(res.defaultMarker).toBe("\u2713 Default");
+      expect(res.cardLines.every((n) => n <= 3), JSON.stringify(res.cardLines)).toBe(true);
       await page.keyboard.press("Escape");
     }
   });

@@ -42,10 +42,16 @@
     return svg;
   }
 
-  // The visible "Group by" control and the filter-row child that holds it.
+  // The visible "Group by" control and the filter-row child that holds it. It
+  // is missing on Saved, Done, Read and reason-filtered lists; there the
+  // designed fallback is "Sort by", used only while "Group by" is absent.
   function findAnchor(doc) {
+    return findControl(doc, /^\s*Group by\b/i) || findControl(doc, /^\s*Sort by\b/i);
+  }
+
+  function findControl(doc, label) {
     for (const b of doc.querySelectorAll("button, summary, [role='button']")) {
-      if (b.closest(".ghnt-triage") || !/^\s*Group by\b/i.test(b.textContent || "")) continue;
+      if (b.closest(".ghnt-triage") || !label.test(b.textContent || "")) continue;
       let node = b;
       for (let depth = 0; node && node.parentElement && depth < 6; depth++, node = node.parentElement) {
         const parent = node.parentElement;
@@ -53,6 +59,17 @@
       }
     }
     return null;
+  }
+
+  // A schematic of one layout: decorative, drawn with Primer colours in CSS.
+  function thumb(id) {
+    const bar = (cls) => el("i", { class: cls });
+    const rows = () => el("b", { class: "ghnt-t-rows" }, bar(""), bar(""), bar(""));
+    const parts =
+      id === "integrated" ? [el("b", { class: "ghnt-t-rail" }, bar(""), bar(""), bar("")), rows()]
+      : id === "quickbar" ? [el("b", { class: "ghnt-t-pills" }, bar(""), bar(""), bar(""), bar("")), rows()]
+      : [el("b", { class: "ghnt-t-heads" }, bar("ghnt-t-head"), bar("ghnt-t-head"), bar("ghnt-t-head"))];
+    return el("span", { class: `ghnt-thumb ghnt-thumb-${id}`, "aria-hidden": "true" }, parts);
   }
 
   // Notes about missing data, from the capability states the engine reports.
@@ -163,7 +180,7 @@
           const radio = el("input", { type: "radio", name: "ghnt-layout", value: l.id, checked, "data-ghnt-focus": `layout-${l.id}` });
           radio.checked = checked;
           radio.addEventListener("change", () => writeLayout(l.id));
-          group.append(el("label", { class: "ghnt-card" + (checked ? " is-selected" : "") }, el("span", { class: "ghnt-thumb", "aria-hidden": "true" }), el("span", { class: "ghnt-card-title" }, radio, el("span", { text: l.label })), el("span", { class: "ghnt-hint", text: l.id === prefs.DEFAULT_LAYOUT ? "Default · " + l.description : l.description })));
+          group.append(el("label", { class: "ghnt-card" + (checked ? " is-selected" : "") }, thumb(l.id), el("span", { class: "ghnt-card-title" }, radio, el("span", { text: l.label }), l.id === prefs.DEFAULT_LAYOUT ? el("span", { class: "ghnt-default", text: "\u2713 Default" }) : null), el("span", { class: "ghnt-hint", text: l.description })));
         }
         layoutSection.append(group);
       }

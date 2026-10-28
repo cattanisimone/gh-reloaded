@@ -20,8 +20,8 @@
   ];
 
   const LAYOUTS = [
-    { id: "integrated", label: "Integrated navigation", description: "Categories in the inbox's own navigation" },
-    { id: "quickbar", label: "Quick bar", description: "Horizontal filters" },
+    { id: "integrated", label: "Integrated navigation", description: "Side navigation" },
+    { id: "quickbar", label: "Quick bar", description: "Filter pills" },
     { id: "grouped", label: "Grouped sections", description: "Collapsible groups" },
   ];
   const DEFAULT_LAYOUT = "integrated";
