@@ -23,13 +23,16 @@
   .d{font-size:12px;font-weight:400;line-height:18px;color:var(--muted);white-space:nowrap}
   .df{font-size:12px;font-weight:400;line-height:18px;color:var(--accent)}
   .rows .cards{grid-template-columns:minmax(0,1fr)}
-  .rows .cd{grid-template-columns:80px minmax(0,1fr);grid-template-rows:18px 18px 18px;column-gap:8px}
-  .rows .th{grid-row:1/4;align-self:center}
+  .rows .cd{grid-template-columns:96px minmax(0,1fr);grid-template-rows:none;row-gap:0;column-gap:8px;align-items:center}
+  .rows .th{grid-row:1;width:96px;height:54px}
+  .rows .tx{display:flex;flex-direction:column;justify-content:center;min-width:0}
   .rows .t{white-space:normal}
 </style></head><body><main>
 
 <h1>#105 · Triage settings panel: re-plan of the layout cards</h1>
 <p class="meta">Size: normal · PR <a href="https://github.com/cattanisimone/gh-reloaded/pull/107">#107</a> · Issue <a href="https://github.com/cattanisimone/gh-reloaded/issues/105">#105</a> · Goal: replace the layout-card design, which needed a fix in every review round, with one that meets every constraint by construction.</p>
+
+<div class="box new"><b>Revision (review of <code>3e8836a</code>).</b> (1) One breakpoint rule with an exact boundary: 3 columns when the cards’ container is at least 396px, i.e. viewport ≥ 456px; the matrix adds 439, 440, 455, 456, 471 and 472. (2) The wide font is bundled with <code>@font-face</code> from <code>test/e2e/fixtures/</code>, and a guard checks that it really renders before the card assertions run. (3) The fixture gets every live rule that reaches the panel (body 14px/21px, <code>label</code>, <code>p</code>, <code>h2</code>), and the panel reset also zeroes <code>margin</code>. (4) Row mode has no reserved lines: the title takes one line, the marker exists only on Integrated, and equal heights are asserted within each layout.</div>
 
 <div class="box"><b>What this re-plan changes and what it keeps.</b> Kept as approved at <code>6a5f33e</code> and confirmed by the last two reviews: the Triage ▾ button (anchor on <i>Group by</i>, designed fallback after <i>Sort by</i>, Primer look, 1012px switch), the preferences contract (<code>prefs.js</code>, <code>ghntModules</code>, <code>ghntNativeInbox</code>, <code>ghntLayout</code>), the route gating, the state matrix, the thumbnails, permissions (none). The <a href="https://github.com/cattanisimone/gh-reloaded/blob/c003a3ba309c9a72e4d210a4f61736c1f4dbffb5/.plans/105.html">earlier plan</a> still holds for those parts. <b>Replaced:</b> the panel width, the card box model, the card copy, the narrow layout, and the way the card tests measure text.</div>
 
@@ -52,28 +55,30 @@
 <tr><td>C4</td><td>“✓ Default” on its own line, accent colour <code>var(--fgColor-accent, #0969da)</code>, never in the title row</td><td>Reviews 4, 5, mockup</td></tr>
 <tr><td>C5</td><td>Description regular (400) and muted, whatever GitHub’s <code>label</code> rule says</td><td>Review 5 (live 600)</td></tr>
 <tr><td>C6</td><td>Every element in a card stays inside the card; <code>panel.scrollWidth ≤ panel.clientWidth</code>; document <code>scrollWidth</code> = viewport</td><td>Review 4, issue</td></tr>
-<tr><td>C7</td><td>Widths 360 / 600 / 800 / 1011 / 1012 / 1280 / 1500, light and dark; narrow viewport stays readable</td><td>Reviews 1, 4, issue</td></tr>
+<tr><td>C7</td><td>Widths 360 / 439 / 440 / 455 / 456 / 471 / 472 / 600 / 800 / 1011 / 1012 / 1280 / 1500, light and dark. One breakpoint rule: 3 columns at a container of ≥ 396px (viewport ≥ 456px), rows at ≤ 455px; narrow viewport stays readable</td><td>Reviews 1, 4, 6, issue</td></tr>
 <tr><td>C8</td><td>One panel width used in plan, mockup and tests</td><td>Review 2</td></tr>
 <tr><td>C9</td><td>Keyboard: Tab into the group, arrows move the choice, visible focus ring; screen reader announces a group of exclusive options</td><td>Issue</td></tr>
-<tr><td>C10</td><td>Tests run with GitHub’s font stack and GitHub’s global rules in the fixture, and still have margin when the font is wider</td><td>Review 4, rounds 2–3</td></tr>
+<tr><td>C10</td><td>Tests run with GitHub’s font stack and GitHub’s global rules in the fixture (measured live, see “Live values”), and still have margin with a wider font that is bundled in the repo and proven to render</td><td>Reviews 4, 6, rounds 2–3</td></tr>
 <tr><td>C11</td><td>Unchanged and passing: button 32px, 6px radius, <code>0 12px</code>, label centred like Group by; open state tinted with accent; Sort by fallback</td><td>Reviews 1–4</td></tr>
+<tr><td>C12</td><td>Row mode wastes no space: the title takes one line (a second only if it wraps), no empty marker line, rows of equal height</td><td>Review 6</td></tr>
 </table></div>
 
 <h2>New approach: a fixed card grid with a text budget</h2>
 <ul>
 <li><b>Panel 440px</b> (was 380; the mockup panel is about 455), <code>min(440px, 100vw − 32px)</code>. Cards become 132px instead of 112px, and the title and description no longer share a row with the radio.</li>
-<li><b>One card box model, fixed rows:</b> thumbnail · title (2 lines reserved, 36px) · description (1 line, <code>nowrap</code>) · marker line (18px, “✓ Default” only on Integrated, empty elsewhere). Heights are equal by construction, and nothing needs to measure itself.</li>
+<li><b>3-column card box model, fixed rows:</b> thumbnail · title (2 lines reserved, 36px) · description (1 line, <code>nowrap</code>) · marker line (18px, “✓ Default” only on Integrated, empty elsewhere). Heights are equal by construction, and nothing needs to measure itself.</li>
 <li><b>The radio is visually hidden, not removed.</b> A native <code>&lt;input type="radio"&gt;</code> per card keeps the radiogroup, arrow keys and screen reader semantics (C9). The visible indicator is a 2px accent border, an accent tint and a ✓ badge in the thumbnail corner (C1). The focus ring is drawn on the card with <code>.ghnt-card:has(input:focus-visible)</code>.</li>
-<li><b>Panel-local text reset:</b> every text class in the panel sets its own <code>font-size</code>, <code>font-weight</code>, <code>line-height</code> and <code>color</code>, so GitHub’s <code>label</code>, <code>h2</code> or <code>p</code> rules cannot leak in (C5).</li>
-<li><b>Copy limited by a budget:</b> every description must fit on one line in the <i>widest</i> font available to the tests with at least 6px to spare, and every title word must fit on a line. New descriptions (measured in DejaVu Sans 12px, which is wider than GitHub’s stack): <i>In the sidebar</i> 83px, <i>Filter pills</i> 58px, <i>Collapsible list</i> 87px. Budget: 95px. The longest title word, <i>navigation</i>, is 78px at 13px/600.</li>
-<li><b>Narrow mode</b> is a different grid template on the same markup: when the cards’ container is under 380px (viewport &lt; ~470px), each card becomes a full-width row: thumbnail 80px on the left, the three text lines on the right (≈190px of text at 360). Same rows, same budget, no separate CSS for text.</li>
+<li><b>Panel-local text reset:</b> every text element the panel renders sets its own <code>font-size</code>, <code>font-weight</code>, <code>line-height</code>, <code>color</code> and <code>margin: 0</code> (spacing comes from the grid and flex gaps only), so GitHub’s <code>label</code> (600), <code>p</code> (<code>margin-bottom: 10px</code>) or <code>h2</code> (24px/36px) rules cannot leak in (C5).</li>
+<li><b>Copy limited by a budget:</b> every description must fit on one line in the <i>widest</i> font the tests use with at least 6px to spare. Budget: 95px. Widths at 12px/400: DejaVu Sans <i>In the sidebar</i> 83px, <i>Filter pills</i> 57px, <i>Collapsible list</i> 87px; live GitHub font 77, 55 and 82px. The longest title word, <i>navigation</i>, is 78px at 13px/600, and the whole title <i>Integrated navigation</i> is 160px.</li>
+<li><b>One breakpoint rule:</b> a container query on the panel (content box = panel width − 28px of padding, minus a classic scrollbar if one shows). At <b>≥ 396px</b> of content, 3 columns; below, rows. Without a panel scrollbar, panel = <code>min(440, vw − 32)</code> and content = <code>min(412, vw − 60)</code>, so the exact boundary is <b>viewport 455px → rows, 456px → 3 columns</b>. The narrowest 3-column card is 126.7px with 106.7px of text: 11.7px above the budget and 20px above the widest description. A 15px classic scrollbar at full width leaves 397px, so it stays 3 columns.</li>
+<li><b>Row mode</b> (viewport ≤ 455) uses a different template on the same markup, without the reserved rows: thumbnail 96×54 on the left and a vertically centred text column of 18px lines with no gap: title (one line, a second only if it wraps), description, and “✓ Default” only on Integrated (no empty marker line elsewhere). Every row is 54px of content (the thumbnail height, also 3 × 18px), so the rows have equal height without empty bands. At 360 the text column is 176px, 16px more than the full title in DejaVu, so no title wraps at any matrix width.</li>
 </ul>
 
 <h2>Mockup</h2>
-<p class="small muted">Drawn with the exact box model above (440px panel, 132px cards; 328px panel at a 360px viewport). Selected card = 2px accent border, tint and ✓ badge; the radio is hidden but present.</p>
+<p class="small muted">Drawn with the exact box model above (440px panel, 132px cards; 328px panel at a 360px viewport, rows with a 96×54 thumbnail). Selected card = 2px accent border, tint and ✓ badge; the radio is hidden but present.</p>
 <div class="scroll"><div class="demo">
  <div class="pn new" style="width:440px">
-  <p class="cap">TRIAGE LAYOUT · ≥ 472px viewport</p>
+  <p class="cap">TRIAGE LAYOUT · ≥ 456px viewport</p>
   <div class="cards">
    <div class="cd sel"><div class="th"><b style="width:24%;display:flex;flex-direction:column;gap:3px"><i></i><i></i><i></i></b><b style="flex:1;display:flex;flex-direction:column;gap:3px"><i style="background:#0969da;opacity:.7"></i><i></i><i></i></b></div><span class="ck">✓</span><span class="t">Integrated navigation</span><span class="d">In the sidebar</span><span class="df">✓ Default</span></div>
    <div class="cd"><div class="th" style="flex-direction:column"><b style="display:flex;gap:3px"><i style="width:20%;height:6px;background:#0969da"></i><i style="width:20%;height:6px"></i><i style="width:20%;height:6px"></i></b><i></i><i></i></div><span class="t">Quick bar</span><span class="d">Filter pills</span><span></span></div>
@@ -81,11 +86,11 @@
   </div>
  </div>
  <div class="pn rows new" style="width:328px">
-  <p class="cap">TRIAGE LAYOUT · 360px viewport</p>
+  <p class="cap">TRIAGE LAYOUT · ≤ 455px viewport (360 shown)</p>
   <div class="cards">
-   <div class="cd sel"><div class="th"><b style="width:24%;display:flex;flex-direction:column;gap:3px"><i></i><i></i></b><b style="flex:1;display:flex;flex-direction:column;gap:3px"><i style="background:#0969da;opacity:.7"></i><i></i></b></div><span class="ck" style="left:58px;right:auto;top:6px">✓</span><span class="t">Integrated navigation</span><span class="d">In the sidebar</span><span class="df">✓ Default</span></div>
-   <div class="cd"><div class="th" style="flex-direction:column"><b style="display:flex;gap:3px"><i style="width:20%;height:6px;background:#0969da"></i><i style="width:20%;height:6px"></i></b><i></i></div><span class="t">Quick bar</span><span class="d">Filter pills</span><span></span></div>
-   <div class="cd"><div class="th" style="flex-direction:column;gap:5px"><i style="height:5px;background:#1f2328"></i><i style="height:5px;background:#1f2328"></i></div><span class="t">Grouped sections</span><span class="d">Collapsible list</span><span></span></div>
+   <div class="cd sel"><div class="th"><b style="width:24%;display:flex;flex-direction:column;gap:3px"><i></i><i></i><i></i></b><b style="flex:1;display:flex;flex-direction:column;gap:3px"><i style="background:#0969da;opacity:.7"></i><i></i><i></i></b></div><span class="ck" style="left:82px;right:auto;top:6px">✓</span><div class="tx"><span class="t">Integrated navigation</span><span class="d">In the sidebar</span><span class="df">✓ Default</span></div></div>
+   <div class="cd"><div class="th" style="flex-direction:column"><b style="display:flex;gap:3px"><i style="width:20%;height:6px;background:#0969da"></i><i style="width:20%;height:6px"></i><i style="width:20%;height:6px"></i></b><i></i><i></i></div><div class="tx"><span class="t">Quick bar</span><span class="d">Filter pills</span></div></div>
+   <div class="cd"><div class="th" style="flex-direction:column;gap:6px"><i style="height:6px;background:#1f2328"></i><i style="height:6px;background:#1f2328"></i><i style="height:6px;background:#1f2328"></i></div><div class="tx"><span class="t">Grouped sections</span><span class="d">Collapsible list</span></div></div>
   </div>
  </div>
 </div></div>
@@ -95,9 +100,10 @@
 <tr><th>Viewport</th><th>Panel</th><th>Cards</th><th>Text column</th><th>Never</th></tr>
 <tr><td>≥ 1012 (header row)</td><td>440, right-aligned to the button, clamped 16px from edges</td><td>3 × 132</td><td>112px (≥ 105 with a classic scrollbar)</td><td rowspan="3">text outside a card, a wrapped description, horizontal scroll in the panel or the page</td></tr>
 <tr><td>472 – 1011 (header column)</td><td>440</td><td>3 × 132</td><td>112px</td></tr>
-<tr><td>&lt; 472 (360 in tests)</td><td><code>vw − 32</code> (328 at 360)</td><td>1 column, full-width rows</td><td>≈190px beside an 80px thumbnail</td></tr>
+<tr><td>456 – 471</td><td><code>vw − 32</code> (424 – 439)</td><td>3 × 126.7 – 131.7</td><td>106.7 – 111.7px</td></tr>
+<tr><td>≤ 455 (360, 439, 440, 455 in tests)</td><td><code>vw − 32</code> (328 at 360)</td><td>1 column, rows 54px of content</td><td>176px at 360 beside a 96px thumbnail</td><td>the same, and no empty reserved line</td></tr>
 </table></div>
-<p class="small muted">The switch is a container query on the cards’ wrapper (3 columns at ≥ 380px of content, i.e. ≥ 121px cards and ≥ 101px of text), so a vertical scrollbar in the panel cannot push the grid under the budget.</p>
+<p class="small muted">Single rule: <code>@container (min-width: 396px)</code> on the panel switches to 3 columns. The boundary moves only if a classic scrollbar shows in the panel (then 3 columns from viewport ≈ 471); the test pins the scrollbar case at 1500 and 472.</p>
 
 <h2>How it works</h2>
 <div class="scroll"><svg viewBox="0 0 860 120" width="100%" role="img" aria-label="Layout card build">
@@ -112,10 +118,11 @@
 <h2>Changes by file</h2>
 <div class="scroll"><table>
 <tr><th>File</th><th>Change</th><th>Why</th></tr>
-<tr><td><code>features/notifications/panel.css</code></td><td>Rewrite only the card block: fixed-row grid, panel-local text reset, hidden radio, ✓ badge, accent marker, <code>:has(:focus-visible)</code> ring, one container query. Drop the 351px row variant and the title-row marker rules.</td><td>C1–C6, C9</td></tr>
-<tr><td><code>features/notifications/panel.js</code></td><td>Panel width 440; card markup <code>label.ghnt-card &gt; input.sr-only + thumb + badge + title + hint + marker</code> (marker slot always present).</td><td>C3, C4, C8</td></tr>
+<tr><td><code>features/notifications/panel.css</code></td><td>Rewrite only the card block: fixed-row grid, panel-local text reset, hidden radio, ✓ badge, accent marker, <code>:has(:focus-visible)</code> ring, one container query. One container query at 396px for the 3-column grid; the row template (96px thumb, one-line title, no reserved rows) applies below it. Drop the 351px row variant and the title-row marker rules.</td><td>C1–C7, C9, C12</td></tr>
+<tr><td><code>features/notifications/panel.js</code></td><td>Panel width 440; card markup <code>label.ghnt-card &gt; input.sr-only + thumb + badge + title + hint + marker</code> (marker element only on Integrated; the 3-column grid reserves its row by template, the row mode does not).</td><td>C3, C4, C8, C12</td></tr>
 <tr><td><code>features/notifications/prefs.js</code></td><td>Layout descriptions: <i>In the sidebar</i>, <i>Filter pills</i>, <i>Collapsible list</i>.</td><td>Text budget</td></tr>
-<tr><td><code>test/e2e/fixtures/notifications.html</code></td><td>Add GitHub’s global rules that reach the panel: <code>label{font-weight:600}</code>, body font stack, 14px/1.5.</td><td>C5, C10</td></tr>
+<tr><td><code>test/e2e/fixtures/notifications.html</code></td><td>Add the live rules that reach the panel: body GitHub stack (<code>"Mona Sans VF", -apple-system, …</code>) 14px/21px; <code>label{font-weight:600;font-size:14px;line-height:21px;display:inline}</code>; <code>p{margin:0 0 10px}</code>; <code>h2{font-size:24px;line-height:36px;font-weight:600}</code>.</td><td>C5, C10</td></tr>
+<tr><td><code>test/e2e/fixtures/fonts/</code></td><td>A DejaVu Sans woff2 (regular and bold, Latin subset) with its licence file, loaded by the spec with <code>@font-face</code> under a family name no system has (<code>GHR Wide Test</code>), so the wide run cannot silently fall back. Test-only: outside the release zip.</td><td>C10</td></tr>
 <tr><td><code>test/e2e/notifications-config-panel.spec.js</code></td><td>Replace the per-symptom card tests with one matrix test (below).</td><td>C10</td></tr>
 <tr><td><code>test/unit/notifications-prefs.test.js</code></td><td>Copy budget: descriptions ≤ 18 characters and titles ≤ 2 words per line (cheap guard; the e2e measures pixels).</td><td>Text budget</td></tr>
 <tr><td><code>screenshots/notifications-config-panel.svg</code>, <code>README.md</code></td><td>Mockup redrawn at 440px with the new copy; README sentence on the layout cards.</td><td>Docs in sync</td></tr>
@@ -125,20 +132,23 @@
 <p>None changed. Storage keys stay <code>ghntModules</code>, <code>ghntNativeInbox</code>, <code>ghntLayout</code>, with the same values and defaults. Token permissions: none.</p>
 
 <h2>Test plan</h2>
-<p><b>One card matrix test</b> runs every combination of viewport {360, 600, 800, 1011, 1012, 1280, 1500} × theme {light, dark} × font {GitHub’s stack, <code>"DejaVu Sans"</code> as the wide worst case}, with GitHub’s <code>label</code> rule in the fixture. A failure message prints the card rect, each child’s rect, the computed font and the panel width.</p>
+<p><b>One card matrix test</b> runs every combination of viewport {360, 439, 440, 455, 456, 471, 472, 600, 800, 1011, 1012, 1280, 1500} × theme {light, dark} × font {GitHub’s stack, the bundled <code>GHR Wide Test</code> (DejaVu Sans) as the wide worst case}, with the live global rules in the fixture. <b>Font guard:</b> before the card assertions of the wide run, the test waits for <code>document.fonts.load</code> and requires <i>Collapsible list</i> at 12px/400 to measure ≥ 85px (it is 87px in DejaVu; the live font is 82px), so a missing font fails the test instead of passing it. <b>Scrollbar case:</b> at 1500 and 472 with a short viewport and a forced 15px panel scrollbar, the grid stays 3 columns with ≥ 101px of text. A failure message prints the card rect, each child’s rect, the computed font, the measured guard width and the panel and container widths.</p>
 <div class="scroll"><table>
 <tr><th>Constraint</th><th>Assertion in the matrix</th></tr>
-<tr><td>C1</td><td>3 cards, equal width (±0.5px) and equal height; one <code>aria-checked</code>/<code>:checked</code>; selected has 2px accent border and a visible ✓ badge; the whole card is clickable (click on title and on thumbnail)</td></tr>
+<tr><td>C1</td><td>3 cards, equal width (±0.5px) and equal height within the layout in use (3 columns or rows, never compared across them); one <code>aria-checked</code>/<code>:checked</code>; selected has 2px accent border and a visible ✓ badge; the whole card is clickable (click on title and on thumbnail)</td></tr>
 <tr><td>C2</td><td>thumb width/height = 16/9 (±1px); <code>aria-hidden</code>; the three thumbs’ <code>innerHTML</code> differ</td></tr>
 <tr><td>C3</td><td>each description height ≤ its line height; title ≤ 2 line heights</td></tr>
 <tr><td>C4</td><td>“✓ Default” only on Integrated, its top below the description’s bottom, colour = <code>--fgColor-accent</code></td></tr>
 <tr><td>C5</td><td>description <code>font-weight</code> 400 and colour = <code>--fgColor-muted</code>, with <code>label{font-weight:600}</code> in the fixture</td></tr>
 <tr><td>C6</td><td>every card descendant’s rect inside the card rect; <code>panel.scrollWidth ≤ clientWidth</code>; page <code>scrollWidth</code> = viewport</td></tr>
-<tr><td>C7</td><td>3 columns at ≥ 472, one column below; panel width = <code>min(440, vw − 32)</code></td></tr>
+<tr><td>C7</td><td>3 columns at ≥ 456, rows at ≤ 455 (both sides of 440 and 472 checked too); panel width = <code>min(440, vw − 32)</code>; in 3 columns every card’s text column ≥ 101px</td></tr>
+<tr><td>C12</td><td>in rows: each title is one line (height = line height), only Integrated has a marker element, rows are equal height and no row has a text line with zero content</td></tr>
+<tr><td>Reset</td><td>every text element in the panel has computed <code>margin</code> 0 with <code>p{margin:0 0 10px}</code> and <code>h2</code> 24px in the fixture; panel headings keep their own size</td></tr>
 <tr><td>C9</td><td>Tab focuses the selected card’s radio and the card shows a 2px ring; ArrowRight/ArrowLeft change the choice and write <code>ghntLayout</code>; group has <code>role="radiogroup"</code> and an accessible name</td></tr>
 <tr><td>C11</td><td>existing native-look, fallback and state-matrix tests stay unchanged and green</td></tr>
 </table></div>
-<p class="small"><b>Live check before handing over:</b> <code>/notifications</code> needs a signed-in account, so the anonymous probe cannot open it. The PR body will list it under “Not verified on live github.com”: card containment at 1500 and 360, real dark theme, screen reader announcement, inbox shortcuts with the panel open. Testing with the wider DejaVu font is what gives margin against the live font.</p>
+<p class="small"><b>Live values</b> (measured by the reviewer on the signed-in <code>/notifications</code> at 1500px, the source of the fixture rules): body <code>Mona Sans VF</code> stack, 14px/21px; <code>label</code> 600, 14px/21px, inline; <code>p</code> <code>margin-bottom: 10px</code>; <code>h2</code> 24px/36px/600; descriptions at 12px/400: 77 / 55 / 82px, inside the 95px budget.</p>
+<p class="small"><b>Live check before handing over:</b> the anonymous probe cannot open <code>/notifications</code>, so the PR body lists under “Not verified on live github.com”: the panel itself at 1500, 456, 455 and 360 (card containment, breakpoint), real dark theme, focus order, screen reader announcement, inbox shortcuts with the panel open. The bundled wider font is what gives margin against the live font.</p>
 
 <h2>Risks and open questions</h2>
 <ul>
