@@ -408,8 +408,16 @@
     }
     // Rows move under the reader: the browser's own scroll anchoring would fight the compensation below.
     target.classList.add("ghnt-grouped");
-    // A row's native slot is remembered the first time it moves.
     const classified = list.filter((r) => M.categoryOf(r.item));
+    // The scroll anchor, taken before anything is hidden or moved: the first
+    // visible row that stays in its section, or on the first build (nothing has
+    // a section yet) the first visible row that gets one, else a header.
+    const onScreen = (n) => n.isConnected && n.getBoundingClientRect().bottom > 0 && n.getBoundingClientRect().top < window.innerHeight;
+    const stay = classified.filter((r) => lastSection.get(r.key) === M.categoryOf(r.item));
+    const candidates = (lastSection.size ? stay : classified).map((r) => r.li).sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+    const ref = window.scrollY > 0 ? candidates.find(onScreen) || [...document.querySelectorAll("li.ghnt-sec")].find(onScreen) : null;
+    const before = ref ? ref.getBoundingClientRect().top : 0;
+    // A row's native slot is remembered the first time it moves.
     for (const r of classified) {
       if (!slots.has(r.li) && r.li.parentNode) {
         const mark = document.createComment("ghnt-slot");
@@ -454,22 +462,16 @@
     const current = [...target.children].slice(0, desired.length);
     const same = current.length === desired.length && current.every((n, i) => n === desired[i]);
     if (!same) {
-      // The scroll anchor is a visible node that stays in its section: moving
-      // the rows around it must not move it on screen.
-      const stay = new Set(classified.filter((r) => lastSection.get(r.key) === M.categoryOf(r.item)).map((r) => r.li));
-      const onScreen = (n) => n.getBoundingClientRect().bottom > 0 && n.getBoundingClientRect().top < window.innerHeight;
-      const ref = [...stay].filter((n) => n.isConnected).sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1)).find(onScreen) || [...document.querySelectorAll("li.ghnt-sec")].find(onScreen);
-      const before = ref ? ref.getBoundingClientRect().top : 0;
       let cursor = target.firstChild;
       for (const node of desired) {
         if (node === cursor) cursor = cursor.nextSibling;
         else target.insertBefore(node, cursor);
       }
-      // The page only needs holding in place once the reader has scrolled.
-      if (ref && ref.isConnected && window.scrollY > 0) {
-        const delta = ref.getBoundingClientRect().top - before;
-        if (Math.abs(delta) > 0.5) window.scrollBy(0, delta);
-      }
+    }
+    // The page only needs holding in place once the reader has scrolled (ref is null at scrollY 0).
+    if (ref && ref.isConnected) {
+      const delta = ref.getBoundingClientRect().top - before;
+      if (Math.abs(delta) > 0.5) window.scrollBy(0, delta);
     }
 
     // Native boxes (Group by Repository) emptied by the move are hidden.

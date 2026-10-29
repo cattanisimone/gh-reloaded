@@ -48,10 +48,15 @@ function graphql(aliases) {
   return { data: { viewer: { login: "mira" }, repository } };
 }
 
-async function boot(context, page, { storage = {}, url = INBOX, viewport, scheme, tokens = true, delay = 0 } = {}) {
+// `hold: true` keeps every API reply pending until the test calls release(),
+// so a test of the classifying state does not race a fixed delay.
+async function boot(context, page, { storage = {}, url = INBOX, viewport, scheme, tokens = true, delay = 0, hold = false } = {}) {
   const requests = [];
+  let release = () => {};
+  const gate = hold ? new Promise((r) => (release = r)) : null;
   await context.route("https://api.github.com/**", async (route) => {
     if (delay) await new Promise((r) => setTimeout(r, delay));
+    if (gate) await gate;
     const request = route.request();
     const u = new URL(request.url());
     requests.push(u.pathname);
@@ -69,7 +74,7 @@ async function boot(context, page, { storage = {}, url = INBOX, viewport, scheme
   await page.goto(url);
   const world = await isolatedWorld(context, page);
   await world.ready();
-  return { world, requests };
+  return { world, requests, release };
 }
 
 const stored = async (context, keys) => (await backgroundWorker(context)).evaluate((k) => chrome.storage.local.get(k), keys);
@@ -809,11 +814,12 @@ for (const width of [400, 800, 1100, 1500]) {
 }
 
 test("Grouped headers show an ellipsis while rows classify and no 'None among' note", async ({ context, page }) => {
-  const { world } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped" }, delay: 3500 });
+  const { world, release } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped" }, hold: true });
   await expect(secs(page)).toHaveCount(4, { timeout: 5000 });
   await expect(page.locator(".ghnt-sec-btn .ghnt-count")).toHaveText(["…", "…", "16", "…"]);
   await expect(page.locator(".ghnt-sec-note")).not.toContainText("None among");
   await expect(page.locator(".ghnt-sec-btn").first()).toHaveAttribute("aria-label", /classifying of 32 loaded/);
+  release();
   await settled(world);
   await expect(page.locator(".ghnt-sec-btn .ghnt-count")).toHaveText(["8", "4", "16", "4"]);
 });
@@ -827,4 +833,32 @@ test("block: a bulk-action toast that gets height is re-measured", async ({ cont
   await expect
     .poll(() => page.evaluate(() => Math.round((document.querySelector(".js-bulk-action-toasts").getBoundingClientRect().top - document.querySelector('[data-ghnt-triage="block"]').getBoundingClientRect().bottom) * 10) / 10))
     .toBe(8);
+});
+
+test("a category selected while rows classify: the status line shows an ellipsis, never a 0", async ({ context, page }) => {
+  const { world, release } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "quickbar" }, hold: true });
+  await expect(page.locator(".ghnt-pending")).toContainText(/Classifying \d+ notifications?…/);
+  await cat(page, "waiting").click();
+  await expect(cat(page, "waiting").locator(".ghnt-count")).toHaveText("…");
+  await expect(page.locator(".ghnt-status")).toContainText("Waiting · … of 32 loaded");
+  await expect(page.locator(".ghnt-empty")).toHaveCount(0);
+  release();
+  await settled(world);
+  await expect(page.locator(".ghnt-status")).toContainText("Waiting · 4 of 32 loaded");
+});
+
+test("Grouped: a reader who scrolled before the sections are built keeps the row they were reading in place", async ({ context, page }) => {
+  const { world, release } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped" }, viewport: { width: 1100, height: 600 }, hold: true });
+  await expect(page.locator(".ghnt-pending")).toContainText(/Classifying/);
+  await page.evaluate(() => window.scrollTo(0, 700));
+  // The first row on screen that is classified without the API (a quiet one), so it has a section at the first build.
+  const probe = await page.evaluate(() => {
+    const li = [...document.querySelectorAll("li.notifications-list-item")].filter((n) => [3, 4, 7, 0].includes(Number(n.dataset.notificationId.slice(3)) % 8)).find((n) => n.getBoundingClientRect().bottom > 0);
+    return { id: li.dataset.notificationId, top: li.getBoundingClientRect().top };
+  });
+  release();
+  await expect(secs(page)).toHaveCount(4, { timeout: 5000 });
+  await settled(world);
+  const top = await page.evaluate((id) => document.querySelector(`li[data-notification-id="${id}"]`).getBoundingClientRect().top, probe.id);
+  expect(Math.abs(top - probe.top), `${probe.id} at ${probe.top} before the build, ${top} after (scrollY ${await page.evaluate(() => window.scrollY)})`).toBeLessThanOrEqual(1);
 });
