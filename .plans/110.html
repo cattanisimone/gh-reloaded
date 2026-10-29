@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #110 CI on main</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;overflow-wrap:anywhere} .scroll{overflow-x:auto}
+</style></head><body><main>
+  <h1>#110 · Make the CI on main green again</h1>
+  <p class="meta">Size: simple (plan and implementation together) · Goal: stop the unit test runner from crashing intermittently on CI.</p>
+
+  <h2>What changes for users</h2>
+  <ul><li>Nothing in the extension. Only a test file changes, so no release.</li><li>CI on <code>main</code> and on every pull request stops failing at random in the unit suite.</li></ul>
+
+  <h2>Root cause</h2>
+  <table>
+    <tr><th>Run</th><th>What the log shows</th></tr>
+    <tr><td>main 99424a2 (40779241006)</td><td>The unit suite stops after test 404, in <code>release-please-config.test.js</code>. There is no summary, no <code>not ok</code> line, and the step exits with code 1.</td></tr>
+    <tr><td>main 2f4dc58 (40545710241)</td><td><code>not ok 27 - test/unit/release-please-config.test.js</code>, uncaughtException: <code>Unable to deserialize cloned data due to invalid or unsupported version.</code></td></tr>
+    <tr><td>PR run 40792266136</td><td>Stops right after a test in the same file, the same way as the first run.</td></tr>
+    <tr><td>Local, Node 20.20.2</td><td>Reproduced: 3 of 40 runs of that file crash with the same error.</td></tr>
+  </table>
+  <div class="scroll"><svg viewBox="0 0 860 150" width="100%" role="img" aria-label="Under node --test, the test file's stdout carries both the runner's serialized messages and release-please's log lines">
+    <g font-family="-apple-system,Segoe UI,Arial,sans-serif" font-size="13">
+      <rect x="10" y="20" width="250" height="50" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="22" y="42">release-please-config.test.js</text><text x="22" y="60" fill="#59636e">child process</text>
+      <rect x="10" y="90" width="250" height="44" rx="6" fill="#fff8f8" stroke="#d1242f"/><text x="22" y="117">logger: console.info("✔ Considering…")</text>
+      <path d="M260 45 H420 M260 112 H420" stroke="#1f2328" marker-end="url(#a)"/>
+      <rect x="420" y="40" width="150" height="80" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="436" y="72">same stdout pipe</text><text x="436" y="92" fill="#59636e">V8 frames + text</text>
+      <path d="M570 80 H660" stroke="#1f2328" marker-end="url(#a)"/>
+      <rect x="660" y="40" width="190" height="80" rx="6" fill="#fff8f8" stroke="#d1242f"/><text x="672" y="68">node --test parent</text><text x="672" y="88" fill="#d1242f">deserialize error</text><text x="672" y="106" fill="#d1242f">→ crash, exit 1</text>
+      <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1f2328"/></marker></defs>
+    </g></svg></div>
+  <p>On Node 20, <code>node --test</code> reads each test file's stdout as its binary message channel. release-please's default logger writes coloured info lines to that same stdout. When a log line lands inside a message frame, the parent fails to deserialize it. Depending on timing, it then reports the file as failed or crashes without a summary. That is why the log names no failing test.</p>
+
+  <h2>Changes by file</h2>
+  <table><tr><th>File</th><th>Change</th><th>Why</th></tr>
+    <tr><td><code>test/unit/release-please-config.test.js</code></td><td>Before the manifest and strategy are built, give release-please a silent logger through its own <code>setLogger</code>. Add a regression test that captures <code>console</code> while release PRs are built and asserts that nothing was written.</td><td>No extra text on the runner's channel means no corrupted frames. The policy checks stay exactly as they are.</td></tr>
+  </table>
+
+  <h2>Data, permissions, privacy</h2><p>None.</p>
+
+  <h2>Test plan</h2>
+  <table><tr><th>Criterion</th><th>Test</th><th>Name / evidence</th></tr>
+    <tr><td>release-please logs nothing under the runner</td><td>unit (fails before the fix)</td><td><code>release-please writes nothing to the console while building a release PR</code></td></tr>
+    <tr><td>The crash is gone</td><td>stress run</td><td>Before the fix, 3 of 40 runs crashed. After it, the same loop runs 60 times with 0 crashes.</td></tr>
+    <tr><td>main is green</td><td>CI</td><td>Full <code>npm test</code> passes on this pull request's CI run.</td></tr>
+  </table>
+  <p><b>Live check:</b> not applicable, because nothing is injected into github.com.</p>
+
+  <h2>Risks and open questions</h2>
+  <ul>
+    <li>The test reaches into release-please internals (<code>build/src/util/logger.js</code>). It is pinned at <code>~17.6.0</code>, and the file already uses deep imports that fail loudly if they move. Default: accept this.</li>
+    <li>The PR type is <code>test:</code>, not the issue's <code>fix(ci):</code>, because users notice nothing and a <code>fix</code> would cut a patch release with no user-facing change. Recorded as an assumption.</li>
+  </ul>
+
+  <h2>Out of scope</h2>
+  <ul><li>Moving CI to Node 22. It is a wider change, and silencing the logger already removes the cause.</li><li><code>graph-bench</code>'s p95 timing budget can fail on slow local machines (it failed on the agent's aarch64 sandbox). It passes on CI and is listed as a follow-up.</li></ul>
+</main></body></html>
