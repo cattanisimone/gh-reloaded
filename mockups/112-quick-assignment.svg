@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="930" viewBox="0 0 1600 930">
+<rect x="0" y="0" width="1600" height="930" rx="0" fill="#f6f8fa" stroke="none" stroke-width="1"/>
+<rect x="0" y="0" width="1600" height="10" rx="0" fill="#c2410c" stroke="none" stroke-width="1"/>
+<text x="70" y="77" font-family="Inter,Arial,sans-serif" font-size="19" font-weight="700" fill="#b54719" text-anchor="start">GH RELOADED  /  EXPERIMENTAL FEATURE (OPT-IN)</text>
+<text x="70" y="132" font-family="Inter,Arial,sans-serif" font-size="38" font-weight="750" fill="#1f2328" text-anchor="start">Assignees: fewer steps, no ambiguity</text>
+<text x="70" y="173" font-family="Inter,Arial,sans-serif" font-size="19" font-weight="400" fill="#57606a" text-anchor="start">Conceptual comparison based on user feedback: NOT a screenshot of the real GitHub UI</text>
+<rect x="70" y="210" width="715" height="548" rx="14" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+<rect x="71" y="211" width="713" height="65" rx="13" fill="#f6f8fa" stroke="none" stroke-width="1"/>
+<line x1="71" y1="276" x2="784" y2="276" stroke="#d0d7de" stroke-width="1"/>
+<rect x="815" y="210" width="715" height="548" rx="14" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+<rect x="816" y="211" width="713" height="65" rx="13" fill="#f6f8fa" stroke="none" stroke-width="1"/>
+<line x1="816" y1="276" x2="1529" y2="276" stroke="#d0d7de" stroke-width="1"/>
+<text x="94" y="253" font-family="Inter,Arial,sans-serif" font-size="21" font-weight="700" fill="#57606a" text-anchor="start">TODAY · reported friction</text>
+<text x="839" y="253" font-family="Inter,Arial,sans-serif" font-size="21" font-weight="700" fill="#1a7f37" text-anchor="start">PROPOSAL · contextual actions</text>
+<text x="99" y="325" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="500" fill="#0969da" text-anchor="start">demo-labs</text>
+<text x="196" y="325" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="500" fill="#0969da" text-anchor="start">/ event-hub</text>
+<text x="99" y="363" font-family="Inter,Arial,sans-serif" font-size="23" font-weight="700" fill="#1f2328" text-anchor="start">Improve cache invalidation</text>
+<text x="99" y="389" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="400" fill="#57606a" text-anchor="start">#284  ·  Open issue</text>
+<rect x="99" y="428" width="132" height="30" rx="15" fill="#ddf4ff" stroke="none" stroke-width="1"/>
+<text x="165.0" y="449" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="600" fill="#0969da" text-anchor="middle">enhancement</text>
+<rect x="99" y="492" width="390" height="156" rx="8" fill="#f6f8fa" stroke="#d8dee4" stroke-width="1"/>
+<text x="121" y="527" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700" fill="#24292f" text-anchor="start">Issue detail</text>
+<text x="121" y="564" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="400" fill="#57606a" text-anchor="start">The task needs a different owner.</text>
+<text x="121" y="599" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="400" fill="#57606a" text-anchor="start">I want to reassign it quickly.</text>
+<line x1="512" y1="301" x2="512" y2="717" stroke="#d0d7de" stroke-width="1"/>
+<text x="538" y="335" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700" fill="#24292f" text-anchor="start">Assignees</text>
+<text x="747" y="335" font-family="Inter,Arial,sans-serif" font-size="20" font-weight="500" fill="#57606a" text-anchor="middle">⚙</text>
+<line x1="538" y1="350" x2="757" y2="350" stroke="#d0d7de" stroke-width="1"/>
+<circle cx="558" cy="393" r="18" fill="#e6e7ff" stroke="none" stroke-width="1"/>
+<text x="558" y="399" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700" fill="#5652ad" text-anchor="middle">A</text>
+<text x="585" y="399" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="600" fill="#0969da" text-anchor="start">alex-dev</text>
+<text x="539" y="438" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="400" fill="#8c959f" text-anchor="start">Click opens profile</text>
+<text x="538" y="472" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="400" fill="#8c959f" text-anchor="start">Remove via picker</text>
+<line x1="538" y1="492" x2="755" y2="492" stroke="#d0d7de" stroke-width="1"/>
+<rect x="538" y="512" width="219" height="43" rx="7" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="647.5" y="540" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="600" fill="#24292f" text-anchor="middle">Manage assignees</text>
+<text x="538" y="585" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="650" fill="#cf222e" text-anchor="start">Extra navigation / clicks</text>
+<text x="538" y="614" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="650" fill="#cf222e" text-anchor="start">to remove or self-assign</text>
+<text x="844" y="325" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="500" fill="#0969da" text-anchor="start">demo-labs</text>
+<text x="940" y="325" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="500" fill="#0969da" text-anchor="start">/ event-hub</text>
+<text x="844" y="363" font-family="Inter,Arial,sans-serif" font-size="23" font-weight="700" fill="#1f2328" text-anchor="start">Improve cache invalidation</text>
+<text x="844" y="389" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="400" fill="#57606a" text-anchor="start">#284  ·  Open issue</text>
+<rect x="844" y="428" width="132" height="30" rx="15" fill="#ddf4ff" stroke="none" stroke-width="1"/>
+<text x="910.0" y="449" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="600" fill="#0969da" text-anchor="middle">enhancement</text>
+<rect x="844" y="492" width="373" height="156" rx="8" fill="#f6f8fa" stroke="#d8dee4" stroke-width="1"/>
+<text x="865" y="527" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700" fill="#24292f" text-anchor="start">Issue detail</text>
+<text x="865" y="564" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="400" fill="#57606a" text-anchor="start">Keep the task in context.</text>
+<text x="865" y="599" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="400" fill="#57606a" text-anchor="start">Actions are explicit and reversible.</text>
+<line x1="1232" y1="301" x2="1232" y2="717" stroke="#d0d7de" stroke-width="1"/>
+<text x="1254" y="335" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700" fill="#24292f" text-anchor="start">Assignees</text>
+<text x="1496" y="335" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#0969da" text-anchor="end">Manage</text>
+<line x1="1254" y1="350" x2="1523" y2="350" stroke="#d0d7de" stroke-width="1"/>
+<circle cx="1277" cy="395" r="18" fill="#e6e7ff" stroke="none" stroke-width="1"/>
+<text x="1277" y="401" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700" fill="#5652ad" text-anchor="middle">A</text>
+<text x="1305" y="400" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="600" fill="#0969da" text-anchor="start">alex-dev</text>
+<rect x="1480" y="376" width="42" height="38" rx="7" fill="#fff0ee" stroke="#ffd0cf" stroke-width="1"/>
+<text x="1501" y="401" font-family="Inter,Arial,sans-serif" font-size="27" font-weight="500" fill="#cf222e" text-anchor="middle">×</text>
+<text x="1254" y="444" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="400" fill="#57606a" text-anchor="start">Remove alex-dev  ·  one action</text>
+<rect x="1254" y="472" width="269" height="43" rx="7" fill="#1a7f37" stroke="#1a7f37" stroke-width="1"/>
+<text x="1388.5" y="500" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#ffffff" text-anchor="middle">+ Assign me</text>
+<text x="1254" y="551" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="500" fill="#57606a" text-anchor="start">If already assigned:</text>
+<rect x="1254" y="566" width="269" height="43" rx="7" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="1388.5" y="594" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#24292f" text-anchor="middle">− Unassign me</text>
+<text x="1254" y="651" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="650" fill="#1a7f37" text-anchor="start">Never replace others silently</text>
+<rect x="70" y="786" width="1460" height="89" rx="10" fill="#fff" stroke="#d0d7de" stroke-width="1"/>
+<rect x="93" y="811" width="40" height="40" rx="8" fill="#dafbe1" stroke="none" stroke-width="1"/>
+<text x="113" y="837" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="700" fill="#1a7f37" text-anchor="middle">✓</text>
+<text x="156" y="823" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="700" fill="#1f2328" text-anchor="start">Design rule</text>
+<text x="156" y="850" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="400" fill="#57606a" text-anchor="start">Add me ≠ Replace owner   ·   Separate profile link from remove action   ·   Respect permissions &amp; native UI</text>
+<text x="70" y="905" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="400" fill="#6e7781" text-anchor="start">Fictional data  ·  Light theme concept</text>
+</svg>
