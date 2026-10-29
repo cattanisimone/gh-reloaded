@@ -273,7 +273,7 @@ test("Grouped: a moved row's checkbox and own action buttons still respond; chec
   await row9.locator(".js-notifications-list-item-check").check();
   expect(await page.evaluate(() => window.__done)).toEqual(["done:NT_9"]);
   await expect(row9.locator(".js-notifications-list-item-check")).toBeChecked();
-  await page.locator(".js-check-all").check();
+  await page.locator(".js-check-all").evaluate((e) => { if (!e.checked) e.click(); });
   expect(await page.locator("li.notifications-list-item .js-notifications-list-item-check:checked").count()).toBe(32);
 });
 
@@ -475,14 +475,14 @@ test("select-all never selects rows the view hides (filtered or collapsed), so a
   await settled(world);
   await cat(page, "waiting").click();
   await expect(visibleRows(page)).toHaveCount(4);
-  await page.locator(".js-check-all").check();
+  await page.locator(".js-check-all").evaluate((e) => { if (!e.checked) e.click(); });
   await expect.poll(() => page.locator("li.notifications-list-item .js-notifications-list-item-check:checked").count()).toBe(4);
-  await page.locator(".js-check-all").uncheck();
+  await page.locator(".js-check-all").evaluate((e) => { if (e.checked) e.click(); });
   await seedStorage(context, { ghntLayout: "grouped" });
   await expect(secs(page)).toHaveCount(4);
   await page.locator('.ghnt-sec-btn[data-ghnt-sec="informational"]').click();
   await expect(visibleRows(page)).toHaveCount(16);
-  await page.locator(".js-check-all").check();
+  await page.locator(".js-check-all").evaluate((e) => { if (!e.checked) e.click(); });
   await expect.poll(() => page.locator("li.notifications-list-item .js-notifications-list-item-check:checked").count()).toBe(16);
 });
 
@@ -504,12 +504,13 @@ test("a restored Turbo snapshot carries no hidden rows and no grouped order", as
   await expect(secs(page)).toHaveCount(4); // and the view comes back
 });
 
-test("Grouped: rows still being classified are hidden, not shown under a collapsed Unverifiable header", async ({ context, page }) => {
-  const { world } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped", ghntTriageCollapsed: { unverifiable: true } }, delay: 2500 });
+test("Grouped: the native list is untouched while rows classify; sections are built once after 2s at most, with pending rows hidden", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped", ghntTriageCollapsed: { unverifiable: true } }, delay: 3500 });
   await expect(page.locator(".ghnt-pending")).toBeVisible();
-  const pendingVisible = await page.locator("li.notifications-list-item:visible").evaluateAll((els) => els.length);
-  const classified = await page.locator("li.ghnt-sec ~ li.notifications-list-item:visible").count();
-  expect(pendingVisible).toBe(classified);
+  await expect(secs(page)).toHaveCount(0);
+  await expect(visibleRows(page)).toHaveCount(32);
+  await expect(secs(page)).toHaveCount(4, { timeout: 4000 });
+  expect(await visibleRows(page).count()).toBe(await page.locator("li.ghnt-sec ~ li.notifications-list-item:visible").count());
   await settled(world);
   await expect(page.locator(".ghnt-pending")).toHaveCount(0);
   await expect(visibleRows(page)).toHaveCount(32 - 4);
@@ -652,4 +653,178 @@ test("the selected sidebar category uses the accent tint and accent text, unlike
   });
   expect(g.sel).toEqual(g.want);
   expect(g.sel.bg).not.toBe(g.current);
+});
+
+// ---- the one block after the filter row (S2), spacing, anchor, variants --------
+
+// Everything the block constraints compare, read in one pass.
+const blockGeo = (page) =>
+  page.evaluate(() => {
+    const row = document.querySelector("#filters");
+    const block = document.querySelector('[data-ghnt-triage="block"]');
+    if (!row || !block) return { missing: true };
+    const rect = (n) => n.getBoundingClientRect();
+    const kids = [...row.children].map(rect).filter((r) => r.width > 0);
+    const list = document.querySelector(".js-check-all-container > .Box, .js-check-all-container > .js-notifications-list");
+    const br = rect(block);
+    const parts = [...block.children].map(rect);
+    const cov = block.querySelector(".ghnt-coverage");
+    return {
+      next: row.nextElementSibling === block,
+      left: br.left - Math.min(...kids.map((r) => r.left)),
+      right: br.right - Math.max(...kids.map((r) => r.right)),
+      above: br.top - rect(row).bottom,
+      // a list box the filter hid entirely (no row matches) has no top to measure
+      below: rect(list).height > 0 ? rect(list).top - br.bottom : 8,
+      content: br.height - (parts[parts.length - 1].bottom - parts[0].top),
+      covHeight: cov ? rect(cov).height : 0,
+      docW: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    };
+  });
+const near = (v, to = 0) => Math.abs(v - to) <= 0.6;
+const blockOk = async (page, why) => {
+  await expect
+    .poll(async () => {
+      const g = await blockGeo(page);
+      if (g.missing) return `${why}: no block`;
+      const bad = [];
+      if (!g.next) bad.push("not the row's next sibling");
+      if (!near(g.left)) bad.push(`left ${g.left}`);
+      if (!near(g.right)) bad.push(`right ${g.right}`);
+      if (!near(g.above, 8)) bad.push(`above ${g.above}`);
+      if (!near(g.below, 8)) bad.push(`below ${g.below}`);
+      if (!near(g.content)) bad.push(`height ${g.content} beyond content`);
+      return bad.length ? `${why}: ${bad.join(", ")}` : "ok";
+    })
+    .toBe("ok");
+};
+
+for (const variant of [
+  { name: "A Inbox", hash: "", wait: true },
+  { name: "B reason filter (Sort by only, 4 rows)", hash: "#reason", wait: true },
+  { name: "C Done (Sort by only, 0 rows)", hash: "#done", wait: false },
+]) {
+  test(`block: edges, 8px gaps and content height hold at every width and layout (${variant.name})`, async ({ context, page }) => {
+    test.setTimeout(180_000);
+    const { world } = await boot(context, page, { url: `${INBOX}${variant.hash}`, viewport: { width: 1280, height: 800 } });
+    if (variant.wait) await settled(world);
+    const widths = [320, 375, 400, 500, 543, 544, 600, 767, 768, 900, 1011, 1012, 1100, 1280, 1500, 600, 400];
+    for (const layout of ["integrated", "quickbar", "grouped"]) {
+      await seedStorage(context, { ghntLayout: layout });
+      for (const width of widths) {
+        await page.setViewportSize({ width, height: 800 });
+        await blockOk(page, `${variant.name} ${layout} ${width}`);
+      }
+    }
+    // with a category selected the status, empty text and Next page row join the block
+    await seedStorage(context, { ghntLayout: "quickbar" });
+    await cat(page, "waiting").click();
+    for (const width of [400, 800, 1100]) {
+      await page.setViewportSize({ width, height: 800 });
+      await blockOk(page, `${variant.name} selected ${width}`);
+    }
+    await expect(page.locator(".ghnt-block .ghnt-coverage a.ghnt-next")).toHaveCount(1);
+    if (!variant.wait || variant.hash === "") await expect(page.locator(".ghnt-block .ghnt-empty a.ghnt-next")).toHaveCount(1);
+  });
+}
+
+test("block: Show native inbox brings back the native gap between the filter row and the list", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#reason`, viewport: { width: 800, height: 800 }, storage: { ghntNativeInbox: true } });
+  await page.waitForTimeout(500);
+  const gap = () => page.evaluate(() => document.querySelector(".js-check-all-container > .Box").getBoundingClientRect().top - document.querySelector("#filters").getBoundingClientRect().bottom);
+  const native = await gap();
+  await seedStorage(context, { ghntNativeInbox: false });
+  await settled(world);
+  await expect(page.locator('[data-ghnt-triage="block"]')).toHaveCount(1);
+  await seedStorage(context, { ghntNativeInbox: true });
+  await expect(page.locator('[data-ghnt-triage="block"]')).toHaveCount(0);
+  expect(await gap()).toBe(native);
+});
+
+for (const hash of ["", "#reason"]) {
+  test(`anchor: without the filter row nothing of the view runs, with it the view comes back (${hash || "Inbox"})`, async ({ context, page }) => {
+    const { world } = await boot(context, page, { url: `${INBOX}${hash}`, viewport: { width: 1280, height: 800 } });
+    await settled(world);
+    const order = () => page.locator("li.notifications-list-item").evaluateAll((els) => els.map((e) => e.getAttribute("data-notification-id")).join());
+    const native = await order();
+    const nodes = async () => ({ ours: await page.locator("[data-ghnt-triage]").count(), off: await page.locator(".ghnt-off, li.notifications-list-item[hidden]").count(), rows: await visibleRows(page).count() });
+    const total = native.split(",").length;
+    for (const layout of ["integrated", "quickbar", "grouped"]) {
+      await seedStorage(context, { ghntLayout: layout });
+      if (layout === "grouped") await expect(secs(page)).toHaveCount(4);
+      else {
+        await expect(page.locator('[data-ghnt-triage="block"]')).toHaveCount(1);
+        await cat(page, "waiting").click();
+      }
+      await page.evaluate(() => {
+        window.__row = document.querySelector("#filters");
+        window.__row.remove();
+      });
+      await expect.poll(nodes).toEqual({ ours: 0, off: 0, rows: total });
+      expect(await order()).toBe(native);
+      await page.evaluate(() => document.querySelector(".js-check-all-container").prepend(window.__row));
+      await expect(page.locator('[data-ghnt-triage="block"]')).toHaveCount(1);
+      expect(await page.evaluate(() => document.querySelector("#filters").nextElementSibling.getAttribute("data-ghnt-triage"))).toBe("block");
+    }
+  });
+}
+
+test("variant B: the row-hiding filter and Grouped work without Group by, an empty match shows the empty state", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#reason`, viewport: { width: 1280, height: 800 } });
+  await settled(world);
+  await cat(page, "attention").click();
+  await expect(visibleRows(page)).toHaveCount((await state(world)).items.filter((i) => i.section === "attention").length);
+  await cat(page, "waiting").click();
+  await expect(visibleRows(page)).toHaveCount(0);
+  await expect(page.locator(".ghnt-block .ghnt-empty")).toContainText("No match among the loaded notifications.");
+  await seedStorage(context, { ghntLayout: "grouped" });
+  await expect(secs(page)).toHaveCount(4);
+  await expect(page.locator("#filters button", { hasText: /Group by/ })).toHaveCount(0);
+});
+
+test("variant C: the empty state and its Clear triage / Next page row render with no rows", async ({ context, page }) => {
+  await boot(context, page, { url: `${INBOX}#done`, viewport: { width: 1280, height: 800 } });
+  await cat(page, "attention").click();
+  const block = page.locator(".ghnt-block");
+  await expect(block.locator(".ghnt-empty")).toContainText("No match among the loaded notifications.");
+  await expect(block.getByRole("button", { name: "Clear triage" })).toBeVisible();
+  await expect(block.locator(".ghnt-empty a.ghnt-next")).toHaveCount(1);
+});
+
+for (const width of [400, 800, 1100, 1500]) {
+  test(`Grouped never scrolls the page on load or when facts land (${width}px)`, async ({ context, page }) => {
+    await page.addInitScript(() => {
+      window.__maxY = 0;
+      setInterval(() => (window.__maxY = Math.max(window.__maxY, window.scrollY)), 10);
+    });
+    const { world } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped" }, viewport: { width, height: 800 }, delay: 700 });
+    await expect(secs(page)).toHaveCount(4, { timeout: 6000 });
+    const top = () => page.locator("li.ghnt-sec").first().evaluate((e) => e.getBoundingClientRect().top);
+    await settled(world);
+    const before = await top();
+    await page.waitForTimeout(400);
+    expect(await top()).toBe(before);
+    expect(await page.evaluate(() => window.__maxY)).toBe(0);
+  });
+}
+
+test("Grouped headers show an ellipsis while rows classify and no 'None among' note", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped" }, delay: 3500 });
+  await expect(secs(page)).toHaveCount(4, { timeout: 5000 });
+  await expect(page.locator(".ghnt-sec-btn .ghnt-count")).toHaveText(["…", "…", "16", "…"]);
+  await expect(page.locator(".ghnt-sec-note")).not.toContainText("None among");
+  await expect(page.locator(".ghnt-sec-btn").first()).toHaveAttribute("aria-label", /classifying of 32 loaded/);
+  await settled(world);
+  await expect(page.locator(".ghnt-sec-btn .ghnt-count")).toHaveText(["8", "4", "16", "4"]);
+});
+
+test("block: a bulk-action toast that gets height is re-measured", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#reason`, viewport: { width: 800, height: 800 } });
+  await settled(world);
+  await blockOk(page, "before");
+  await page.evaluate(() => (document.querySelector(".js-bulk-action-toasts").style.height = "40px"));
+  // the toast is now the first box in flow below the block: the 8px gap is re-measured to it
+  await expect
+    .poll(() => page.evaluate(() => Math.round((document.querySelector(".js-bulk-action-toasts").getBoundingClientRect().top - document.querySelector('[data-ghnt-triage="block"]').getBoundingClientRect().bottom) * 10) / 10))
+    .toBe(8);
 });

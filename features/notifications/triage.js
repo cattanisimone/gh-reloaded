@@ -11,9 +11,13 @@
 // changes or the module stops. Nothing is written to GitHub; the only stored
 // value is which sections are collapsed (ghntTriageCollapsed).
 //
-// Anchors are ARIA and stable classes only, never a CSS-module class. A
-// missing anchor means nothing is inserted and the next scan retries; no other
-// container is used. Counts cover the rows loaded on the page.
+// Everything the view says comes from one pure model (GHNT_TRIAGE_MODEL.view):
+// no renderer formats a count or a sentence. Everything we add above the list
+// is ONE block placed right after the filter row; the filter row is the anchor
+// of the whole view, and without it nothing runs (no block, no sidebar group,
+// no hidden or moved row) until the next scan finds it again. Anchors are ARIA
+// and stable classes only, never a CSS-module class; no other container is
+// used. Counts cover the rows loaded on the page.
 //
 // Registers itself with the registry content.js created, so it loads after it.
 
@@ -23,6 +27,8 @@
   const LAYOUT_IDS = ["integrated", "quickbar", "grouped"];
   const HIGHLIGHT_MS = 3000;
   const NARROW = 768; // GitHub hides the sidebar below this width
+  const GAP = 8; // space above and below the block, whatever the native margins
+  const GROUP_WAIT_MS = 2000; // Grouped waits this long for rows still being classified
 
   const host = globalThis.GHNotifications;
   if (!host || !M) return;
@@ -39,6 +45,13 @@
   let observer = null;
   let timer = null;
   let rendering = false;
+  let resizer = null; // ResizeObserver: refreshes the block's insets and gaps
+  let measureQueued = false;
+  let watched = [];
+  let built = false; // Grouped: the sections of the current list exist
+  let groupedTarget = null; // the list Grouped works on
+  let groupedSince = 0;
+  let groupedTimer = null;
   const slots = new Map(); // row li -> comment placeholder of its native slot
   const hidden = new Set(); // rows and boxes we set ghnt-off on
   const collapsedRows = new Set(); // rows we set `hidden` on
@@ -107,72 +120,166 @@
     return el("span", { class: `ghnt-dot ghnt-dot-${id}`, "aria-hidden": "true" });
   }
 
-  function categoryButton(id, c, cls) {
-    const pending = state?.phase === "loading" && c.pending > 0 && c[id] === 0;
-    const btn = el(
-      "button",
-      { type: "button", class: cls, "aria-pressed": String(selected === id), "aria-label": M.ariaLabel(id, c, pending), "data-ghnt-cat": id },
-      dot(id),
-      el("span", { class: "ghnt-label", text: M.labelOf(id) }),
-      el("span", { class: "ghnt-count", text: M.countText(c[id], pending) })
-    );
+  function categoryButton(cat, cls) {
+    const btn = el("button", { type: "button", class: cls, "aria-pressed": String(cat.pressed), "aria-label": cat.aria, "data-ghnt-cat": cat.id }, dot(cat.id), el("span", { class: "ghnt-label", text: cat.label }), el("span", { class: "ghnt-count", text: cat.count }));
     btn.addEventListener("click", () => {
-      selected = selected === id ? null : id;
+      selected = selected === cat.id ? null : cat.id;
       render();
     });
     return btn;
   }
 
-  function buildSidebar(c) {
-    const items = M.CATEGORIES.map((cat) => el("li", { class: "ghnt-nav-li" }, categoryButton(cat.id, c, "ghnt-nav-item")));
+  function buildSidebar(v) {
+    const items = v.cats.map((cat) => el("li", { class: "ghnt-nav-li" }, categoryButton(cat, "ghnt-nav-item")));
     // GitHub separates its sidebar groups with an hr: the Triage group ends with one too.
     return el("nav", { class: "ghnt-nav", "aria-label": "Triage", "data-ghnt-triage": "nav" }, el("h3", { class: "ghnt-nav-title", text: "Triage" }), el("ul", { class: "ghnt-nav-list" }, items), el("hr", { class: "ghnt-nav-sep" }));
   }
 
-  // How far GitHub's filter controls sit inside the column the bar spans
-  // (the filter row's own padding below 768px): the bar takes the same insets,
-  // so its edges line up with the controls above it at every width.
-  function insetsOf(row) {
-    const parent = row.parentElement;
-    const rects = [...row.children].map((n) => n.getBoundingClientRect()).filter((r) => r.width > 0);
-    if (!parent || !rects.length) return [0, 0];
-    const box = parent.getBoundingClientRect();
-    const cs = getComputedStyle(parent);
-    const left = box.left + parseFloat(cs.borderLeftWidth) + parseFloat(cs.paddingLeft);
-    const right = box.right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight);
-    return [Math.min(...rects.map((r) => r.left)) - left, right - Math.max(...rects.map((r) => r.right))].map((v) => Math.max(0, Math.round(v)));
+  function buildBar(v, kind) {
+    const buttons = v.cats.map((cat) => categoryButton(cat, "ghnt-pill"));
+    return el("div", { class: `ghnt-bar ${kind === "compact" ? "ghnt-compact" : "ghnt-quickbar"}`, role: "group", "aria-label": "Triage", "data-ghnt-triage": kind }, buttons);
   }
 
-  function buildBar(c, kind, row) {
-    const buttons = M.CATEGORIES.map((cat) => categoryButton(cat.id, c, "ghnt-pill"));
-    const [left, right] = insetsOf(row);
-    const style = left || right ? `margin-left: ${left}px; margin-right: ${right}px;` : null;
-    return el("div", { class: `ghnt-bar ${kind === "compact" ? "ghnt-compact" : "ghnt-quickbar"}`, role: "group", "aria-label": "Triage", "data-ghnt-triage": kind, style }, buttons);
+  // GitHub's own link to the next page of the inbox, or null on the last page.
+  function nextHref() {
+    const a = document.querySelector('.paginate-container a[rel="next"], nav[aria-label="Pagination"] a[rel="next"], nav[aria-label="Pagination"] a[href*="after="]');
+    return a?.getAttribute("href") || null;
   }
 
-  // Replaces the content of a block in place, keeping focus on the same
-  // category button, so a re-render never drops the keyboard position.
+  const nextLink = (v) => (v.next ? el("a", { class: "ghnt-next", href: v.next.href, text: v.next.label }) : null);
+
+  // The one block of ours above the list: [pills] + status + empty + coverage.
+  function buildBlockKids(v, barKind) {
+    const kids = [];
+    if (barKind) kids.push(buildBar(v, barKind));
+    const status = el("div", { class: "ghnt-status", "data-ghnt-triage": "status", role: "status" });
+    if (v.status) {
+      status.append(el("span", { class: "ghnt-status-text", text: v.status }));
+      const clear = el("button", { type: "button", class: "ghnt-clear", text: "Clear triage" });
+      clear.addEventListener("click", () => {
+        const was = selected;
+        selected = null;
+        render();
+        // The status (and the focused button in it) is gone: keep the keyboard position.
+        document.querySelector(`[data-ghnt-cat="${was}"]`)?.focus();
+      });
+      status.append(clear);
+    }
+    if (v.empty) status.append(el("div", { class: "ghnt-empty" }, v.empty, v.next && " ", nextLink(v)));
+    if (v.pending) status.append(el("div", { class: "ghnt-pending", text: v.pending }));
+    if (status.childNodes.length) kids.push(status);
+    kids.push(el("p", { class: "ghnt-coverage", "data-ghnt-triage": "coverage" }, v.coverage, v.next && " ", nextLink(v)));
+    return kids;
+  }
+
+  const focusKey = (node) => (node?.getAttribute?.("data-ghnt-cat") ? `[data-ghnt-cat="${node.getAttribute("data-ghnt-cat")}"]` : node?.classList?.contains("ghnt-clear") ? ".ghnt-clear" : null);
+
+  // Replaces the sidebar group in place, keeping focus on the same category.
   function sync(kind, build, place) {
     const old = live.get(kind);
     const next = build();
     if (old && old.isConnected) {
       if (old.outerHTML === next.outerHTML && place(old, true)) return old;
-      const focus = old.contains(document.activeElement) ? document.activeElement.getAttribute("data-ghnt-cat") : null;
+      const key = old.contains(document.activeElement) ? focusKey(document.activeElement) : null;
       if (!place(next, false)) return old;
       old.remove();
       live.set(kind, next);
-      if (focus) next.querySelector(`[data-ghnt-cat="${focus}"]`)?.focus();
+      if (key) next.querySelector(key)?.focus();
       return next;
     }
     if (place(next, false)) live.set(kind, next);
     return next;
   }
 
+  // Puts the block right after the filter row, filling it in place and keeping
+  // focus on the same control, so a re-render never drops the keyboard position.
+  function syncBlock(row, kids) {
+    let block = live.get("block");
+    if (!block || !block.isConnected) {
+      block = el("div", { class: "ghnt-block", "data-ghnt-triage": "block" });
+      live.set("block", block);
+    }
+    const holder = el("div", null, kids);
+    if (block.innerHTML !== holder.innerHTML) {
+      const key = block.contains(document.activeElement) ? focusKey(document.activeElement) : null;
+      block.replaceChildren(...holder.childNodes);
+      if (key) block.querySelector(key)?.focus();
+    }
+    if (block.previousElementSibling !== row) row.after(block);
+    return block;
+  }
+
+  // Inset rule: the block is a sibling of the filter row, so its margin-inline
+  // is measured against the parent's content box over the row's visible
+  // children (zero-width ones are skipped). Spacing rule: with the block's own
+  // vertical margins at 0, read the native gaps above and below it and set
+  // margins that bring both to GAP (negative when the native ones are bigger;
+  // they add to the neighbours' margins whether those collapse or not).
+  function nextBox(block) {
+    for (let n = block.nextElementSibling; n; n = n.nextElementSibling) {
+      const pos = getComputedStyle(n).position;
+      if (pos === "absolute" || pos === "fixed") continue;
+      if (n.getBoundingClientRect().height > 0) return n;
+    }
+    return null;
+  }
+
+  function insetsOf(row) {
+    const parent = row.parentElement;
+    const rects = [...row.children].map((n) => n.getBoundingClientRect()).filter((r) => r.width > 0);
+    if (!parent || !rects.length) return null;
+    const box = parent.getBoundingClientRect();
+    const cs = getComputedStyle(parent);
+    const left = box.left + parseFloat(cs.borderLeftWidth) + parseFloat(cs.paddingLeft);
+    const right = box.right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight);
+    return [Math.min(...rects.map((r) => r.left)) - left, right - Math.max(...rects.map((r) => r.right))].map((x) => Math.max(0, Math.round(x)));
+  }
+
+  function measure() {
+    const block = live.get("block");
+    const row = filterRow();
+    if (!active || !row || !block?.isConnected || block.previousElementSibling !== row) return;
+    const insets = insetsOf(row);
+    if (!insets) return;
+    block.style.marginTop = block.style.marginBottom = "0px";
+    const above = block.getBoundingClientRect().top - row.getBoundingClientRect().bottom;
+    const next = nextBox(block);
+    const below = next ? next.getBoundingClientRect().top - block.getBoundingClientRect().bottom : 0;
+    block.style.setProperty("--ghnt-l", `${insets[0]}px`);
+    block.style.setProperty("--ghnt-r", `${insets[1]}px`);
+    block.style.marginTop = `${Math.round((GAP - above) * 100) / 100}px`;
+    block.style.marginBottom = `${Math.round((GAP - below) * 100) / 100}px`;
+    watch(row, block, next);
+  }
+
+  // Native size changes (the row, the toasts container, a window resize that
+  // flips Primer's lg margins) refresh the measurement without a full render.
+  function watch(row, block, next) {
+    if (!resizer) return;
+    const nodes = [row, block];
+    for (let n = block.nextElementSibling; n && n !== next; n = n.nextElementSibling) nodes.push(n);
+    if (next) nodes.push(next);
+    // observe() reports once at once: only touch the observer when the set changed
+    if (nodes.length === watched.length && nodes.every((n, i) => n === watched[i])) return;
+    resizer.disconnect();
+    for (const n of nodes) resizer.observe(n);
+    watched = nodes;
+  }
+
+  function queueMeasure() {
+    if (measureQueued) return;
+    measureQueued = true;
+    requestAnimationFrame(() => {
+      measureQueued = false;
+      measure();
+    });
+  }
+
   // A Turbo snapshot restores dead clones of earlier nodes (no handlers):
   // everything of ours that this module did not build is removed.
   function sweepStrays() {
-    const own = new Set(live.values());
-    for (const node of document.querySelectorAll("[data-ghnt-triage]")) if (!own.has(node)) node.remove();
+    const own = [...live.values()];
+    for (const node of document.querySelectorAll("[data-ghnt-triage]")) if (!own.some((o) => o === node || o.contains(node))) node.remove();
   }
 
   // ---- hide / restore --------------------------------------------------------
@@ -217,75 +324,6 @@
     if (e.target?.matches?.('input[type="checkbox"]')) setTimeout(() => active && uncheckHidden(), 0);
   };
 
-  // ---- info (status + coverage), outside the native list ---------------------
-
-  // GitHub's own link to the next page of the inbox, or null on the last page.
-  function nextLink() {
-    return document.querySelector('.paginate-container a[rel="next"], nav[aria-label="Pagination"] a[rel="next"], nav[aria-label="Pagination"] a[href*="after="]');
-  }
-
-  // A link to the same target as GitHub's next page, or null.
-  function nextPage() {
-    const href = nextLink()?.getAttribute("href");
-    return href ? el("a", { class: "ghnt-next", href, text: M.NEXT_LABEL }) : null;
-  }
-
-  function renderInfo(c, mode) {
-    const lists = nativeLists();
-    if (!lists.length) return removeInfo();
-    const first = boxOf(lists[0]);
-    const last = boxOf(lists[lists.length - 1]);
-
-    const status = el("div", { class: "ghnt-status", "data-ghnt-triage": "status", role: "status" });
-    if (mode === "filter" && selected) {
-      status.append(el("span", { class: "ghnt-status-text", text: M.statusLine(selected, c) }));
-      const clear = el("button", { type: "button", class: "ghnt-clear", text: "Clear triage" });
-      clear.addEventListener("click", () => {
-        const was = selected;
-        selected = null;
-        render();
-        // The status (and the focused button in it) is gone: keep the keyboard position.
-        document.querySelector(`[data-ghnt-cat="${was}"]`)?.focus();
-      });
-      status.append(clear);
-    }
-    const empty = mode === "filter" ? M.emptyText(selected, c) : "";
-    if (empty) {
-      const next = nextPage();
-      status.append(el("div", { class: "ghnt-empty" }, empty, next && " ", next));
-    }
-    const pend = M.pendingText(c.pending);
-    if (pend) status.append(el("div", { class: "ghnt-pending", text: pend }));
-    const showStatus = status.childNodes.length > 0;
-
-    syncInfo("status", showStatus ? status : null, (node) => first.before(node));
-    const next = nextPage();
-    const cov = el("p", { class: "ghnt-coverage", "data-ghnt-triage": "coverage" }, M.coverageText(c, !!next), next && " ", next);
-    syncInfo("coverage", cov, (node) => last.after(node));
-  }
-
-  function syncInfo(kind, next, place) {
-    const old = live.get(kind);
-    if (!next) {
-      old?.remove();
-      live.delete(kind);
-      return;
-    }
-    if (old && old.isConnected && old.outerHTML === next.outerHTML) return;
-    const focus = old?.contains(document.activeElement) ? document.activeElement.className : null;
-    old?.remove();
-    place(next);
-    live.set(kind, next);
-    if (focus) next.querySelector(`.${focus.split(" ")[0]}`)?.focus();
-  }
-
-  function removeInfo() {
-    for (const kind of ["status", "coverage"]) {
-      live.get(kind)?.remove();
-      live.delete(kind);
-    }
-  }
-
   // ---- grouped sections ------------------------------------------------------
 
   function slotOrder(a, b) {
@@ -319,15 +357,15 @@
   }
 
   // Inert text under an expanded header: never a row, so j/k never stop on it.
-  function buildNote(cat, n) {
-    const lines = M.sectionNote(cat, n);
-    return lines.length ? el("div", { class: "ghnt-sec-note" }, lines.map((t) => el("p", { text: t }))) : null;
+  function buildNote(cat) {
+    return cat.note.length ? el("div", { class: "ghnt-sec-note" }, cat.note.map((t) => el("p", { text: t }))) : null;
   }
 
-  function buildHeader(cat, c, expanded, ids) {
-    const btn = el("button", { type: "button", class: "ghnt-sec-btn", "aria-expanded": String(expanded), "aria-controls": ids.join(" ") || false, "aria-label": `${M.labelOf(cat)}, ${c[cat]} of ${c.loaded} loaded notifications`, "data-ghnt-sec": cat }, dot(cat), el("span", { class: "ghnt-label", text: M.labelOf(cat) }), el("span", { class: "ghnt-count", text: M.countText(c[cat], false) }), chevron(expanded));
+  function buildHeader(cat, ids) {
+    const expanded = cat.expanded;
+    const btn = el("button", { type: "button", class: "ghnt-sec-btn", "aria-expanded": String(expanded), "aria-controls": ids.join(" ") || false, "aria-label": cat.aria, "data-ghnt-sec": cat.id }, dot(cat.id), el("span", { class: "ghnt-label", text: cat.label }), el("span", { class: "ghnt-count", text: cat.count }), chevron(expanded));
     btn.addEventListener("click", () => {
-      collapsed = { ...collapsed, [cat]: expanded };
+      collapsed = { ...collapsed, [cat.id]: expanded };
       try {
         chrome.storage.local.set({ [COLLAPSED_KEY]: collapsed });
       } catch {
@@ -347,10 +385,27 @@
     return btn;
   }
 
-  function renderGrouped(list, c) {
+  function renderGrouped(list, v, c) {
     const lists = nativeLists();
     if (!lists.length) return;
     const target = lists[0];
+    if (target !== groupedTarget) {
+      groupedTarget = target;
+      built = false;
+      groupedSince = Date.now();
+    }
+    // Rows still being classified: the native list stays as GitHub drew it and
+    // the block says so; the sections are built once, when nothing is pending
+    // or after GROUP_WAIT_MS at most, so they never reorder twice.
+    if (!built) {
+      const left = GROUP_WAIT_MS - (Date.now() - groupedSince);
+      if (c.pending > 0 && left > 0) {
+        clearTimeout(groupedTimer);
+        groupedTimer = setTimeout(render, left);
+        return;
+      }
+      built = true;
+    }
     // Rows move under the reader: the browser's own scroll anchoring would fight the compensation below.
     target.classList.add("ghnt-grouped");
     // A row's native slot is remembered the first time it moves.
@@ -369,13 +424,14 @@
 
     const desired = [];
     const heads = [];
-    for (const id of M.IDS) {
-      const isOpen = collapsed[id] !== true;
+    for (const cat of v.cats) {
+      const id = cat.id;
+      const isOpen = cat.expanded;
       let li = live.get(`sec-${id}`);
       if (!li || !li.isConnected) li = el("li", { class: "ghnt-sec", "data-ghnt-sec": id, "data-ghnt-triage": "sec" });
       live.set(`sec-${id}`, li);
-      const btn = buildHeader(id, c, isOpen, groups[id].map((r) => rowId(r.li)));
-      const kids = [btn, isOpen ? buildNote(id, c[id]) : null].filter(Boolean);
+      const btn = buildHeader(cat, groups[id].map((r) => rowId(r.li)));
+      const kids = [btn, buildNote(cat)].filter(Boolean);
       const prev = li.querySelector(".ghnt-sec-btn");
       const focused = prev && prev === document.activeElement;
       if (!prev || li.innerHTML !== kids.map((k) => k.outerHTML).join("")) {
@@ -409,7 +465,8 @@
         if (node === cursor) cursor = cursor.nextSibling;
         else target.insertBefore(node, cursor);
       }
-      if (ref && ref.isConnected) {
+      // The page only needs holding in place once the reader has scrolled.
+      if (ref && ref.isConnected && window.scrollY > 0) {
         const delta = ref.getBoundingClientRect().top - before;
         if (Math.abs(delta) > 0.5) window.scrollBy(0, delta);
       }
@@ -458,20 +515,29 @@
       }
     }
     lastSection.clear();
+    clearTimeout(groupedTimer);
+    groupedTimer = null;
+    built = false;
+    groupedTarget = null;
   }
 
   // ---- render ----------------------------------------------------------------
 
   function removeChrome() {
-    for (const kind of ["nav", "quickbar", "compact"]) {
-      live.get(kind)?.remove();
-      live.delete(kind);
-    }
+    live.get("nav")?.remove();
+    live.delete("nav");
+  }
+
+  function removeBlock() {
+    live.get("block")?.remove();
+    live.delete("block");
+    resizer?.disconnect();
+    watched = [];
   }
 
   function unrender() {
     removeChrome();
-    removeInfo();
+    removeBlock();
     unrenderGrouped();
     clearOff();
   }
@@ -495,54 +561,42 @@
       layout = want;
       sweepStrays();
       if (!state || state.phase === "idle") return;
+      // The filter row anchors the whole view: without it nothing of ours runs
+      // (no block, no sidebar group, no hidden or moved row), the next scan retries.
+      const row = filterRow();
+      const compact = want === "integrated" && narrowNow();
+      const nav = want === "integrated" && !compact ? sidebarNav() : null;
+      if (!row || !insetsOf(row) || (want === "integrated" && !compact && !nav)) {
+        unrender();
+        return;
+      }
       const list = rows();
       const c = M.counts(list.map((r) => r.item || { inPage: true, pending: true }));
+      const v = M.view(c, { layout: want, selected, collapsed, nextHref: nextHref() });
       if (want === "grouped") {
         selected = null;
         removeChrome();
         clearOff();
-        renderGrouped(list, c);
-        renderInfo(c, "grouped");
+        renderGrouped(list, v, c);
       } else {
         unrenderGrouped();
-        renderChrome(want, c);
+        if (nav) {
+          sync("nav", () => buildSidebar(v), (node, inPlace) => {
+            if (inPlace) return nav.firstElementChild === node;
+            nav.prepend(node);
+            return true;
+          });
+        } else removeChrome();
         applyFilter(list);
-        renderInfo(c, "filter");
       }
+      const barKind = want === "quickbar" ? "quickbar" : compact ? "compact" : null;
+      syncBlock(row, buildBlockKids(v, barKind));
+      measure();
     } finally {
       uncheckHidden();
       observer?.takeRecords();
       rendering = false;
     }
-  }
-
-  function renderChrome(want, c) {
-    const row = filterRow();
-    const compact = want === "integrated" && narrowNow();
-    for (const kind of ["nav", "quickbar", "compact"]) {
-      const wanted = want === "integrated" ? (compact ? "compact" : "nav") : "quickbar";
-      if (kind !== wanted) {
-        live.get(kind)?.remove();
-        live.delete(kind);
-      }
-    }
-    if (want === "integrated" && !compact) {
-      const nav = sidebarNav();
-      if (!nav) return; // anchor missing: nothing, retried on the next scan
-      sync("nav", () => buildSidebar(c), (node, inPlace) => {
-        if (inPlace) return nav.firstElementChild === node;
-        nav.prepend(node);
-        return true;
-      });
-      return;
-    }
-    if (!row) return; // the filter row is the anchor of the pills
-    const kind = compact ? "compact" : "quickbar";
-    sync(kind, () => buildBar(c, kind, row), (node, inPlace) => {
-      if (inPlace) return node.previousElementSibling === row;
-      row.after(node);
-      return true;
-    });
   }
 
   function schedule() {
@@ -598,6 +652,7 @@
     });
     observer.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("resize", schedule);
+    resizer = new ResizeObserver(queueMeasure);
     document.addEventListener("change", afterSelect, true);
     document.addEventListener("click", afterSelect, true);
     document.addEventListener("turbo:before-cache", leaveForCache);
@@ -618,6 +673,9 @@
     observer?.disconnect();
     observer = null;
     window.removeEventListener("resize", schedule);
+    resizer?.disconnect();
+    resizer = null;
+    watched = [];
     document.removeEventListener("change", afterSelect, true);
     document.removeEventListener("click", afterSelect, true);
     document.removeEventListener("turbo:before-cache", leaveForCache);

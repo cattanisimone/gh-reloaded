@@ -29,13 +29,17 @@ li.notifications-list-item[hidden] { display: none !important; }
 .ghnt-nav-item:focus-visible, .ghnt-pill:focus-visible, .ghnt-sec-btn:focus-visible, .ghnt-clear:focus-visible { outline: 2px solid var(--borderColor-accent-emphasis, #0969da); outline-offset: -2px; }
 
 /* Quick bar and the compact row below 768px. */
-.ghnt-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.ghnt-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
 .ghnt-compact { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; }
 .ghnt-compact .ghnt-pill { flex: none; }
 .ghnt-pill { box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border: 1px solid var(--borderColor-default, #d1d9e0); border-radius: 6px; background: var(--bgColor-muted, #f6f8fa); color: var(--fgColor-default, #1f2328); font: inherit; font-size: 14px; font-weight: 500; line-height: 21px; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04); transition: background-color 0.08s; }
 .ghnt-pill:hover { background: var(--bgColor-neutral-muted, #818b981f); }
 .ghnt-pill[aria-pressed="true"] { background: var(--bgColor-accent-muted, #ddf4ff); border-color: var(--borderColor-accent-emphasis, #0969da); color: var(--fgColor-accent, #0969da); }
 .ghnt-pill .ghnt-label { flex: none; }
+
+/* The one block above the list, right after the filter row. Its insets come from the filter controls and its vertical margins from the native gaps (triage.js measure()), so it is a plain block whose height is its content. flow-root keeps the children's margins inside it. */
+.ghnt-block { display: flow-root; box-sizing: border-box; margin-inline: var(--ghnt-l, 0) var(--ghnt-r, 0); }
+.ghnt-block > :last-child { margin-bottom: 0; }
 
 /* Status, empty, coverage. */
 .ghnt-status { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0 0 8px; font-size: 14px; }
@@ -44,7 +48,7 @@ li.notifications-list-item[hidden] { display: none !important; }
 .ghnt-clear:hover { text-decoration: underline; }
 .ghnt-next { color: var(--fgColor-accent, #0969da); white-space: nowrap; }
 .ghnt-empty, .ghnt-pending { flex: 1 0 100%; color: var(--fgColor-muted, #59636e); }
-.ghnt-coverage { margin: 8px 0; font-size: 12px; line-height: 18px; color: var(--fgColor-muted, #59636e); }
+.ghnt-coverage { margin: 0; font-size: 12px; line-height: 18px; color: var(--fgColor-muted, #59636e); }
 
 /* Grouped sections: inert headers inside GitHub's own list. */
 li.ghnt-sec { display: block; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--borderColor-default, #d1d9e0); background: var(--bgColor-muted, #f6f8fa); }
