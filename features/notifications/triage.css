@@ -58,6 +58,7 @@ li.ghnt-sec:first-child { border-top: 0; }
 .ghnt-chevron { flex: none; margin-left: auto; color: var(--fgColor-muted, #59636e); }
 .ghnt-sec-note { padding: 0 16px 8px 32px; font-size: 12px; line-height: 18px; color: var(--fgColor-muted, #59636e); }
 .ghnt-sec-note p { margin: 0; }
+li.ghnt-sec-pending { padding: 8px 16px; list-style: none; border-top: 1px solid var(--borderColor-default, #d1d9e0); font-size: 12px; line-height: 18px; color: var(--fgColor-muted, #59636e); }
 li.notifications-list-item.ghnt-moved { background: var(--bgColor-attention-muted, #fff8c5); transition: background-color 3s ease-out; }
 @media (prefers-reduced-motion: reduce) { li.notifications-list-item.ghnt-moved { transition: none; } }
 ul.ghnt-grouped { overflow-anchor: none; }

@@ -149,7 +149,7 @@
   const nextLink = (v) => (v.next ? el("a", { class: "ghnt-next", href: v.next.href, text: v.next.label }) : null);
 
   // The one block of ours above the list: [pills] + status + empty + coverage.
-  function buildBlockKids(v, barKind) {
+  function buildBlockKids(v, barKind, pendingInBlock = true) {
     const kids = [];
     if (barKind) kids.push(buildBar(v, barKind));
     const status = el("div", { class: "ghnt-status", "data-ghnt-triage": "status", role: "status" });
@@ -166,7 +166,7 @@
       status.append(clear);
     }
     if (v.empty) status.append(el("div", { class: "ghnt-empty" }, v.empty, v.next && " ", nextLink(v)));
-    if (v.pending) status.append(el("div", { class: "ghnt-pending", text: v.pending }));
+    if (v.pending && pendingInBlock) status.append(el("div", { class: "ghnt-pending", text: v.pending }));
     if (status.childNodes.length) kids.push(status);
     kids.push(el("p", { class: "ghnt-coverage", "data-ghnt-triage": "coverage" }, v.coverage, v.next && " ", nextLink(v)));
     return kids;
@@ -448,6 +448,21 @@
       }
       heads.push(li);
       desired.push(li, ...groups[id].map((r) => r.li));
+      if (id === M.IDS[M.IDS.length - 1]) {
+        // Sections built at the GROUP_WAIT_MS cap: the rows still being
+        // classified are counted after the last section, not in the block above
+        // the list, so the line going away never moves the first header up.
+        let wait = live.get("sec-pending");
+        if (v.pending) {
+          if (!wait || !wait.isConnected) wait = el("li", { class: "ghnt-sec-pending ghnt-pending", "data-ghnt-triage": "sec", role: "status" });
+          if (wait.textContent !== v.pending) wait.textContent = v.pending;
+          live.set("sec-pending", wait);
+          desired.push(wait);
+        } else if (wait) {
+          wait.remove();
+          live.delete("sec-pending");
+        }
+      }
       for (const r of groups[id]) {
         if (isOpen && collapsedRows.has(r.li)) {
           r.li.removeAttribute("hidden");
@@ -502,7 +517,7 @@
       else li.remove();
     }
     slots.clear();
-    for (const id of M.IDS) {
+    for (const id of [...M.IDS, "pending"]) {
       live.get(`sec-${id}`)?.remove();
       live.delete(`sec-${id}`);
     }
@@ -592,7 +607,7 @@
         applyFilter(list);
       }
       const barKind = want === "quickbar" ? "quickbar" : compact ? "compact" : null;
-      syncBlock(row, buildBlockKids(v, barKind));
+      syncBlock(row, buildBlockKids(v, barKind, !(want === "grouped" && built)));
       measure();
     } finally {
       uncheckHidden();

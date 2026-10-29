@@ -516,6 +516,10 @@ test("Grouped: the native list is untouched while rows classify; sections are bu
   await expect(visibleRows(page)).toHaveCount(32);
   await expect(secs(page)).toHaveCount(4, { timeout: 4000 });
   expect(await visibleRows(page).count()).toBe(await page.locator("li.ghnt-sec ~ li.notifications-list-item:visible").count());
+  // the rows still classifying are counted after the last section, inert, not in the block above the list
+  await expect(page.locator("ul.js-navigation-container > li.ghnt-sec-pending")).toContainText(/Classifying \d+ notifications?…/);
+  await expect(page.locator('[data-ghnt-triage="block"] .ghnt-pending')).toHaveCount(0);
+  await expect(page.locator("li.ghnt-sec-pending.js-navigation-item, li.ghnt-sec-pending.notifications-list-item")).toHaveCount(0);
   await settled(world);
   await expect(page.locator(".ghnt-pending")).toHaveCount(0);
   await expect(visibleRows(page)).toHaveCount(32 - 4);
@@ -812,6 +816,18 @@ for (const width of [400, 800, 1100, 1500]) {
     expect(await page.evaluate(() => window.__maxY)).toBe(0);
   });
 }
+
+test("Grouped built at the 2s cap while rows still classify: the first header does not move when the facts land", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped" }, viewport: { width: 1100, height: 800 }, delay: 3000 });
+  await expect(secs(page)).toHaveCount(4, { timeout: 6000 });
+  const top = () => page.locator("li.ghnt-sec").first().evaluate((e) => e.getBoundingClientRect().top);
+  const before = await top();
+  await expect(page.getByText(/Classifying \d+ notifications?…/)).toBeVisible();
+  await settled(world);
+  await expect(page.getByText(/Classifying/)).toHaveCount(0);
+  expect(await top()).toBe(before);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+});
 
 test("Grouped headers show an ellipsis while rows classify and no 'None among' note", async ({ context, page }) => {
   const { world, release } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped" }, hold: true });
