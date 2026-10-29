@@ -54,9 +54,9 @@
     return `${labelOf(id)}, ${pending ? "classifying" : c[id]} of ${c.loaded} loaded ${plural(c.loaded, "notification", "notifications")}`;
   }
 
-  // "Needs attention · 3 of 25 loaded"
-  function statusLine(selected, c) {
-    return `${labelOf(selected)} · ${c[selected]} of ${c.loaded} loaded`;
+  // "Needs attention · 3 of 25 loaded"; "…" for a 0 that is not known yet.
+  function statusLine(selected, c, pending) {
+    return `${labelOf(selected)} · ${pending ? "…" : c[selected]} of ${c.loaded} loaded`;
   }
 
   // How far the counts reach. `more` is true when GitHub has another page.
@@ -117,7 +117,7 @@
       layout: o.layout,
       selected,
       cats,
-      status: selected ? statusLine(selected, c) : "",
+      status: selected ? statusLine(selected, c, isPending(c, selected)) : "",
       empty: selected && !isPending(c, selected) ? emptyText(selected, c) : "",
       pending: pendingLine,
       coverage: coverageText(c, !!next),

@@ -89,6 +89,7 @@ test("copy: coverage names the loaded rows and partial pages; an empty filter is
   assert.equal(M.coverageText(c, true), "Counts cover the 25 loaded notifications; more pages not loaded.");
   assert.equal(M.coverageText({ ...c, loaded: 1 }, false), "Counts cover the 1 loaded notification.");
   assert.equal(M.statusLine("waiting", c), "Waiting · 5 of 25 loaded");
+  assert.equal(M.statusLine("waiting", { ...c, waiting: 0, pending: 3 }, true), "Waiting · … of 25 loaded");
   assert.equal(M.emptyText("attention", c), "No match among the loaded notifications.");
   assert.doesNotMatch(M.emptyText("attention", c), /clear|all/i);
   assert.equal(M.emptyText("waiting", c), "");
@@ -158,7 +159,8 @@ test("view(): layouts x {loading, pending, partial, last page, empty, all classi
           assert.equal(v.empty, "");
         } else {
           assert.equal(v.selected, "waiting");
-          assert.equal(v.status, `Waiting · ${c.waiting} of ${c.loaded} loaded`);
+          // the status line never states a 0 the pill shows as "…"
+          assert.equal(v.status, `Waiting · ${pendingNow && c.waiting === 0 ? "…" : c.waiting} of ${c.loaded} loaded`);
           // "No match" is never said while the rows are still being classified
           assert.equal(v.empty, pendingNow || c.waiting > 0 ? "" : "No match among the loaded notifications.");
         }
