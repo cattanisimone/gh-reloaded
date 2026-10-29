@@ -125,12 +125,29 @@
 
   function buildSidebar(c) {
     const items = M.CATEGORIES.map((cat) => el("li", { class: "ghnt-nav-li" }, categoryButton(cat.id, c, "ghnt-nav-item")));
-    return el("nav", { class: "ghnt-nav", "aria-label": "Triage", "data-ghnt-triage": "nav" }, el("h3", { class: "ghnt-nav-title", text: "Triage" }), el("ul", { class: "ghnt-nav-list" }, items));
+    // GitHub separates its sidebar groups with an hr: the Triage group ends with one too.
+    return el("nav", { class: "ghnt-nav", "aria-label": "Triage", "data-ghnt-triage": "nav" }, el("h3", { class: "ghnt-nav-title", text: "Triage" }), el("ul", { class: "ghnt-nav-list" }, items), el("hr", { class: "ghnt-nav-sep" }));
   }
 
-  function buildBar(c, kind) {
+  // How far GitHub's filter controls sit inside the column the bar spans
+  // (the filter row's own padding below 768px): the bar takes the same insets,
+  // so its edges line up with the controls above it at every width.
+  function insetsOf(row) {
+    const parent = row.parentElement;
+    const rects = [...row.children].map((n) => n.getBoundingClientRect()).filter((r) => r.width > 0);
+    if (!parent || !rects.length) return [0, 0];
+    const box = parent.getBoundingClientRect();
+    const cs = getComputedStyle(parent);
+    const left = box.left + parseFloat(cs.borderLeftWidth) + parseFloat(cs.paddingLeft);
+    const right = box.right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight);
+    return [Math.min(...rects.map((r) => r.left)) - left, right - Math.max(...rects.map((r) => r.right))].map((v) => Math.max(0, Math.round(v)));
+  }
+
+  function buildBar(c, kind, row) {
     const buttons = M.CATEGORIES.map((cat) => categoryButton(cat.id, c, "ghnt-pill"));
-    return el("div", { class: `ghnt-bar ${kind === "compact" ? "ghnt-compact" : "ghnt-quickbar"}`, role: "group", "aria-label": "Triage", "data-ghnt-triage": kind }, buttons);
+    const [left, right] = insetsOf(row);
+    const style = left || right ? `margin-left: ${left}px; margin-right: ${right}px;` : null;
+    return el("div", { class: `ghnt-bar ${kind === "compact" ? "ghnt-compact" : "ghnt-quickbar"}`, role: "group", "aria-label": "Triage", "data-ghnt-triage": kind, style }, buttons);
   }
 
   // Replaces the content of a block in place, keeping focus on the same
@@ -202,8 +219,15 @@
 
   // ---- info (status + coverage), outside the native list ---------------------
 
-  function more() {
-    return !!document.querySelector('.paginate-container a[rel="next"], nav[aria-label="Pagination"] a[rel="next"], nav[aria-label="Pagination"] a[href*="after="]');
+  // GitHub's own link to the next page of the inbox, or null on the last page.
+  function nextLink() {
+    return document.querySelector('.paginate-container a[rel="next"], nav[aria-label="Pagination"] a[rel="next"], nav[aria-label="Pagination"] a[href*="after="]');
+  }
+
+  // A link to the same target as GitHub's next page, or null.
+  function nextPage() {
+    const href = nextLink()?.getAttribute("href");
+    return href ? el("a", { class: "ghnt-next", href, text: M.NEXT_LABEL }) : null;
   }
 
   function renderInfo(c, mode) {
@@ -226,13 +250,17 @@
       status.append(clear);
     }
     const empty = mode === "filter" ? M.emptyText(selected, c) : "";
-    if (empty) status.append(el("div", { class: "ghnt-empty", text: empty }));
+    if (empty) {
+      const next = nextPage();
+      status.append(el("div", { class: "ghnt-empty" }, empty, next && " ", next));
+    }
     const pend = M.pendingText(c.pending);
     if (pend) status.append(el("div", { class: "ghnt-pending", text: pend }));
     const showStatus = status.childNodes.length > 0;
 
     syncInfo("status", showStatus ? status : null, (node) => first.before(node));
-    const cov = el("p", { class: "ghnt-coverage", "data-ghnt-triage": "coverage", text: M.coverageText(c, more()) });
+    const next = nextPage();
+    const cov = el("p", { class: "ghnt-coverage", "data-ghnt-triage": "coverage" }, M.coverageText(c, !!next), next && " ", next);
     syncInfo("coverage", cov, (node) => last.after(node));
   }
 
@@ -275,8 +303,29 @@
     return li.id;
   }
 
+  // Octicons chevron-down / chevron-right (16px).
+  const CHEVRON = {
+    down: "M12.78 5.22a.749.749 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.06 0L3.22 6.28a.749.749 0 1 1 1.06-1.06L8 9.94l3.72-3.72a.749.749 0 0 1 1.06 0Z",
+    right: "M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z",
+  };
+  function chevron(expanded) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    for (const [k, v] of Object.entries({ class: "ghnt-chevron", width: "16", height: "16", viewBox: "0 0 16 16", fill: "currentColor", "aria-hidden": "true", focusable: "false" })) svg.setAttribute(k, v);
+    const path = document.createElementNS(ns, "path");
+    path.setAttribute("d", expanded ? CHEVRON.down : CHEVRON.right);
+    svg.append(path);
+    return svg;
+  }
+
+  // Inert text under an expanded header: never a row, so j/k never stop on it.
+  function buildNote(cat, n) {
+    const lines = M.sectionNote(cat, n);
+    return lines.length ? el("div", { class: "ghnt-sec-note" }, lines.map((t) => el("p", { text: t }))) : null;
+  }
+
   function buildHeader(cat, c, expanded, ids) {
-    const btn = el("button", { type: "button", class: "ghnt-sec-btn", "aria-expanded": String(expanded), "aria-controls": ids.join(" ") || false, "aria-label": `${M.labelOf(cat)}, ${c[cat]} of ${c.loaded} loaded notifications`, "data-ghnt-sec": cat }, dot(cat), el("span", { class: "ghnt-label", text: M.labelOf(cat) }), el("span", { class: "ghnt-count", text: M.countText(c[cat], false) }), el("span", { class: "ghnt-chevron", "aria-hidden": "true", text: expanded ? "▾" : "▸" }));
+    const btn = el("button", { type: "button", class: "ghnt-sec-btn", "aria-expanded": String(expanded), "aria-controls": ids.join(" ") || false, "aria-label": `${M.labelOf(cat)}, ${c[cat]} of ${c.loaded} loaded notifications`, "data-ghnt-sec": cat }, dot(cat), el("span", { class: "ghnt-label", text: M.labelOf(cat) }), el("span", { class: "ghnt-count", text: M.countText(c[cat], false) }), chevron(expanded));
     btn.addEventListener("click", () => {
       collapsed = { ...collapsed, [cat]: expanded };
       try {
@@ -326,10 +375,11 @@
       if (!li || !li.isConnected) li = el("li", { class: "ghnt-sec", "data-ghnt-sec": id, "data-ghnt-triage": "sec" });
       live.set(`sec-${id}`, li);
       const btn = buildHeader(id, c, isOpen, groups[id].map((r) => rowId(r.li)));
+      const kids = [btn, isOpen ? buildNote(id, c[id]) : null].filter(Boolean);
       const prev = li.querySelector(".ghnt-sec-btn");
       const focused = prev && prev === document.activeElement;
-      if (!prev || prev.outerHTML !== btn.outerHTML) {
-        li.replaceChildren(btn);
+      if (!prev || li.innerHTML !== kids.map((k) => k.outerHTML).join("")) {
+        li.replaceChildren(...kids);
         if (focused) btn.focus();
       }
       heads.push(li);
@@ -488,7 +538,7 @@
     }
     if (!row) return; // the filter row is the anchor of the pills
     const kind = compact ? "compact" : "quickbar";
-    sync(kind, () => buildBar(c, kind), (node, inPlace) => {
+    sync(kind, () => buildBar(c, kind, row), (node, inPlace) => {
       if (inPlace) return node.previousElementSibling === row;
       row.after(node);
       return true;

@@ -1,7 +1,7 @@
 // features/notifications/triage-model.js — the pure side of the Triage view:
 // the four categories, the counts over the rows loaded on the page, which
 // rows a selected category keeps, the copy that says how far the counts
-// reach, and the arrow-key movement between section headers. No DOM and no
+// reach and what an empty or Unverifiable section means, and the arrow-key movement between section headers. No DOM and no
 // storage, so every rule is unit-tested in Node. The engine's items are the
 // only input; nothing here classifies.
 //
@@ -73,6 +73,18 @@
     return "No match among the loaded notifications.";
   }
 
+  // The link to GitHub's next page, shown in the coverage line and the empty state.
+  const NEXT_LABEL = "Next page ›";
+
+  // The inert lines under an expanded Grouped section: an empty one says it
+  // covers only the loaded rows, and Unverifiable always says why it exists.
+  function sectionNote(id, n) {
+    const lines = [];
+    if (n === 0) lines.push("None among the loaded notifications.");
+    if (id === "unverifiable") lines.push("This group holds notifications whose data or token permissions are not enough to tell.");
+    return lines;
+  }
+
   const pendingText = (n) => (n > 0 ? `Classifying ${n} ${plural(n, "notification", "notifications")}…` : "");
 
   // Roving movement between section headers (ArrowUp/Down/Home/End).
@@ -85,5 +97,5 @@
     return index;
   }
 
-  global.GHNT_TRIAGE_MODEL = { CATEGORIES, IDS, counts, categoryOf, keeps, labelOf, countText, ariaLabel, statusLine, coverageText, emptyText, pendingText, moveFocus };
+  global.GHNT_TRIAGE_MODEL = { CATEGORIES, IDS, counts, categoryOf, keeps, labelOf, countText, ariaLabel, statusLine, coverageText, emptyText, NEXT_LABEL, sectionNote, pendingText, moveFocus };
 })(typeof window !== "undefined" ? window : globalThis);

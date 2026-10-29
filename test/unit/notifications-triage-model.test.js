@@ -93,6 +93,7 @@ test("copy: coverage names the loaded rows and partial pages; an empty filter is
   assert.doesNotMatch(M.emptyText("attention", c), /clear|all/i);
   assert.equal(M.emptyText("waiting", c), "");
   assert.equal(M.emptyText(null, c), "");
+  assert.equal(M.NEXT_LABEL, "Next page ›");
   assert.equal(M.pendingText(4), "Classifying 4 notifications…");
   assert.equal(M.pendingText(1), "Classifying 1 notification…");
   assert.equal(M.pendingText(0), "");
@@ -114,4 +115,12 @@ test("moveFocus: arrows wrap, Home and End jump, other keys stay", () => {
   assert.equal(M.moveFocus(1, "End", 4), 3);
   assert.equal(M.moveFocus(1, "a", 4), 1);
   assert.equal(M.moveFocus(0, "ArrowDown", 0), -1);
+});
+
+test("a Grouped section note: empty sections cover only the loaded rows, Unverifiable always says why", () => {
+  assert.deepEqual(plain(M.sectionNote("waiting", 0)), ["None among the loaded notifications."]);
+  assert.deepEqual(plain(M.sectionNote("waiting", 3)), []);
+  assert.deepEqual(plain(M.sectionNote("unverifiable", 2)), ["This group holds notifications whose data or token permissions are not enough to tell."]);
+  assert.deepEqual(plain(M.sectionNote("unverifiable", 0)), ["None among the loaded notifications.", "This group holds notifications whose data or token permissions are not enough to tell."]);
+  for (const id of M.IDS) for (const line of M.sectionNote(id, 0)) assert.doesNotMatch(line, /all clear|nothing to do/i);
 });

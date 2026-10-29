@@ -102,7 +102,7 @@ test("fresh install renders Integrated navigation: the Triage group is the first
   for (const id of Object.keys(MANY)) expect(await countOf(page, id)).toBe(String(MANY[id].length));
   await expect(bar(page)).toHaveCount(0);
   await expect(secs(page)).toHaveCount(0);
-  await expect(page.locator(".ghnt-coverage")).toHaveText("Counts cover the 32 loaded notifications; more pages not loaded.");
+  await expect(page.locator(".ghnt-coverage")).toHaveText("Counts cover the 32 loaded notifications; more pages not loaded. Next page ›");
   await expect(cat(page, "attention")).toHaveAttribute("aria-label", "Needs attention, 8 of 32 loaded notifications");
 });
 
@@ -522,4 +522,134 @@ test("Clear triage by keyboard keeps focus on the category that was selected", a
   await page.getByRole("button", { name: "Clear triage" }).focus();
   await page.keyboard.press("Enter");
   await expect(cat(page, "attention")).toBeFocused();
+});
+
+test("Next page: the coverage line and the empty state link to GitHub's own next page, in every layout, and not on the last page", async ({ context, page }) => {
+  const { world } = await boot(context, page);
+  await settled(world);
+  const next = (loc) => loc.getByRole("link", { name: "Next page ›" });
+  for (const layout of ["integrated", "quickbar", "grouped"]) {
+    await seedStorage(context, { ghntLayout: layout });
+    if (layout === "grouped") await expect(secs(page)).toHaveCount(4);
+    await expect(next(page.locator(".ghnt-coverage")), layout).toHaveAttribute("href", "/notifications?after=p2");
+    await expect(page.locator(".ghnt-coverage"), layout).toHaveText("Counts cover the 6 loaded notifications; more pages not loaded. Next page ›");
+  }
+  await seedStorage(context, { ghntLayout: "integrated" });
+  await cat(page, "waiting").click(); // nothing is Waiting in the 6-row set
+  const empty = page.locator(".ghnt-empty");
+  await expect(empty).toContainText("No match among the loaded notifications.");
+  await expect(next(empty)).toHaveAttribute("href", "/notifications?after=p2");
+  // It is GitHub's own link target: following it loads page 2, where there is no next page.
+  await next(empty).click();
+  await expect(page).toHaveURL(/after=p2/);
+  await settled(world);
+  await expect(page.locator(".ghnt-coverage")).toHaveText("Counts cover the 2 loaded notifications.");
+  await expect(page.getByRole("link", { name: "Next page ›" })).toHaveCount(0);
+});
+
+test("Grouped: an empty expanded section and Unverifiable say what they mean, as inert text that is not a row", async ({ context, page }) => {
+  const { world } = await boot(context, page, { storage: { ghntLayout: "grouped" } });
+  await settled(world);
+  await expect(secs(page)).toHaveCount(4);
+  const note = (id) => page.locator(`li.ghnt-sec[data-ghnt-sec="${id}"] .ghnt-sec-note`);
+  const c = await state(world).then((s) => Object.fromEntries(["attention", "waiting", "informational", "unverifiable"].map((id) => [id, s.items.filter((i) => i.inPage !== false && i.section === id).length])));
+  expect(c.waiting).toBe(0);
+  await expect(note("waiting")).toHaveText("None among the loaded notifications.");
+  await expect(note("unverifiable")).toContainText("This group holds notifications whose data or token permissions are not enough to tell.");
+  await expect(note("attention")).toHaveCount(0);
+  const inert = await page.evaluate(() => [...document.querySelectorAll(".ghnt-sec-note")].every((n) => n.closest("li.ghnt-sec") && !n.closest(".js-navigation-item") && !n.querySelector("a, button, input")));
+  expect(inert).toBe(true);
+  // Collapsed, the note goes with the rows.
+  await page.locator('.ghnt-sec-btn[data-ghnt-sec="waiting"]').click();
+  await expect(note("waiting")).toHaveCount(0);
+  await page.locator('.ghnt-sec-btn[data-ghnt-sec="waiting"]').click();
+  await expect(note("waiting")).toHaveCount(1);
+  // The 32-row set: a non-empty Unverifiable still says why it exists.
+  await page.goto(`${INBOX}#many`);
+  await settled(world);
+  await expect(note("unverifiable")).toHaveText("This group holds notifications whose data or token permissions are not enough to tell.");
+});
+
+test("Grouped header: the count sits right after the label, an SVG chevron at the right edge", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped" }, viewport: { width: 1280, height: 800 } });
+  await settled(world);
+  for (const [id, expanded] of [["attention", true], ["waiting", false]]) {
+    if (!expanded) await page.locator(`.ghnt-sec-btn[data-ghnt-sec="${id}"]`).click();
+    const g = await page.locator(`.ghnt-sec-btn[data-ghnt-sec="${id}"]`).evaluate((b) => {
+      const r = b.getBoundingClientRect();
+      const l = b.querySelector(".ghnt-label").getBoundingClientRect();
+      const c = b.querySelector(".ghnt-count").getBoundingClientRect();
+      const ch = b.querySelector(".ghnt-chevron");
+      const cr = ch.getBoundingClientRect();
+      return { gap: Math.round(c.left - l.right), svg: ch.tagName.toLowerCase(), size: [Math.round(cr.width), Math.round(cr.height)], toRight: Math.round(r.right - cr.right), expanded: b.getAttribute("aria-expanded"), path: ch.querySelector("path").getAttribute("d").slice(0, 8) };
+    });
+    expect(g.gap, id).toBeLessThanOrEqual(8);
+    expect(g.svg, id).toBe("svg");
+    expect(g.size, id).toEqual([16, 16]);
+    expect(g.toRight, id).toBe(16); // the button's own right padding
+    expect(g.expanded, id).toBe(String(expanded));
+    if (id === "waiting") expect(g.path).not.toBe(await page.locator('.ghnt-sec-btn[data-ghnt-sec="attention"] .ghnt-chevron path').getAttribute("d").then((d) => d.slice(0, 8)));
+  }
+});
+
+test("narrow widths: the Quick bar and the compact row line up with GitHub's filter controls, left and right", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many`, viewport: { width: 1280, height: 800 } });
+  await settled(world);
+  for (const width of [320, 400, 500, 600, 767, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const layout of ["integrated", "quickbar"]) {
+      await seedStorage(context, { ghntLayout: layout });
+      const kind = layout === "quickbar" ? "quickbar" : width < 768 ? "compact" : null;
+      if (!kind) continue;
+      await expect(page.locator(`[data-ghnt-triage="${kind}"]`)).toHaveCount(1);
+      const why = `${width} ${layout}`;
+      await expect.poll(() => page.evaluate((k) => {
+        const b = document.querySelector(`[data-ghnt-triage="${k}"]`).getBoundingClientRect();
+        const ctl = [...document.querySelectorAll("#filters > *")].map((n) => n.getBoundingClientRect()).filter((r) => r.width > 0);
+        const left = Math.min(...ctl.map((r) => r.left));
+        const right = Math.max(...ctl.map((r) => r.right));
+        return JSON.stringify({ left: Math.round(b.left - left), right: Math.round(b.right - right), page: document.documentElement.scrollWidth <= document.documentElement.clientWidth });
+      }, kind), why).toBe(JSON.stringify({ left: 0, right: 0, page: true }));
+    }
+  }
+});
+
+test("sidebar: a native divider separates the Triage group from Inbox, with the metrics of GitHub's own", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many`, viewport: { width: 1280, height: 800 } });
+  await settled(world);
+  const g = await page.evaluate(() => {
+    const side = document.querySelector('nav[aria-label="Notifications"]');
+    const mine = side.querySelector('[data-ghnt-triage="nav"] hr');
+    const native = [...side.querySelectorAll("hr")].find((h) => !h.closest("[data-ghnt-triage]"));
+    const m = (h) => { const c = getComputedStyle(h); return [c.borderTopWidth, c.borderBottomWidth, c.borderBottomStyle, c.borderBottomColor, c.marginTop, c.marginBottom, h.getBoundingClientRect().height].join(" "); };
+    const top = (n) => n.getBoundingClientRect().top;
+    const bottom = (n) => n.getBoundingClientRect().bottom;
+    const group = side.querySelector('[data-ghnt-triage="nav"] .ghnt-nav-list');
+    const inbox = side.querySelector('nav[aria-label="Inbox"]');
+    const filters = side.querySelector('nav[aria-label="Filters"]');
+    return { mine: mine && m(mine), native: m(native), lastChild: mine && mine === mine.parentElement.lastElementChild, gapMine: Math.round(top(inbox) - bottom(group)), gapNative: Math.round(top(filters) - bottom(inbox)) };
+  });
+  expect(g.mine).toBe(g.native);
+  expect(g.native).toMatch(/^0px 1px solid .* 15px 15px 1$/);
+  expect(g.lastChild).toBe(true);
+  expect(g.gapMine).toBe(g.gapNative);
+});
+
+test("the selected sidebar category uses the accent tint and accent text, unlike GitHub's grey current item", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many` });
+  await settled(world);
+  await cat(page, "waiting").click();
+  const g = await page.evaluate(() => {
+    const probe = document.createElement("span");
+    probe.style.cssText = "background: var(--bgColor-accent-muted); color: var(--fgColor-accent)";
+    document.body.append(probe);
+    const want = getComputedStyle(probe);
+    const out = { bg: want.backgroundColor, fg: want.color };
+    probe.remove();
+    const sel = getComputedStyle(document.querySelector('[data-ghnt-cat="waiting"]'));
+    const cur = getComputedStyle(document.querySelector('nav[aria-label="Inbox"] a[aria-current="page"]'));
+    return { want: out, sel: { bg: sel.backgroundColor, fg: sel.color }, current: cur.backgroundColor };
+  });
+  expect(g.sel).toEqual(g.want);
+  expect(g.sel.bg).not.toBe(g.current);
 });

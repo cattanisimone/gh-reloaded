@@ -26,6 +26,7 @@
     ul.notification-list-item-actions-responsive + tool-tip; rows are js-navigation-item.
   - pagination: div.paginate-container with Previous / Next.
   - the filter row spans the full width above the sidebar and the list (the sidebar's own placement is measured, the filter row's is kept as the #105 fixture had it).
+  - below 768px the filter controls are inset from the column the list uses: at x=8 to w-8 under 544px (no page padding) and 8px inside a 16px page padding from 544px; Primer's base hr (1px muted bottom border, 15px margins) separates the sidebar groups.
   - variants by hash: #many = 32 rows, #repo = Group by Repository (a Box per repository), #relative, #empty.
 
   One page, three routes (the tests serve it for every github.com navigation):
@@ -41,8 +42,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Notifications</title>
 <style>
-  :root { color-scheme: light dark; --bgColor-default: #fff; --bgColor-muted: #f6f8fa; --bgColor-neutral-muted: #818b981f; --borderColor-default: #d1d9e0; --fgColor-default: #1f2328; --fgColor-muted: #59636e; --bgColor-accent-muted: #ddf4ff; --borderColor-accent-emphasis: #0969da; --fgColor-accent: #0969da; --bgColor-accent-emphasis: #0969da; --fgColor-onEmphasis: #fff; --shadow-floating-small: 0 0 0 1px #d1d9e0, 0 6px 12px -3px #25292e0a, 0 6px 18px 0 #25292e1f; }
-  @media (prefers-color-scheme: dark) { :root { --bgColor-default: #0d1117; --bgColor-muted: #151b23; --bgColor-neutral-muted: #656c7633; --borderColor-default: #3d444d; --fgColor-default: #f0f6fc; --fgColor-muted: #9198a1; --bgColor-accent-muted: #388bfd1a; --borderColor-accent-emphasis: #1f6feb; --fgColor-accent: #4493f8; --bgColor-accent-emphasis: #1f6feb; --fgColor-onEmphasis: #fff; --shadow-floating-small: 0 0 0 1px #3d444d, 0 8px 16px -4px #01040966, 0 4px 32px -8px #01040966; } }
+  :root { color-scheme: light dark; --bgColor-default: #fff; --bgColor-muted: #f6f8fa; --bgColor-neutral-muted: #818b981f; --borderColor-default: #d1d9e0; --borderColor-muted: #d1d9e0b3; --fgColor-default: #1f2328; --fgColor-muted: #59636e; --bgColor-accent-muted: #ddf4ff; --borderColor-accent-emphasis: #0969da; --fgColor-accent: #0969da; --bgColor-accent-emphasis: #0969da; --fgColor-onEmphasis: #fff; --shadow-floating-small: 0 0 0 1px #d1d9e0, 0 6px 12px -3px #25292e0a, 0 6px 18px 0 #25292e1f; }
+  @media (prefers-color-scheme: dark) { :root { --bgColor-default: #0d1117; --bgColor-muted: #151b23; --bgColor-neutral-muted: #656c7633; --borderColor-default: #3d444d; --borderColor-muted: #3d444db3; --fgColor-default: #f0f6fc; --fgColor-muted: #9198a1; --bgColor-accent-muted: #388bfd1a; --borderColor-accent-emphasis: #1f6feb; --fgColor-accent: #4493f8; --bgColor-accent-emphasis: #1f6feb; --fgColor-onEmphasis: #fff; --shadow-floating-small: 0 0 0 1px #3d444d, 0 8px 16px -4px #01040966, 0 4px 32px -8px #01040966; } }
   .d-flex { display: flex; } .flex-column { flex-direction: column; } .flex-auto { flex: 1 1 auto; } .min-width-0 { min-width: 0; }
   .filters-row { margin-bottom: 16px; }
   .filters-row > .f-item { width: 100%; margin-bottom: 8px; }
@@ -73,6 +74,9 @@
   @media (prefers-color-scheme: dark) { body { background: #0d1117; color: #e6edf3; } a { color: #58a6ff; } }
   header { height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 16px; border-bottom: 1px solid #d1d9e0; }
   main { max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
+  /* Below 768px the live page has no side padding under 544px and 16px from 544px, and the filter row insets its controls by 8px more. */
+  @media (max-width: 543.98px) { main { padding-left: 0; padding-right: 0; } }
+  @media (max-width: 767.98px) { .filters-row { padding: 0 8px; } }
   ul { list-style: none; margin: 0; padding: 0; }
   .layout { display: flex; gap: 24px; align-items: flex-start; }
   .layout > .sidebar { display: none; flex: none; width: calc(184px + (100vw - 768px) * 0.25); }
@@ -81,7 +85,8 @@
   .layout > .content { flex: 1 1 auto; min-width: 0; }
   .sidebar nav[aria-label="Inbox"] a, .sidebar nav[aria-label="Filters"] a { display: flex; align-items: center; gap: 8px; box-sizing: border-box; height: 33px; padding: 0 8px; border-radius: 6px; color: inherit; text-decoration: none; }
   .sidebar nav a[aria-current="page"] { background: #818b9826; font-weight: 600; }
-  .sidebar hr { border: 0; border-top: 1px solid #d1d9e0; margin: 8px 0; }
+  /* Primer's base hr, as the live sidebar renders it between its groups: 1px muted bottom border, 15px margins. */
+  hr { box-sizing: content-box; height: 0; margin: 15px 0; overflow: hidden; background: transparent; border: 0; border-bottom: 1px solid var(--borderColor-muted); }
   .Box { border: 1px solid #d1d9e0; border-radius: 6px; margin-bottom: 16px; overflow: hidden; }
   .Box-header { padding: 8px 16px; background: #f6f8fa; border-bottom: 1px solid #d1d9e0; font-weight: 600; }
   ul.color-bg-subtle { background: #f6f8fa; }
@@ -95,7 +100,7 @@
   ul.notification-list-item-actions-responsive { display: none; }
   li.notification-unread { font-weight: 600; }
   tool-tip { display: none; }
-  @media (prefers-color-scheme: dark) { li.notifications-list-item { background: #0d1117; } li.notifications-list-item.notification-unread { background: #388bfd1a; } .Box, .Box-header, .sidebar hr { border-color: #3d444d; } .Box-header, ul.color-bg-subtle { background: #151b23; } }
+  @media (prefers-color-scheme: dark) { li.notifications-list-item { background: #0d1117; } li.notifications-list-item.notification-unread { background: #388bfd1a; } .Box, .Box-header { border-color: #3d444d; } .Box-header, ul.color-bg-subtle { background: #151b23; } }
   .reason-label { color: #59636e; }
   nav[aria-label="Pagination"] { display: flex; gap: 12px; padding: 12px 0; }
   .paginate-container { margin-top: 16px; }
