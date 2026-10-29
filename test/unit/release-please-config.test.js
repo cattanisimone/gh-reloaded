@@ -15,6 +15,12 @@ import { Manifest } from "release-please/build/src/manifest.js";
 import { buildStrategy } from "release-please/build/src/factory.js";
 import { parseConventionalCommits } from "release-please/build/src/commit.js";
 import { Version } from "release-please/build/src/version.js";
+import { setLogger } from "release-please/build/src/util/logger.js";
+
+// Before anything is built: the manifest and strategies capture the logger
+// when they are constructed. Why it must be silent is in the test below.
+const noop = () => {};
+setLogger({ error: noop, warn: noop, info: noop, debug: noop, trace: noop });
 
 const CONFIG_FILE = "release-please-config.json";
 const MANIFEST_FILE = ".release-please-manifest.json";
@@ -52,6 +58,24 @@ async function releasePullRequest(...messages) {
   }));
   return strategy.buildReleasePullRequest(parseConventionalCommits(commits), latestRelease);
 }
+
+// Under `node --test` on Node 20 a test file's stdout carries the runner's own
+// serialized messages, and release-please's log lines written in between
+// intermittently crash the runner ("Unable to deserialize cloned data"). The
+// logger must stay silent here.
+test("release-please writes nothing to the console while building a release PR", async () => {
+  const written = [];
+  const methods = ["log", "info", "warn", "error", "debug", "trace"];
+  const original = Object.fromEntries(methods.map((m) => [m, console[m]]));
+  for (const m of methods) console[m] = (...args) => written.push([m, ...args]);
+  try {
+    await releasePullRequest("feat: add a thing");
+    await releasePullRequest("docs: reword the readme");
+  } finally {
+    Object.assign(console, original);
+  }
+  assert.deepEqual(written, []);
+});
 
 test("breaking change below 1.0 bumps the minor", async () => {
   const pr = await releasePullRequest("feat!: remove the old option\n\nBREAKING CHANGE: the option is gone");
