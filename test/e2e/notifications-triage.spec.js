@@ -690,6 +690,8 @@ const blockGeo = (page) =>
       below: rect(list).height > 0 ? rect(list).top - br.bottom : 8,
       content: br.height - (parts[parts.length - 1].bottom - parts[0].top),
       covHeight: cov ? rect(cov).height : 0,
+      // lines of text in the coverage times its line-height: a stretched box is taller
+      covText: cov ? (() => { const r = document.createRange(); r.selectNodeContents(cov); const tops = [...r.getClientRects()].map((l) => Math.round((l.top + l.bottom) / 2 / 4)); return new Set(tops).size * parseFloat(getComputedStyle(cov).lineHeight); })() : 0,
       docW: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   });
@@ -706,6 +708,7 @@ const blockOk = async (page, why) => {
       if (!near(g.above, 8)) bad.push(`above ${g.above}`);
       if (!near(g.below, 8)) bad.push(`below ${g.below}`);
       if (!near(g.content)) bad.push(`height ${g.content} beyond content`);
+      if (!near(g.covHeight, g.covText)) bad.push(`coverage ${g.covHeight}px high for ${g.covText}px of text`);
       return bad.length ? `${why}: ${bad.join(", ")}` : "ok";
     })
     .toBe("ok");
