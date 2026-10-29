@@ -198,11 +198,13 @@
       main.innerHTML = '<h1>acme/web</h1><p>Code · Issues · Pull requests</p>';
     }
   }
-  // Soft navigation, like Turbo: no document load, history.pushState and turbo:load.
+  // Soft navigation, like Turbo: no document load, turbo:before-cache on the
+  // page being left (also from one inbox page to the next), history.pushState and turbo:load.
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a#bell, a#next, a#prev');
     if (!a) return;
     e.preventDefault();
+    document.dispatchEvent(new Event('turbo:before-cache'));
     history.pushState({}, '', a.getAttribute('href'));
     render();
     document.dispatchEvent(new Event('turbo:load'));

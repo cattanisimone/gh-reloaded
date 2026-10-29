@@ -496,16 +496,19 @@ test("a restored Turbo snapshot carries no hidden rows and no grouped order", as
   await settled(world);
   await cat(page, "informational").click();
   await expect(visibleRows(page)).toHaveCount(16);
-  // Turbo caches the page before leaving it.
-  await page.evaluate(() => { document.dispatchEvent(new Event("turbo:before-cache")); window.__snap = document.getElementById("main").innerHTML; });
-  await expect(page.locator(".ghnt-off")).toHaveCount(0);
-  await expect(everything(page)).toHaveCount(0);
+  // Turbo caches the page in the same task as the event: what it stores is checked there.
+  expect(await page.evaluate(() => { document.dispatchEvent(new Event("turbo:before-cache")); return { off: document.querySelectorAll(".ghnt-off, li.notifications-list-item[hidden]").length, ours: document.querySelectorAll("[data-ghnt-triage]").length }; })).toEqual({ off: 0, ours: 0 });
+  // the selection is not reset by the cache event: Turbo fires it on a visit to the next inbox page too
+  await expect(cat(page, "informational")).toHaveAttribute("aria-pressed", "true");
   await seedStorage(context, { ghntLayout: "grouped" });
   await expect(secs(page)).toHaveCount(4);
-  await page.evaluate(() => document.dispatchEvent(new Event("turbo:before-cache")));
-  expect(await page.evaluate(() => [...document.querySelectorAll("li.notifications-list-item")].map((e) => e.dataset.notificationId))).toEqual(Array.from({ length: 32 }, (_, i) => `NT_${i + 1}`));
-  await expect(secs(page)).toHaveCount(0);
-  await expect(page.locator("ul.js-navigation-container").evaluate((ul) => document.createNodeIterator(ul, NodeFilter.SHOW_COMMENT).nextNode())).resolves.toBeNull();
+  // What Turbo snapshots is the page right after the event: checked in the same task, before the view comes back.
+  const snap = await page.evaluate(() => {
+    document.dispatchEvent(new Event("turbo:before-cache"));
+    const ul = document.querySelector("ul.js-navigation-container");
+    return { order: [...document.querySelectorAll("li.notifications-list-item")].map((e) => e.dataset.notificationId), secs: document.querySelectorAll("li.ghnt-sec, li.ghnt-sec-pending").length, comment: !!document.createNodeIterator(ul, NodeFilter.SHOW_COMMENT).nextNode() };
+  });
+  expect(snap).toEqual({ order: Array.from({ length: 32 }, (_, i) => `NT_${i + 1}`), secs: 0, comment: false });
   await expect(secs(page)).toHaveCount(4); // and the view comes back
 });
 

@@ -641,9 +641,10 @@
   // restored snapshot is GitHub's plain list (render() rebuilds it).
   function leaveForCache() {
     if (!active) return;
+    // The selection stays: Turbo caches on every visit, also from one inbox
+    // page to the next; leaving the inbox stops the module, which resets it.
     unrender();
     layout = null;
-    selected = null;
   }
 
   function start(api) {
