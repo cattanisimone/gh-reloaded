@@ -78,14 +78,52 @@
 
   // The inert lines under an expanded Grouped section: an empty one says it
   // covers only the loaded rows, and Unverifiable always says why it exists.
-  function sectionNote(id, n) {
+  function sectionNote(id, n, pending) {
     const lines = [];
-    if (n === 0) lines.push("None among the loaded notifications.");
+    if (n === 0 && !pending) lines.push("None among the loaded notifications.");
     if (id === "unverifiable") lines.push("This group holds notifications whose data or token permissions are not enough to tell.");
     return lines;
   }
 
+  // A category with 0 while rows are still classifying is not known yet.
+  const isPending = (c, id) => c.pending > 0 && c[id] === 0;
+
   const pendingText = (n) => (n > 0 ? `Classifying ${n} ${plural(n, "notification", "notifications")}…` : "");
+
+  // Everything any layout shows, computed once: no renderer formats a count,
+  // a label or a sentence itself, so a rule cannot be missed by one layout.
+  // o = { layout, selected, collapsed, nextHref }.
+  function view(c, o = {}) {
+    const selected = o.layout === "grouped" ? null : IDS.includes(o.selected) ? o.selected : null;
+    const collapsed = o.collapsed || {};
+    const next = o.nextHref ? { href: o.nextHref, label: NEXT_LABEL } : null;
+    const cats = CATEGORIES.map(({ id, label }) => {
+      const pending = isPending(c, id);
+      const expanded = collapsed[id] !== true;
+      return {
+        id,
+        label,
+        n: c[id],
+        pending,
+        count: countText(c[id], pending),
+        aria: ariaLabel(id, c, pending),
+        pressed: selected === id,
+        expanded,
+        note: expanded ? sectionNote(id, c[id], pending) : [],
+      };
+    });
+    const pendingLine = pendingText(c.pending);
+    return {
+      layout: o.layout,
+      selected,
+      cats,
+      status: selected ? statusLine(selected, c) : "",
+      empty: selected && !isPending(c, selected) ? emptyText(selected, c) : "",
+      pending: pendingLine,
+      coverage: coverageText(c, !!next),
+      next,
+    };
+  }
 
   // Roving movement between section headers (ArrowUp/Down/Home/End).
   function moveFocus(index, key, length) {
@@ -97,5 +135,5 @@
     return index;
   }
 
-  global.GHNT_TRIAGE_MODEL = { CATEGORIES, IDS, counts, categoryOf, keeps, labelOf, countText, ariaLabel, statusLine, coverageText, emptyText, NEXT_LABEL, sectionNote, pendingText, moveFocus };
+  global.GHNT_TRIAGE_MODEL = { CATEGORIES, IDS, counts, categoryOf, keeps, labelOf, countText, ariaLabel, statusLine, coverageText, emptyText, NEXT_LABEL, sectionNote, pendingText, isPending, view, moveFocus };
 })(typeof window !== "undefined" ? window : globalThis);

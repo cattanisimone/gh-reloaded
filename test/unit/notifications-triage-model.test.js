@@ -124,3 +124,47 @@ test("a Grouped section note: empty sections cover only the loaded rows, Unverif
   assert.deepEqual(plain(M.sectionNote("unverifiable", 0)), ["None among the loaded notifications.", "This group holds notifications whose data or token permissions are not enough to tell."]);
   for (const id of M.IDS) for (const line of M.sectionNote(id, 0)) assert.doesNotMatch(line, /all clear|nothing to do/i);
 });
+
+// view(): one table of every state the three layouts share (S1).
+test("view(): layouts x {loading, pending, partial, last page, empty, all classified} give one set of strings", () => {
+  const mk = (over) => ({ attention: 0, waiting: 0, informational: 0, unverifiable: 0, pending: 0, loaded: 0, ...over });
+  const states = {
+    loading: mk({ pending: 5, loaded: 5 }),
+    pending: mk({ attention: 2, pending: 3, loaded: 5 }),
+    classified: mk({ attention: 2, waiting: 1, informational: 2, loaded: 5 }),
+    empty: mk(),
+  };
+  for (const layout of ["integrated", "quickbar", "grouped"]) {
+    for (const [name, c] of Object.entries(states)) {
+      for (const nextHref of ["/notifications?after=p2", null]) {
+        const v = M.view(c, { layout, selected: "waiting", collapsed: { informational: true }, nextHref });
+        const pendingNow = c.pending > 0;
+        // a category with 0 is "…" while rows classify, whatever the layout
+        for (const cat of v.cats) {
+          assert.equal(cat.pending, pendingNow && c[cat.id] === 0, `${layout}/${name}/${cat.id}`);
+          assert.equal(cat.count, cat.pending ? "…" : String(c[cat.id]));
+          assert.match(cat.aria, cat.pending ? /classifying of/ : new RegExp(`, ${c[cat.id]} of ${c.loaded} loaded`));
+          assert.ok(!cat.pending || !cat.note.some((l) => /None among/.test(l)), "no None note while pending");
+        }
+        assert.equal(v.cats.find((x) => x.id === "informational").expanded, false);
+        assert.deepEqual(plain(v.cats.find((x) => x.id === "informational").note), []);
+        // Next page only when GitHub has one, in the coverage line
+        assert.equal(v.next?.href ?? null, nextHref);
+        assert.equal(v.coverage, M.coverageText(c, !!nextHref));
+        assert.equal(v.pending, pendingNow ? `Classifying ${c.pending} ${c.pending === 1 ? "notification" : "notifications"}…` : "");
+        if (layout === "grouped") {
+          assert.equal(v.selected, null);
+          assert.equal(v.status, "");
+          assert.equal(v.empty, "");
+        } else {
+          assert.equal(v.selected, "waiting");
+          assert.equal(v.status, `Waiting · ${c.waiting} of ${c.loaded} loaded`);
+          // "No match" is never said while the rows are still being classified
+          assert.equal(v.empty, pendingNow || c.waiting > 0 ? "" : "No match among the loaded notifications.");
+        }
+      }
+    }
+  }
+  assert.equal(M.view(states.classified, { layout: "integrated", selected: "attention" }).empty, "");
+  assert.equal(M.view(states.classified, { layout: "integrated", selected: "bogus" }).selected, null);
+});
