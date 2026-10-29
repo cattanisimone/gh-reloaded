@@ -884,3 +884,20 @@ test("Grouped: a reader who scrolled before the sections are built keeps the row
   const top = await page.evaluate((id) => document.querySelector(`li[data-notification-id="${id}"]`).getBoundingClientRect().top, probe.id);
   expect(Math.abs(top - probe.top), `${probe.id} at ${probe.top} before the build, ${top} after (scrollY ${await page.evaluate(() => window.scrollY)})`).toBeLessThanOrEqual(1);
 });
+
+test("Grouped: a row GitHub removes (Done, Unsubscribe) stays gone when the layout is left, and leaves no placeholder", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped" } });
+  await settled(world);
+  await expect(secs(page)).toHaveCount(4);
+  const rows = page.locator("li.notifications-list-item");
+  await page.evaluate(() => document.querySelector('li[data-notification-id="NT_5"]').remove());
+  await expect(rows).toHaveCount(31);
+  await seedStorage(context, { ghntLayout: "integrated" });
+  await expect(secs(page)).toHaveCount(0);
+  await page.waitForTimeout(300);
+  await expect(rows).toHaveCount(31);
+  await expect(page.locator('li[data-notification-id="NT_5"]')).toHaveCount(0);
+  const native = Array.from({ length: 32 }, (_, i) => `NT_${i + 1}`).filter((id) => id !== "NT_5");
+  expect(await rows.evaluateAll((els) => els.map((e) => e.dataset.notificationId))).toEqual(native);
+  expect(await page.evaluate(() => document.createNodeIterator(document.querySelector("ul.js-navigation-container"), NodeFilter.SHOW_COMMENT).nextNode())).toBeNull();
+});

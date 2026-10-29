@@ -417,6 +417,14 @@
     const candidates = (lastSection.size ? stay : classified).map((r) => r.li).sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
     const ref = window.scrollY > 0 ? candidates.find(onScreen) || [...document.querySelectorAll("li.ghnt-sec")].find(onScreen) : null;
     const before = ref ? ref.getBoundingClientRect().top : 0;
+    // Rows GitHub removed since the last render are forgotten with their slot.
+    for (const [li, mark] of slots) {
+      if (li.isConnected) continue;
+      mark.remove();
+      slots.delete(li);
+      collapsedRows.delete(li);
+      hidden.delete(li);
+    }
     // A row's native slot is remembered the first time it moves.
     for (const r of classified) {
       if (!slots.has(r.li) && r.li.parentNode) {
@@ -513,8 +521,12 @@
 
   function unrenderGrouped() {
     for (const [li, mark] of slots) {
-      if (mark.parentNode) mark.replaceWith(li);
-      else li.remove();
+      // A row GitHub removed meanwhile (Done, Unsubscribe) stays gone.
+      if (mark.parentNode && li.isConnected) mark.replaceWith(li);
+      else {
+        mark.remove();
+        li.remove();
+      }
     }
     slots.clear();
     for (const id of [...M.IDS, "pending"]) {
