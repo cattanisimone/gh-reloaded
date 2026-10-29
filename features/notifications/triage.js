@@ -186,6 +186,20 @@
     }
   }
 
+  // GitHub's select-all and its bulk actions reach every checkbox of the
+  // list, seen or not: a row the view hides must never stay selected.
+  function uncheckHidden() {
+    for (const li of document.querySelectorAll("li.notifications-list-item.ghnt-off, li.notifications-list-item[hidden]")) {
+      for (const box of li.querySelectorAll('input[type="checkbox"]:checked')) {
+        box.checked = false;
+        box.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+  }
+  const afterSelect = (e) => {
+    if (e.target?.matches?.('input[type="checkbox"]')) setTimeout(() => active && uncheckHidden(), 0);
+  };
+
   // ---- info (status + coverage), outside the native list ---------------------
 
   function more() {
@@ -203,8 +217,11 @@
       status.append(el("span", { class: "ghnt-status-text", text: M.statusLine(selected, c) }));
       const clear = el("button", { type: "button", class: "ghnt-clear", text: "Clear triage" });
       clear.addEventListener("click", () => {
+        const was = selected;
         selected = null;
         render();
+        // The status (and the focused button in it) is gone: keep the keyboard position.
+        document.querySelector(`[data-ghnt-cat="${was}"]`)?.focus();
       });
       status.append(clear);
     }
@@ -296,6 +313,9 @@
         slots.set(r.li, mark);
       }
     }
+    // Rows still being classified wait, hidden, until they have a section.
+    for (const r of list) if (!M.categoryOf(r.item)) setOff(r.li, true);
+    for (const r of classified) setOff(r.li, false);
     const groups = Object.fromEntries(M.IDS.map((id) => [id, classified.filter((r) => M.categoryOf(r.item) === id).sort(slotOrder)]));
 
     const desired = [];
@@ -440,6 +460,7 @@
         renderInfo(c, "filter");
       }
     } finally {
+      uncheckHidden();
       observer?.takeRecords();
       rendering = false;
     }
@@ -495,6 +516,15 @@
     render();
   }
 
+  // Turbo snapshots the page before leaving it: take the view out first, so a
+  // restored snapshot is GitHub's plain list (render() rebuilds it).
+  function leaveForCache() {
+    if (!active) return;
+    unrender();
+    layout = null;
+    selected = null;
+  }
+
   function start(api) {
     if (active) return;
     active = true;
@@ -518,6 +548,11 @@
     });
     observer.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("resize", schedule);
+    document.addEventListener("change", afterSelect, true);
+    document.addEventListener("click", afterSelect, true);
+    document.addEventListener("turbo:before-cache", leaveForCache);
+    // A restored Turbo snapshot can carry marks of a view that is gone.
+    document.querySelectorAll(".ghnt-off").forEach((n) => n.classList.remove("ghnt-off"));
     loadCollapsed();
     render();
   }
@@ -533,6 +568,9 @@
     observer?.disconnect();
     observer = null;
     window.removeEventListener("resize", schedule);
+    document.removeEventListener("change", afterSelect, true);
+    document.removeEventListener("click", afterSelect, true);
+    document.removeEventListener("turbo:before-cache", leaveForCache);
     unrender();
     layout = null;
     selected = null;

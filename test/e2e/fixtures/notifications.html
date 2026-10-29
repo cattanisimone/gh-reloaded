@@ -189,6 +189,11 @@
     render();
     document.dispatchEvent(new Event('turbo:load'));
   });
+  // GitHub's check-all selects EVERY checkbox of its container, seen or not.
+  document.addEventListener('change', (e) => {
+    if (!e.target.classList || !e.target.classList.contains('js-check-all')) return;
+    document.querySelectorAll('.js-check-all-container .js-notifications-list-item-check').forEach((c) => (c.checked = e.target.checked));
+  });
   window.addEventListener('popstate', render);
   render();
 </script>

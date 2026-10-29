@@ -267,7 +267,6 @@ test("Grouped: a moved row's checkbox and own action buttons still respond; chec
   await page.evaluate(() => {
     window.__done = [];
     document.addEventListener("click", (e) => { const b = e.target.closest("[data-action]"); if (b) window.__done.push(b.dataset.action + ":" + b.closest("li.notifications-list-item").dataset.notificationId); });
-    document.querySelector(".js-check-all").addEventListener("change", (e) => document.querySelectorAll("li.notifications-list-item:not([hidden]):not(.ghnt-off) .js-notifications-list-item-check").forEach((c) => (c.checked = e.target.checked)));
   });
   const row9 = page.locator('li[data-notification-id="NT_9"]');
   await row9.locator('[data-action="done"]').click();
@@ -469,4 +468,58 @@ test("the compact row below 768px scrolls inside itself, never the page", async 
   await expect(compact(page)).toHaveCount(1);
   const g = await compact(page).evaluate((e) => ({ canScroll: e.scrollWidth > e.clientWidth, overflowX: getComputedStyle(e).overflowX, page: document.documentElement.scrollWidth <= document.documentElement.clientWidth }));
   expect(g).toEqual({ canScroll: true, overflowX: "auto", page: true });
+});
+
+test("select-all never selects rows the view hides (filtered or collapsed), so a bulk action cannot reach them", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many` });
+  await settled(world);
+  await cat(page, "waiting").click();
+  await expect(visibleRows(page)).toHaveCount(4);
+  await page.locator(".js-check-all").check();
+  await expect.poll(() => page.locator("li.notifications-list-item .js-notifications-list-item-check:checked").count()).toBe(4);
+  await page.locator(".js-check-all").uncheck();
+  await seedStorage(context, { ghntLayout: "grouped" });
+  await expect(secs(page)).toHaveCount(4);
+  await page.locator('.ghnt-sec-btn[data-ghnt-sec="informational"]').click();
+  await expect(visibleRows(page)).toHaveCount(16);
+  await page.locator(".js-check-all").check();
+  await expect.poll(() => page.locator("li.notifications-list-item .js-notifications-list-item-check:checked").count()).toBe(16);
+});
+
+test("a restored Turbo snapshot carries no hidden rows and no grouped order", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many` });
+  await settled(world);
+  await cat(page, "informational").click();
+  await expect(visibleRows(page)).toHaveCount(16);
+  // Turbo caches the page before leaving it.
+  await page.evaluate(() => { document.dispatchEvent(new Event("turbo:before-cache")); window.__snap = document.getElementById("main").innerHTML; });
+  await expect(page.locator(".ghnt-off")).toHaveCount(0);
+  await expect(everything(page)).toHaveCount(0);
+  await seedStorage(context, { ghntLayout: "grouped" });
+  await expect(secs(page)).toHaveCount(4);
+  await page.evaluate(() => document.dispatchEvent(new Event("turbo:before-cache")));
+  expect(await page.evaluate(() => [...document.querySelectorAll("li.notifications-list-item")].map((e) => e.dataset.notificationId))).toEqual(Array.from({ length: 32 }, (_, i) => `NT_${i + 1}`));
+  await expect(secs(page)).toHaveCount(0);
+  await expect(page.locator("ul.js-navigation-container").evaluate((ul) => document.createNodeIterator(ul, NodeFilter.SHOW_COMMENT).nextNode())).resolves.toBeNull();
+  await expect(secs(page)).toHaveCount(4); // and the view comes back
+});
+
+test("Grouped: rows still being classified are hidden, not shown under a collapsed Unverifiable header", async ({ context, page }) => {
+  const { world } = await boot(context, page, { url: `${INBOX}#many`, storage: { ghntLayout: "grouped", ghntTriageCollapsed: { unverifiable: true } }, delay: 2500 });
+  await expect(page.locator(".ghnt-pending")).toBeVisible();
+  const pendingVisible = await page.locator("li.notifications-list-item:visible").evaluateAll((els) => els.length);
+  const classified = await page.locator("li.ghnt-sec ~ li.notifications-list-item:visible").count();
+  expect(pendingVisible).toBe(classified);
+  await settled(world);
+  await expect(page.locator(".ghnt-pending")).toHaveCount(0);
+  await expect(visibleRows(page)).toHaveCount(32 - 4);
+});
+
+test("Clear triage by keyboard keeps focus on the category that was selected", async ({ context, page }) => {
+  const { world } = await boot(context, page);
+  await settled(world);
+  await cat(page, "attention").click();
+  await page.getByRole("button", { name: "Clear triage" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(cat(page, "attention")).toBeFocused();
 });
