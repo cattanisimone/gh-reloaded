@@ -103,6 +103,22 @@ test("PR triage switch defaults on, has no Configure link, and persists", async 
   expect(await worker.evaluate(() => chrome.storage.local.get("ghprtEnabled"))).toEqual({ ghprtEnabled: false });
 });
 
+test("Quick assignment switch is experimental, defaults off, has no Configure link, and persists", async ({ context, page }) => {
+  const worker = await openOptions(context, page, "#features");
+  const sw = page.locator("#feature-ghqa");
+  const row = page.locator(".row", { has: sw });
+  await expect(row.locator(".badge")).toHaveText("Experimental");
+  await expect(sw).toHaveAttribute("aria-checked", "false");
+  expect(await worker.evaluate(() => chrome.storage.local.get("ghqaEnabled"))).toEqual({});
+  await expect(row.locator("a.cfg")).toHaveCount(0);
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+  expect(await worker.evaluate(() => chrome.storage.local.get("ghqaEnabled"))).toEqual({ ghqaEnabled: true });
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "false");
+  expect(await worker.evaluate(() => chrome.storage.local.get("ghqaEnabled"))).toEqual({ ghqaEnabled: false });
+});
+
 test("Linked PR status switch defaults on, has no Configure link, and persists", async ({ context, page }) => {
   const worker = await openOptions(context, page, "#features");
   const sw = page.locator("#feature-ghlps");
