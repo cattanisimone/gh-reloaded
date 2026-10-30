@@ -4,10 +4,10 @@ import { openOptions } from "./support/options.js";
 
 const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt", "ghqa", "ghlps", "ghgs", "ghnt-reason-tags"];
 
-test("Features lists 11 switches and Configure only for Quick-create, Standup, My Issues, GitHub Status", async ({ context, page }) => {
+test("Features lists 12 switches and Configure only for Quick-create, Standup, My Issues, GitHub Status", async ({ context, page }) => {
   await openOptions(context, page);
   const features = page.locator("#features");
-  await expect(features.getByRole("switch")).toHaveCount(11);
+  await expect(features.getByRole("switch")).toHaveCount(12);
   for (const s of SWITCHES) await expect(page.locator(`#feature-${s}`)).toHaveCount(1);
   const links = features.locator("a.cfg");
   await expect(links).toHaveCount(4);
