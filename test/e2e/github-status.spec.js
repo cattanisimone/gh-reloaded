@@ -984,8 +984,11 @@ test("a tab that becomes visible on a stale snapshot repaints gray before the re
   });
   await run("const real = Date.now.bind(Date); Date.now = () => real() + 16 * 60000; document.dispatchEvent(new Event('visibilitychange'))");
   await expect(dot(page)).toHaveAttribute("data-state", "unknown", { timeout: 1500 });
-  // The refresh is still out (answers after 4 s): gray came from the repaint, not from the answer.
-  expect(log).toHaveLength(2);
+  // The repaint runs before the refresh is sent, so the request may reach the
+  // mock a little later: wait for it rather than checking once.
+  await expect.poll(() => log.length, { message: "the refresh request never reached githubstatus.com", intervals: [50], timeout: 10_000 }).toBe(2);
+  // The refresh is still out (answers 4 s after it arrived): gray came from the repaint, not from the answer.
+  await expect(dot(page), `dot state with ${log.length} requests seen and the answer still held`).toHaveAttribute("data-state", "unknown", { timeout: 0 });
 });
 
 test("a header transparent all the way up gets no ring instead of a wrong colour", async ({ page, context }) => {
