@@ -43,7 +43,7 @@ Go to [github.com/settings/personal-access-tokens/new](https://github.com/settin
 
 | Scope | Permission | Used for |
 | --- | --- | --- |
-| Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues |
+| Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues, confirming a Quick assignment (read-only) |
 | Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage, Linked PR status |
 | Repository | **Contents** | **HTML preview** of files in private repos (public repos work without a token) |
 | Repository | **Metadata** | added by GitHub automatically |
@@ -172,6 +172,17 @@ On a repository's own **Pull requests** page (`github.com/<owner>/<repo>/pulls`)
 - A PR gets at most one placement, the **author role first**. As author: `Your turn` when a reviewer's latest review requests changes and they were not asked again, when the checks fail, or when the branch conflicts; `Waiting on review` (naming reviewers and teams) or `Waiting on checks` otherwise. As reviewer: `Your turn · Review requested` when you are asked (also after your own earlier "changes requested"); `Waiting on author` after you requested changes, with a note when there are new commits since (commits alone never make it your turn). A team request alone shows a neutral `Team review requested` (membership is not checked and it is counted in neither group). Approved, green, or a draft with no blocker: no placement. There is no "ready to merge" and no unread status, ever.
 - Review facts come from one batched GraphQL query per page of visible PR numbers (25 per query, two in flight, cached for 60 seconds), with the token mapped to the repository owner or the default one. The native list never waits for it: the panel says `Loading review data…` first. Without a token, with a refusal or a rate limit, the panel says what is missing and the rows get no guessed label; a single PR that cannot be read says `Triage unavailable`. Needs a token with **Pull requests: Read** (and read access to commit statuses or checks for the checks rollup).
 - Only open and draft rows of the repository's list are triaged; the closed and merged tabs and the global `github.com/pulls` page are left alone. Rows are found through `data-testid` hooks and ARIA labels, never CSS-module classes; if an anchor (the page's `Pull requests` search landmark for the panel) is missing, nothing is rendered until the next scan.
+
+### Quick assignment (experimental) — [features/quick-assign](features/quick-assign)
+
+On a repository **issue** page, under GitHub's own Assignees list, **Assign me** adds you without removing anyone, or **Unassign me** removes only you; each assignee row also gets a small **✕** (*Remove @user from assignees*) at its right end, visible on hover and keyboard focus, while the name and avatar still open the profile. The native gear picker stays as it is. **Off by default**: switch it on in Settings → Features (it is marked *Experimental*); switching it off removes everything it added.
+
+![Quick assignment: Assign me / Unassign me under the native Assignees list, a ✕ per assignee row, and the Saving, confirmed and failure states.](screenshots/quick-assign/quick-assign.svg)
+
+- It writes nothing through GitHub's API. Each action drives GitHub's **own Assignees picker** in your session (opens it, filters by the exact login, toggles that one option, closes it so GitHub saves) and then makes one **read-only** request for the issue to confirm GitHub's stored assignees. The line under the button reads `Saving…`, then `✓ Assigned` / `✓ Unassigned` / `✓ Removed @user` only after that read agrees and nobody else was removed; a failure says so (`✕ Couldn't assign you`), and when the read cannot run it says `Sent, not confirmed` with the reason (the token for the owner needs **Issues: Read**, a rate limit with its reset time, or a private repository without a token) instead of showing green.
+- No controls when you cannot edit assignees (signed out, no write access, locked or archived issue: GitHub's own edit button is absent), on pull requests, in the Projects side panel or when an anchor is missing; on an empty issue GitHub's own **Assign yourself** stays the only action. App and bot assignees get no ✕. If you open the native picker yourself the controls are disabled until you close it.
+- Not included: "Replace with me", pull requests, Projects, bulk changes. Needs no new token permission: without a token, public repositories still work, the action just stays "not confirmed".
+- It depends on GitHub's picker markup (roles, ARIA labels, visible logins). If GitHub changes it, an action stops with a failure message and the picker is closed untouched; the native picker keeps working.
 
 ### Linked PR status — [features/linked-pr-status](features/linked-pr-status)
 

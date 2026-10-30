@@ -232,3 +232,31 @@ test("a partial GraphQL result is not cached for callers that did not opt in", a
   await assert.rejects(() => ghGraphQL("query { nocache }", { n: 4 }, { owner: "acme" }), /boom/);
   assert.equal(calls, 2);
 });
+
+test("ghFetch noStore asks the browser to bypass its HTTP cache and skips the in-memory map", async () => {
+  const seen = [];
+  globalThis.fetch = async (url, opts) => {
+    seen.push(opts);
+    return { ok: true, status: 200, json: async () => ({ n: seen.length }) };
+  };
+  await ghFetch("/repos/acme/web/issues/9", { owner: "acme" }); // fills the map
+  const second = await ghFetch("/repos/acme/web/issues/9", { owner: "acme", noStore: true });
+  assert.equal(seen.length, 2, "noStore must not be served from the map");
+  assert.equal(seen[1].cache, "no-store");
+  assert.deepEqual(second, { n: 2 });
+  // The fresh result refreshes the map for ordinary readers.
+  assert.deepEqual(await ghFetch("/repos/acme/web/issues/9", { owner: "acme" }), { n: 2 });
+  assert.equal(seen.length, 2);
+});
+
+test("ghFetch without noStore leaves fetch options unchanged", async () => {
+  let opts;
+  globalThis.fetch = async (url, o) => {
+    opts = o;
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  await ghFetch("/repos/acme/web/issues/10", { owner: "acme" });
+  assert.equal("cache" in opts, false);
+  await ghFetch("/repos/acme/web/issues/10", { owner: "acme", fresh: true });
+  assert.equal("cache" in opts, false);
+});

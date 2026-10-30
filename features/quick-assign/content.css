@@ -1,0 +1,176 @@
+/* Quick assignment (experimental). Only data-ghqa* hooks; colours come from
+   GitHub's Primer variables so light and dark follow the page's theme. */
+
+/* The row stays exactly as GitHub lays it out: the ✕ floats over its right end,
+   so with it hidden the row is identical to native. Only while it shows does a
+   name under it truncate with an ellipsis. */
+li[data-ghqa-row] {
+  position: relative;
+}
+li[data-ghqa-row]:hover > a,
+li[data-ghqa-row]:focus-within > a {
+  padding-right: 36px;
+}
+li[data-ghqa-row]:hover > a [data-testid="issue-assignees"],
+li[data-ghqa-row]:focus-within > a [data-testid="issue-assignees"] {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ghqa-x {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fgColor-muted, #59636e);
+  cursor: pointer;
+  opacity: 0;
+}
+[data-ghqa-row]:hover > .ghqa-x,
+[data-ghqa-row]:focus-within > .ghqa-x,
+.ghqa-x:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .ghqa-x {
+    opacity: 1;
+  }
+}
+.ghqa-x:hover,
+.ghqa-x:focus-visible {
+  background: var(--bgColor-danger-muted, #ffebe9);
+  color: var(--fgColor-danger, #d1242f);
+}
+.ghqa-x:focus-visible {
+  outline: 2px solid var(--focus-outlineColor, #0969da);
+  outline-offset: -2px;
+}
+.ghqa-x[aria-disabled="true"],
+.ghqa-x[aria-disabled="true"]:hover {
+  background: transparent;
+  color: var(--fgColor-muted, #59636e);
+  cursor: default;
+}
+
+/* The button and its status, under the native list. */
+[data-ghqa-actions] {
+  align-self: stretch; /* the live section is a flex column that does not stretch its children */
+  margin-top: 8px;
+}
+.ghqa-btn {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--button-default-borderColor-rest, #d1d9e0);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: 80ms cubic-bezier(0.33, 1, 0.68, 1);
+  transition-property: color, background-color, border-color, filter;
+}
+.ghqa-default {
+  background: var(--button-default-bgColor-rest, #f6f8fa);
+  color: var(--fgColor-default, #1f2328);
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
+}
+.ghqa-primary {
+  background: var(--button-primary-bgColor-rest, #1f883d);
+  border-color: rgba(31, 35, 40, 0.15);
+  color: var(--button-primary-fgColor-rest, #fff);
+  box-shadow: 0 1px 1px rgba(31, 35, 40, 0.04), 0 1px 2px rgba(31, 35, 40, 0.03);
+}
+.ghqa-btn:hover:not([aria-disabled="true"]) {
+  filter: brightness(0.95);
+}
+.ghqa-btn:active:not([aria-disabled="true"]) {
+  filter: brightness(0.89);
+  box-shadow: none;
+}
+.ghqa-btn:focus-visible {
+  outline: 2px solid var(--focus-outlineColor, #0969da);
+  outline-offset: -2px;
+}
+.ghqa-btn[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Status: one short line, then one muted explanation line. */
+[data-ghqa-status] {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 18px;
+  container-type: inline-size;
+  color: var(--fgColor-muted, #59636e);
+}
+[data-ghqa-status][data-tone="ok"] .ghqa-line {
+  color: var(--fgColor-success, #1a7f37);
+}
+[data-ghqa-status][data-tone="bad"] .ghqa-line {
+  color: var(--fgColor-danger, #d1242f);
+}
+.ghqa-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ghqa-extra {
+  display: none;
+}
+@container (min-width: 280px) {
+  .ghqa-extra {
+    display: inline;
+  }
+}
+.ghqa-detail {
+  color: var(--fgColor-muted, #59636e);
+}
+.ghqa-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--fgColor-accent, #0969da);
+  cursor: pointer;
+}
+.ghqa-link:hover {
+  text-decoration: underline;
+}
+.ghqa-spin {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  vertical-align: -1px;
+  border: 2px solid var(--fgColor-muted, #59636e);
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ghqa-spin 0.8s linear infinite;
+}
+@keyframes ghqa-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ghqa-spin {
+    animation: none;
+  }
+}

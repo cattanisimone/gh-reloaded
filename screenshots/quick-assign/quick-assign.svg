@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" font-family="DejaVu Sans, sans-serif">
+<rect width="1200" height="520" fill="#fff"/>
+<text x="28" y="40" font-size="18" font-weight="600" fill="#1f2328">Quick assignment (experimental) — Assignees section of an issue, fictional data</text>
+<text x="28" y="62" font-size="12" fill="#59636e">Dashed outline = added by GH Reloaded. The native gear picker is unchanged.</text>
+<!-- card 1: someone else assigned -->
+<g transform="translate(28,90)">
+<text x="0" y="0" font-size="11" font-weight="600" fill="#59636e">SOMEONE ELSE ASSIGNED</text>
+<rect x="0" y="12" width="270" height="170" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<text x="14" y="40" font-size="12" font-weight="600" fill="#59636e">Assignees</text><text x="244" y="40" font-size="14" fill="#59636e">⚙</text>
+<circle cx="24" cy="66" r="10" fill="#ddf4ff"/><text x="42" y="71" font-size="14" fill="#1f2328">alex-dev</text>
+<rect x="232" y="54" width="24" height="24" rx="6" fill="#ffebe9" stroke="#0969da" stroke-dasharray="3 2"/><text x="239" y="71" font-size="13" fill="#d1242f">✕</text>
+<rect x="14" y="94" width="242" height="32" rx="6" fill="#1f883d" stroke="#0969da" stroke-dasharray="3 2"/><text x="135" y="115" font-size="14" font-weight="600" fill="#fff" text-anchor="middle">Assign me</text>
+</g>
+<!-- card 2: me + colleague, hover -->
+<g transform="translate(330,90)">
+<text x="0" y="0" font-size="11" font-weight="600" fill="#59636e">ME + COLLEAGUE, ✕ ON HOVER</text>
+<rect x="0" y="12" width="270" height="170" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<text x="14" y="40" font-size="12" font-weight="600" fill="#59636e">Assignees</text><text x="244" y="40" font-size="14" fill="#59636e">⚙</text>
+<circle cx="24" cy="66" r="10" fill="#ddf4ff"/><text x="42" y="71" font-size="14" fill="#1f2328">alex-dev</text>
+<rect x="8" y="82" width="254" height="32" rx="6" fill="#f6f8fa"/>
+<circle cx="24" cy="98" r="10" fill="#ddf4ff"/><text x="42" y="103" font-size="14" fill="#1f2328">me-dev</text>
+<rect x="232" y="86" width="24" height="24" rx="6" fill="#ffebe9" stroke="#0969da" stroke-dasharray="3 2"/><text x="239" y="103" font-size="13" fill="#d1242f">✕</text>
+<rect x="14" y="128" width="242" height="32" rx="6" fill="#f6f8fa" stroke="#0969da" stroke-dasharray="3 2"/><text x="135" y="149" font-size="14" font-weight="600" fill="#1f2328" text-anchor="middle">Unassign me</text>
+</g>
+<!-- card 3: saving -> confirmed -->
+<g transform="translate(632,90)">
+<text x="0" y="0" font-size="11" font-weight="600" fill="#59636e">SAVING… → CONFIRMED BY GITHUB</text>
+<rect x="0" y="12" width="270" height="170" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<text x="14" y="40" font-size="12" font-weight="600" fill="#59636e">Assignees</text>
+<circle cx="24" cy="66" r="10" fill="#ddf4ff"/><text x="42" y="71" font-size="14" fill="#1f2328">alex-dev</text>
+<rect x="14" y="86" width="242" height="32" rx="6" fill="#1f883d" opacity=".6"/><text x="135" y="107" font-size="14" font-weight="600" fill="#fff" text-anchor="middle">Assign me</text>
+<text x="14" y="138" font-size="12" fill="#59636e">◌ Saving…</text>
+<text x="14" y="164" font-size="12" fill="#1a7f37">✓ Assigned (confirmed by GitHub)</text>
+</g>
+<!-- card 4: failures -->
+<g transform="translate(934,90)">
+<text x="0" y="0" font-size="11" font-weight="600" fill="#59636e">FAILURE / NOT CONFIRMED</text>
+<rect x="0" y="12" width="240" height="170" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<text x="14" y="40" font-size="12" font-weight="600" fill="#59636e">Assignees</text>
+<text x="14" y="62" font-size="12" fill="#d1242f">✕ Couldn't assign you</text>
+<text x="14" y="80" font-size="11" fill="#59636e">The list shows GitHub's current state.</text>
+<text x="14" y="95" font-size="11" fill="#59636e">Use the ⚙ picker.</text>
+<text x="14" y="128" font-size="12" fill="#59636e">Sent, not confirmed</text>
+<text x="14" y="146" font-size="11" fill="#59636e">The token for acme can't read issues</text>
+<text x="14" y="161" font-size="11" fill="#59636e">(Issues: Read). <tspan fill="#0969da">Settings → GitHub tokens</tspan></text>
+</g>
+<!-- bottom notes -->
+<text x="28" y="330" font-size="13" font-weight="600" fill="#1f2328">Other states</text>
+<text x="28" y="356" font-size="12" fill="#59636e">• Empty issue: GitHub's own “Assign yourself” is the only action, nothing is added.</text>
+<text x="28" y="378" font-size="12" fill="#59636e">• Read-only visitor, locked issue, pull request, Projects side panel, feature off: the page is exactly GitHub's.</text>
+<text x="28" y="400" font-size="12" fill="#59636e">• App / bot assignee rows get no ✕. If you open the native picker yourself, our controls are disabled until you close it.</text>
+<text x="28" y="422" font-size="12" fill="#59636e">• Nothing is written through the API: GitHub's own picker saves, one read-only request confirms.</text>
+</svg>

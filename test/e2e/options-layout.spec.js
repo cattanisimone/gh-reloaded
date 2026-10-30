@@ -2,12 +2,12 @@
 import { test, expect } from "./support/extension.js";
 import { openOptions } from "./support/options.js";
 
-const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt", "ghlps", "ghgs"];
+const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt", "ghqa", "ghlps", "ghgs"];
 
-test("Features lists 10 switches and Configure only for Quick-create, Standup, My Issues, GitHub Status", async ({ context, page }) => {
+test("Features lists 11 switches and Configure only for Quick-create, Standup, My Issues, GitHub Status", async ({ context, page }) => {
   await openOptions(context, page);
   const features = page.locator("#features");
-  await expect(features.getByRole("switch")).toHaveCount(10);
+  await expect(features.getByRole("switch")).toHaveCount(11);
   for (const s of SWITCHES) await expect(page.locator(`#feature-${s}`)).toHaveCount(1);
   const links = features.locator("a.cfg");
   await expect(links).toHaveCount(4);
@@ -32,13 +32,14 @@ test("Standup and tile fields live in their Advanced groups", async ({ context, 
 test("seeded keys load into the new controls unchanged", async ({ context, page }) => {
   const worker = await openOptions(context, page);
   await worker.evaluate(() => chrome.storage.local.set({
-    ghsmEnabled: false, ghsmStaleDays: 5, ghsmReviewKeywords: "qa, uat", ghmiEnabled: false, ghprtEnabled: false, ghlpsEnabled: false, ghmiTileMin: 700, ghmiTileMax: 900,
+    ghsmEnabled: false, ghsmStaleDays: 5, ghsmReviewKeywords: "qa, uat", ghmiEnabled: false, ghprtEnabled: false, ghqaEnabled: true, ghlpsEnabled: false, ghmiTileMin: 700, ghmiTileMax: 900,
   }));
   await page.reload();
   await expect(page.locator("#feature-ghsm")).toHaveAttribute("aria-checked", "false");
   await expect(page.locator("#feature-ghmi")).toHaveAttribute("aria-checked", "false");
   await expect(page.locator("#feature-ghprt")).toHaveAttribute("aria-checked", "false");
   await expect(page.locator("#feature-ghlps")).toHaveAttribute("aria-checked", "false");
+  await expect(page.locator("#feature-ghqa")).toHaveAttribute("aria-checked", "true");
   await expect(page.locator("#ghsm-stale-days")).toHaveValue("5");
   await expect(page.locator("#ghsm-review-keywords")).toHaveValue("qa, uat");
   await expect(page.locator("#ghmi-tile-min")).toHaveValue("700");
