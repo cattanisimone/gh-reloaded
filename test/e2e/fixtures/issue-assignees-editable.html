@@ -1,0 +1,171 @@
+<!doctype html>
+<!-- Fixture: the Assignees section of an issue for a signed-in user who can edit it (acme/web#123, signed in as mira), with GitHub's own Assignees picker.
+     Built from the signed-in markup observed on github.com (2026-10-30), fictional names. Anchors the feature uses:
+     meta[name=user-login]; [data-testid=sidebar-assignees-section] with h3 "Assignees" and, in the header, a button with sr-only text "Edit Assignees" (absent when the user cannot edit);
+     rows li > a[href=/<login>] with the login in [data-testid=issue-assignees] inside ul[class*=assigneesList]; empty state span[class*=emptyText] holding button[class*=selfAssignButton] "Assign yourself"; with rows the list wrapper (childrenContainer) is a direct child of the section, in the empty state the text and the list wrapper (hiddenChildrenContainer) sit inside headerContentWrapper (as observed live).
+     The picker: the header button toggles (and, as live, its node is replaced by a fresh one as soon as the picker opens) a div[role=dialog] with input[role=combobox][aria-label="Filter assignees"] in a TextInput wrapper whose aria-busy is true while the async list loads (its spinner nodes stay rendered either way, as observed live) and ul[role=listbox][aria-multiselectable] of li[role=option][aria-selected]
+     whose span[data-component="ActionList.Item.Label"] (class prc-ActionList-ItemLabel-…) holds only the login and a sibling ActionList.Description span the full name (as observed live). Nothing is saved while clicking; Escape closes the dialog and, if the selection changed, sends ONE POST to /_fixture/save (GitHub does one PATCH on close).
+     The page re-renders the whole list after a save, like React does. Test hooks: window.__fx { saves, users, state, openCount, openDelay }. Layout: .sidebar is 296px, 256px under 1012px and full width (viewport minus 32px) under 768px, as measured live.
+     ?old swaps the hashed class names for the previous Name-module__x--hash naming. ?issue=N, ?assignees=a,b,app:build-bot, ?empty set the initial state. -->
+<html lang="en" data-color-mode="light"><head><meta charset="utf-8"><title>Fixture issue · acme/web#123</title>
+<meta name="user-login" content="mira">
+<style>
+  :root { --fgColor-default: #1f2328; --fgColor-muted: #59636e; --fgColor-danger: #d1242f; --bgColor-danger-muted: #ffebe9; --focus-outlineColor: #0969da; --borderColor-default: #d1d9e0; --bgColor-default: #fff; --bgColor-muted: #f6f8fa; }
+  :root[data-color-mode="dark"] { --fgColor-default: #f0f6fc; --fgColor-muted: #9198a1; --fgColor-danger: #f85149; --bgColor-danger-muted: #f851491a; --focus-outlineColor: #1f6feb; --borderColor-default: #3d444d; --bgColor-default: #0d1117; --bgColor-muted: #151b23; }
+  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; color: var(--fgColor-default); background: var(--bgColor-default); }
+  .sidebar { width: 296px; padding: 16px; box-sizing: content-box; }
+  @media (max-width: 1011px) { .sidebar { width: 256px; } }
+  @media (max-width: 767px) { .sidebar { width: auto; } }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  h3 { margin: 0; font-size: 12px; font-weight: 600; color: var(--fgColor-muted); }
+  .SectionContainer__x0 { display: flex; flex-direction: column; position: relative; }
+  .headerContentWrapper__x1 { display: flex; flex-direction: column; }
+  .container__x2 { display: flex; align-items: center; justify-content: space-between; height: 26px; }
+  .container__x2 button { width: 26px; height: 26px; border: 0; background: transparent; border-radius: 6px; color: var(--fgColor-muted); cursor: pointer; }
+  .container__x2 button:hover { background: var(--bgColor-muted); }
+  ul.assigneesList__x8 { list-style: none; margin: 0; padding: 0; }
+  .prc-ActionList-ActionListItem-So4vC { display: list-item; }
+  li > a { display: grid; grid-template-columns: auto auto 1fr; align-items: center; column-gap: 8px; padding: 6px 8px; min-height: 32px; box-sizing: border-box; color: var(--fgColor-default); text-decoration: none; border-radius: 6px; }
+  li > a:hover { background: var(--bgColor-muted); }
+  .av { width: 20px; height: 20px; border-radius: 50%; background: #ddf4ff; display: block; }
+  .assigneeNameLabel__x9 { line-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .emptyText__x3 { font-size: 12px; color: var(--fgColor-muted); display: block; }
+  .selfAssignButton__x10 { background: none; border: 0; padding: 0; font: inherit; color: #0969da; cursor: pointer; }
+  /* the native picker */
+  [role=dialog] { position: absolute; z-index: 10; width: 300px; background: var(--bgColor-default); border: 1px solid var(--borderColor-default); border-radius: 12px; box-shadow: 0 8px 24px rgba(66,74,83,.12); padding: 8px; }
+  [role=dialog] input { width: 100%; box-sizing: border-box; }
+  [role=listbox] { list-style: none; margin: 8px 0 0; padding: 0; max-height: 240px; overflow: auto; }
+  [role=option] { display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+  [role=option][aria-selected=true] { background: #ddf4ff; }
+  .desc { color: var(--fgColor-muted); }
+  .spin { color: var(--fgColor-muted); font-size: 12px; }
+</style></head>
+<body>
+<div class="sidebar">
+  <div class="SectionContainer__x0" data-testid="sidebar-assignees-section" id="sec">
+    <div class="headerContentWrapper__x1">
+      <div class="container__x2"><h3 class="SectionHeaderTitle__x5">Assignees</h3><button type="button" id="edit" aria-haspopup="dialog"><span class="sr-only">Edit Assignees</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="currentColor"/></svg></button></div>
+    </div>
+  </div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const ALL = [
+    { login: "alex-dev", name: "Alex Rivera" }, { login: "alex", name: "Alexander Poe" }, { login: "mira", name: "Mira Chen" },
+    { login: "sam-dev", name: "Sam Okoye" }, { login: "zed-user", name: "Zed Park" }, { login: "lee", name: "Lee Ng" }, { login: "jo_acme", name: "Jo Managed" },
+    ...Array.from({ length: 12 }, (_, i) => ({ login: "dev" + (i + 1), name: "Dev Number " + (i + 1) })),
+  ];
+  const parse = (v) => (v ? v.split(",").filter(Boolean).map((s) => (s.startsWith("app:") ? { login: s.slice(4), app: true } : { login: s })) : null);
+  const fx = (window.__fx = {
+    issue: Number(q.get("issue") || 123),
+    state: q.has("empty") ? [] : parse(q.get("assignees")) || [{ login: "alex-dev" }],
+    users: ALL.slice(),
+    saves: [],
+    openCount: 0,
+    saveDelay: 30,
+    loadDelay: 120,
+    render() {
+      const head = sec.firstElementChild;
+      for (const k of [...sec.children, ...head.children]) if (k !== head && !k.classList.contains("container__x2") && k.getAttribute('role') !== 'dialog' && !k.hasAttribute('data-ghqa-actions')) k.remove();
+      const body = head; // live, the empty text and the hidden list wrapper sit inside the header wrapper
+      const wrap = document.createElement("div");
+      if (!fx.state.length) {
+        wrap.className = "hiddenChildrenContainer__x4";
+        const empty = document.createElement("span");
+        empty.className = "emptyText__x3";
+        empty.append("No one– ");
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "selfAssignButton__x10";
+        b.textContent = "Assign yourself";
+        b.onclick = () => commit([{ login: "mira" }]);
+        empty.append(b);
+        body.append(empty);
+        wrap.style.cssText = "height:0;overflow:hidden";
+      } else wrap.className = "childrenContainer__x7";
+      const ul = document.createElement("ul");
+      ul.className = "prc-ActionList-ActionList-rPFF2 assigneesList__x8";
+      for (const a of fx.state) {
+        const li = document.createElement("li");
+        li.className = "prc-ActionList-ActionListItem-So4vC";
+        const link = document.createElement("a");
+        link.className = "prc-ActionList-ActionListContent-KBb8-";
+        link.href = a.app ? "/apps/" + a.login : "/" + a.login;
+        link.innerHTML = '<span class="av"></span><span class="prc-ActionList-ItemLabel-81ohH"><div class="assigneeNameLabel__x9" data-testid="issue-assignees"></div></span>';
+        link.querySelector("div").textContent = a.login;
+        li.append(link);
+        ul.append(li);
+      }
+      wrap.append(ul);
+      if (!fx.state.length) head.append(wrap);
+      else sec.insertBefore(wrap, sec.querySelector(':scope > [data-ghqa-actions]'));
+      if (q.has("old")) document.querySelectorAll("[class]").forEach((el) => { el.className = el.className.replace(/(\w+)__x\d+/g, "Sidebar-module__$1--b1"); });
+    },
+  });
+  const sec = document.getElementById("sec");
+  let edit = document.getElementById("edit");
+  function commit(next) {
+    fx.saves.push(next.map((a) => a.login));
+    fetch("/_fixture/save", { method: "POST", body: JSON.stringify({ issue: fx.issue, assignees: next.map((a) => a.login) }) }).catch(() => {});
+    const issue = fx.issue;
+    setTimeout(() => { if (fx.issue !== issue) return; fx.state = next.map((a) => fx.state.find((s) => s.login === a.login) || a); fx.render(); }, fx.saveDelay);
+  }
+  let dialog = null, selected = null, input = null, list = null, spinner = null;
+  function paint() {
+    const term = input.value.trim().toLowerCase();
+    list.replaceChildren();
+    for (const u of fx.users.filter((u) => !term || u.login.toLowerCase().includes(term) || u.name.toLowerCase().includes(term))) {
+      const li = document.createElement("li");
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", String(selected.has(u.login)));
+      li.className = "prc-ActionList-ActionListItem-So4vC Item__lB63KU";
+      li.innerHTML = '<div class="prc-ActionList-ActionListContent-KBb8-"><span class="prc-ActionList-ActionListSubContent-gKsFp"><div class="prc-ActionList-ItemDescriptionWrap-ujC8S"><span class="prc-ActionList-ItemLabel-81ohH" data-component="ActionList.Item.Label"></span><span class="prc-ActionList-Description-Z-EZJ desc" data-component="ActionList.Description"></span></div></span></div>';
+      li.querySelector('[data-component="ActionList.Item.Label"]').textContent = u.login;
+      li.querySelector('[data-component="ActionList.Description"]').textContent = u.name;
+      li.onclick = () => { selected.has(u.login) ? selected.delete(u.login) : selected.add(u.login); paint(); };
+      list.append(li);
+    }
+  }
+  // Live, GitHub re-renders the header when its picker opens: the "Edit Assignees" button node is replaced.
+  function replaceEdit() {
+    const fresh = edit.cloneNode(true);
+    fresh.addEventListener("click", onEdit);
+    edit.replaceWith(fresh);
+    edit = fresh;
+  }
+  function open() {
+    fx.openCount++;
+    replaceEdit();
+    selected = new Set(fx.state.filter((a) => !a.app).map((a) => a.login));
+    dialog = document.createElement("div");
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-label", "Select assignees");
+    dialog.innerHTML = '<span class="prc-SelectPanel-TextInput--Qqkq TextInput-wrapper prc-components-TextInputWrapper-Hpdqi" aria-busy="true"><input role="combobox" aria-label="Filter assignees" type="text"><span class="TextInput-icon"><div class="prc-components-SpinnerVisible-paqsj"><span class="prc-Spinner-Box-Y-ke-"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor"/></svg></span></div></span></span><ul role="listbox" aria-multiselectable="true"></ul>';
+    input = dialog.querySelector("input"); list = dialog.querySelector("ul");
+    const wrapper = dialog.querySelector(".TextInput-wrapper");
+    // Live, the spinner nodes stay rendered after loading; only aria-busy on the wrapper tells the state.
+    spinner = { set hidden(v) { wrapper.setAttribute("aria-busy", String(!v)); } };
+    document.getElementById("sec").append(dialog);
+    spinner.hidden = false;
+    setTimeout(() => { spinner.hidden = true; paint(); }, fx.loadDelay);
+    let t;
+    input.addEventListener("input", () => { spinner.hidden = false; list.replaceChildren(); clearTimeout(t); t = setTimeout(() => { spinner.hidden = true; paint(); }, fx.loadDelay); });
+    input.focus();
+  }
+  function close(save) {
+    const before = fx.state.filter((a) => !a.app).map((a) => a.login).sort().join();
+    const after = [...selected].sort().join();
+    dialog.remove(); dialog = null;
+    edit.focus();
+    if (save && before !== after) {
+      const kept = fx.state.filter((a) => a.app || selected.has(a.login));
+      for (const l of selected) if (!kept.some((a) => a.login === l)) kept.push({ login: l });
+      commit(kept);
+    }
+  }
+  function onEdit() { dialog ? close(false) : fx.openDelay ? setTimeout(open, fx.openDelay) : open(); }
+  edit.addEventListener("click", onEdit);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && dialog) { e.preventDefault(); close(true); } });
+  fx.render();
+</script>
+</body></html>

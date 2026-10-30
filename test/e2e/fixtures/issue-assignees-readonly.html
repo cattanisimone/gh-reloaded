@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- Fixture: the Assignees section of an issue as an anonymous visitor (or a signed-in user without write access) sees it, fictional repository acme/web.
+     Structure and class names copied from github.com's live markup (probed 2026-10-30, anonymous, a public issue): section [data-testid=sidebar-assignees-section] with h3 "Assignees" in div[class*=containerReadonly] (no edit button),
+     the list ul[class*=assigneesList] in div[class*=childrenContainer] (hiddenChildrenContainer + span[class*=emptyText] when nobody is assigned), rows li > a[href=/<login>] with the login in [data-testid=issue-assignees].
+     ?empty shows the empty variant; ?old swaps the hashed names for the previous Name-module__x--hash naming. Hashed classes are kept as served; no feature code matches a prefix. -->
+<html lang="en" data-color-mode="light"><head><meta charset="utf-8"><title>Fixture issue · acme/web#123</title>
+<style>
+  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; color: #1f2328; background: #fff; }
+  .sidebar { width: 296px; padding: 16px; }
+  h3 { margin: 0; font-size: 12px; font-weight: 600; color: #59636e; }
+  .headerContentWrapper__x1 { display: flex; flex-direction: column; }
+  .containerReadonly__x2 { display: flex; align-items: center; height: 26px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li > a { display: grid; grid-template-columns: auto auto 1fr; align-items: center; column-gap: 8px; padding: 6px 8px; min-height: 32px; box-sizing: border-box; color: #1f2328; text-decoration: none; border-radius: 6px; }
+  .av { width: 20px; height: 20px; border-radius: 50%; background: #ddf4ff; }
+  .emptyText__x3 { font-size: 12px; color: #59636e; }
+  .hiddenChildrenContainer__x4 { height: 0; overflow: hidden; }
+</style></head>
+<body>
+<meta name="user-login" content="mira">
+<div class="sidebar">
+  <div class="SectionContainer__x0" data-testid="sidebar-assignees-section">
+    <div class="headerContentWrapper__x1">
+      <div class="containerReadonly__x2"><h3 class="SectionHeaderTitle__x5 headingReadonly__x6">Assignees</h3></div>
+    </div>
+    <div class="childrenContainer__x7" id="kids">
+      <ul class="prc-ActionList-ActionList-rPFF2 assigneesList__x8">
+        <li class="prc-ActionList-ActionListItem-So4vC"><a class="prc-ActionList-ActionListContent-KBb8-" href="/alex-dev"><span class="av"></span><span class="prc-ActionList-ItemLabel-81ohH"><div class="assigneeNameLabel__x9" data-testid="issue-assignees">alex-dev</div></span></a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  if (q.has("empty")) {
+    const sec = document.querySelector('[data-testid="sidebar-assignees-section"]');
+    sec.querySelector("#kids").className = "hiddenChildrenContainer__x4";
+    sec.querySelector("ul").replaceChildren();
+    sec.querySelector(".headerContentWrapper__x1").insertAdjacentHTML("afterend", '<span class="emptyText__x3">No one</span>');
+  }
+  if (q.has("old")) {
+    document.querySelectorAll("[class]").forEach((el) => { el.className = el.className.replace(/(\w+)__x\d+/g, "Sidebar-module__$1--b1"); });
+  }
+</script>
+</body></html>
