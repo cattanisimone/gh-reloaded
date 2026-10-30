@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.4.1...v1.5.0) (2026-10-30)
+
+
+### Features
+
+* **notifications:** add an in-page Triage settings panel ([#107](https://github.com/cattanisimone/gh-reloaded/issues/107)) ([99424a2](https://github.com/cattanisimone/gh-reloaded/commit/99424a234169aa7a628801244eefedb576025cc4))
+* **notifications:** add the triage view with three layouts ([#109](https://github.com/cattanisimone/gh-reloaded/issues/109)) ([5f39ffe](https://github.com/cattanisimone/gh-reloaded/commit/5f39ffec96d5f882d76ceb38c1ccd6cf5599923c))
+
 ## [1.4.1](https://github.com/cattanisimone/gh-reloaded/compare/v1.4.0...v1.4.1) (2026-10-22)
 
 
