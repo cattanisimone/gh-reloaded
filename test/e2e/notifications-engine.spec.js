@@ -11,8 +11,9 @@ import { isolatedWorld } from "./support/isolated-world.js";
 
 const INBOX = "https://github.com/notifications";
 const TOKENS = { githubTokens: [{ id: "t", name: "d", token: "x", owner: "" }], defaultTokenId: "t" };
-// The real Triage module is on by default: these specs switch it off and drive a dummy one.
-const ENABLE = { ghntModules: { dummy: true, triage: false } };
+// The reason tags and Triage modules are on by default; these tests are about the bare engine.
+const OFF = { ghntModules: { reasonTags: false, triage: false } };
+const ENABLE = { ghntModules: { dummy: true, reasonTags: false, triage: false } };
 
 const node = (over = {}) => ({
   state: "OPEN",
@@ -65,7 +66,7 @@ const DEFAULT_GRAPHQL = (aliases) => ({
 
 async function boot(context, page, { storage = TOKENS, graphql = DEFAULT_GRAPHQL, notifications, url = INBOX, register = true, enable = true } = {}) {
   const log = [];
-  await seedStorage(context, { ghntModules: { triage: false }, ...storage });
+  await seedStorage(context, { ...storage, ...OFF });
   await routeApi(context, log, { graphql, notifications });
   await routeGithub(context, "notifications.html");
   await page.goto(url);

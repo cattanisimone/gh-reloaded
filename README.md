@@ -43,13 +43,15 @@ Go to [github.com/settings/personal-access-tokens/new](https://github.com/settin
 
 | Scope | Permission | Used for |
 | --- | --- | --- |
-| Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues, confirming a Quick assignment (read-only) |
-| Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage, Linked PR status |
+| Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues, confirming a Quick assignment (read-only), Notification reason tags (mentions) |
+| Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage, Linked PR status, Notification reason tags (review requests and mentions) |
 | Repository | **Contents** | **HTML preview** of files in private repos (public repos work without a token) |
 | Repository | **Metadata** | added by GitHub automatically |
 | Organization | **Projects** | Projects v2 Status, Standup mode, My Issues project memberships |
 
 Click **Generate token** and copy it immediately — GitHub shows it exactly once.
+
+Already have a token? **Notification reason tags** needs no new permission, but a token limited to selected repositories shows *Unverifiable* on inbox rows from other repositories. Open the tag's panel: it names the permission (Pull requests: Read or Issues: Read) and links to Settings → GitHub tokens, where **Verify access** with one of those repositories shows whether the token can read it.
 
 Two GitHub limitations to know about:
 
@@ -74,7 +76,7 @@ If an organization enforces SSO, open [github.com/settings/tokens](https://githu
 
 Back in the extension's Settings page, under **GitHub tokens**: paste the token (`github_pat_…` or `ghp_…`) into **Default token**, **Save tokens**, then **Test** — it should report the GitHub username the token authenticates as.
 
-**Verify access.** **Test** only proves the token authenticates. **Verify access**, next to it on every token card, opens a panel where you name a repository (required) and optionally an issue, a Projects v2 URL and a private file, then **Run checks** sends at most four read-only requests with that card's own token (an unsaved token is used as typed and labelled). Each capability is reported as *Available*, *Access denied* (only when GitHub's answer proves it: an invalid token, SSO not authorized, a missing permission or an organization policy), *Not verified* (a 403 or 404 that could have several causes, so no permission is blamed), *Not checked* (nothing to test) or *Temporary error* (rate limit, network, timeout). Nothing runs on page load, and results are never stored or shown with the token. A Projects URL under `/users/<login>/projects/<n>` is owned by a personal account: a fine-grained token cannot read it, so any result other than *Available* points to a classic token with the `read:project` scope. See the screenshots for [light](screenshots/token-access-diagnostics/light.svg) and [dark](screenshots/token-access-diagnostics/dark.svg).
+**Verify access.** **Test** only proves the token authenticates. **Verify access**, next to it on every token card, opens a panel where you name a repository (required) and optionally an issue, a Projects v2 URL and a private file, then **Run checks** sends at most five read-only requests (authentication, the repository's issues, the repository's pull requests, and the optional project and file) with that card's own token (an unsaved token is used as typed and labelled). Each capability is reported as *Available*, *Access denied* (only when GitHub's answer proves it: an invalid token, SSO not authorized, a missing permission or an organization policy), *Not verified* (a 403 or 404 that could have several causes, so no permission is blamed), *Not checked* (nothing to test) or *Temporary error* (rate limit, network, timeout). Nothing runs on page load, and results are never stored or shown with the token. A Projects URL under `/users/<login>/projects/<n>` is owned by a personal account: a fine-grained token cannot read it, so any result other than *Available* points to a classic token with the `read:project` scope. See the screenshots for [light](screenshots/token-access-diagnostics/light.svg) and [dark](screenshots/token-access-diagnostics/dark.svg).
 
 Working across several repository owners — organizations or personal accounts — that need their own token? **Add owner token** for each, with that owner's login (e.g. `acme`; a pasted `https://github.com/acme` works too). A request always uses the token of the repository's owner, falling back to the default token — never by trying every saved token in turn; with no default set, owners without a token of their own are read anonymously. Saved tokens are never shown again in full, only by their last 4 characters.
 
@@ -223,6 +225,17 @@ On the inbox at `github.com/notifications`, the loaded notifications are sorted 
 ![The Triage view in its three layouts: Integrated navigation in GitHub's sidebar, the Quick bar and Grouped sections, with the narrow, empty and loading states, fictional data.](screenshots/notifications-triage.svg)
 
 - No new token permission and nothing is written to GitHub. The only value stored is which Grouped sections are collapsed, in this browser (`ghntTriageCollapsed`); the selected category is kept in memory only. **Restore defaults** in the panel keeps removing exactly its three keys.
+### Notification reason tags — [features/notifications](features/notifications)
+
+On the inbox (`github.com/notifications`), every row gets a small tag on its own line under the title, starting at the title text's left edge (past the row's status icon), that says why it is there: **Direct review request**, **Team review request**, **Re-review requested**, **Mention**, **Subscribed**, **CI** or **Unverifiable**. Each tag has a color, a text, an icon and an accessible label, and the order of the rows is never changed. Other native reasons (commented, assigned, author, state change…) get no tag.
+
+![Notification reason tags: inbox rows with a tag under each title and the "Why is this here?" panel open on a team review request, fictional repositories.](screenshots/notification-reason-tags.svg)
+
+- Click a tag, or Tab to it and press Enter, Space or `?`, to open **Why is this here?** in a panel under the row, its card lined up with the tag and filling the row to its right edge: GitHub's own reason, the evidence, when the data was read (and that it may be stale) and the rule applied. Esc closes it and returns focus to the tag. Clicks and keys on a tag never reach GitHub's own row handlers: the thread does not open, is not marked as read and GitHub's shortcuts dialog does not appear.
+- Direct, team and re-review are shown only when they can be proved from the pull request (its reviewer list, request events and your reviews). A team request never claims the review is yours to give. Anything that cannot be proved, because there is no token for the owner, the token was refused or belongs to another account, the data is incomplete or you were requested and then removed, is **Unverifiable**, and the panel says what is missing with a link to Settings → GitHub tokens.
+- Mention, Subscribed and CI come from GitHub's own label and need no token; the Mention panel adds the matched mention and a link to it when it could be read.
+- If a thread's reason changes while the page is open the tag updates in place and the row is highlighted for 3 seconds. Colors come from GitHub's own theme variables, so dark and high-contrast themes follow GitHub.
+- On by default; switch it off under **Settings → Features**, or turn on **Native inbox**, and the page is exactly GitHub's own. It reads review requests and mentions across every repository in your inbox (read-only, cached for 60 seconds, nothing is written to GitHub), with the **Pull requests: Read** and **Issues: Read** permissions already listed under [Install](#install).
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 

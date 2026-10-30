@@ -1,0 +1,165 @@
+<!doctype html>
+<!--
+  Fixture: github.com/notifications (the inbox list) built on the row structure measured on the live
+  inbox by the reviewer (fictional data, signed in as mira). Per row:
+    li.notifications-list-item.js-navigation-item[.notification-unread] (display:list-item, padding-left 8px)
+      > div.d-flex (the row container): checkbox + unread dot lead, a.notification-list-item-link.flex-auto.min-width-0
+        (a flex row: the status icon span, 16px + 8px margin, then div.flex-auto holding the repo line and the
+        title; the title text column is that div, 24px right of the link's left edge), div.d-flex.flex-row.flex-md-row-reverse (avatars, the reason label
+        span.f6.flex-self-center.ml-2.pl-2.flex-shrink-0, the date)
+      > ul.notification-list-item-actions (absolute, hidden)
+      > ul.notification-list-item-actions-responsive (visible below 768px)
+  No CSS-module class is used. The Primer variables below are the ones the live page defines for both
+  themes (#dark in the URL, or data-color-mode="dark"). #grouped adds repository headers between rows.
+  The page records what GitHub's own handlers would see in window.__rec (click on a row, keys, checkbox,
+  the "?" dialog), in capture and bubble phase: a tag must never feed it.
+  window.__fx: replaceRow(key) swaps a row's li; navFocus(key, on) is j/k selection; setLabel(key, text|null) changes or removes a row's native label; flexRow(key) makes the li
+  a non-wrapping flex row.
+-->
+<html lang="en" data-color-mode="light" data-light-theme="light" data-dark-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="user-login" content="mira">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notifications</title>
+<style>
+  :root {
+    --fgColor-default: #1f2328; --fgColor-muted: #59636e; --fgColor-accent: #0969da; --fgColor-attention: #9a6700; --fgColor-success: #1a7f37; --fgColor-done: #8250df; --fgColor-severe: #bc4c00;
+    --bgColor-default: #ffffff; --bgColor-muted: #f6f8fa; --bgColor-accent-muted: #ddf4ff; --bgColor-attention-muted: #fff8c5; --bgColor-neutral-muted: #818b981f; --bgColor-done-muted: #fbefff; --bgColor-severe-muted: #fff1e5;
+    --borderColor-default: #d1d9e0; --borderColor-muted: #d1d9e0b3; --borderColor-accent-muted: #54aeff66; --borderColor-attention-muted: #d4a72c66; --borderColor-done-muted: #c297ff66; --borderColor-severe-muted: #fb8f4466;
+    --borderColor-accent-emphasis: #0969da; --color-notifications-row-bg: #ffffff; --color-notifications-row-read-bg: #f6f8fa;
+    --overlay-bgColor: #ffffff; --focus-outlineColor: #0969da; --shadow-floating-large: 0 0 0 1px #d1d9e0, 0 8px 24px #25292e1f;
+  }
+  :root[data-color-mode="dark"] {
+    --fgColor-default: #f0f6fc; --fgColor-muted: #9198a1; --fgColor-accent: #4493f8; --fgColor-attention: #d29922; --fgColor-success: #3fb950; --fgColor-done: #ab7df8; --fgColor-severe: #db6d28;
+    --bgColor-default: #0d1117; --bgColor-muted: #151b23; --bgColor-accent-muted: #388bfd1a; --bgColor-attention-muted: #bb800926; --bgColor-neutral-muted: #656c7633; --bgColor-done-muted: #ab7df826; --bgColor-severe-muted: #db6d281a;
+    --borderColor-default: #3d444d; --borderColor-muted: #3d444db3; --borderColor-accent-muted: #388bfd66; --borderColor-attention-muted: #9e6a0366; --borderColor-done-muted: #ab7df866; --borderColor-severe-muted: #db6d2866;
+    --borderColor-accent-emphasis: #1f6feb; --color-notifications-row-bg: #151b23; --color-notifications-row-read-bg: #0d1117;
+    --overlay-bgColor: #151b23; --focus-outlineColor: #1f6feb; --shadow-floating-large: 0 0 0 1px #3d444d, 0 24px 48px #010409;
+  }
+  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; background: var(--bgColor-default); color: var(--fgColor-default); }
+  a { color: inherit; text-decoration: none; }
+  header { height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 16px; border-bottom: 1px solid var(--borderColor-default); }
+  .layout { display: flex; gap: 16px; max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
+  aside { flex: none; width: 256px; }
+  aside.closed { display: none; }
+  main { flex: 1; min-width: 0; }
+  ul.list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--borderColor-default); border-radius: 6px; background: var(--color-notifications-row-read-bg); }
+  h3.group { margin: 0; padding: 8px 16px; font-size: 12px; background: var(--bgColor-muted); border-top: 1px solid var(--borderColor-default); }
+  /* GitHub's row rules, copied from the served stylesheet, !important included. */
+  li.notifications-list-item { display: list-item; position: relative; padding: 8px 8px 8px 8px; border-bottom: 1px solid; }
+  .color-border-muted { border-color: var(--borderColor-muted) !important; }
+  .notification-unread { background-color: var(--color-notifications-row-bg) !important; }
+  .notification-read { background-color: var(--color-notifications-row-read-bg) !important; }
+  .notifications-list-item:hover, .notifications-list-item:focus-within, .notifications-list-item.navigation-focus { background-color: var(--bgColor-accent-muted) !important; box-shadow: inset 2px 0 0 var(--borderColor-accent-emphasis); }
+  .notifications-list-item:last-child { border-bottom: 0 !important; }
+  li.notification-unread { font-weight: 600; }
+  .row { display: flex; align-items: flex-start; }
+  .lead { flex: none; width: 37px; display: flex; gap: 8px; align-items: center; height: 24px; }
+  .lead input { margin: 0; }
+  .lead i { width: 12px; height: 12px; border-radius: 50%; background: var(--fgColor-accent); }
+  .notification-list-item-link { flex: 1 1 0; min-width: 0; display: flex; align-items: flex-start; }
+  .notification-list-item-link > .status { flex: none; width: 16px; height: 16px; margin: 2px 8px 0 0; color: var(--fgColor-done, #8250df); }
+  .notification-list-item-link > .flex-auto { flex: 1 1 auto; min-width: 0; }
+  .notification-list-item-link p { margin: 0; }
+  .repo { font-size: 12px; font-weight: 400; color: var(--fgColor-muted); }
+  .markdown-title { overflow-wrap: anywhere; }
+  .cluster { display: flex; flex-direction: row-reverse; align-items: center; flex: none; }
+  .cluster .f6 { font-size: 12px; font-weight: 400; color: var(--fgColor-muted); border-left: 1px solid var(--borderColor-default); padding-left: 8px; margin-left: 8px; }
+  .cluster .avatars { width: 64px; height: 20px; background: var(--bgColor-neutral-muted); border-radius: 10px; margin-left: 8px; }
+  .cluster time { width: 56px; text-align: right; font-size: 12px; font-weight: 400; color: var(--fgColor-muted); }
+  ul.notification-list-item-actions { position: absolute; top: 0; bottom: 0; right: 0; display: none; list-style: none; margin: 0; padding: 0; }
+  ul.notification-list-item-actions-responsive { display: none; list-style: none; width: 291px; height: 30px; margin: 8px 0; padding: 0 0 0 29px; }
+  @media (max-width: 767px) {
+    .lead { width: 29px; }
+    .row { flex-wrap: wrap; }
+    .notification-list-item-link { flex: 1 1 calc(100% - 29px); }
+    .cluster { flex: 0 0 100%; box-sizing: border-box; padding-left: 29px; justify-content: flex-end; }
+    ul.notification-list-item-actions-responsive { display: block; }
+  }
+  @media (max-width: 1099px) { aside { width: 200px; } }
+  nav[aria-label="Pagination"] { display: flex; gap: 12px; padding: 12px 0; }
+</style>
+</head>
+<body>
+<header><a href="/" id="logo">GitHub</a><a href="/notifications" id="bell" aria-label="Notifications">Inbox</a></header>
+<div class="layout"><aside id="side">Filters</aside><main id="main"></main></div>
+<script>
+  const ROWS = [
+    { id: 1, path: '/acme-labs/atlas-web/pull/1482', repo: 'acme-labs/atlas-web #1482', title: 'Remove legacy flag from checkout', label: 'review requested', unread: true, avatars: true, time: '12 min' },
+    { id: 2, path: '/acme-labs/billing-api/pull/311', repo: 'acme-labs/billing-api #311', title: 'Update billing schema', label: 'review requested', unread: true, avatars: true, time: '1 h' },
+    { id: 3, path: '/acme-labs/atlas-web/pull/1490', repo: 'acme-labs/atlas-web #1490', title: 'Tighten upload limits', label: 'review requested', unread: true, avatars: true, time: '2 h' },
+    { id: 4, path: '/acme-labs/atlas-web/pull/1475', repo: 'acme-labs/atlas-web #1475', title: 'Fix list pagination', label: 'mention', unread: true, avatars: true, time: '2 h' },
+    { id: 5, path: '/northwind/design-kit/pull/204', repo: 'northwind/design-kit #204', title: 'Secondary color tokens', label: 'review requested', unread: true, avatars: false, time: '5 h' },
+    { id: 6, path: '/acme-labs/docs-site/pull/77', repo: 'acme-labs/docs-site #77', title: 'New contributing guide', label: 'subscribed', unread: false, avatars: false, time: '6 h' },
+    { id: 7, path: '/acme-labs/atlas-web/actions/runs/7', repo: 'acme-labs/atlas-web', title: 'CI: build failed', label: 'ci activity', unread: false, avatars: false, time: '7 h' },
+    { id: 8, path: '/acme-labs/docs-site/issues/70', repo: 'acme-labs/docs-site #70', title: 'Docs typo', label: 'commented', unread: false, avatars: true, time: '1 d' },
+    { id: 9, path: '/acme-labs/atlas-web/pull/1500', repo: 'acme-labs/atlas-web #1500', title: 'Rework the notification settings page so that every toggle explains in plain words what it changes and what it never touches, with a long title that wraps on two lines or more', label: 'subscribed', unread: false, avatars: true, time: '2 d' },
+  ];
+  const abs = (r) => 'https://github.com' + r.path + '?notification_referrer_id=NT_' + r.id + '&notifications_query=is%3Aunread';
+  const rowHtml = (r) =>
+    '<li class="notifications-list-item js-navigation-item color-border-muted pl-2 ' + (r.unread ? 'notification-unread' : 'notification-read') + '" data-notification-id="NT_' + r.id + '">' +
+    '<div class="row d-flex"><div class="lead"><input type="checkbox" aria-label="Select"><i></i></div>' +
+    '<a class="notification-list-item-link flex-auto min-width-0" href="' + abs(r) + '"><span class="status"><svg class="octicon octicon-git-pull-request" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="currentColor"></circle></svg></span><div class="flex-auto min-width-0"><p class="repo">' + r.repo + '</p><p class="markdown-title">' + r.title + '</p></div></a>' +
+    '<div class="cluster d-flex flex-row flex-md-row-reverse"><time>' + r.time + '</time><span class="f6 flex-self-center ml-2 pl-2 flex-shrink-0">' + r.label + '</span>' + (r.avatars ? '<span class="avatars"></span>' : '') + '</div></div>' +
+    '<ul class="notification-list-item-actions"><li><button>Done</button></li></ul>' +
+    '<ul class="notification-list-item-actions-responsive"><li><button>Done</button></li></ul></li>';
+  function render() {
+    const main = document.getElementById('main');
+    const path = location.pathname.replace(/\/+$/, '');
+    if (location.hash.includes('dark')) document.documentElement.setAttribute('data-color-mode', 'dark');
+    if (location.hash.includes('nosidebar')) document.getElementById('side').classList.add('closed');
+    if (path === '/notifications' || path === '/notifications/subscriptions') {
+      let html = '';
+      let last = '';
+      for (const r of ROWS) {
+        const repo = r.repo.split(' ')[0];
+        if (location.hash.includes('grouped') && repo !== last) { html += '<h3 class="group">' + repo + '</h3>'; last = repo; }
+        html += rowHtml(r);
+      }
+      main.innerHTML = '<h1>' + (path === '/notifications' ? 'Notifications' : 'Subscriptions') + '</h1><ul class="list">' + html + '</ul>' +
+        '<nav aria-label="Pagination"><a id="next" href="/notifications?after=p2">Next</a></nav>';
+    } else {
+      main.innerHTML = '<h1>acme-labs/atlas-web</h1><p>Code · Issues · Pull requests</p>';
+    }
+  }
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a#bell, a#next');
+    if (!a) return;
+    e.preventDefault();
+    history.pushState({}, '', a.getAttribute('href'));
+    render();
+    document.dispatchEvent(new Event('turbo:load'));
+  });
+  window.addEventListener('popstate', render);
+  render();
+
+  // What GitHub's own handlers would observe.
+  window.__rec = [];
+  for (const phase of [true, false]) {
+    const tag = phase ? 'c:' : 'b:';
+    document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('li.notifications-list-item')) window.__rec.push(tag + 'click-row'); }, phase);
+    document.addEventListener('change', (e) => { if (e.target.matches && e.target.matches('input[type=checkbox]')) window.__rec.push(tag + 'checkbox'); }, phase);
+    document.addEventListener('keydown', (e) => window.__rec.push(tag + 'key:' + e.key), phase);
+    document.addEventListener('keyup', (e) => window.__rec.push(tag + 'keyup:' + e.key), phase);
+  }
+  window.__fx = {
+    li: (key) => [...document.querySelectorAll('li.notifications-list-item')].find((li) => li.querySelector('a.notification-list-item-link')?.href.includes(key)),
+    setLabel(key, text) {
+      const span = this.li(key).querySelector('.f6');
+      if (text === null) span.remove(); else span.textContent = text;
+    },
+    // Replace a row's li by a fresh copy, like GitHub's morphing does.
+    replaceRow(key) {
+      const li = this.li(key);
+      const tpl = document.createElement('template');
+      tpl.innerHTML = rowHtml(ROWS.find((r) => r.path.includes(key)));
+      li.replaceWith(tpl.content.firstElementChild);
+    },
+    // j/k selection.
+    navFocus(key, on = true) { this.li(key).classList.toggle('navigation-focus', on); },
+    flexRow(key) { this.li(key).style.display = 'flex'; this.li(key).style.flexWrap = 'nowrap'; },
+  };
+</script>
+</body>
+</html>

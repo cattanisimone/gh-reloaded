@@ -66,13 +66,13 @@
       .filter((t) => !Number.isNaN(t.created));
     const recent = matches.filter((t) => t.created >= windowStart).sort((a, b) => b.created - a.created)[0];
     if (recent) {
-      return out("attention", 9, ["Direct mention"], { scope: "direct", at: recent.at, href: recent.url || "" });
+      return out("attention", 9, ["Direct mention"], { scope: "direct", at: recent.at, href: recent.url || "", by: recent.author, source: recent.source });
     }
     const editedInside = matches.some((t) => t.edited >= windowStart);
     const readInFull = facts.commentsTotal <= 50 && facts.mentionReviewsTotal <= 50 && facts.threadsTotal === 0;
     const newest = matches.sort((a, b) => b.created - a.created)[0];
     if (newest && !editedInside && readInFull) {
-      return out("informational", 10, ["Mentioned more than the window ago"], { at: newest.at });
+      return out("informational", 10, ["Mentioned more than the window ago"], { at: newest.at, by: newest.author, source: newest.source, href: newest.url || "" });
     }
     return unverifiable(11, newest ? (editedInside ? "mention in an item edited inside the window" : "read set incomplete") : "no mention found in what was read", "read: body, last 50 comments, last 50 reviews");
   }
@@ -125,6 +125,31 @@
     return unverifiable(8, complete ? "request state not provable (removed, partly satisfied or no request)" : "review data incomplete (more than the page size read)");
   }
 
+  // --- who a review request is addressed to ---------------------------------
+
+  // "rerequest" | "direct" | "team" | null. Provable from the facts alone,
+  // whatever section the pull request lands in. Null when the read is
+  // incomplete, the request was added and removed, or nothing names me or a
+  // team: a guess is never a tag.
+  function requestScope(facts, me) {
+    if (!facts || !facts.ok || facts.kind !== "pull") return null;
+    const complete = facts.requestsTotal <= 100 && facts.reviewsTotal <= 50 && facts.eventsTotal <= 100;
+    if (!complete) return null;
+    const events = facts.events || [];
+    const mine = events.filter((e) => e.target === "User" && same(e.name, me));
+    const pendingMe = (facts.users || []).some((u) => same(u, me));
+    if (pendingMe) {
+      const lastAsked = Math.max(0, ...mine.filter((e) => e.type === "added").map((e) => Date.parse(e.at) || 0));
+      const reviewedBefore = (facts.reviews || []).some((r) => counted(r, facts.author) && same(r.author, me) && Date.parse(r.at) < lastAsked);
+      return reviewedBefore ? "rerequest" : "direct";
+    }
+    if (mine.length) return mine.some((e) => e.type === "removed") ? null : "direct";
+    if ((facts.teams || []).length) return "team";
+    // A team request that was since answered no longer lists the team as pending.
+    const teamAsked = events.some((e) => e.type === "added" && e.target === "Team");
+    return teamAsked && !events.some((e) => e.type === "removed") ? "team" : null;
+  }
+
   // --- entry point ---------------------------------------------------------
 
   const KNOWN_QUIET = ["subscribed", "ci_activity", "state_change", "comment", "author", "assign", "team_mention", "manual", "security_alert", "approval_requested", "invitation"];
@@ -142,7 +167,8 @@
       if (!ctx.me) return unverifiable(1, "signed-in login unknown");
       if (!facts.viewer) return unverifiable(1, "token login unknown");
       if (!same(ctx.me, facts.viewer)) return unverifiable(1, "token belongs to another account");
-      return reason === "mention" ? classifyMention(facts, ctx, now) : classifyReview(facts, ctx);
+      if (reason === "mention") return classifyMention(facts, ctx, now);
+      return { ...classifyReview(facts, ctx), requestedAs: requestScope(facts, ctx.me), teams: facts.teams || [] };
     }
 
     if (reason === "mention" || reason === "review_requested") return unverifiable(12, "subject kind not read", `subject: ${row.kind}`);
@@ -155,5 +181,5 @@
     return (row.kind === "pull" || row.kind === "issue") && (row.reason === "review_requested" || row.reason === "mention");
   }
 
-  global.GHNT_CLASSIFY = { classify, needsFacts, hasMention, stripCode, counted };
+  global.GHNT_CLASSIFY = { classify, requestScope, needsFacts, hasMention, stripCode, counted };
 })(typeof window !== "undefined" ? window : globalThis);

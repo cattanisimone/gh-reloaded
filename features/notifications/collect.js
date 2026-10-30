@@ -14,7 +14,10 @@
   // The reason as the inbox displays it (lowercase text) -> internal reason.
   const LABELS = {
     "review requested": "review_requested",
+    // The live inbox says "mention" / "team mention"; older markup said "mentioned".
+    mention: "mention",
     mentioned: "mention",
+    "team mention": "team_mention",
     "team mentioned": "team_mention",
     subscribed: "subscribed",
     commented: "comment",
@@ -82,17 +85,50 @@
 
   // --- DOM -----------------------------------------------------------------
 
+  // Injected nodes (class ghnt-*) never feed back into what is read.
+  const isInjectedClass = (cls) => String(cls || "").split(/\s+/).some((c) => c.startsWith("ghnt-"));
+
+  // The native reason label among the leaf elements of a row: a known label
+  // text wins, else a leaf marked as a reason. Pure, so it is unit-tested.
+  // leaves: [{ text, className, dataReason }]; returns the chosen leaf or null.
+  function pickLabel(leaves) {
+    const usable = (leaves || []).filter((l) => !isInjectedClass(l.className) && norm(l.text));
+    return usable.find((l) => Object.hasOwn(LABELS, norm(l.text))) || usable.find((l) => /reason/i.test(l.className || "") || l.dataReason) || null;
+  }
+
+  // Inside a row only: the li itself may carry our highlight class.
+  function injectedNode(el, root) {
+    for (let n = el; n && n !== root; n = n.parentElement) if (isInjectedClass(n.getAttribute?.("class"))) return true;
+    return false;
+  }
+
+  function labelElement(li, link) {
+    const els = [...li.querySelectorAll("*")].filter((el) => !el.children.length && !link.contains(el) && !injectedNode(el, li));
+    const leaves = els.map((el) => ({ text: el.textContent, className: el.getAttribute("class") || "", dataReason: el.hasAttribute("data-reason"), el }));
+    return pickLabel(leaves)?.el || null;
+  }
+
   function labelOf(li, link) {
-    const leaves = [...li.querySelectorAll("*")].filter((el) => !el.children.length && !link.contains(el) && norm(el.textContent));
-    const known = leaves.find((el) => Object.hasOwn(LABELS, norm(el.textContent)));
-    if (known) return known.textContent;
-    const marked = leaves.find((el) => /reason/i.test(el.getAttribute("class") || "") || el.hasAttribute("data-reason"));
-    return marked ? marked.textContent : "";
+    return labelElement(li, link)?.textContent || "";
   }
 
   function subjectLink(li) {
     const anchors = [...li.querySelectorAll("a[href]")].map((a) => ({ a, s: parseSubject(a.href) })).filter((x) => x.s);
     return anchors.find((x) => x.s.kind === "pull" || x.s.kind === "issue") || anchors[0] || null;
+  }
+
+  // The row of a notification key: { li, container, link, label } where
+  // container is the li's direct child holding the subject link (the row
+  // proper) and label the native reason element, or null when the row, the
+  // link or the label cannot be found. Injected nodes are never matched.
+  function findRow(doc, key) {
+    for (const li of doc.querySelectorAll("li.notifications-list-item")) {
+      const found = subjectLink(li);
+      if (!found || found.s.key !== key) continue;
+      const container = [...li.children].find((c) => c.contains(found.a)) || null;
+      return { li, container, link: found.a, label: labelElement(li, found.a) };
+    }
+    return null;
   }
 
   // The key of one inbox row, the same one readPage() and the engine use; null
@@ -126,5 +162,5 @@
     return { me, rows, hasPagination: !!doc.querySelector('nav[aria-label="Pagination"]') };
   }
 
-  global.GHNT_COLLECT = { reasonFromLabel, parseSubject, fromApiItem, mergeApi, readPage, keyOf, LABELS };
+  global.GHNT_COLLECT = { reasonFromLabel, parseSubject, fromApiItem, mergeApi, readPage, findRow, keyOf, pickLabel, LABELS };
 })(typeof window !== "undefined" ? window : globalThis);

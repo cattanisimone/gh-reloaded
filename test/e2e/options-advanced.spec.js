@@ -78,6 +78,35 @@ test("Standup fields live in Advanced and save, validate and clear", async ({ co
   await expect(days).toHaveValue("");
 });
 
+test("a late storage read does not overwrite Advanced fields the user already edited", async ({ context, page }) => {
+  const worker = await backgroundWorker(context);
+  await worker.evaluate(() => chrome.storage.local.set({ ghsmStaleDays: 6, ghmiTileMin: 700 }));
+  // Read storage on load as usual but deliver the result only when the test
+  // releases it, as a slow runner does: the snapshot predates the user's edit.
+  await page.addInitScript(() => {
+    if (!globalThis.chrome?.storage?.local) return;
+    const local = chrome.storage.local;
+    const get = local.get.bind(local);
+    let release;
+    const gate = new Promise((resolve) => { release = resolve; });
+    window.__releaseStorage = release;
+    local.get = (...args) => get(...args).then((result) => gate.then(() => result));
+  });
+  await openOptions(context, page);
+  const days = page.locator("#ghsm-stale-days");
+  const words = page.locator("#ghsm-review-keywords");
+  const min = page.locator("#ghmi-tile-min");
+  await expect(days).toHaveValue("");
+  await days.fill("4");
+  await days.dispatchEvent("change");
+  await page.evaluate(() => window.__releaseStorage());
+  await expect.poll(() => storedStandup(worker)).toEqual({ ghsmStaleDays: 4 });
+  await expect(days).toHaveValue("4");
+  // Fields the user did not touch still show the saved values.
+  await expect(min).toHaveValue("700");
+  await expect(words).toHaveValue("");
+});
+
 test("turning Standup and My Issues off keeps their saved values, still editable", async ({ context, page }) => {
   const worker = await backgroundWorker(context);
   await worker.evaluate(() => chrome.storage.local.set({ ghsmStaleDays: 6, ghsmReviewKeywords: "qa", ghmiTileMin: 700 }));

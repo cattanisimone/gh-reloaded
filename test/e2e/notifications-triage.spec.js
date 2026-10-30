@@ -69,7 +69,8 @@ async function boot(context, page, { storage = {}, url = INBOX, viewport, scheme
   });
   if (viewport) await page.setViewportSize(viewport);
   if (scheme) await page.emulateMedia({ colorScheme: scheme });
-  await seedStorage(context, { ...(tokens ? TOKENS : {}), ...storage });
+  // These specs drive Triage alone: the reason tags module (#102), on by default, is switched off unless a test turns it on.
+  await seedStorage(context, { ghntModules: { reasonTags: false }, ...(tokens ? TOKENS : {}), ...storage });
   await routeGithub(context, "notifications.html");
   await page.goto(url);
   const world = await isolatedWorld(context, page);
@@ -199,7 +200,7 @@ test("Show native inbox and Triage off remove everything and restore the page ex
   await seedStorage(context, { ghntNativeInbox: false, ghntLayout: "quickbar" });
   await expect(bar(page)).toHaveCount(1);
   await cat(page, "waiting").click();
-  await seedStorage(context, { ghntModules: { triage: false } });
+  await seedStorage(context, { ghntModules: { triage: false, reasonTags: false } });
   await expect(bar(page)).toHaveCount(0);
   await expect(page.locator(".ghnt-off")).toHaveCount(0);
   expect(await region()).toBe(native);

@@ -187,3 +187,30 @@ test("an unchanged scan does not publish again", async () => {
   await env.engine.scan();
   assert.equal(n, 0);
 });
+
+test("items carry owner, repo, the raw label and when their facts were read", async () => {
+  const env = setup({ rows: [row(1)] });
+  await env.engine.start();
+  const item = section(env, 1);
+  assert.deepEqual([item.owner, item.repo, item.rawLabel, item.readAt], ["acme", "web", "review_requested", T0]);
+  assert.equal(item.requestedAs, "direct");
+});
+
+test("facts read for one reason are not reused when the reason changes", async () => {
+  const env = setup({ rows: [row(1, "mention")], respond: (p) => ({ ok: true, facts: Object.fromEntries(p.rows.map((r) => [r.key, r.reason === "mention" ? { ok: true, kind: "pull", viewer: "mira", state: "OPEN", texts: [{ source: "comment", text: "@mira hi", at: new Date(T0 - 1000).toISOString(), author: "lee", url: "u" }], commentsTotal: 1, mentionReviewsTotal: 0, threadsTotal: 0 } : pullFacts()])), reasons: Object.fromEntries(p.rows.map((r) => [r.key, r.reason])), capabilities: { "pr:acme": "ok" }, api: { state: "not-tried", items: [] }, rateLimited: false, retryAt: null }) });
+  await env.engine.start();
+  assert.equal(section(env, 1).rule, 9);
+  env.rows = [row(1, "review_requested")];
+  await env.engine.scan();
+  assert.equal(env.sent.length, 2, "read again for the new reason, inside the 60 s cache window");
+  assert.equal(section(env, 1).rule, 3);
+  assert.equal(section(env, 1).requestedAs, "direct");
+});
+
+test("a REST reason that differs from the label does not cause a read on every scan", async () => {
+  const env = setup({ rows: [row(1, "mention")], respond: (p) => ({ ok: true, facts: Object.fromEntries(p.rows.map((r) => [r.key, pullFacts()])), reasons: Object.fromEntries(p.rows.map((r) => [r.key, "review_requested"])), capabilities: {}, api: { state: "ok", items: [{ id: "1", reason: "review_requested", subject: { url: "https://api.github.com/repos/acme/web/pulls/1", type: "PullRequest", title: "t" }, repository: { full_name: "acme/web" } }] }, rateLimited: false, retryAt: null }) });
+  await env.engine.start();
+  await env.engine.scan();
+  await env.engine.scan();
+  assert.equal(env.sent.length, 1, "the label said mention but REST said review_requested: one read");
+});

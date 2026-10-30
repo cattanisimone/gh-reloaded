@@ -91,6 +91,44 @@ test("unregistering a started module stops it, an unstarted one is not stopped",
   assert.deepEqual(log, ["+d", "-d"]);
 });
 
+test("defaultOn: unset means on, an explicit false wins, nothing runs before the preferences are read", () => {
+  const reg = R.createRegistry();
+  const log = [];
+  reg.register({ id: "tags", defaultOn: true, start: () => log.push("+"), stop: () => log.push("-") });
+  reg.setRunning(true);
+  assert.equal(reg.hasActive(), false, "preferences not read yet");
+  assert.deepEqual(log, []);
+  reg.setConfig({ modules: {} });
+  assert.equal(reg.hasActive(), true);
+  assert.deepEqual(log, ["+"]);
+  assert.equal(reg.list()[0].enabled, true);
+  reg.setConfig({ modules: { tags: false } });
+  assert.deepEqual(log, ["+", "-"]);
+  assert.equal(reg.list()[0].enabled, false);
+  reg.setConfig({ modules: { other: true } });
+  assert.deepEqual(log, ["+", "-", "+"], "an unrelated key leaves the default on");
+});
+
+test("a module without defaultOn stays off when unset", () => {
+  const reg = R.createRegistry();
+  reg.register({ id: "x", start() {}, stop() {} });
+  reg.setConfig({ modules: {} });
+  assert.equal(reg.hasActive(), false);
+});
+
+test("registering a started id again stops the old module, starts the new one, and its disposer removes it", () => {
+  const { reg, log } = setup();
+  reg.setConfig({ modules: { a: true, b: true } });
+  reg.setRunning(true);
+  log.length = 0;
+  const off = reg.register({ id: "a", start: () => log.push("+a2"), stop: () => log.push("-a2") });
+  assert.deepEqual(log, ["-a", "+a2"]);
+  assert.deepEqual(Array.from(reg.list(), (m) => m.id), ["b", "c", "a"]);
+  off();
+  assert.deepEqual(log, ["-a", "+a2", "-a2"]);
+  assert.deepEqual(Array.from(reg.list(), (m) => m.id), ["b", "c"]);
+});
+
 test("unregister stops a started module and removes it from the list; an unknown id is a no-op", () => {
   const { reg, log } = setup(["a", "b"]);
   reg.setRunning(true);

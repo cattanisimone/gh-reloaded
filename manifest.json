@@ -149,11 +149,14 @@
         "features/notifications/panel.js",
         "features/notifications/content.js",
         "features/notifications/triage-model.js",
-        "features/notifications/triage.js"
+        "features/notifications/triage.js",
+        "features/notifications/reason-tag.js",
+        "features/notifications/reason-tags.js"
       ],
       "css": [
         "features/notifications/panel.css",
-        "features/notifications/triage.css"
+        "features/notifications/triage.css",
+        "features/notifications/reason-tags.css"
       ],
       "run_at": "document_idle"
     },

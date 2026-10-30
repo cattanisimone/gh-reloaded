@@ -22,7 +22,7 @@ export const STATUS_LABEL = {
   [STATUS.TEMPORARY]: "Temporary error",
 };
 
-export const MAX_REQUESTS = 4;
+export const MAX_REQUESTS = 5;
 export const CONCURRENCY = 2;
 export const TIMEOUT_MS = 10000;
 
@@ -105,6 +105,13 @@ export function buildChecks({ repo, issue, project, file }) {
     label: "Repository & issues",
     resource: issue ? `${slug}, issue #${issue}` : `${slug}, issues list`,
     request: { url: issue ? `${API}/repos/${slug}/issues/${issue}` : `${API}/repos/${slug}/issues?per_page=1` },
+  });
+  checks.push({
+    id: "pulls",
+    kind: "pulls",
+    label: "Pull requests",
+    resource: `${slug}, pull requests list`,
+    request: { url: `${API}/repos/${slug}/pulls?per_page=1` },
   });
   if (project) {
     const root = project.kind === "orgs" ? "organization" : "user";
@@ -258,7 +265,7 @@ function permissionRemedy(kind, type, headers, project) {
       : "Grant Organization → Projects: read on the token.";
     return { text, href: DOCS.fineGrained };
   }
-  const perm = kind === "file" ? "Contents: read" : "Issues: read (and Metadata)";
+  const perm = kind === "file" ? "Contents: read" : kind === "pulls" ? "Pull requests: read (and Metadata)" : "Issues: read (and Metadata)";
   return { text: `Include this repository in the token's selection and grant ${perm}.`, href: DOCS.fineGrained };
 }
 

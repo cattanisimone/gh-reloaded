@@ -1,0 +1,117 @@
+/* Reason tags on the notifications inbox. Colors come from GitHub's Primer
+   variables, with light values as fallback, so GitHub's theme (dark, high
+   contrast) drives them. Every class starts with ghnt- and none contains the
+   word "reason": the collector must never read its own nodes as a reason.
+
+   One left column: the title text. The script sets the line's and the
+   panel's padding-left from measurements, so the pill's border box and the
+   card's border box both start at the left edge of the title text (the
+   link's first child with text, the div.flex-auto holding the repository
+   line and the title), not at the link, whose status icon comes first; with
+   no such element the row gets no tag until the next scan. Inside, tag and card share the same
+   inset (1px border + --ghnt-inset), so the card's content starts at the tag
+   icon; the card's marks are as wide as the icon and spaced like the label,
+   so the card's text starts at the tag label. The card then fills the row up
+   to its right content edge; its lines stop at 80ch to stay readable. */
+
+.ghnt-line, li.ghnt-why { --ghnt-inset: 8px; --ghnt-icon: 12px; --ghnt-gap: 4px; }
+
+.ghnt-line {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.ghnt-tag {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ghnt-gap);
+  min-width: 0;
+  max-width: 100%;
+  height: 20px;
+  margin: 0;
+  padding: 0 var(--ghnt-inset);
+  border: 1px solid var(--ghnt-border);
+  border-radius: 2em;
+  background: var(--ghnt-bg);
+  color: var(--ghnt-fg);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter 80ms;
+}
+.ghnt-tag:hover { filter: brightness(0.95); }
+.ghnt-tag:active { filter: brightness(0.89); }
+.ghnt-tag:focus-visible { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: 1px; }
+.ghnt-tag-text { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ghnt-icon { flex: none; width: var(--ghnt-icon); height: var(--ghnt-icon); }
+
+.ghnt-tone-accent { --ghnt-fg: var(--fgColor-accent, #0550ae); --ghnt-bg: var(--bgColor-accent-muted, #ddf4ff); --ghnt-border: var(--borderColor-accent-muted, #80ccff); }
+.ghnt-tone-neutral { --ghnt-fg: var(--fgColor-muted, #59636e); --ghnt-bg: var(--bgColor-neutral-muted, #eff2f5); --ghnt-border: var(--borderColor-default, #d1d9e0); }
+.ghnt-tone-done { --ghnt-fg: var(--fgColor-done, #6639ba); --ghnt-bg: var(--bgColor-done-muted, #fbefff); --ghnt-border: var(--borderColor-done-muted, #c297ff66); }
+.ghnt-tone-severe { --ghnt-fg: var(--fgColor-severe, #953800); --ghnt-bg: var(--bgColor-severe-muted, #fff1e5); --ghnt-border: var(--borderColor-severe-muted, #fb8f4466); }
+.ghnt-tone-attention { --ghnt-fg: var(--fgColor-attention, #7d4e00); --ghnt-bg: var(--bgColor-attention-muted, #fff8c5); --ghnt-border: var(--borderColor-attention-muted, #d4a72c66); }
+
+/* The panel: one li right after the row's li, in the page flow. It carries no
+   GitHub class, so none of the row's styles reach it; the script mirrors the
+   row's state in data-ghnt-* attributes. Backgrounds are GitHub's own row
+   variables (inverted in dark themes), so the panel follows the row. */
+li.ghnt-why {
+  box-sizing: border-box;
+  display: list-item;
+  list-style: none;
+  margin: 0;
+  padding: 0 8px 8px;
+  border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+  background: var(--color-notifications-row-read-bg, var(--bgColor-muted, #f6f8fa));
+  color: var(--fgColor-default, #1f2328);
+  font: 12px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  font-weight: 400;
+  text-align: left;
+}
+li.ghnt-why[data-ghnt-state="unread"] { background: var(--color-notifications-row-bg, var(--bgColor-default, #fff)); }
+li.ghnt-why[data-ghnt-active] {
+  background: var(--bgColor-accent-muted, #ddf4ff);
+  box-shadow: inset 2px 0 0 var(--borderColor-accent-emphasis, #0969da);
+}
+li.ghnt-why[data-ghnt-last] { border-bottom: 0; }
+/* Row side: the divider moves under the panel, and the row shows what the
+   panel is doing. !important and specificity match GitHub's own row rules. */
+li.notifications-list-item[data-ghnt-why-open] { border-bottom-color: transparent !important; }
+li.notifications-list-item[data-ghnt-why-open][data-ghnt-last] { border-bottom: 0 !important; }
+li.notifications-list-item[data-ghnt-active] {
+  background-color: var(--bgColor-accent-muted, #ddf4ff) !important;
+  box-shadow: inset 2px 0 0 var(--borderColor-accent-emphasis, #0969da) !important;
+}
+/* Outranks GitHub's row rules (.notification-unread, :hover, .navigation-focus, all
+   !important) and our own [data-ghnt-active] above; the panel mirrors it. */
+li.notifications-list-item.ghnt-hl,
+li.ghnt-why[data-ghnt-hl] { background-color: var(--bgColor-attention-muted, #fff8c5) !important; transition: background-color 300ms; }
+
+.ghnt-why-card {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 12px 12px var(--ghnt-inset);
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border-radius: 6px;
+  background: var(--overlay-bgColor, var(--bgColor-default, #fff));
+}
+.ghnt-why-title { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+.ghnt-why-list { margin: 0; padding: 0; list-style: none; }
+.ghnt-why-line { display: flex; gap: var(--ghnt-gap); max-width: 80ch; margin: 4px 0; overflow-wrap: anywhere; }
+.ghnt-why-mark { flex: none; width: var(--ghnt-icon); text-align: center; font-weight: 600; }
+.ghnt-why-ok .ghnt-why-mark { color: var(--fgColor-success, #1a7f37); }
+.ghnt-why-warn .ghnt-why-mark { color: var(--fgColor-attention, #7d4e00); }
+.ghnt-why-info .ghnt-why-mark { color: var(--fgColor-accent, #0550ae); }
+.ghnt-why-rule { display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--borderColor-muted, #d1d9e0b3); color: var(--fgColor-muted, #59636e); }
+.ghnt-why-link { color: var(--fgColor-accent, #0969da); background: none; border: 0; padding: 0; font: inherit; text-decoration: underline; cursor: pointer; text-align: left; }
+.ghnt-why-link:focus-visible { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: 1px; }
