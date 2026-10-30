@@ -30,7 +30,7 @@
 
   <h2>Changes by file</h2>
   <table><tr><th>File</th><th>Change</th><th>Why</th></tr>
-  <tr><td><code>test/e2e/github-status.spec.js</code></td><td>Replace the one-shot <code>expect(log).toHaveLength(2)</code> with <code>expect.poll</code> on the log length; once the refresh request is seen, assert the dot is <em>still</em> gray (the mock holds the answer 4 s), then that the answer paints it green again. Failure messages print the log length and the dot state.</td><td>Same claim (gray comes from the repaint, before the answer), now independent of how fast the request reaches the mock.</td></tr>
+  <tr><td><code>test/e2e/github-status.spec.js</code></td><td>Replace the one-shot <code>expect(log).toHaveLength(2)</code> with <code>expect.poll</code> on the log length; once the refresh request is seen, assert the dot is <em>still</em> gray (the mock holds the answer 4 s). The failure messages say what was missing and how many requests were seen.</td><td>Same claim (gray comes from the repaint, before the answer), now independent of how fast the request reaches the mock.</td></tr>
   </table>
 
   <h2>Data, permissions, privacy</h2><p>None. Token permissions: none.</p>
@@ -43,7 +43,7 @@
   <p><strong>Live check:</strong> not applicable, no injected markup changes.</p>
 
   <h2>Risks and open questions</h2>
-  <ul><li>Other one-shot log checks right after a UI wait: swept <code>test/e2e/*.spec.js</code>; the others assert after the answer was rendered or assert absence after a wait, so they do not race (default: leave them).</li></ul>
+  <ul><li>Other one-shot log checks right after a UI wait: swept <code>test/e2e/*.spec.js</code>; the others assert absence after a wait (no race) or, in <code>two tabs, one request</code>, exactly one request once both tabs show the dot, which has never failed on CI because the first request leaves long before the second tab loads (default: leave it, listed as a follow-up).</li></ul>
 
   <h2>Out of scope</h2><ul><li>Any change to the GitHub Status feature itself.</li></ul>
 </main></body></html>
