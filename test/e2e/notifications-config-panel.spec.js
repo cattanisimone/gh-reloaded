@@ -28,6 +28,8 @@ async function boot(context, page, { storage = {}, modules = "none", api, viewpo
   await page.goto(url);
   const world = await isolatedWorld(context, page);
   await world.ready();
+  // The real Triage module registers itself; these specs drive dummy modules.
+  await world.evaluate(`GHNotifications.registry.unregister("triage")`);
   if (modules === "all") {
     await world.evaluate(`(() => { globalThis.__log = []; const r = GHNotifications.registry;
       r.register({ id: "triage", defaultOn: true, layouts: ${JSON.stringify(LAYOUTS)}, start() { __log.push("+triage"); }, stop() { __log.push("-triage"); } });
@@ -249,7 +251,7 @@ test("native inbox on: engine stopped, button still present and opens, switches 
 });
 
 test("engine idle: no coverage, permission or token note and no api.github.com request when opening", async ({ context, page }) => {
-  const { requests } = await boot(context, page, { storage: TOKENS });
+  const { requests } = await boot(context, page, { storage: { ...TOKENS, ghntModules: { triage: false } } });
   await open(page);
   await expect(panel(page)).not.toContainText(/Coverage|permission|scope|token/i);
   expect(await panel(page).innerText()).not.toContain("ghp_secret123");

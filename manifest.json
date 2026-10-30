@@ -147,10 +147,13 @@
         "features/notifications/collect.js",
         "features/notifications/engine.js",
         "features/notifications/panel.js",
-        "features/notifications/content.js"
+        "features/notifications/content.js",
+        "features/notifications/triage-model.js",
+        "features/notifications/triage.js"
       ],
       "css": [
-        "features/notifications/panel.css"
+        "features/notifications/panel.css",
+        "features/notifications/triage.css"
       ],
       "run_at": "document_idle"
     },

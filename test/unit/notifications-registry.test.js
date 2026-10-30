@@ -90,3 +90,27 @@ test("unregistering a started module stops it, an unstarted one is not stopped",
   off2();
   assert.deepEqual(log, ["+d", "-d"]);
 });
+
+test("unregister stops a started module and removes it from the list; an unknown id is a no-op", () => {
+  const { reg, log } = setup(["a", "b"]);
+  reg.setRunning(true);
+  reg.setConfig({ modules: { a: true, b: true } });
+  assert.equal(reg.unregister("a"), true);
+  assert.deepEqual([...log], ["+a", "+b", "-a"]);
+  assert.deepEqual([...reg.list().map((m) => m.id)], ["b"]);
+  assert.equal(reg.unregister("a"), false);
+  assert.equal(reg.unregister("zzz"), false);
+});
+
+test("until the stored preferences are read nothing starts, even a default-on module", () => {
+  const reg = R.createRegistry();
+  const log = [];
+  reg.register({ id: "t", defaultOn: true, start: () => log.push("+t"), stop: () => log.push("-t") });
+  reg.setRunning(true);
+  assert.equal(reg.hasActive(), false);
+  assert.deepEqual([...log], []);
+  reg.setConfig({ modules: { t: false } });
+  assert.deepEqual([...log], []);
+  reg.setConfig({ modules: {} });
+  assert.deepEqual([...log], ["+t"]);
+});

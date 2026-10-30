@@ -1,0 +1,64 @@
+/* features/notifications/triage.css — the Triage view: sidebar group, pills,
+   status line, section headers. Primer variables with light fallbacks so
+   light and dark follow the page. Items copy GitHub's ActionList item (33px
+   high, 6px radius); pills copy a medium Primer button (32px, 6px, 1px). */
+
+li.notifications-list-item.ghnt-off,
+.ghnt-off { display: none !important; }
+li.notifications-list-item[hidden] { display: none !important; }
+
+.ghnt-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--fgColor-muted, #59636e); }
+.ghnt-dot-attention { background: var(--fgColor-danger, #d1242f); }
+.ghnt-dot-waiting { background: var(--fgColor-attention, #9a6700); }
+.ghnt-dot-informational { background: var(--fgColor-accent, #0969da); }
+.ghnt-dot-unverifiable { background: var(--fgColor-done, #8250df); }
+.ghnt-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ghnt-count { flex: none; min-width: 20px; padding: 0 6px; box-sizing: border-box; text-align: center; font-size: 12px; font-weight: 500; line-height: 18px; border-radius: 2em; background: var(--bgColor-neutral-muted, #818b981f); color: var(--fgColor-default, #1f2328); }
+
+/* Integrated navigation: a group at the top of GitHub's sidebar. */
+.ghnt-nav { margin: 0; }
+.ghnt-nav-title { margin: 0; padding: 6px 8px; font-size: 12px; font-weight: 600; line-height: 18px; color: var(--fgColor-muted, #59636e); }
+.ghnt-nav-list { list-style: none; margin: 0; padding: 0; border: 0; }
+.ghnt-nav-li { margin: 0; padding: 0; list-style: none; }
+.ghnt-nav-item { box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; height: 33px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; color: var(--fgColor-default, #1f2328); font: inherit; font-size: 14px; line-height: 21px; text-align: left; cursor: pointer; }
+.ghnt-nav-item:hover { background: var(--control-transparent-bgColor-hover, #818b981a); }
+/* Selected: the accent tint of the pills, so it never reads as GitHub's grey current item. */
+.ghnt-nav-item[aria-pressed="true"] { background: var(--bgColor-accent-muted, #ddf4ff); color: var(--fgColor-accent, #0969da); font-weight: 600; }
+/* Primer's base hr, the one GitHub puts between its sidebar groups. */
+.ghnt-nav-sep { box-sizing: content-box; height: 0; margin: 15px 0; overflow: hidden; background: transparent; border: 0; border-bottom: 1px solid var(--borderColor-muted, #d1d9e0b3); }
+.ghnt-nav-item:focus-visible, .ghnt-pill:focus-visible, .ghnt-sec-btn:focus-visible, .ghnt-clear:focus-visible { outline: 2px solid var(--borderColor-accent-emphasis, #0969da); outline-offset: -2px; }
+
+/* Quick bar and the compact row below 768px. */
+.ghnt-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.ghnt-compact { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; }
+.ghnt-compact .ghnt-pill { flex: none; }
+.ghnt-pill { box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border: 1px solid var(--borderColor-default, #d1d9e0); border-radius: 6px; background: var(--bgColor-muted, #f6f8fa); color: var(--fgColor-default, #1f2328); font: inherit; font-size: 14px; font-weight: 500; line-height: 21px; white-space: nowrap; cursor: pointer; box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04); transition: background-color 0.08s; }
+.ghnt-pill:hover { background: var(--bgColor-neutral-muted, #818b981f); }
+.ghnt-pill[aria-pressed="true"] { background: var(--bgColor-accent-muted, #ddf4ff); border-color: var(--borderColor-accent-emphasis, #0969da); color: var(--fgColor-accent, #0969da); }
+.ghnt-pill .ghnt-label { flex: none; }
+
+/* The one block above the list, right after the filter row. Its insets come from the filter controls and its vertical margins from the native gaps (triage.js measure()), so it is a plain block whose height is its content. flow-root keeps the children's margins inside it. */
+.ghnt-block { display: flow-root; box-sizing: border-box; margin-inline: var(--ghnt-l, 0) var(--ghnt-r, 0); }
+.ghnt-block > :last-child { margin-bottom: 0; }
+
+/* Status, empty, coverage. */
+.ghnt-status { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0 0 8px; font-size: 14px; }
+.ghnt-status-text { font-weight: 600; }
+.ghnt-clear { padding: 0; border: 0; background: none; color: var(--fgColor-accent, #0969da); font: inherit; cursor: pointer; }
+.ghnt-clear:hover { text-decoration: underline; }
+.ghnt-next { color: var(--fgColor-accent, #0969da); white-space: nowrap; }
+.ghnt-empty, .ghnt-pending { flex: 1 0 100%; color: var(--fgColor-muted, #59636e); }
+.ghnt-coverage { margin: 0; font-size: 12px; line-height: 18px; color: var(--fgColor-muted, #59636e); }
+
+/* Grouped sections: inert headers inside GitHub's own list. */
+li.ghnt-sec { display: block; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--borderColor-default, #d1d9e0); background: var(--bgColor-muted, #f6f8fa); }
+li.ghnt-sec:first-child { border-top: 0; }
+.ghnt-sec-btn { box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 8px 16px; border: 0; background: transparent; color: var(--fgColor-default, #1f2328); font: inherit; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; }
+.ghnt-sec-btn .ghnt-label { flex: 0 1 auto; }
+.ghnt-chevron { flex: none; margin-left: auto; color: var(--fgColor-muted, #59636e); }
+.ghnt-sec-note { padding: 0 16px 8px 32px; font-size: 12px; line-height: 18px; color: var(--fgColor-muted, #59636e); }
+.ghnt-sec-note p { margin: 0; }
+li.ghnt-sec-pending { padding: 8px 16px; list-style: none; border-top: 1px solid var(--borderColor-default, #d1d9e0); font-size: 12px; line-height: 18px; color: var(--fgColor-muted, #59636e); }
+li.notifications-list-item.ghnt-moved { background: var(--bgColor-attention-muted, #fff8c5); transition: background-color 3s ease-out; }
+@media (prefers-reduced-motion: reduce) { li.notifications-list-item.ghnt-moved { transition: none; } }
+ul.ghnt-grouped { overflow-anchor: none; }

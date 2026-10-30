@@ -95,6 +95,13 @@
     return anchors.find((x) => x.s.kind === "pull" || x.s.kind === "issue") || anchors[0] || null;
   }
 
+  // The key of one inbox row, the same one readPage() and the engine use; null
+  // when the row has no subject link.
+  function keyOf(li) {
+    const found = subjectLink(li);
+    return found ? found.s.key : null;
+  }
+
   function readPage(doc = document) {
     const me = doc.querySelector('meta[name="user-login"]')?.getAttribute("content") || "";
     const rows = [];
@@ -119,5 +126,5 @@
     return { me, rows, hasPagination: !!doc.querySelector('nav[aria-label="Pagination"]') };
   }
 
-  global.GHNT_COLLECT = { reasonFromLabel, parseSubject, fromApiItem, mergeApi, readPage, LABELS };
+  global.GHNT_COLLECT = { reasonFromLabel, parseSubject, fromApiItem, mergeApi, readPage, keyOf, LABELS };
 })(typeof window !== "undefined" ? window : globalThis);

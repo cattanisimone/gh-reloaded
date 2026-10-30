@@ -11,7 +11,8 @@ import { isolatedWorld } from "./support/isolated-world.js";
 
 const INBOX = "https://github.com/notifications";
 const TOKENS = { githubTokens: [{ id: "t", name: "d", token: "x", owner: "" }], defaultTokenId: "t" };
-const ENABLE = { ghntModules: { dummy: true } };
+// The real Triage module is on by default: these specs switch it off and drive a dummy one.
+const ENABLE = { ghntModules: { dummy: true, triage: false } };
 
 const node = (over = {}) => ({
   state: "OPEN",
@@ -64,12 +65,14 @@ const DEFAULT_GRAPHQL = (aliases) => ({
 
 async function boot(context, page, { storage = TOKENS, graphql = DEFAULT_GRAPHQL, notifications, url = INBOX, register = true, enable = true } = {}) {
   const log = [];
-  await seedStorage(context, storage);
+  await seedStorage(context, { ghntModules: { triage: false }, ...storage });
   await routeApi(context, log, { graphql, notifications });
   await routeGithub(context, "notifications.html");
   await page.goto(url);
   const world = await isolatedWorld(context, page);
   await world.ready();
+  // The real Triage module registers itself; these specs drive dummy modules.
+  await world.evaluate(`GHNotifications.registry.unregister("triage")`);
   if (register) await world.evaluate(`(() => { globalThis.__dummy = []; GHNotifications.registry.register({ id: "dummy", start() { __dummy.push("start"); }, stop() { __dummy.push("stop"); } }); return true; })()`);
   if (enable) await seedStorage(context, ENABLE);
   return { log, world };
