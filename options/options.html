@@ -127,6 +127,15 @@
           </div>
           <div class="row">
             <div class="row-text">
+              <span class="row-title">Notification reason tags</span>
+              <span class="row-desc">On github.com/notifications, each row gets a tag saying why it is there, with a "Why is this here?" panel. Reads review requests and mentions across every repository in your inbox; shows Unverifiable where the token has no access.</span>
+            </div>
+            <button id="feature-ghnt-reason-tags" type="button" role="switch" aria-checked="false" aria-label="Notification reason tags" class="switch">
+              <span class="switch-track"><span class="switch-knob"></span></span>
+            </button>
+          </div>
+          <div class="row">
+            <div class="row-text">
               <span class="row-title">GitHub Status</span>
               <span class="row-desc">A status dot next to the GitHub logo, fed by githubstatus.com, with a notice when an open incident concerns the page you are on.</span>
             </div>
@@ -149,8 +158,8 @@
           </p>
           <div class="permission-box" aria-label="Fine-grained token permissions GH Reloaded needs">
             <div class="permission-head">Fine-grained token <small>recommended</small></div>
-            <div class="permission-row"><span>Issues</span><strong>Read-only</strong></div>
-            <div class="permission-row"><span>Pull requests <small>PR triage and Linked PR status; add Commit statuses or Checks for the checks rollup</small></span><strong>Read-only</strong></div>
+            <div class="permission-row"><span>Issues <small>Notification reason tags: mentions on issues</small></span><strong>Read-only</strong></div>
+            <div class="permission-row"><span>Pull requests <small>PR triage, Linked PR status and Notification reason tags (review requests and mentions); add Commit statuses or Checks for the checks rollup</small></span><strong>Read-only</strong></div>
             <div class="permission-row"><span>Projects</span><strong>Read-only</strong></div>
             <div class="permission-row"><span>Contents <small>private HTML previews only</small></span><strong>Read-only</strong></div>
           </div>

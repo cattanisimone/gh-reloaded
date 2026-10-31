@@ -104,16 +104,18 @@ test("success: requests only the named targets, results name target, time and st
   await card.locator(".diag-issue").fill("12");
   await card.locator(".diag-project").fill("https://github.com/orgs/acme/projects/3");
   await card.locator(".diag-run").click();
-  await expect(card.locator(".diag-summary")).toHaveText("3 checked: 3 available.");
-  expect(calls.map((c) => c.url)).toEqual(expect.arrayContaining(["https://api.github.com/user", "https://api.github.com/repos/acme/app/issues/12", "https://api.github.com/graphql"]));
-  expect(calls).toHaveLength(3);
+  await expect(card.locator(".diag-summary")).toHaveText("4 checked: 4 available.");
+  expect(calls.map((c) => c.url)).toEqual(expect.arrayContaining(["https://api.github.com/user", "https://api.github.com/repos/acme/app/issues/12", "https://api.github.com/repos/acme/app/pulls?per_page=1", "https://api.github.com/graphql"]));
+  expect(calls).toHaveLength(4);
   expect(calls.every((c) => c.auth === `Bearer ${FINE}`)).toBe(true);
   const rows = card.locator(".diag-result");
-  await expect(rows).toHaveCount(4);
+  await expect(rows).toHaveCount(5);
   await expect(rows.nth(1)).toContainText("acme/app, issue #12");
+  await expect(rows.nth(2)).toContainText("acme/app, pull requests list");
   await expect(rows.nth(1)).toContainText(/\d{1,2}:\d{2}/);
   await expect(rows.nth(1).locator(".diag-pill")).toHaveText("Available");
-  await expect(rows.nth(3).locator(".diag-pill")).toHaveText("Not checked");
+  await expect(rows.nth(3).locator(".diag-pill")).toHaveText("Available");
+  await expect(rows.nth(4).locator(".diag-pill")).toHaveText("Not checked");
   expect(calls.every((c) => c.method === "GET" || c.url.endsWith("/graphql"))).toBe(true);
   expect(calls.find((c) => c.url.endsWith("/graphql")).body).not.toMatch(/mutation/);
 });
@@ -203,7 +205,7 @@ test("a user-owned project with a fine-grained token shows the classic read:proj
   await card.locator(".diag-repo").fill("sam/app");
   await card.locator(".diag-project").fill("https://github.com/users/sam/projects/2");
   await card.locator(".diag-run").click();
-  const row = card.locator(".diag-result").nth(2);
+  const row = card.locator(".diag-result").nth(3);
   await expect(row.locator(".diag-pill")).toHaveText("Not verified");
   await expect(row).toContainText("read:project");
   await expect(row).toContainText("classic token");
@@ -293,4 +295,27 @@ test("keyboard, ARIA, responsive and dark", async ({ context, page }) => {
   const bg = await page.locator("#token-default .diag").evaluate((el) => getComputedStyle(el).backgroundColor);
   const [r, g, b] = bg.match(/\d+/g).map(Number);
   expect(r + g + b).toBeLessThan(150);
+});
+
+test("Pull requests row: Available on 200, Access denied naming Pull requests: read on 403, Not verified on 404", async ({ context, page }) => {
+  let pulls = { body: [] };
+  await mockApi(context, (call) => (call.url.includes("/pulls") ? pulls : ok(call)));
+  const card = await openDefault(context, page);
+  await card.locator(".tok-secret").fill(FINE);
+  await card.locator(".diag-repo").fill("acme/app");
+  const row = card.locator(".diag-result").nth(2);
+  await card.locator(".diag-run").click();
+  await expect(card.locator(".diag-summary")).toHaveText("3 checked: 3 available.");
+  await expect(row).toContainText("Pull requests");
+  await expect(row.locator(".diag-pill")).toHaveText("Available");
+
+  pulls = { status: 403, body: { message: "Resource not accessible by personal access token" } };
+  await card.locator(".diag-run").click();
+  await expect(row.locator(".diag-pill")).toHaveText("Access denied");
+  await expect(row).toContainText("Pull requests: read (and Metadata)");
+  await expect(row).toContainText("repository in the token's selection");
+
+  pulls = { status: 404, body: { message: "Not Found" } };
+  await card.locator(".diag-run").click();
+  await expect(row.locator(".diag-pill")).toHaveText("Not verified");
 });

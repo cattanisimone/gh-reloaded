@@ -563,16 +563,51 @@ chrome.storage.onChanged.addListener((changes) => {
 
 loadFeatureToggles();
 
+// Notification reason tags live in the notifications engine's module map
+// (ghntModules: { id: boolean }), shared with later modules of that engine:
+// unset means on, and the object is merged, never replaced, so other modules
+// and Native inbox keep their values.
+const REASON_TAGS_SWITCH = document.getElementById("feature-ghnt-reason-tags");
+
+async function loadReasonTags() {
+  const { ghntModules } = await chrome.storage.local.get("ghntModules");
+  REASON_TAGS_SWITCH.setAttribute("aria-checked", String(ghntModules?.reasonTags !== false));
+}
+
+REASON_TAGS_SWITCH.addEventListener("click", async (e) => {
+  const next = e.currentTarget.getAttribute("aria-checked") !== "true";
+  e.currentTarget.setAttribute("aria-checked", String(next));
+  const { ghntModules } = await chrome.storage.local.get("ghntModules");
+  await chrome.storage.local.set({ ghntModules: { ...(ghntModules && typeof ghntModules === "object" ? ghntModules : {}), reasonTags: next } });
+});
+
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.ghntModules) REASON_TAGS_SWITCH.setAttribute("aria-checked", String(changes.ghntModules.newValue?.reasonTags !== false));
+});
+
+loadReasonTags();
+
 // Standup mode thresholds. An empty or invalid value clears the setting so
 // the feature falls back to its defaults (3 days; review, qa, test, deploy,
 // release) rather than storing something it would have to second-guess.
 const staleDaysInput = document.getElementById("ghsm-stale-days");
 const reviewKeywordsInput = document.getElementById("ghsm-review-keywords");
 
+// The saved values arrive asynchronously; a field the user already edited
+// keeps their input instead of being overwritten by the late read.
+const editedFields = new WeakSet();
+function trackEdits(...inputs) {
+  for (const input of inputs) input.addEventListener("input", () => editedFields.add(input));
+}
+function fillUnlessEdited(input, value) {
+  if (!editedFields.has(input)) input.value = value ?? "";
+}
+trackEdits(staleDaysInput, reviewKeywordsInput);
+
 async function loadStandupSettings() {
   const { ghsmStaleDays, ghsmReviewKeywords } = await chrome.storage.local.get(["ghsmStaleDays", "ghsmReviewKeywords"]);
-  staleDaysInput.value = ghsmStaleDays ?? "";
-  reviewKeywordsInput.value = ghsmReviewKeywords ?? "";
+  fillUnlessEdited(staleDaysInput, ghsmStaleDays);
+  fillUnlessEdited(reviewKeywordsInput, ghsmReviewKeywords);
 }
 
 staleDaysInput.addEventListener("change", async () => {
@@ -600,6 +635,7 @@ loadStandupSettings();
 const TILE_LIMITS = { min: 280, max: 2000, defaultMin: 630 };
 const tileMinInput = document.getElementById("ghmi-tile-min");
 const tileMaxInput = document.getElementById("ghmi-tile-max");
+trackEdits(tileMinInput, tileMaxInput);
 
 function tileWidthValue(input) {
   if (input.value.trim() === "") return null;
@@ -638,8 +674,8 @@ document.getElementById("ghmi-tile-reset").addEventListener("click", async () =>
 
 async function loadTileWidths() {
   const { ghmiTileMin, ghmiTileMax } = await chrome.storage.local.get(["ghmiTileMin", "ghmiTileMax"]);
-  tileMinInput.value = ghmiTileMin ?? "";
-  tileMaxInput.value = ghmiTileMax ?? "";
+  fillUnlessEdited(tileMinInput, ghmiTileMin);
+  fillUnlessEdited(tileMaxInput, ghmiTileMax);
 }
 loadTileWidths();
 

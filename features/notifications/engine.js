@@ -49,25 +49,35 @@
       }
     }
 
-    function fresh(key) {
-      const f = facts.get(key);
-      return !!f && now() - f.at < TTL_MS;
+    // Facts are read for one reason (a review request and a mention read
+    // different things), so facts read for another reason are not reused: a
+    // thread whose reason changes while the page is open is read again.
+    function fresh(row) {
+      const f = facts.get(row.key);
+      return !!f && f.reason === row.reason && now() - f.at < TTL_MS;
     }
+    const factsFor = (row) => {
+      const f = facts.get(row.key);
+      return f && f.reason === row.reason ? f : undefined;
+    };
 
     function build(page, phase) {
       const apiRows = api.state === "ok" ? api.items.map(fromApiItem) : [];
       const merged = mergeApi(page.rows, apiRows);
       const ctx = { me: page.me, windowDays: getWindowDays(), rateLimited: rate.limited };
       const items = merged.map((row) => {
-        const f = facts.get(row.key)?.value;
+        const f = factsFor(row)?.value;
         const pending = needsFacts(row) && !f && phase === "loading";
         let r = pending ? null : classify({ row, facts: f, ctx, now: now() });
-        const prev = results.get(row.key);
+        // What was classified before counts only for the same reason: a row
+        // whose reason just changed is pending until it is read again.
+        const prevEntry = results.get(row.key);
+        const prev = prevEntry && prevEntry.reason === row.reason ? prevEntry.result : null;
         // A rate limit never demotes a row that was already classified.
         if (r && rate.limited && r.rule === 1 && prev && prev.rule !== 1) r = prev;
-        if (r) results.set(row.key, r);
+        if (r) results.set(row.key, { reason: row.reason, result: r });
         else if (prev && !f) r = prev;
-        return { key: row.key, kind: row.kind, reason: row.reason, inPage: row.inPage !== false, pending: !r, ...(r || {}) };
+        return { key: row.key, kind: row.kind, owner: row.owner || "", repo: row.repo || "", reason: row.reason, rawLabel: row.rawLabel || "", readAt: factsFor(row)?.at ?? null, tokenLogin: f?.viewer || "", inPage: row.inPage !== false, pending: !r, ...(r || {}) };
       });
       return { phase, items, coverage: { loaded: merged.length, total: null, partial: true }, capabilities: { ...capabilities, "api:notifications": api.state }, rateLimited: rate.limited, retryAt: rate.retryAt, me: page.me };
     }
@@ -81,7 +91,9 @@
       }
       const rateBlocked = rate.limited && rate.retryAt != null && now() < rate.retryAt;
       const apiStale = now() - api.at >= TTL_MS;
-      const wanted = page.rows.filter((r) => (r.kind === "pull" || r.kind === "issue") && !fresh(r.key));
+      // The effective reason (REST wins over the label) decides what is read.
+      const known = mergeApi(page.rows, api.state === "ok" ? api.items.map(fromApiItem) : []);
+      const wanted = known.filter((r) => r.inPage !== false && (r.kind === "pull" || r.kind === "issue") && !fresh(r));
       if (rateBlocked || (!wanted.length && !apiStale)) {
         publish(build(page, "ready"));
         return;
@@ -122,7 +134,7 @@
     function apply(res, wanted) {
       const at = now();
       if (!res || !res.ok) {
-        for (const r of wanted) facts.set(r.key, { at, value: { ok: false, why: "request failed" } });
+        for (const r of wanted) facts.set(r.key, { at, reason: r.reason, value: { ok: false, why: "request failed" } });
         return;
       }
       rate = { limited: !!res.rateLimited, retryAt: res.retryAt ?? null };
@@ -131,12 +143,14 @@
         api = { at, state: res.api.state, items: res.api.items || [] };
         if (res.api.state !== "not-tried") capabilities["api:notifications"] = res.api.state;
       }
+      // The background knows the effective reason (REST wins over the label).
+      const reasonOf = (key) => res.reasons?.[key] ?? wanted.find((r) => r.key === key)?.reason;
       for (const [key, value] of Object.entries(res.facts || {})) {
         // A rate-limited answer is not a fact: keep what we had and retry later.
         if (!value.ok && rate.limited && value.why === "rate limited") continue;
-        facts.set(key, { at, value });
+        facts.set(key, { at, reason: reasonOf(key), value });
       }
-      for (const r of wanted) if (!facts.has(r.key)) facts.set(r.key, { at, value: { ok: false, why: "no answer" } });
+      for (const r of wanted) if (!facts.has(r.key) || facts.get(r.key).reason !== reasonOf(r.key)) facts.set(r.key, { at, reason: reasonOf(r.key), value: { ok: false, why: "no answer" } });
       if (rate.limited) {
         clearTimer(timer);
         const wait = Math.max((rate.retryAt ?? now() + TTL_MS) - now(), 0) + 50;

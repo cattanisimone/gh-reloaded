@@ -2,7 +2,7 @@
 // of the inbox whose filter header mirrors the measured live one (flex row, no
 // gap, wrappers spacing themselves from 1012px). Registry state is set through
 // the extension's isolated world with dummy modules, because Triage itself
-// ships later. Covers: anchor and native look of the button, the panel
+// ships later; the shipped Tags module is replaced by a dummy. Covers: anchor and native look of the button, the panel
 // (keyboard, Esc, outside click, width, viewport), switches, layouts, Show
 // native inbox, Restore defaults, the idle engine, reasons, SPA navigation.
 import fs from "node:fs";
@@ -28,8 +28,9 @@ async function boot(context, page, { storage = {}, modules = "none", api, viewpo
   await page.goto(url);
   const world = await isolatedWorld(context, page);
   await world.ready();
-  // The real Triage module registers itself; these specs drive dummy modules.
-  await world.evaluate(`GHNotifications.registry.unregister("triage")`);
+  // The real Triage (#109) and reason tags (#102) modules register themselves;
+  // these specs drive dummy modules.
+  await world.evaluate(`GHNotifications.registry.unregister("triage"); GHNotifications.registry.unregister("reasonTags")`);
   if (modules === "all") {
     await world.evaluate(`(() => { globalThis.__log = []; const r = GHNotifications.registry;
       r.register({ id: "triage", defaultOn: true, layouts: ${JSON.stringify(LAYOUTS)}, start() { __log.push("+triage"); }, stop() { __log.push("-triage"); } });
@@ -251,7 +252,8 @@ test("native inbox on: engine stopped, button still present and opens, switches 
 });
 
 test("engine idle: no coverage, permission or token note and no api.github.com request when opening", async ({ context, page }) => {
-  const { requests } = await boot(context, page, { storage: { ...TOKENS, ghntModules: { triage: false } } });
+  // Tags and Triage are on by default and would start the engine on load: switch them off so the engine stays idle.
+  const { requests } = await boot(context, page, { storage: { ...TOKENS, ghntModules: { reasonTags: false, triage: false } } });
   await open(page);
   await expect(panel(page)).not.toContainText(/Coverage|permission|scope|token/i);
   expect(await panel(page).innerText()).not.toContain("ghp_secret123");

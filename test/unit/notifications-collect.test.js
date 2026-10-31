@@ -28,13 +28,19 @@ test("parseSubject: other subjects are keyed by path and carry no number", () =>
   assert.equal(C.parseSubject("https://example.com/a/b/pull/1"), null);
 });
 
-const REAL = { "review requested": "review_requested", mentioned: "mention", "team mentioned": "team_mention", subscribed: "subscribed", commented: "comment", "ci activity": "ci_activity", assigned: "assign", author: "author", "state change": "state_change", "approval requested": "approval_requested", "security alert": "security_alert", invitation: "invitation", manual: "manual" };
+const REAL = { "review requested": "review_requested", mention: "mention", mentioned: "mention", "team mention": "team_mention", "team mentioned": "team_mention", subscribed: "subscribed", commented: "comment", "ci activity": "ci_activity", assigned: "assign", author: "author", "state change": "state_change", "approval requested": "approval_requested", "security alert": "security_alert", invitation: "invitation", manual: "manual" };
 for (const [label, reason] of Object.entries(REAL)) {
   test(`reason label "${label}" -> ${reason}`, () => {
     assert.equal(C.reasonFromLabel(label), reason);
     assert.equal(C.reasonFromLabel(`  ${label.toUpperCase().replace(" ", "   ")} \n`), reason);
   });
 }
+
+test("the live inbox label 'mention' is a mention, like the older 'mentioned'", () => {
+  assert.equal(C.reasonFromLabel("mention"), "mention");
+  assert.equal(C.reasonFromLabel("mentioned"), "mention");
+  assert.equal(C.reasonFromLabel("team mention"), "team_mention");
+});
 
 test("an unrecognised label is unknown, never review_requested or mention", () => {
   for (const l of ["review wanted", "", "mentioned you", "requested"]) assert.equal(C.reasonFromLabel(l), "unknown");
@@ -64,6 +70,20 @@ test("mergeApi: REST reason wins in both directions, API-only items are inPage f
   assert.equal(merged.find((r) => r.key === "acme/web#2").reason, "comment");
   assert.equal(merged.find((r) => r.key === "acme/web#1").inPage, true);
   assert.equal(merged.find((r) => r.key === "acme/web#3").inPage, false);
+});
+
+test("pickLabel: a known label text wins; injected leaves are ignored", () => {
+  const leaves = [{ text: "acme/web #1", className: "x" }, { text: "Subscribed", className: "ghnt-tag" }, { text: "Mentioned", className: "f6" }];
+  assert.equal(C.pickLabel(leaves).text, "Mentioned");
+});
+
+test("pickLabel: a row whose native label is gone has none, even with an injected 'Subscribed' tag", () => {
+  assert.equal(C.pickLabel([{ text: "Subscribed", className: "ghnt-tag ghnt-tag-x" }, { text: "Fix it", className: "" }]), null);
+});
+
+test("pickLabel: falls back to a leaf marked as a reason, never to an injected one", () => {
+  assert.equal(C.pickLabel([{ text: "weird", className: "reason-label" }]).text, "weird");
+  assert.equal(C.pickLabel([{ text: "weird", className: "ghnt-reason" }]), null);
 });
 
 test("keyOf: the same key readPage uses, null without a subject link", async () => {

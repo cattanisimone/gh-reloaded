@@ -73,6 +73,16 @@
     return {
       register({ id, label, start, stop, availability, reason, defaultOn, layouts } = {}) {
         if (!id || typeof id !== "string") throw new Error("A module needs an id");
+        // Registering an id again replaces the module: the old one is stopped
+        // so the new one starts, and it moves to the end like a new module.
+        if (started.delete(id)) {
+          try {
+            modules.get(id)?.stop?.();
+          } catch {
+            /* ignore */
+          }
+        }
+        modules.delete(id);
         modules.set(id, { id, label: label || id, start, stop, availability: availability || "available", reason: reason || "", defaultOn: defaultOn === true, layouts: Array.isArray(layouts) ? [...layouts] : [] });
         notify();
         reconcile();
@@ -117,6 +127,7 @@
         config.modules = flags && typeof flags === "object" ? { ...flags } : {};
         config.nativeInbox = nativeInbox === true;
         config.layout = normalizeLayout(layout);
+        config.loaded = true;
         notify();
         reconcile();
       },

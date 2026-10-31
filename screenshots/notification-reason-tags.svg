@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="740" viewBox="0 0 1100 740" role="img" aria-label="Notifications inbox with a reason tag under each row and the Why is this here panel open under a team review request">
+<rect width="1100" height="740" fill="#f6f8fa"/><rect x="24" y="24" width="1052" height="656" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<rect x="40" y="38" width="14" height="14" rx="3" fill="#fff" stroke="#8c959f"/>
+<circle cx="77" cy="50" r="6" fill="none" stroke="#1a7f37" stroke-width="1.5"/><text x="93" y="41" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">acme-labs/atlas-web #1482</text>
+<text x="93" y="58" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1f2328">Remove legacy flag from checkout</text>
+<text x="900" y="51" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">review requested</text><text x="1060" y="51" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e" text-anchor="end">12 min</text>
+<g><rect x="93" y="62" width="173" height="20" rx="10" fill="#ddf4ff" stroke="#80ccff"/><circle cx="106" cy="72" r="4" fill="none" stroke="#0550ae" stroke-width="1.5"/><text x="117" y="76" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" font-weight="500" fill="#0550ae">Direct review request</text></g>
+<path d="M24 90 L1076 90" stroke="#d1d9e0"/>
+<rect x="40" y="104" width="14" height="14" rx="3" fill="#fff" stroke="#8c959f"/>
+<circle cx="77" cy="116" r="6" fill="none" stroke="#1a7f37" stroke-width="1.5"/><text x="93" y="107" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">acme-labs/billing-api #311</text>
+<text x="93" y="124" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1f2328">Update billing schema</text>
+<text x="900" y="117" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">review requested</text><text x="1060" y="117" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e" text-anchor="end">1 h</text>
+<g><rect x="93" y="128" width="159" height="20" rx="10" fill="#fff8c5" stroke="#e3c76a"/><circle cx="106" cy="138" r="4" fill="none" stroke="#7d4e00" stroke-width="1.5"/><text x="117" y="142" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" font-weight="500" fill="#7d4e00">Team review request</text></g>
+<rect x="25" y="152" width="1050" height="224" fill="#fff"/>
+<rect x="93" y="156" width="975" height="212" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<text x="102" y="182" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1f2328">Why is this here?</text>
+<text x="102" y="206" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1a7f37" font-weight="600">✓</text><text x="117" y="206" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1f2328">GitHub reason: review requested</text>
+<text x="102" y="223" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#0550ae" font-weight="600">i</text><text x="117" y="223" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1f2328">Request addressed to team</text>
+<text x="102" y="240" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1f2328" font-weight="600"></text><text x="117" y="240" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1f2328">acme-labs/platform-reviewers, not to you</text>
+<text x="102" y="257" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1a7f37" font-weight="600">✓</text><text x="117" y="257" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1f2328">Review by dana APPROVED (does not</text>
+<text x="102" y="274" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1f2328" font-weight="600"></text><text x="117" y="274" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1f2328">satisfy a pending request)</text>
+<text x="102" y="291" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#7d4e00" font-weight="600">!</text><text x="117" y="291" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1f2328">Read from the pull request 3 minutes</text>
+<text x="102" y="308" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1f2328" font-weight="600"></text><text x="117" y="308" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#1f2328">ago: may be stale.</text>
+<path d="M102 321 L1056 321" stroke="#d1d9e0"/>
+<text x="102" y="339" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">Rule: pending team request, none for you. Not owed by you.</text>
+<path d="M24 376 L1076 376" stroke="#d1d9e0"/>
+<g transform="translate(0,220)">
+<rect x="40" y="170" width="14" height="14" rx="3" fill="#fff" stroke="#8c959f"/>
+<circle cx="77" cy="182" r="6" fill="none" stroke="#1a7f37" stroke-width="1.5"/><text x="93" y="173" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">acme-labs/atlas-web #1490</text>
+<text x="93" y="190" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1f2328">Tighten upload limits</text>
+<text x="900" y="183" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">review requested</text><text x="1060" y="183" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e" text-anchor="end">2 h</text>
+<g><rect x="93" y="194" width="159" height="20" rx="10" fill="#ddf4ff" stroke="#80ccff"/><circle cx="106" cy="204" r="4" fill="none" stroke="#0550ae" stroke-width="1.5"/><text x="117" y="208" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" font-weight="500" fill="#0550ae">Re-review requested</text></g>
+<path d="M24 222 L1076 222" stroke="#d1d9e0"/>
+<rect x="40" y="236" width="14" height="14" rx="3" fill="#fff" stroke="#8c959f"/>
+<circle cx="77" cy="248" r="6" fill="none" stroke="#1a7f37" stroke-width="1.5"/><text x="93" y="239" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">acme-labs/atlas-web #1475</text>
+<text x="93" y="256" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1f2328">Fix list pagination</text>
+<text x="900" y="249" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">mention</text><text x="1060" y="249" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e" text-anchor="end">2 h</text>
+<g><rect x="93" y="260" width="80" height="20" rx="10" fill="#fbefff" stroke="#d8b9ff"/><circle cx="106" cy="270" r="4" fill="none" stroke="#6639ba" stroke-width="1.5"/><text x="117" y="274" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" font-weight="500" fill="#6639ba">Mention</text></g>
+<path d="M24 288 L1076 288" stroke="#d1d9e0"/>
+<rect x="40" y="302" width="14" height="14" rx="3" fill="#fff" stroke="#8c959f"/>
+<circle cx="77" cy="314" r="6" fill="none" stroke="#1a7f37" stroke-width="1.5"/><text x="93" y="305" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">northwind/design-kit #204</text>
+<text x="93" y="322" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1f2328">Secondary color tokens</text>
+<text x="900" y="315" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">review requested</text><text x="1060" y="315" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e" text-anchor="end">5 h</text>
+<g><rect x="93" y="326" width="113" height="20" rx="10" fill="#fff1e5" stroke="#ffc49b"/><circle cx="106" cy="336" r="4" fill="none" stroke="#953800" stroke-width="1.5"/><text x="117" y="340" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" font-weight="500" fill="#953800">Unverifiable</text></g>
+<path d="M24 354 L1076 354" stroke="#d1d9e0"/>
+<rect x="40" y="368" width="14" height="14" rx="3" fill="#fff" stroke="#8c959f"/>
+<circle cx="77" cy="380" r="6" fill="none" stroke="#1a7f37" stroke-width="1.5"/><text x="93" y="371" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">acme-labs/docs-site #77</text>
+<text x="93" y="388" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1f2328">New contributing guide</text>
+<text x="900" y="381" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">subscribed</text><text x="1060" y="381" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e" text-anchor="end">6 h</text>
+<g><rect x="93" y="392" width="100" height="20" rx="10" fill="#eff2f5" stroke="#d1d9e0"/><circle cx="106" cy="402" r="4" fill="none" stroke="#59636e" stroke-width="1.5"/><text x="117" y="406" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" font-weight="500" fill="#59636e">Subscribed</text></g>
+<path d="M24 420 L1076 420" stroke="#d1d9e0"/>
+<rect x="40" y="434" width="14" height="14" rx="3" fill="#fff" stroke="#8c959f"/>
+<circle cx="77" cy="446" r="6" fill="none" stroke="#1a7f37" stroke-width="1.5"/><text x="93" y="437" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">acme-labs/docs-site #70</text>
+<text x="93" y="454" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1f2328">Docs typo</text>
+<text x="900" y="447" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">commented</text><text x="1060" y="447" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e" text-anchor="end">1 d</text>
+</g>
+<text x="24" y="716" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif" font-size="12" fill="#59636e">Example only: fictional repositories. Tag and card start at the title text, past the status icon; the panel opens under its row and the commented row gets no tag.</text>
+</svg>

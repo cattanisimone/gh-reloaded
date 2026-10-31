@@ -29,7 +29,7 @@ test("parseTargets: repo is required, optional fields validated", () => {
 test("buildChecks only requests the targets that were given", () => {
   const { targets } = parseTargets({ repo: "acme/app" });
   const checks = buildChecks(targets);
-  assert.deepEqual(checks.filter((k) => k.request).map((k) => k.request.url), ["https://api.github.com/user", "https://api.github.com/repos/acme/app/issues?per_page=1"]);
+  assert.deepEqual(checks.filter((k) => k.request).map((k) => k.request.url), ["https://api.github.com/user", "https://api.github.com/repos/acme/app/issues?per_page=1", "https://api.github.com/repos/acme/app/pulls?per_page=1"]);
   assert.equal(checks.find((k) => k.id === "project").skip.length > 0, true);
   assert.equal(checks.find((k) => k.id === "file").skip.length > 0, true);
 });
@@ -160,11 +160,11 @@ test("runDiagnostics: skips the rest after a 401 and never echoes the token", as
   const res = await runDiagnostics(FINE, { repo: "acme/app", project: "github.com/orgs/acme/projects/3" }, { fetch });
   assert.equal(log.length, 1);
   assert.equal(res[0].status, STATUS.DENIED);
-  assert.deepEqual(res.slice(1).map((r) => r.status), [STATUS.NOT_CHECKED, STATUS.NOT_CHECKED, STATUS.NOT_CHECKED]);
+  assert.deepEqual(res.slice(1).map((r) => r.status), Array(4).fill(STATUS.NOT_CHECKED));
   assert.equal(JSON.stringify(res).includes(FINE), false);
 });
 
-test("runDiagnostics: sends the given token, at most 2 at a time, 4 requests", async () => {
+test("runDiagnostics: sends the given token, at most 2 at a time, 5 requests", async () => {
   let active = 0, peak = 0;
   const log = [];
   const fetch = fakeFetch(async (url) => {
@@ -176,12 +176,12 @@ test("runDiagnostics: sends the given token, at most 2 at a time, 4 requests", a
     return { body: [] };
   }, log);
   const res = await runDiagnostics(FINE, { repo: "acme/app", project: "github.com/orgs/acme/projects/3", file: "a.html" }, { fetch });
-  assert.equal(log.length, 4);
+  assert.equal(log.length, 5);
   assert.ok(peak <= 2);
   assert.ok(log.every((l) => l.init.headers.Authorization === `Bearer ${FINE}`));
-  assert.deepEqual(res.map((r) => r.status), Array(4).fill(STATUS.AVAILABLE));
+  assert.deepEqual(res.map((r) => r.status), Array(5).fill(STATUS.AVAILABLE));
   assert.match(res[0].reason, /sam, fine-grained token/);
-  assert.equal(summarize(res), "4 checked: 4 available.");
+  assert.equal(summarize(res), "5 checked: 5 available.");
 });
 
 test("runDiagnostics: timeout and abort", async () => {
@@ -204,7 +204,7 @@ test("runDiagnostics: a private file is read by status only", async () => {
     return new Response(JSON.stringify(url.endsWith("/user") ? { login: "u" } : []), { status: 200 });
   };
   const res = await runDiagnostics(FINE, { repo: "a/b", file: "p.txt" }, { fetch });
-  assert.equal(res[3].status, STATUS.AVAILABLE);
+  assert.equal(res[4].status, STATUS.AVAILABLE);
   assert.ok(cancelled);
 });
 
@@ -236,8 +236,8 @@ test("runDiagnostics: a failed private-file request has its error body parsed", 
     return new Response(JSON.stringify(url.endsWith("/user") ? { login: "u" } : []), { status: 200 });
   };
   const res = await runDiagnostics(FINE, { repo: "a/b", file: "p.txt" }, { fetch });
-  assert.equal(res[3].status, STATUS.DENIED);
-  assert.match(res[3].remedy.text, /Contents: read/);
+  assert.equal(res[4].status, STATUS.DENIED);
+  assert.match(res[4].remedy.text, /Contents: read/);
 });
 
 test("runDiagnostics: a rate-limited authentication stops the remaining requests", async () => {
@@ -267,4 +267,48 @@ test("classify: user-owned project with an OAuth or app token stays token-neutra
   const r = classify({ status: 200, projectNull: true, errors: [] }, { kind: "project", token: "gho_abc123", project: usr });
   assert.match(r.remedy.text, /read:project/);
   assert.doesNotMatch(r.remedy.text, /fine-grained/);
+});
+
+test("buildChecks always requests the pull requests list right after issues, within MAX_REQUESTS (5)", () => {
+  const { targets } = parseTargets({ repo: "acme/app", issue: "5", project: "github.com/orgs/acme/projects/2", file: "a.html" });
+  const checks = buildChecks(targets);
+  assert.deepEqual(checks.map((k) => k.id), ["auth", "repo", "pulls", "project", "file"]);
+  assert.equal(checks[2].request.url, "https://api.github.com/repos/acme/app/pulls?per_page=1");
+  assert.equal(checks[2].label, "Pull requests");
+  assert.equal(checks[2].resource, "acme/app, pull requests list");
+  assert.equal(checks.filter((k) => k.request).length, MAX_REQUESTS);
+  assert.equal(MAX_REQUESTS, 5);
+});
+
+test("classify pulls: 200 is Available", () => {
+  assert.equal(c({ status: 200 }, "pulls").status, STATUS.AVAILABLE);
+});
+
+test("classify pulls: a fine-grained 403 'not accessible by personal access token' is Access denied naming Pull requests: read and the repository selection", () => {
+  const r = c({ status: 403, headers: {}, message: "Resource not accessible by personal access token" }, "pulls");
+  assert.equal(r.status, STATUS.DENIED);
+  assert.match(r.remedy.text, /repository's selection|repository in the token's selection/);
+  assert.match(r.remedy.text, /Pull requests: read \(and Metadata\)/);
+});
+
+test("classify pulls: a classic 403 names the accepted and granted scopes", () => {
+  const r = classify({ status: 403, headers: { "x-oauth-scopes": "gist", "x-accepted-oauth-scopes": "repo" }, message: "Resource not accessible by personal access token" }, { kind: "pulls", token: CLASSIC });
+  assert.equal(r.status, STATUS.DENIED);
+  assert.match(r.remedy.text, /Accepted for this request: repo\. Granted: gist/);
+});
+
+test("classify pulls: a 404 is Not verified with the ambiguous remedy", () => {
+  const r = c({ status: 404 }, "pulls");
+  assert.equal(r.status, STATUS.NOT_VERIFIED);
+  assert.match(r.remedy.text, /Check the resource name/);
+});
+
+test("runDiagnostics: a 401 marks Pull requests Not checked; pull requests are read once, with the card's token", async () => {
+  const log = [];
+  const denied = await runDiagnostics(FINE, { repo: "acme/app" }, { fetch: fakeFetch(() => ({ status: 401, body: {} }), log) });
+  assert.equal(denied.find((r) => r.id === "pulls").status, STATUS.NOT_CHECKED);
+  const seen = [];
+  const res = await runDiagnostics(FINE, { repo: "acme/app" }, { fetch: fakeFetch((url) => { seen.push(url); return { body: url.endsWith("/user") ? { login: "u" } : [] }; }) });
+  assert.equal(seen.filter((u) => u.includes("/pulls")).length, 1);
+  assert.equal(res.find((r) => r.id === "pulls").status, STATUS.AVAILABLE);
 });
