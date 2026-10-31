@@ -198,3 +198,8 @@ test("every popover starts with the GitHub reason and ends with the rule", () =>
 test("injected text never becomes the reason: only the item's own fields are read", () => {
   assert.equal(T.tagFor(item({ reason: "unknown", rawLabel: "Subscribed" })), null);
 });
+
+test("visible copy says panel, never popover", () => {
+  const states = [item(), item({ reason: "mention", rawLabel: "mention" }), item({ requestedAs: null, section: "unverifiable", rule: 1, evidence: ["token denied"] })];
+  for (const i of states) assert.doesNotMatch(text(T.popover(i, ctx())), /popover/i);
+});

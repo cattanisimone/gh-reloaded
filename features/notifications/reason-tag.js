@@ -1,6 +1,6 @@
 // features/notifications/reason-tag.js — the pure half of the reason tags:
 // which tag a notification gets, its aria-label, and the lines of the
-// "Why is this here?" popover for every tag in every data state. No DOM, so
+// "Why is this here?" panel for every tag in every data state. No DOM, so
 // the rules are unit-tested; reason-tags.js renders them.
 //
 // Only what the engine proved is stated: a direct, team or re-review tag
@@ -155,7 +155,7 @@
   }
 
   function mentionLines(item, ctx, state) {
-    const rule = "Rule: shown whenever GitHub's reason is mention; the popover adds the mention when it could be read.";
+    const rule = "Rule: shown whenever GitHub's reason is mention; the panel adds the mention when it could be read.";
     if (state === "loading") return { lines: [L("info", "Checking the mention…")], rule };
     if (["no-token", "denied", "other"].includes(state)) return { lines: blocked(state, item, ctx, { perm: "mention" }), rule };
     if (state === "rate" || state === "failed") return { lines: blocked(state, item, ctx, { perm: "mention" }), rule };
