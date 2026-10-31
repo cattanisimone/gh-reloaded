@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.5.0...v1.6.0) (2026-10-31)
+
+
+### Features
+
+* add experimental quick assignment actions to the issue page ([#115](https://github.com/cattanisimone/gh-reloaded/issues/115)) ([039cbe1](https://github.com/cattanisimone/gh-reloaded/commit/039cbe19c0ae3ab27e90dfd77985319fa715e500))
+* **notifications:** add reason tags and a "Why is this here?" panel ([#104](https://github.com/cattanisimone/gh-reloaded/issues/104)) ([b6bca75](https://github.com/cattanisimone/gh-reloaded/commit/b6bca75940063853719b58e8c8dbd2edecf91e55))
+
 ## [1.5.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.4.1...v1.5.0) (2026-10-30)
 
 
