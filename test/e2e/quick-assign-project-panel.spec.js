@@ -158,6 +158,17 @@ test("panel: URL and title disagree → nothing", async ({ context, page }) => {
   await expect(assignBtn(page)).toHaveCount(1);
 });
 
+test("panel: a linked Markdown heading in the body neither hides the controls nor drops a running action", async ({ context, page }) => {
+  const server = await setup(context, page);
+  await expect(assignBtn(page)).toHaveCount(1); // the fixture's body already has one linked h1
+  await assignBtn(page).click();
+  await expect(status(page)).toContainText("Saving…");
+  // comments render late, with more headings that hold links
+  await page.evaluate(() => document.querySelector(".panelMain__Q3").insertAdjacentHTML("beforeend", '<div class="markdown-body"><div class="markdown-heading"><h1><a href="/acme/web/issues/13">#13</a></h1></div></div>'));
+  await expect(status(page).locator(".ghqa-line")).toContainText("✓ Assigned");
+  expect(server.saves).toEqual([{ issue: "acme/web#26", assignees: ["alex-dev", "mira"] }]);
+});
+
 test("panel: URL names another repository than the title link → nothing", async ({ context, page }) => {
   await setup(context, page, { url: `${USER_TABLE}?pane=issue&issue=acme%7Capi%7C26` });
   await page.waitForTimeout(600);

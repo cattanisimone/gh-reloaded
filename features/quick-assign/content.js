@@ -57,8 +57,10 @@
     return { ...issue, key: `panel:${issue.owner}/${issue.repo}#${issue.number}`.toLowerCase(), root: panels[0] };
   }
 
+  // The title link is the only link in an h1 outside rendered Markdown: the
+  // issue body and comments may hold headings with links of their own.
   const sameIssueTitle = (panel, issue) => {
-    const links = panel.querySelectorAll("h1 a[href]");
+    const links = [...panel.querySelectorAll("h1 a[href]")].filter((a) => !a.closest('.markdown-body, .markdown-heading, [data-testid="markdown-body"], [class*="markdown"]'));
     return links.length === 1 && P.sameIssueLink(links[0].getAttribute("href"), issue);
   };
 
