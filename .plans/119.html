@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #119 Quick assignment in the Projects side panel</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;word-break:break-word} .scroll{overflow-x:auto}
+  .new{outline:2px dashed var(--accent);outline-offset:2px}
+  .pair{display:flex;gap:16px;flex-wrap:wrap} .frame{flex:1 1 380px;min-width:0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .bar{background:var(--soft);border-bottom:1px solid var(--line);padding:6px 10px;font-size:12px;color:var(--muted)}
+  .panel{display:flex;gap:16px;padding:12px;font-size:13px} .body{flex:1;min-width:0} .side{width:150px;flex:none}
+  .ln{height:8px;background:#e6eaef;border-radius:4px;margin:6px 0} .ttl{font-weight:600;font-size:15px;margin-bottom:6px}
+  .sec h3{font-size:12px;margin:0 0 6px;display:flex;justify-content:space-between;color:var(--muted)} .row{display:flex;align-items:center;gap:6px;padding:2px 0}
+  .av{width:16px;height:16px;border-radius:50%;background:#8c959f;flex:none} .x{margin-left:auto;color:var(--muted);font-size:11px}
+  .btn{display:inline-block;border:1px solid #d1d9e0;background:#f6f8fa;border-radius:6px;padding:2px 10px;font-size:12px;font-weight:500;margin-top:6px}
+  .tag{display:inline-block;font-size:11px;border-radius:10px;padding:0 8px;background:#ddf4ff;color:var(--accent)} .bad{color:var(--bad)} .ok{color:var(--ok)}
+  svg text{font:12px -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;fill:#1f2328}
+</style></head><body><main>
+  <h1>#119 · Quick assignment in the Projects issue side panel</h1>
+  <p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/119">cattanisimone/gh-reloaded#119</a> · Size: <b>normal</b> · PR type <code>fix:</code> · Goal: the same Assign me / Unassign me / ✕ controls when an issue is opened in a Projects v2 side panel, bound to exactly that issue.</p>
+
+  <h2>What changes for users</h2>
+  <ul>
+    <li>With <b>Quick assignment (Experimental)</b> on, an issue opened from a Projects table or board shows <b>Assign me / Unassign me</b> and a ✕ per assignee in the side panel, exactly as on the full issue page.</li>
+    <li>Same safety: GitHub's own picker does the change, Assign me never removes anyone, ✓ only after a read-back of <b>that</b> issue.</li>
+    <li>Closing the panel, switching item, opening a sub-issue inside the panel or going back/forward drops the controls and any pending status of the previous issue.</li>
+    <li>No controls on draft items, pull requests, read-only panels, or when the panel's issue cannot be identified with certainty. Off by default, unchanged.</li>
+  </ul>
+
+  <h2>Mockup</h2>
+  <div class="pair">
+    <div class="frame"><div class="bar">Before · <code>users/acme/projects/1/views/1?pane=issue…</code></div>
+      <div class="panel"><div class="body"><div class="ttl">Cart API <span class="tag">#26</span></div><div class="ln"></div><div class="ln" style="width:70%"></div><div class="ln" style="width:85%"></div></div>
+        <div class="side sec"><h3>Assignees <span>⚙</span></h3><div class="row"><span class="av"></span>octo-dev</div><div class="row"><span class="av"></span>alex-dev</div></div></div></div>
+    <div class="frame"><div class="bar">After · same panel, signed in as <b>octo-dev</b></div>
+      <div class="panel"><div class="body"><div class="ttl">Cart API <span class="tag">#26</span></div><div class="ln"></div><div class="ln" style="width:70%"></div><div class="ln" style="width:85%"></div></div>
+        <div class="side sec"><h3>Assignees <span>⚙</span></h3><div class="row"><span class="av"></span>octo-dev<span class="x new">✕</span></div><div class="row"><span class="av"></span>alex-dev<span class="x new">✕</span></div>
+          <span class="btn new">Unassign me</span><div style="font-size:11px;margin-top:4px" class="new"><span style="color:#59636e">Saving…</span></div></div></div></div>
+  </div>
+  <p class="meta">New parts dashed. Pixel-identical to the full-page controls (same section markup, same CSS). States reused unchanged: none (native <i>Assign yourself</i> only), self only → Unassign me, colleague only → Assign me, self + colleague → Unassign me; Saving…, confirmed, failure, <i>Sent, not confirmed</i>. At narrow widths (800px, live) GitHub stacks the sidebar under the body; the controls follow it.</p>
+
+  <h2>Visual contract</h2>
+  <table id="visual-contract">
+    <tr><th>Reference</th><td>The issue's approved mockup (<code>quick-assign-project-panel-comparison.svg</code>, full issue vs Projects preview) and the existing full-page controls under GitHub's native Assignees section; the panel is a parity copy of the full page.</td></tr>
+    <tr><th>Anchor</th><td>Same as the full page: the actions box sits right after the native assignee list inside <code>[data-testid="sidebar-assignees-section"]</code>; its left border box aligns with the border box of the native section (x1180 in the panel at 1500px, live), and each ✕ sits at the right border edge of its assignee row.</td></tr>
+    <tr><th>Width</th><td>Fills the Assignees section column, as on the full page: widthShare 1.0 of the section (296px at 1500 and 256px at 1100, 672px at 800 when stacked, 368px at 400, measured live). No px cap.</td></tr>
+    <tr><th>Responsive</th><td>1500 / 1100: sidebar column beside the body, controls on one line, status may wrap to its detail line. 800 and 400: GitHub stacks the sidebar below the body; controls follow it, never overflow the panel, no horizontal scroll.</td></tr>
+    <tr><th>Native controls</th><td>The gear (Edit Assignees), the native <i>Assign yourself</i>, avatars and profile links are kept untouched; never clipped, crushed, duplicated or hidden. Row height unchanged.</td></tr>
+    <tr><th>Evidence</th><td>Live logged-in check on the playground's user-owned Project (table and board views) with the factory account, before and after at the same state (same item, same assignees) and the same viewport (1500, 1100, 800, 400). Org-owned Projects: Not verified on live github.com (no org playground); covered by fixture tests. Fixture tests named in the test plan.</td></tr>
+    <tr><th>Expected</th><td>Actions box left border edge minus section border edge 0 ±1px; widthShare ≥ 0.98 of the section; ✕ right border edge to row right edge equal to the full page ±1px; row height unchanged (0 ±1px); panel scrollWidth equals clientWidth at every viewport.</td></tr>
+  </table>
+
+  <h2>Route matrix</h2>
+  <table>
+    <tr><th>Route / view</th><th>Controls</th><th>Notes</th></tr>
+    <tr><td><code><code>/&lt;o&gt;/lt;o<code>/&lt;o&gt;/gt;/&lt;r&gt;/issues/&lt;n&gt;</code> full issue</td><td>Yes (unchanged)</td><td>Existing behaviour and suite stay as they are.</td></tr>
+    <tr><td><code>users/&lt;u&gt;/projects/&lt;p&gt;[/views/&lt;v&gt;]?pane=issue&amp;issue=o|r|n</code> table and board</td><td>Yes, inside the panel</td><td>Probed live: same section markup (identical class tree), panel is <code>[role="dialog"]</code>.</td></tr>
+    <tr><td><code>orgs/&lt;o&gt;/projects/…</code> same query</td><td>Yes, inside the panel</td><td>Same component and URL shape; fixture only.</td></tr>
+    <tr><td>Sub-issue opened inside the panel</td><td>Yes, for the new issue</td><td>Live: GitHub replaces panel content and pushes <code>issue=o|r|m</code>; back returns to the parent.</td></tr>
+    <tr><td>Panel closed (Esc / ✕), draft item, pull request item, roadmap without panel</td><td>None</td><td>No <code>issue=</code> param or the panel's title link is not <code>/issues/</code> → teardown.</td></tr>
+  </table>
+
+  <h2>How it works</h2>
+  <div class="scroll"><svg viewBox="0 0 860 250" width="100%" role="img" aria-label="Context resolution and action flow">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+    <g fill="#f6f8fa" stroke="#d1d9e0"><rect x="10" y="20" width="200" height="54" rx="6"/><rect x="10" y="100" width="200" height="54" rx="6"/><rect x="290" y="56" width="230" height="64" rx="6" stroke="#0969da"/><rect x="600" y="20" width="250" height="54" rx="6"/><rect x="600" y="100" width="250" height="54" rx="6"/><rect x="290" y="170" width="230" height="64" rx="6"/><rect x="600" y="180" width="250" height="54" rx="6"/></g>
+    <text x="20" y="42">Full issue route</text><text x="20" y="62" fill="#59636e">/o/r/issues/n → root = document</text>
+    <text x="20" y="122">Project route + pane=issue</text><text x="20" y="142" fill="#59636e">issue=o|r|n from the URL</text>
+    <text x="300" y="80" font-weight="600">contextOfPage() (new)</text><text x="300" y="100" fill="#59636e">{owner, repo, number, key, root}</text>
+    <text x="610" y="42">panel = [role=dialog] with the section</text><text x="610" y="62" fill="#59636e">and title link == /o/r/issues/n</text>
+    <text x="610" y="122">mismatch / 0 or 2+ panels</text><text x="610" y="142" fill="#bf3989">→ null: no controls, retry</text>
+    <text x="300" y="194">render() scoped to root</text><text x="300" y="214" fill="#59636e">findSection(root), picker, keepFocus</text>
+    <text x="610" y="202">read-back {o,r,n} (GET only)</text><text x="610" y="222" fill="#59636e">aborts when key changes</text>
+    <g stroke="#59636e" fill="none" marker-end="url(#a)"><path d="M210 47L288 78"/><path d="M210 127L288 100"/><path d="M520 80L598 50"/><path d="M520 96L598 126"/><path d="M405 120L405 168"/><path d="M520 202L598 206"/></g>
+  </svg></div>
+  <p>Identity needs <b>two agreeing sources</b>: the URL's <code>issue=owner|repo|number</code> and the panel's own title link (<code>h1 a[href="/owner/repo/issues/number"]</code>, observed live). While GitHub swaps panel content the two disagree for a moment: no controls, retry on the next scan. The key carries the surface (<code>panel:</code> / <code>page:</code>), so every existing <code>key !== page.key</code> guard (picker drive, read-back loop, final status) also stops on close, item switch, sub-issue or back/forward. The picker stays global (one Primer <code>SelectPanel</code> at a time, portaled inside the panel, observed live); the section, list and edit button are looked up only inside the panel root.</p>
+
+  <h2>Changes by file</h2>
+  <table>
+    <tr><th>File</th><th>Change</th><th>Why</th></tr>
+    <tr><td><code>features/quick-assign/content.js</code></td><td><code>issueOfPage()</code> → <code>contextOfPage()</code> (full issue unchanged + Projects panel); <code>findSection(root)</code>; observer triggers on Project routes with <code>pane=issue</code>; header comment.</td><td>The only reason the panel was skipped (issue's root-cause hypothesis, confirmed by the live probe).</td></tr>
+    <tr><td><code>features/quick-assign/picker.js</code></td><td>Pure <code>issueFromProjectUrl(pathname, search)</code> and <code>sameIssueLink(href, issue)</code>.</td><td>Unit-testable parsing (pipes, case, trailing slash, PR links).</td></tr>
+    <tr><td><code>test/e2e/fixtures/project-issue-panel.html</code> (new)</td><td>Projects page + <code>[role=dialog]</code> side panel built from the live class tree (<code>SectionContainer__66uuDW</code>, <code>assigneesList__mQi2i-</code>, <code>SidePanelIssueView__GXE-dl</code>…), switch-item, sub-issue, close and the picker stand-in. Fictional <code>acme/web</code>.</td><td>Realistic panel fixture required by the issue.</td></tr>
+    <tr><td><code>test/e2e/quick-assign-project-panel.spec.js</code> (new), <code>test/unit/quick-assign-picker.test.js</code></td><td>Tests below.</td><td>Test-first.</td></tr>
+    <tr><td><code>README.md</code></td><td>Quick assignment: "issue page <b>or a Projects issue side panel</b>"; drop "in the Projects side panel" from the no-controls list.</td><td>Docs in sync.</td></tr>
+  </table>
+  <p class="meta">No shared files (<code>lib/github-api.js</code>, <code>background.js</code>, <code>options/</code>, <code>manifest.json</code>) change: the content script already matches <code>https://github.com/*</code>. <code>background/quick-assign.js</code> and <code>content.css</code> unchanged.</p>
+
+  <h2>Data, permissions, privacy</h2>
+  <p>None. Same read-only <code>GET /repos/{o}/{r}/issues/{n}</code> (Issues: Read) for confirmation; no new token scope, write API, host or extension permission, storage key. <code>PRIVACY.md</code> unchanged. Token permissions: none.</p>
+
+  <h2>Test plan</h2>
+  <table>
+    <tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
+    <tr><td>Controls render in the panel via scoped anchors</td><td>e2e panel fixture</td><td><code>panel: user and org Project, table and board URLs render controls in the panel section</code></td></tr>
+    <tr><td>None / self / colleague / self+colleague; no duplicate Assign yourself</td><td>e2e</td><td><code>panel: actions per assignee situation</code> (4 cases)</td></tr>
+    <tr><td>Assign keeps everyone; remove/unassign only the target; honest failure</td><td>e2e</td><td><code>panel: assign me keeps the colleague, confirmed by a read of the panel's issue</code>; <code>panel: ✕ removes only that person</code>; <code>panel: no-change read-back is a failure</code></td></tr>
+    <tr><td>Identity: board/table, org/user, nested; closing/switching never touches the wrong issue</td><td>unit + e2e</td><td><code>issueFromProjectUrl / sameIssueLink</code>; <code>panel: URL and title disagree → nothing</code>; <code>panel: switching item during read-back drops the status, no read of the old issue after the switch</code>; <code>panel: closing during Saving… tears down</code>; <code>panel: sub-issue in panel re-renders for the new issue</code></td></tr>
+    <tr><td>Full load vs SPA, panel ↔ full issue, reopen, back/forward, re-renders</td><td>e2e</td><td><code>panel: open → close → reopen and back/forward leave one set of controls</code>; <code>panel → full issue → back</code>; <code>panel: React re-render re-asserts once</code></td></tr>
+    <tr><td>Read-only / archived / PR / draft: nothing; picker kept; no overflow</td><td>e2e</td><td><code>panel: no edit button → nothing</code>; <code>panel: pull request and draft items get nothing</code>; <code>panel widths 1500/1100/800/400: no horizontal overflow</code></td></tr>
+    <tr><td>Disabled: fully native after toggle and SPA</td><td>e2e</td><td><code>panel: off by default</code>; <code>panel: switching off mid-panel removes every node</code></td></tr>
+    <tr><td>Light/dark, keyboard, focus restore, hover, slow picker, failed read-back, rate limit</td><td>e2e</td><td><code>panel: ✕ and buttons look (light, dark)</code>; <code>panel: focus lands on the replacement control</code>; <code>panel: late picker reported and closed</code>; <code>panel: 403 / rate limit wording</code>; <code>panel: Escape that closes the picker does not close the panel</code></td></tr>
+    <tr><td>Full-page fixture still covered; anchors</td><td>e2e (existing)</td><td>existing <code>quick-assign.spec.js</code> unchanged and green; <code>panel: primary anchor is the section inside the panel, not a section elsewhere on the page</code> on current hashed names</td></tr>
+    <tr><td>No new permissions; docs</td><td>unit + review</td><td><code>manifest.test.js</code> unchanged; <code>panel: every api.github.com request is a GET</code></td></tr>
+  </table>
+  <p><b>Live check (done for this plan):</b> on the playground user Project (table <code>views/1</code> and board <code>views/2</code>) the panel is <code>[role="dialog"][aria-label^="Side panel: Issue:"]</code>, contains exactly one <code>[data-testid="sidebar-assignees-section"]</code> whose class tree is <b>identical</b> to the full issue page, the title link is <code>/owner/repo/issues/n</code>, the URL carries <code>issue=owner|repo|n</code>, a sub-issue click swaps content and URL, back restores it, Escape on the panel closes it and clears the query; the assignee picker opens inside the panel and a real Escape closes only the picker. Section width 296 / 256 / 672 / 368 px at 1500 / 1100 / 800 / 400. Not seen live: a panel with assignees (playground items have none, the plan did not change data) and org-owned Projects.</p>
+
+  <h2>Risks and open questions</h2>
+  <ul>
+    <li>Our synthetic Escape (to save via the picker) could bubble to the panel and close it. Real Escape does not (live). Default: keep the current dispatch, add a fixture test, check live during implementation by assigning/unassigning the factory account on a playground issue; if it closes the panel, dispatch on the picker element only.</li>
+    <li>Panel title link moves or changes shape. Default: no controls (anchor missing → retry), never URL-only identity.</li>
+    <li>Two panels or stale panel content after fast switching. Default: exactly one matching panel or nothing.</li>
+    <li>Org-owned Projects not verifiable live. Default: same matcher, fixture covers <code>orgs/</code>; PR body lists it under "Not verified on live github.com".</li>
+    <li>Assumption: <code>screenshots/quick-assign/quick-assign.svg</code> stays as is, since the panel controls are visually identical; README text is updated.</li>
+  </ul>
+
+  <h2>Out of scope</h2>
+  <ul><li>Pull request side panels, other Projects surfaces (roadmap cards, item hovercards), changing assignment semantics or the native picker, enabling the experiment by default.</li></ul>
+</main></body></html>
