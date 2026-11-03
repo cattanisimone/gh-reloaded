@@ -225,7 +225,7 @@ test("panel: switching item during the read-back drops the status, no read of th
   await assignBtn(page).click();
   await expect(status(page)).toContainText("Saving…");
   await page.evaluate(() => window.__fx.open("acme/web#27"));
-  await expect(page.locator('[role=dialog][aria-label^="Side panel"] h1 a')).toHaveAttribute("href", "/acme/web/issues/27");
+  await expect(page.locator('[role=dialog][aria-label^="Side panel"] header h1 a')).toHaveAttribute("href", "/acme/web/issues/27");
   const readsAtSwitch = server.reads.length;
   await expect(assignBtn(page)).toHaveText("Unassign me"); // #27 is mira's own
   await page.waitForTimeout(7000); // longer than the whole read-back schedule
