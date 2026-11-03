@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="760" viewBox="0 0 1480 760" role="img" aria-labelledby="t d">
+<title id="t">Quick Assignment: full issue versus Projects issue side panel</title><desc id="d">Illustrative, fictional comparison. Full issue page shows Unassign me. Projects issue side panel has the same Assignees section but no Quick Assignment controls. Expected behavior is parity.</desc>
+<rect x="0" y="0" width="1480" height="760" rx="0" fill="#f6f8fa" stroke="#f6f8fa" stroke-width="1"/>
+<text x="56" y="61" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="29" fill="#1f2328" font-weight="700">Quick Assignment — missing in Projects side panel</text>
+<text x="56" y="93" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="15" fill="#57606a" font-weight="400">Fictional UI comparison based on the reported behavior; not a live GitHub capture</text>
+<rect x="56" y="119" width="150" height="27" rx="14" fill="#ddf4ff" stroke="#ddf4ff" stroke-width="1"/>
+<text x="67" y="137" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#0969da" font-weight="600">CURRENT BEHAVIOR</text>
+<rect x="801" y="119" width="150" height="27" rx="14" fill="#ffebe9" stroke="#ffebe9" stroke-width="1"/>
+<text x="812" y="137" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#cf222e" font-weight="600">CURRENT BEHAVIOR</text>
+<rect x="56" y="166" width="666" height="456" rx="10" fill="#fff" stroke="#d0d7de" stroke-width="1"/>
+<rect x="56" y="166" width="666" height="51" rx="10" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="79" y="198" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="14" fill="#57606a" font-weight="500">sample-org / demo-repo     Issues / #26</text>
+<text x="82" y="257" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="21" fill="#1f2328" font-weight="650">QA: assignment behavior</text>
+<rect x="82" y="273" width="64" height="27" rx="14" fill="#dafbe1" stroke="#dafbe1" stroke-width="1"/>
+<text x="93" y="291" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#1a7f37" font-weight="600">Open</text>
+<rect x="82" y="324" width="357" height="121" rx="6" fill="#fff" stroke="#d0d7de" stroke-width="1"/>
+<rect x="82" y="324" width="357" height="31" rx="5" fill="#ddf4ff" stroke="#d0d7de" stroke-width="1"/>
+<text x="96" y="345" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#57606a" font-weight="500">alex-dev opened this issue</text>
+<text x="97" y="389" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="14" fill="#1f2328" font-weight="400">Fictional issue to test assignments</text>
+<text x="97" y="413" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#57606a" font-weight="400">One issue, two assignees</text>
+<text x="469" y="254" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="14" fill="#57606a" font-weight="650">Assignees</text>
+<text x="683" y="254" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="18" fill="#57606a" font-weight="400">⚙</text>
+<circle cx="483" cy="284" r="10" fill="#bf8700"/>
+<text x="504" y="290" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#1f2328" font-weight="400">alex-dev</text>
+<circle cx="483" cy="311" r="10" fill="#8250df"/>
+<text x="504" y="317" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#1f2328" font-weight="400">sam-dev</text>
+<rect x="469" y="340" width="222" height="33" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="542.05" y="361.5" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#1f2328" font-weight="500">Unassign me</text>
+<path d="M586 390 L586 408" stroke="#1a7f37" stroke-width="2"/>
+<rect x="477" y="413" width="78" height="27" rx="14" fill="#dafbe1" stroke="#dafbe1" stroke-width="1"/>
+<text x="488" y="431" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#1a7f37" font-weight="600">Visible</text>
+<rect x="759" y="166" width="666" height="456" rx="10" fill="#fff" stroke="#d0d7de" stroke-width="1"/>
+<rect x="759" y="166" width="666" height="51" rx="10" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="781" y="198" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="14" fill="#57606a" font-weight="500">sample-org / Projects / Demo board</text>
+<rect x="772" y="231" width="177" height="373" rx="6" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
+<text x="785" y="254" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#57606a" font-weight="600">Title</text>
+<path d="M781 268 L941 268" stroke="#d8dee4" stroke-width="1" fill="none"/>
+<rect x="782" y="280" width="157" height="32" rx="3" fill="#ddf4ff" stroke="#54aeff" stroke-width="1.3"/>
+<text x="789" y="301" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#0969da" font-weight="500">QA: assignment</text>
+<path d="M781 320 L941 320" stroke="#d8dee4" stroke-width="1" fill="none"/>
+<path d="M781 353 L941 353" stroke="#d8dee4" stroke-width="1" fill="none"/>
+<path d="M781 384 L941 384" stroke="#d8dee4" stroke-width="1" fill="none"/>
+<path d="M781 415 L941 415" stroke="#d8dee4" stroke-width="1" fill="none"/>
+<path d="M781 446 L941 446" stroke="#d8dee4" stroke-width="1" fill="none"/>
+<path d="M781 477 L941 477" stroke="#d8dee4" stroke-width="1" fill="none"/>
+<path d="M781 508 L941 508" stroke="#d8dee4" stroke-width="1" fill="none"/>
+<path d="M781 539 L941 539" stroke="#d8dee4" stroke-width="1" fill="none"/>
+<rect x="958" y="221" width="454" height="385" rx="7" fill="#fff" stroke="#d0d7de" stroke-width="1"/>
+<text x="974" y="257" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="18" fill="#1f2328" font-weight="650">QA: assignment behavior #26</text>
+<rect x="974" y="272" width="64" height="27" rx="14" fill="#dafbe1" stroke="#dafbe1" stroke-width="1"/>
+<text x="985" y="290" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#1a7f37" font-weight="600">Open</text>
+<rect x="974" y="316" width="235" height="133" rx="5" fill="#fff" stroke="#d0d7de" stroke-width="1"/>
+<rect x="974" y="316" width="235" height="29" rx="4" fill="#ddf4ff" stroke="#d0d7de" stroke-width="1"/>
+<text x="984" y="335" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="11" fill="#57606a" font-weight="500">alex-dev opened this issue</text>
+<text x="984" y="376" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#1f2328" font-weight="400">Fictional test issue</text>
+<text x="984" y="397" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#57606a" font-weight="400">Project issue detail</text>
+<text x="1224" y="336" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="13" fill="#57606a" font-weight="650">Assignees</text>
+<text x="1391" y="336" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="16" fill="#57606a" font-weight="400">⚙</text>
+<circle cx="1236" cy="363" r="8" fill="#bf8700"/>
+<text x="1252" y="368" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#1f2328" font-weight="400">alex-dev</text>
+<circle cx="1236" cy="391" r="8" fill="#8250df"/>
+<text x="1252" y="396" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#1f2328" font-weight="400">sam-dev</text>
+<rect x="1222" y="418" width="172" height="37" rx="6" fill="#fff5f5" stroke="#cf222e" stroke-width="1.5" stroke-dasharray="5,4"/>
+<text x="1237" y="440" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#cf222e" font-weight="500">Unassign me</text>
+<text x="1232" y="474" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#cf222e" font-weight="650">Control missing</text>
+<path d="M1223 483 L1392 483" stroke="#d0d7de" stroke-width="1" fill="none"/>
+<text x="1224" y="508" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#57606a" font-weight="600">Labels</text>
+<text x="1224" y="536" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#57606a" font-weight="600">Projects</text>
+<rect x="56" y="649" width="1369" height="70" rx="7" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+<text x="81" y="679" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="14" fill="#1a7f37" font-weight="700">EXPECTED</text>
+<text x="184" y="678" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="15" fill="#1f2328" font-weight="500">The same quick assignment actions work in both views, using GitHub's native picker.</text>
+<text x="184" y="701" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Arial,sans-serif" font-size="12" fill="#57606a" font-weight="400">Keep the experimental toggle and read-only confirmation; no new GitHub token scopes or write API.</text>
+</svg>
