@@ -1,5 +1,5 @@
 // features/quick-assign/content.js — Quick assignment (experimental), on a
-// repository issue page. Under GitHub's own Assignees list it adds
+// repository issue page and in the issue side panel of a Projects page. Under GitHub's own Assignees list it adds
 // "Assign me" / "Unassign me" and a small ✕ on each assignee row.
 //
 // Nothing here writes to GitHub's API. An action drives GitHub's own
@@ -14,6 +14,12 @@
 // CSS-module prefix; a missing anchor means no controls and a retry on the
 // next scan, never another container. Controls exist only while the native
 // edit button does, so a read-only visitor sees exactly the native page.
+//
+// In a Projects side panel the issue is known from two agreeing sources: the
+// URL (?pane=issue&issue=owner|repo|n) and the panel's own title link. The
+// context key carries the surface, so closing the panel, switching item,
+// opening a sub-issue or going back drops any pending action of the previous
+// issue; every lookup is scoped to that panel's root.
 
 (function () {
   const STORAGE_ENABLED = "ghqaEnabled";
@@ -34,17 +40,37 @@
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  function issueOfPage() {
-    const m = /^\/([^/]+)\/([^/]+)\/issues\/(\d+)\/?$/.exec(location.pathname);
-    return m ? { owner: m[1], repo: m[2], number: Number(m[3]), key: `${m[1]}/${m[2]}#${m[3]}`.toLowerCase() } : null;
+  const FULL_ISSUE = /^\/([^/]+)\/([^/]+)\/issues\/(\d+)\/?$/;
+  const PANEL = '[role="dialog"][aria-label^="Side panel"]';
+
+  // The issue the controls act on and where its section lives: { owner, repo,
+  // number, key, root }. null when it cannot be known with certainty.
+  function contextOfPage() {
+    const m = FULL_ISSUE.exec(location.pathname);
+    if (m) return { owner: m[1], repo: m[2], number: Number(m[3]), key: `page:${m[1]}/${m[2]}#${m[3]}`.toLowerCase(), root: document };
+    const issue = P.issueFromProjectUrl(location.pathname, location.search);
+    if (!issue) return null;
+    // Exactly one panel whose own title link is this issue; a panel in the
+    // middle of swapping content disagrees with the URL for a moment: nothing.
+    const panels = [...document.querySelectorAll(PANEL)].filter((el) => sameIssueTitle(el, issue));
+    if (panels.length !== 1) return null;
+    return { ...issue, key: `panel:${issue.owner}/${issue.repo}#${issue.number}`.toLowerCase(), root: panels[0] };
   }
+
+  const sameIssueTitle = (panel, issue) => {
+    const links = panel.querySelectorAll("h1 a[href]");
+    return links.length === 1 && P.sameIssueLink(links[0].getAttribute("href"), issue);
+  };
+
+  // Cheap check for the mutation observer: is this a URL that could carry controls?
+  const onSurface = () => FULL_ISSUE.test(location.pathname) || !!P.issueFromProjectUrl(location.pathname, location.search);
 
   const currentUser = () => document.querySelector('meta[name="user-login"]')?.getAttribute("content") || "";
 
   // --- reading the native section ----------------------------------------
 
-  function findSection() {
-    return [...document.querySelectorAll('[data-testid="sidebar-assignees-section"]')].find((s) => /^assignees$/i.test(s.querySelector("h3")?.textContent.trim() || "")) || null;
+  function findSection(root) {
+    return [...root.querySelectorAll('[data-testid="sidebar-assignees-section"]')].find((s) => /^assignees$/i.test(s.querySelector("h3")?.textContent.trim() || "")) || null;
   }
 
   // The native edit button is the permission signal: it is absent for a
@@ -151,7 +177,8 @@
     if (decision !== "click") return cancel(decision === "already" ? "state" : "option");
     // Escape without a click changes nothing: bail out if the page moved on or the user stepped in.
     // Not `editButton.isConnected`: GitHub replaces that node as soon as the picker opens.
-    if (userActed() || !findSection() || issueOfPage()?.key !== pageKey) return cancel("picker");
+    const now = contextOfPage();
+    if (userActed() || now?.key !== pageKey || !findSection(now.root)) return cancel("picker");
     option.el.click();
     pressEscape(input);
     const closed = await until(() => !openPickerDialog());
@@ -222,7 +249,7 @@
     let last = null;
     for (const delay of READ_DELAYS_MS) {
       await sleep(delay);
-      if (issueOfPage()?.key !== page.key) return null;
+      if (contextOfPage()?.key !== page.key) return null;
       const res = await readBack(page);
       if (res && res.ok && res.error) {
         if (res.error.kind !== "error") return notConfirmed(page, res.error);
@@ -248,8 +275,8 @@
   // --- the action ---------------------------------------------------------
 
   async function run(kind, login, source) {
-    const page = issueOfPage();
-    const section = findSection();
+    const page = contextOfPage();
+    const section = page && findSection(page.root);
     const editButton = section && findEditButton(section);
     if (busy || !page || !editButton || openPickerDialog()) return;
     const action = { kind, login, goal: kind === "assign" ? "add" : "remove" };
@@ -267,7 +294,7 @@
         // From here on, a click or key press of the user means they moved on.
         if (pendingFocus) pendingFocus.inputs = userInputs;
       });
-      if (issueOfPage()?.key !== page.key) return;
+      if (contextOfPage()?.key !== page.key) return;
       if (!driven.ok) {
         result = driven.reason === "busy" ? null : failure(action, driven.reason === "state" ? "GitHub's list already matches. The list shows GitHub's current state." : "GitHub's picker did not respond as expected, nothing was changed. Use the ⚙ picker.");
       } else {
@@ -279,7 +306,7 @@
     } finally {
       busy = false;
     }
-    if (issueOfPage()?.key !== page.key) return;
+    if (contextOfPage()?.key !== page.key) return;
     status = result || null;
     if (pendingFocus) pendingFocus.done = true;
     schedule();
@@ -475,7 +502,7 @@
   let lastKey = "";
   async function sync() {
     if (!extensionAlive()) return;
-    const page = issueOfPage();
+    const page = contextOfPage();
     if (!page) {
       lastKey = "";
       if (!busy) {
@@ -496,7 +523,7 @@
       return;
     }
     if (enabled !== true) return teardown(); // experimental: off unless switched on
-    const section = findSection();
+    const section = findSection(page.root);
     const editButton = section && findEditButton(section);
     const list = section && findList(section);
     if (!section || !editButton || !list) return teardown(); // no anchor or no permission: nothing, retry on the next scan
@@ -522,7 +549,7 @@
   // nodes: re-assert. sync() is idempotent, so our own mutations settle.
   const observer = new MutationObserver(() => {
     if (!extensionAlive()) return observer.disconnect();
-    if (issueOfPage() || document.querySelector("[data-ghqa]")) schedule();
+    if (onSurface() || document.querySelector("[data-ghqa]")) schedule();
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-testid", "href", "role", "aria-selected"] });
 
