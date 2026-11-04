@@ -1,0 +1,228 @@
+<!doctype html>
+<!-- Fixture: a Projects (v2) page with an issue open in the side panel, signed in as mira who can edit assignees. Fictional acme/web, items #26 Cart API, #27 Checkout, #28 Cart totals (a sub-issue of #26), #41 a pull request, plus a draft item.
+     Built from the markup observed on github.com (2026-11) on a user-owned Project, table and board views: the page URL carries ?pane=issue&itemId=<id>&issue=acme%7Cweb%7C<n>; the panel is div[role=dialog][aria-label^="Side panel: Issue:"], a 192x1px wrapper whose content is a fixed frame: a header with h1 > a[href=/owner/repo/issues/n] (the title link) and a scrolling body (overflow:auto) holding the issue body and, beside it (stacked under 768px), the sidebar. The sidebar's Assignees section has the same class tree as the full issue page (see issue-assignees-editable.html for the anchors and for GitHub's own picker, which is mirrored here and, as live, portaled inside the panel).
+     Panel behaviour as observed: Escape on the panel closes it and clears the query, a real Escape while the picker is open closes only the picker; clicking a sub-issue link swaps the panel's content and pushes issue=acme|web|<m>; back restores the parent. Section widths: 296px, 256px under 1012px, full width (viewport minus 64px) when stacked.
+     Test hooks: window.__fx { data[key] = { kind, title, state }, open(key), close(), render(), saves, saveKeys, openCount, saveDelay, loadDelay, ro }. Query flags: ?old swaps hashed class names for the previous Name-module__x--hash naming, ?ro leaves the edit button out, ?decoy adds a second, native-looking Assignees section outside the panel. -->
+<html lang="en" data-color-mode="light"><head><meta charset="utf-8"><title>Fixture Project · acme</title>
+<meta name="user-login" content="mira">
+<style>
+  :root { --fgColor-default: #1f2328; --fgColor-muted: #59636e; --fgColor-danger: #d1242f; --bgColor-danger-muted: #ffebe9; --focus-outlineColor: #0969da; --borderColor-default: #d1d9e0; --bgColor-default: #fff; --bgColor-muted: #f6f8fa; }
+  :root[data-color-mode="dark"] { --fgColor-default: #f0f6fc; --fgColor-muted: #9198a1; --fgColor-danger: #f85149; --bgColor-danger-muted: #f851491a; --focus-outlineColor: #1f6feb; --borderColor-default: #3d444d; --bgColor-default: #0d1117; --bgColor-muted: #151b23; }
+  body { margin: 0; font: 14px/1.5 -apple-system, "Segoe UI", sans-serif; color: var(--fgColor-default); background: var(--bgColor-default); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  h3 { margin: 0; font-size: 12px; font-weight: 600; color: var(--fgColor-muted); }
+  .table { padding: 16px; } .table td { padding: 4px 12px; }
+  /* the panel: a 192x1 dialog wrapper, a fixed frame, a scrolling body */
+  [role=dialog][aria-label^="Side panel"] { width: 192px; height: 1px; }
+  .SidePanelIssueView__GXE { position: fixed; top: 0; right: 0; bottom: 0; width: min(100vw, 1000px); box-sizing: border-box; background: var(--bgColor-default); border-left: 1px solid var(--borderColor-default); display: flex; flex-direction: column; z-index: 5; }
+  .SidePanelIssueView__GXE > header { padding: 8px 16px; border-bottom: 1px solid var(--borderColor-default); }
+  .SidePanelIssueView__GXE h1 { margin: 0; font-size: 20px; } .SidePanelIssueView__GXE h1 a { color: inherit; text-decoration: none; }
+  .panelBody__Q1 { flex: 1; overflow: auto; }
+  .panelCols__Q2 { display: flex; gap: 16px; padding: 16px; box-sizing: border-box; }
+  .panelMain__Q3 { flex: 1; min-width: 0; }
+  @media (max-width: 767px) { .panelCols__Q2 { flex-direction: column; } }
+  .sidebar { width: 296px; flex: none; }
+  @media (max-width: 1011px) { .sidebar { width: 256px; } }
+  @media (max-width: 767px) { .sidebar { width: auto; } }
+  .SectionContainer__x0 { display: flex; flex-direction: column; position: relative; }
+  .headerContentWrapper__x1 { display: flex; flex-direction: column; }
+  .container__x2 { display: flex; align-items: center; justify-content: space-between; height: 26px; }
+  .container__x2 button { width: 26px; height: 26px; border: 0; background: transparent; border-radius: 6px; color: var(--fgColor-muted); cursor: pointer; }
+  .container__x2 button:hover { background: var(--bgColor-muted); }
+  ul.assigneesList__x8 { list-style: none; margin: 0; padding: 0; }
+  .prc-ActionList-ActionListItem-So4vC { display: list-item; }
+  li > a { display: grid; grid-template-columns: auto auto 1fr; align-items: center; column-gap: 8px; padding: 6px 8px; min-height: 32px; box-sizing: border-box; color: var(--fgColor-default); text-decoration: none; border-radius: 6px; }
+  li > a:hover { background: var(--bgColor-muted); }
+  .av { width: 20px; height: 20px; border-radius: 50%; background: #ddf4ff; display: block; }
+  .assigneeNameLabel__x9 { line-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .emptyText__x3 { font-size: 12px; color: var(--fgColor-muted); display: block; }
+  .selfAssignButton__x10 { background: none; border: 0; padding: 0; font: inherit; color: #0969da; cursor: pointer; }
+  /* GitHub's own picker, portaled inside the panel */
+  .picker { position: absolute; z-index: 10; width: 300px; max-width: 100%; box-sizing: border-box; background: var(--bgColor-default); border: 1px solid var(--borderColor-default); border-radius: 12px; box-shadow: 0 8px 24px rgba(66,74,83,.12); padding: 8px; }
+  .picker input { width: 100%; box-sizing: border-box; }
+  [role=listbox] { list-style: none; margin: 8px 0 0; padding: 0; max-height: 240px; overflow: auto; }
+  [role=option] { display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+  [role=option][aria-selected=true] { background: #ddf4ff; }
+  .desc { color: var(--fgColor-muted); }
+</style></head>
+<body>
+<div class="table"><table><tr><td>#26 Cart API</td><td>#27 Checkout</td></tr></table></div>
+<div id="decoy" hidden>
+  <div class="SectionContainer__x0" data-testid="sidebar-assignees-section" style="width:296px">
+    <div class="headerContentWrapper__x1"><div class="container__x2"><h3>Assignees</h3><button type="button" id="decoy-edit"><span class="sr-only">Edit Assignees</span>⚙</button></div></div>
+    <div class="childrenContainer__x7"><ul class="assigneesList__x8"><li><a href="/decoy-user"><span class="av"></span><span><div data-testid="issue-assignees">decoy-user</div></span></a></li></ul></div>
+  </div>
+</div>
+<div id="mount"></div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const ALL = [
+    { login: "alex-dev", name: "Alex Rivera" }, { login: "alex", name: "Alexander Poe" }, { login: "mira", name: "Mira Chen" },
+    { login: "sam-dev", name: "Sam Okoye" }, { login: "zed-user", name: "Zed Park" }, { login: "lee", name: "Lee Ng" }, { login: "jo_acme", name: "Jo Managed" },
+  ];
+  const BASE = location.pathname;
+  const fx = (window.__fx = {
+    ro: q.has("ro"),
+    old: q.has("old"),
+    data: {
+      "acme/web#26": { kind: "issue", n: 26, title: "Cart API", state: [{ login: "alex-dev" }] },
+      "acme/web#27": { kind: "issue", n: 27, title: "Checkout", state: [{ login: "mira" }] },
+      "acme/web#28": { kind: "issue", n: 28, title: "Cart totals", state: [], sub: true },
+      "acme/web#41": { kind: "pr", n: 41, title: "Fix cart rounding", state: [{ login: "alex-dev" }] },
+      "draft": { kind: "draft", title: "Draft idea", state: [{ login: "alex-dev" }] },
+    },
+    users: ALL.slice(),
+    saves: [], saveKeys: [], openCount: 0, saveDelay: 30, loadDelay: 120,
+    cur: null,
+    keyFromUrl() {
+      const p = new URLSearchParams(location.search);
+      if (p.get("pane") !== "issue") return null;
+      const i = p.get("issue");
+      if (!i) return p.get("itemId") === "draft" ? "draft" : null;
+      const [o, r, n] = i.split("|");
+      return `${o}/${r}#${n}`;
+    },
+    open(key) {
+      const it = fx.data[key];
+      const issue = it.n ? `&issue=acme%7Cweb%7C${it.n}` : "";
+      history.pushState({}, "", `${BASE}?pane=issue&itemId=${it.n || "draft"}${issue}`);
+      fx.sync();
+    },
+    close() { history.pushState({}, "", BASE); fx.sync(); },
+    sync() {
+      const key = fx.keyFromUrl();
+      if (fx.cur?.key === key) return;
+      fx.unmount();
+      if (key && fx.data[key]) fx.mount(key);
+    },
+    unmount() { fx.cur = null; document.getElementById("mount").replaceChildren(); },
+    render() { fx.cur?.render(); },
+    mount(key) {
+      const it = fx.data[key];
+      const root = document.getElementById("mount");
+      const link = it.kind === "draft" ? "" : `<a href="/acme/web/${it.kind === "pr" ? "pull" : "issues"}/${it.n}">${it.title}</a>`;
+      root.innerHTML = `<div role="dialog" aria-label="Side panel: ${it.kind === "issue" ? "Issue" : it.kind === "pr" ? "Pull request" : "Draft"}: ${it.title}"><div class="SidePanelIssueView__GXE"><header><h1>${link || it.title} <span>${it.n ? "#" + it.n : ""}</span></h1></header>
+        <div class="panelBody__Q1"><div class="panelCols__Q2"><div class="panelMain__Q3"><p>Body of ${it.title}.</p><div class="markdown-body"><div class="markdown-heading"><h1 class="heading-element">Follow-up of <a class="issue-link" href="https://github.com/acme/web/issues/12">#12</a></h1></div></div><p><a class="sublink" href="/acme/web/issues/28">Cart totals (sub-issue)</a></p><p><a class="otherlink" href="/acme/web/issues/27">Checkout</a></p></div>
+        <div class="sidebar"><div class="SectionContainer__x0" data-testid="sidebar-assignees-section" id="sec"><div class="headerContentWrapper__x1"><div class="container__x2"><h3 class="SectionHeaderTitle__x5">Assignees</h3>${fx.ro ? "" : '<button type="button" id="edit" aria-haspopup="dialog"><span class="sr-only">Edit Assignees</span><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="currentColor"/></svg></button>'}</div></div></div></div>
+        </div></div></div></div>`;
+      root.querySelector(".sublink").addEventListener("click", (e) => { e.preventDefault(); fx.open("acme/web#28"); });
+      root.querySelector(".otherlink").addEventListener("click", (e) => { e.preventDefault(); fx.open("acme/web#27"); });
+      fx.cur = { key, render: () => view.render() };
+      const view = makeView(key, it);
+      view.render();
+    },
+  });
+  window.addEventListener("popstate", fx.sync);
+  if (q.has("decoy")) document.getElementById("decoy").hidden = false;
+
+  function makeView(key, it) {
+    const sec = document.getElementById("sec");
+    let edit = document.getElementById("edit");
+    let dialog = null, selected = null, input = null, list = null, spinner = null;
+    const alive = () => fx.cur?.key === key;
+    function render() {
+      const head = sec.firstElementChild;
+      for (const k of [...sec.children, ...head.children]) if (k !== head && !k.classList.contains("container__x2") && !k.classList.contains("picker") && !k.hasAttribute("data-ghqa-actions")) k.remove();
+      const wrap = document.createElement("div");
+      if (!it.state.length) {
+        wrap.className = "hiddenChildrenContainer__x4";
+        const empty = document.createElement("span");
+        empty.className = "emptyText__x3";
+        empty.append("No one– ");
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "selfAssignButton__x10"; b.textContent = "Assign yourself";
+        b.onclick = () => commit([{ login: "mira" }]);
+        empty.append(b);
+        head.append(empty);
+        wrap.style.cssText = "height:0;overflow:hidden";
+      } else wrap.className = "childrenContainer__x7";
+      const ul = document.createElement("ul");
+      ul.className = "prc-ActionList-ActionList-rPFF2 assigneesList__x8";
+      for (const a of it.state) {
+        const li = document.createElement("li");
+        li.className = "prc-ActionList-ActionListItem-So4vC";
+        const l = document.createElement("a");
+        l.className = "prc-ActionList-ActionListContent-KBb8-";
+        l.href = a.app ? "/apps/" + a.login : "/" + a.login;
+        l.innerHTML = '<span class="av"></span><span class="prc-ActionList-ItemLabel-81ohH"><div class="assigneeNameLabel__x9" data-testid="issue-assignees"></div></span>';
+        l.querySelector("div").textContent = a.login;
+        li.append(l);
+        ul.append(li);
+      }
+      wrap.append(ul);
+      if (!it.state.length) head.append(wrap);
+      else sec.insertBefore(wrap, sec.querySelector(":scope > [data-ghqa-actions]"));
+      if (fx.old) document.querySelectorAll("#mount [class]").forEach((el) => { el.className = el.className.replace(/(\w+)__x\d+/g, "Sidebar-module__$1--b1"); });
+    }
+    function commit(next) {
+      fx.saves.push(next.map((a) => a.login));
+      fx.saveKeys.push(key);
+      fetch("/_fixture/save", { method: "POST", body: JSON.stringify({ issue: key, assignees: next.map((a) => a.login) }) }).catch(() => {});
+      setTimeout(() => { it.state = next.map((a) => it.state.find((s) => s.login === a.login) || a); if (alive()) render(); }, fx.saveDelay);
+    }
+    function paint() {
+      const term = input.value.trim().toLowerCase();
+      list.replaceChildren();
+      for (const u of fx.users.filter((u) => !term || u.login.toLowerCase().includes(term) || u.name.toLowerCase().includes(term))) {
+        const li = document.createElement("li");
+        li.setAttribute("role", "option");
+        li.setAttribute("aria-selected", String(selected.has(u.login)));
+        li.className = "prc-ActionList-ActionListItem-So4vC Item__lB63KU";
+        li.innerHTML = '<div class="prc-ActionList-ActionListContent-KBb8-"><span class="prc-ActionList-ActionListSubContent-gKsFp"><div class="prc-ActionList-ItemDescriptionWrap-ujC8S"><span class="prc-ActionList-ItemLabel-81ohH" data-component="ActionList.Item.Label"></span><span class="prc-ActionList-Description-Z-EZJ desc" data-component="ActionList.Description"></span></div></span></div>';
+        li.querySelector('[data-component="ActionList.Item.Label"]').textContent = u.login;
+        li.querySelector('[data-component="ActionList.Description"]').textContent = u.name;
+        li.onclick = () => { selected.has(u.login) ? selected.delete(u.login) : selected.add(u.login); paint(); };
+        list.append(li);
+      }
+    }
+    function replaceEdit() {
+      const fresh = edit.cloneNode(true);
+      fresh.addEventListener("click", onEdit);
+      edit.replaceWith(fresh);
+      edit = fresh;
+    }
+    function open() {
+      if (!alive()) return;
+      fx.openCount++;
+      replaceEdit();
+      selected = new Set(it.state.filter((a) => !a.app).map((a) => a.login));
+      dialog = document.createElement("div");
+      dialog.className = "picker";
+      dialog.setAttribute("role", "dialog");
+      dialog.setAttribute("aria-label", "Select assignees");
+      dialog.innerHTML = '<span class="prc-SelectPanel-TextInput--Qqkq TextInput-wrapper prc-components-TextInputWrapper-Hpdqi" aria-busy="true"><input role="combobox" aria-label="Filter assignees" type="text"><span class="TextInput-icon"><div class="prc-components-SpinnerVisible-paqsj"><span class="prc-Spinner-Box-Y-ke-"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor"/></svg></span></div></span></span><ul role="listbox" aria-multiselectable="true"></ul>';
+      input = dialog.querySelector("input"); list = dialog.querySelector("ul");
+      const wrapper = dialog.querySelector(".TextInput-wrapper");
+      spinner = { set hidden(v) { wrapper.setAttribute("aria-busy", String(!v)); } };
+      sec.append(dialog);
+      spinner.hidden = false;
+      setTimeout(() => { spinner.hidden = true; if (dialog) paint(); }, fx.loadDelay);
+      let t;
+      input.addEventListener("input", () => { spinner.hidden = false; list.replaceChildren(); clearTimeout(t); t = setTimeout(() => { spinner.hidden = true; if (dialog) paint(); }, fx.loadDelay); });
+      input.focus();
+    }
+    function close(save) {
+      const before = it.state.filter((a) => !a.app).map((a) => a.login).sort().join();
+      const after = [...selected].sort().join();
+      dialog.remove(); dialog = null;
+      edit?.focus();
+      if (save && before !== after) {
+        const kept = it.state.filter((a) => a.app || selected.has(a.login));
+        for (const l of selected) if (!kept.some((a) => a.login === l)) kept.push({ login: l });
+        commit(kept);
+      }
+    }
+    function onEdit() { dialog ? close(false) : fx.openDelay ? setTimeout(open, fx.openDelay) : open(); }
+    edit?.addEventListener("click", onEdit);
+    // Live, Escape closes the picker first; only an Escape with no picker open closes the panel.
+    const onKey = (e) => {
+      if (!alive()) return document.removeEventListener("keydown", onKey);
+      if (e.key !== "Escape") return;
+      if (dialog) { e.preventDefault(); close(true); } else fx.close();
+    };
+    document.addEventListener("keydown", onKey);
+    return { render };
+  }
+  fx.sync();
+</script>
+</body></html>

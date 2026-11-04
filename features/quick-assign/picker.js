@@ -51,5 +51,30 @@
     return { status: done ? "confirmed" : "unchanged", removed: [] };
   }
 
-  global.GHQA_PICKER = { loginFromHref, findOption, decideToggle, compareAssignees };
+  // The issue shown in a Projects side panel, from the URL alone:
+  // /users|orgs/<o>/projects/<n>[/views/<v>]?pane=issue&issue=<owner>|<repo>|<number>
+  // (the pipes arrive percent-encoded; other params may come in any order).
+  // null when anything is missing or malformed. The URL is only half of the
+  // identity: the panel's own title link must agree (sameIssueLink).
+  function issueFromProjectUrl(pathname, search) {
+    if (!/^\/(?:users|orgs)\/[^/]+\/projects\/\d+(?:\/.*)?$/.test(String(pathname || ""))) return null;
+    let params;
+    try {
+      params = new URLSearchParams(search || "");
+    } catch {
+      return null;
+    }
+    if (params.get("pane") !== "issue") return null;
+    const m = /^([A-Za-z0-9](?:[A-Za-z0-9_-]*[A-Za-z0-9])?)\|([A-Za-z0-9._-]+)\|(\d+)$/.exec(params.get("issue") || "");
+    const number = m ? Number(m[3]) : 0;
+    return number > 0 ? { owner: m[1], repo: m[2], number } : null;
+  }
+
+  // Whether `href` (a title link of the panel) is exactly /<owner>/<repo>/issues/<number>.
+  function sameIssueLink(href, issue) {
+    const m = /^\/([^/?#]+)\/([^/?#]+)\/issues\/(\d+)\/?$/.exec(String(href || "").replace(/^https:\/\/github\.com(?=\/)/, ""));
+    return !!m && same(m[1], issue.owner) && same(m[2], issue.repo) && Number(m[3]) === issue.number;
+  }
+
+  global.GHQA_PICKER = { loginFromHref, findOption, decideToggle, compareAssignees, issueFromProjectUrl, sameIssueLink };
 })(typeof window !== "undefined" ? window : globalThis);
