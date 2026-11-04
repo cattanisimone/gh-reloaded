@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/cattanisimone/gh-reloaded/compare/v1.6.0...v1.6.1) (2026-11-04)
+
+
+### Bug Fixes
+
+* show Quick assignment controls in the Projects issue side panel ([#120](https://github.com/cattanisimone/gh-reloaded/issues/120)) ([b200902](https://github.com/cattanisimone/gh-reloaded/commit/b20090298c3cef1e949b5185c940919b641e60b8))
+
 ## [1.6.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.5.0...v1.6.0) (2026-10-31)
 
 
