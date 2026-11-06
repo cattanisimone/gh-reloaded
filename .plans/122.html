@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #122 Image gallery</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--warn:#9a6700;--bg:#fff;--soft:#f6f8fa}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px} h3{font-size:15px;margin:16px 0 6px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:13.5px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:12.5px;word-break:break-word} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto} .tag{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:999px;padding:0 6px;color:var(--muted)}
+  .lbl{font-size:12px;color:var(--accent);margin:4px 0 10px}
+  /* mockup: file header */
+  .gh{border:1px solid var(--line);border-radius:6px;background:#fff;min-width:560px}
+  .gh .crumb{padding:10px 14px;font-size:14px}.gh .crumb a{color:var(--accent);text-decoration:none}
+  .gh .hdr{display:flex;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--line);background:var(--soft);font-size:12px}
+  .gh .grow{flex:1;min-width:0;display:flex;gap:8px;align-items:center;color:var(--muted)}
+  .btn{height:28px;display:inline-flex;align-items:center;padding:0 8px;border:1px solid #d1d9e0;border-radius:6px;background:#f6f8fa;font-family:inherit;font-weight:500;font-size:12px;line-height:18px;box-shadow:0 1px 0 rgba(31,35,40,.04);white-space:nowrap}
+  .btn.primary{background:#1f883d;color:#fff;border-color:rgba(31,35,40,.15)}
+  .btn.off{background:#f6f8fa;color:#818b98;border-color:#d1d9e0;cursor:not-allowed}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}.seg span{padding:4px 10px;font-weight:500}.seg .on{background:#fff;box-shadow:inset 0 0 0 1px var(--line)}
+  .notice{color:var(--warn);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .stagebg{height:120px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--line)}
+  .pic{width:120px;height:80px;border-radius:4px;background:linear-gradient(135deg,#ddf4ff,#b6e3ff)}
+  /* mockup: lightbox */
+  .lb{background:rgba(1,4,9,.55);padding:18px;border-radius:6px;min-width:560px}
+  .dlg{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(140,149,159,.2)}
+  .dlg .top{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .dlg .top b{font-size:14px}.dlg .cnt{margin-left:auto;color:var(--muted);font-size:13px}
+  .dlg .name{padding:8px 14px 0;font-size:12px;color:var(--muted)}.dlg .name strong{display:block;color:var(--fg);font-size:14px}
+  .dlg .stage{display:flex;align-items:center;gap:12px;padding:12px 14px;height:190px}
+  .round{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:600}
+  .dlg .img{flex:1;height:100%;display:flex;align-items:center;justify-content:center}.dlg .img div{width:62%;height:100%;border-radius:6px;background:linear-gradient(135deg,#ddf4ff,#54aeff)}
+  .dlg .foot{display:flex;align-items:center;padding:8px 14px 12px;font-size:12px;color:var(--muted)}.dlg .foot .btn{margin-left:auto}
+  .dark .dlg{background:#0d1117;border-color:#3d444d;color:#f0f6fc}.dark .dlg .top,.dark .dlg .foot{border-color:#3d444d}.dark .round,.dark .btn{background:#212830;border-color:#3d444d;color:#f0f6fc}.dark .dlg .name strong{color:#f0f6fc}
+  .phone{width:300px;min-width:0;padding:0;background:none}.phone .dlg{border-radius:0;height:430px;display:flex;flex-direction:column}.phone .stage{flex:1;height:auto;position:relative;padding:8px}
+  .phone .round{position:absolute;top:50%;transform:translateY(-50%)}.phone .round.l{left:6px}.phone .round.r{right:6px}
+  .row2{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+  svg text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+</style></head><body><main>
+  <h1>#122 · Image gallery for repository folders</h1>
+  <p class="meta">Issue: <a href="https://github.com/cattanisimone/gh-reloaded/issues/122">cattanisimone/gh-reloaded#122</a> · Size: <b>normal</b> (new feature, new UI, new settings) · Goal: browse the images of the current folder in a lightbox from an image file page, and come back to exactly where you started.</p>
+
+  <h2>What changes for users</h2>
+  <ul>
+    <li>On a repository image page (PNG, JPEG, WebP, GIF, SVG in Preview) the gallery opens on that file, showing <code>3 of 8</code>, with previous/next, Esc, close and <code>Open file on GitHub</code>.</li>
+    <li>A green <code>Gallery</code> text button in the file header opens the same set at any time; it stays when automatic opening is off.</li>
+    <li>Browsing never touches the URL or history; closing restores focus and scroll. GitHub's one-key shortcuts are blocked only while it is open.</li>
+    <li>When the folder list cannot be read the native preview is untouched, <code>Gallery</code> is inactive and an accurate notice says why (never "empty folder").</li>
+    <li>Settings: an <code>Image gallery</code> feature row (on) with <code>Configure →</code>, and an <code>Open automatically</code> switch (on) under Advanced.</li>
+  </ul>
+
+  <h2>Mockup</h2>
+  <p class="meta">Fictional repository <code>acme-labs/design-assets</code>. Dashed = added by GH Reloaded. Follows the issue's two mockups: <code>Gallery</code> as the first, green button of the header's action group; a lightbox with title, counter, close, name, stage, arrows, hint and <code>Open file on GitHub</code>.</p>
+  <h3>File header, set known (PNG) and SVG Preview</h3>
+  <div class="scroll"><div class="gh">
+    <div class="crumb"><a href="#">design-assets</a> / <a href="#">screenshots</a> / <b>dashboard.png</b></div>
+    <div class="hdr"><div class="grow">184 KB</div><span class="btn primary new">Gallery</span><span class="btn">⤓</span></div>
+    <div class="stagebg"><div class="pic"></div></div>
+    <div class="hdr"><div class="grow"><span class="seg"><span class="on">Preview</span><span>Code</span><span>Blame</span></span> 12 lines · 2 KB</div><span class="btn primary new">Gallery</span><span class="btn">Raw</span><span class="btn"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor"><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><path d="M1.5 8V2.5a1 1 0 0 1 1-1H8"/></svg></span><span class="btn">⤓</span></div>
+  </div></div>
+  <p class="lbl">Gallery: small Primer button (28px, like its native neighbours), first child of the action group, spaced by the group's own 8px gap.</p>
+  <h3>File header, listing unreadable (≥ 1012 px, then ≤ 767 px)</h3>
+  <div class="scroll"><div class="gh">
+    <div class="hdr"><div class="grow">184 KB <span class="notice new">⚠ Gallery unavailable: GitHub request limit reached. Try again later.</span></div><span class="btn off new" title="(full text as accessible description)">Gallery</span><span class="btn">⤓</span></div>
+    <div class="hdr" style="flex-wrap:wrap"><div class="grow"></div><span class="btn off new">Gallery</span><span class="btn">⋯</span><div class="notice new" style="flex-basis:100%;font-size:12px">⚠ Gallery unavailable: GitHub request limit</div></div>
+  </div></div>
+  <p class="lbl">Notice: inline in the header row, before the left group's flex end, truncating with an ellipsis (it shrinks, native controls do not); at ≤ 767 px the short text sits on its own line inside the same header box. No action in the notice.</p>
+
+  <h3>Lightbox: desktop light, desktop dark, 390 px</h3>
+  <div class="scroll"><div class="lb"><div class="dlg">
+    <div class="top"><b>Image gallery</b><span class="tag">GH Reloaded</span><span class="cnt">3 of 8</span><span class="btn">Close</span></div>
+    <div class="name">acme-labs / design-assets / screenshots<strong>dashboard-dark.svg</strong></div>
+    <div class="stage"><span class="round">‹</span><div class="img"><div></div></div><span class="round">›</span></div>
+    <div class="foot">←→ to navigate · Esc to close<span class="btn">Open file on GitHub</span></div>
+  </div></div></div>
+  <div class="row2" style="margin-top:12px">
+    <div class="lb dark" style="flex:1;min-width:300px"><div class="dlg">
+      <div class="top"><b>Image gallery</b><span class="cnt" title="Image 2 of at least 1000: the folder list is incomplete">2 of 1000+</span><span class="btn">Close</span></div>
+      <div class="name">screenshots<strong>very-long-file-name-for-the-…-variant-B-final.png</strong></div>
+      <div class="stage" style="height:120px"><span class="round">‹</span><div class="img" style="flex-direction:column;color:#9198a1;font-size:13px"><b style="color:#f0f6fc">Can't show this image</b>build.png couldn't be shown. You can try opening it with "Open file on GitHub".</div><span class="round">›</span></div>
+      <div class="foot">←→ to navigate · Esc to close<span class="btn">Open file on GitHub</span></div>
+    </div></div>
+    <div class="lb phone"><div class="dlg">
+      <div class="top"><b>Image gallery</b><span class="cnt">1 of 1</span><span class="btn">Close</span></div>
+      <div class="name">screenshots<strong>onboarding-step-two-<br>mobile-dark.png</strong></div>
+      <div class="stage"><div class="img"><div style="width:70%"></div></div></div>
+      <div class="foot">Esc to close<span class="btn">Open file on GitHub</span></div>
+    </div></div>
+  </div>
+  <p class="lbl">Incomplete list → <code>{n} of {m}+</code> plus tooltip; a failed image keeps counter and arrows; one image → no arrows, hint "Esc to close"; ≤ 767 px → full-screen sheet, arrows over the stage, name on up to two lines.</p>
+
+  <h2>Visual contract</h2>
+  <table id="visual-contract">
+    <tr><th>Reference</th><td>The issue's two approved mockups (Gallery as the first, green button of the file header's action group; the lightbox layout) and, for size and spacing, the precise native neighbour: the small Primer button <code>Download raw file</code> / <code>Raw</code> in the same group, probed live on a public image page.</td></tr>
+    <tr><th>Anchor</th><td>Gallery's border box sits immediately before the border box of the first native control in the action group (the parent of <code>[class*="react-blob-header-edit-and-raw-actions"]</code>, a flex row with an 8px gap); its top and bottom border edges align with that native button's border box. Not the header row's own box, which spans the whole width. The lightbox title text start aligns with the file name text start below it.</td></tr>
+    <tr><th>Width</th><td>Gallery hugs its text label (about 60px at 12px/500 with 8px side padding), never shrinks and is never icon-only. The lightbox fills the viewport minus 24px on each side above 767px (no self-chosen cap) and the whole viewport (100% width share) at 767px and below; the image fits the stage and is never upscaled.</td></tr>
+    <tr><th>Responsive</th><td>1500px / 1100px: Gallery + raw actions group; notice inline with its main text, ellipsis if long. 800px: notice inline with its short text. 390px: native actions collapse to the kebab; Gallery stays as text before it; the notice moves to its own line inside the header box; lightbox becomes a full-screen sheet with arrows over the stage. Nothing overlaps at any width.</td></tr>
+    <tr><th>Native controls</th><td>Raw, Copy, Download, the kebab, the SVG Preview / Code / Blame segmented control and the size text keep their size; only the action group shifts left by Gallery's width + 8px. Unacceptable: a native control clipped, crushed, covered or hidden; a doubled gap. The notice is the element that shrinks (ellipsis).</td></tr>
+    <tr><th>Evidence</th><td>Live anonymous github.com: public image and SVG blob pages of this repository (<code>icons/</code>), before and after at the same state and the same viewport (1500px / 1100px / 800px / 390px), light and dark. Private repositories: Not verified on live github.com unless the playground login works; fixture tests named in the test plan, kept separate from live numbers.</td></tr>
+    <tr><th>Expected</th><td>gap between Gallery's border box and the first native control = 8px ±1; Gallery height = native neighbour height ±0 (28px), top offset 0 ±1px; native controls' widths unchanged (0 ±1px); no horizontal page scroll at 390; lightbox side inset 24 ±1px above 767px and 0 at or below; image rendered size ≤ natural size.</td></tr>
+  </table>
+
+  <h2>Route matrix</h2>
+  <table>
+    <tr><th>Route / view</th><th>Gallery</th><th>Notes</th></tr>
+    <tr><td><code>/blob/&lt;ref&gt;/&lt;dir&gt;/x.png|jpg|jpeg|webp|gif</code> (any case)</td><td>Button + auto-open (setting)</td><td>Image files have no Code / Blame toggle on GitHub.</td></tr>
+    <tr><td>SVG blob, <b>Preview</b> selected in <code>ul[aria-label="File view"]</code></td><td>Button + auto-open</td><td>Preview → Code → Preview is an ordinary visit; Code adds <code>?short_path=</code> (probed) so the selected segment, not the URL, decides.</td></tr>
+    <tr><td>SVG blob, Code selected; any <code>/blame/</code> page</td><td>Nothing; open gallery closes</td><td>Removing our nodes on the way in.</td></tr>
+    <tr><td>Folder (<code>/tree/</code>), raw URLs, PR Files changed, commit / compare, issue attachments, unsupported blobs (README, PDF, BMP)</td><td>Nothing; open gallery closes</td><td>Exclusion list of the issue.</td></tr>
+    <tr><td>Back / Forward, bfcache restore, reload</td><td>Ordinary visit from the URL's file</td><td>Gallery closes on any URL change or <code>pageshow</code> with <code>persisted</code>; nothing remembers the last browsed image.</td></tr>
+  </table>
+
+  <h2>How it works</h2>
+  <div class="scroll"><svg viewBox="0 0 860 250" width="100%" role="img" aria-label="data flow">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+    <g font-size="12" fill="#1f2328">
+      <rect x="10" y="20" width="200" height="90" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="20" y="40" font-weight="600">Blob page (github.com)</text><text x="20" y="58">URL, File view segment,</text><text x="20" y="74">embedded react-app data</text><text x="20" y="90" fill="#59636e">(valid only on a hard load)</text>
+      <rect x="270" y="20" width="230" height="110" rx="6" fill="#ddf4ff" stroke="#0969da"/><text x="280" y="40" font-weight="600">features/image-gallery/</text><text x="280" y="58">model.js: route, set, states, text</text><text x="280" y="74">content.js: button, notice, dialog,</text><text x="280" y="90">keys, focus, SPA + bfcache</text><text x="280" y="106">content.css: Primer look, themes</text>
+      <rect x="560" y="20" width="290" height="90" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="570" y="40" font-weight="600">background/image-gallery.js</text><text x="570" y="58">LIST: ref/path split + Contents dir</text><text x="570" y="74">PROBE: file status / blob bytes</text><text x="570" y="90">SUPPRESS: in-memory, per tab</text>
+      <rect x="560" y="160" width="290" height="60" rx="6" fill="#fff" stroke="#d1d9e0"/><text x="570" y="182" font-weight="600">lib/github-api.js → api.github.com</text><text x="570" y="200">owner token or anonymous (unchanged)</text>
+      <rect x="10" y="160" width="230" height="60" rx="6" fill="#fff" stroke="#d1d9e0"/><text x="20" y="182" font-weight="600">&lt;img&gt; in the page</text><text x="20" y="200">/blob/&lt;ref&gt;/&lt;path&gt;?raw=true (no token)</text>
+    </g>
+    <g stroke="#59636e" fill="none" stroke-width="1.4" marker-end="url(#a)"><path d="M210 60H268"/><path d="M500 60H558"/><path d="M705 110V158"/><path d="M330 130L200 160"/></g>
+    <g font-size="11" fill="#59636e"><text x="214" y="54">read</text><text x="506" y="54">message</text><text x="712" y="140">fetch</text><text x="250" y="160">same-origin image (native path)</text></g>
+  </svg></div>
+  <h3>Listing source and state order (first match wins)</h3>
+  <table>
+    <tr><th>#</th><th>Check</th><th>Result</th></tr>
+    <tr><td>0</td><td>No blob for this URL (GitHub 404 / refusal page) or not a supported image</td><td>Add nothing (a)</td></tr>
+    <tr><td>1</td><td>Embedded <code>codeViewLayoutRoute.path</code> equals the URL's file → use <code>fileTree[dir].items</code>, <code>refInfo.name</code>, <code>repo.private</code>; no request</td><td>Set (complete if <code>items.length == totalCount</code> and &lt; 1000)</td></tr>
+    <tr><td>2</td><td>Page proves private (embedded <code>repo.private</code> for this repo, or the visible <code>Private</code> repo label) and <code>resolveTokenRecord(owner)</code> has no token</td><td>"private" notice (c), no request</td></tr>
+    <tr><td>3</td><td>Background: try ref/path splits (as HTML preview does) on <code>GET /repos/o/r/contents/&lt;dir&gt;?ref=</code>; files only, API order kept</td><td>Set; ≥ 1000 entries → incomplete <code>+</code></td></tr>
+    <tr><td>4</td><td>Error with <code>rateLimited</code></td><td>Rate-limit notice, no retry</td></tr>
+    <tr><td>5</td><td>Network failure, 15 s timeout, 5xx, unparsable</td><td>Listing-error notice</td></tr>
+    <tr><td>6</td><td>401 / 403 / 404 / anything else</td><td>"cause unknown" notice (d)</td></tr>
+    <tr><td>7</td><td>Set read but current file not in it (or empty)</td><td>"file isn't in the list" notice</td></tr>
+  </table>
+  <h3>Timing and suppression</h3>
+  <ul>
+    <li><b>Set not yet known:</b> <code>Gallery</code> is shown <code>aria-disabled</code> with "Loading the folder list…" as its description; a click does nothing. Auto-open fires on arrival only if the URL is unchanged and no <code>pointerdown</code>, <code>keydown</code>, <code>wheel</code> or <code>scroll</code> happened since the visit began; a late set for a previous URL is dropped (visit token).</li>
+    <li><b>Keys:</b> a capture-phase <code>keydown</code>/<code>keypress</code> listener on <code>window</code>, active only while open, handles ←, →, Esc and Tab trapping and stops propagation of everything else, so <code>y</code>, <code>t</code>, <code>/</code>… never reach GitHub.</li>
+    <li><b>Open file on GitHub:</b> a real <code>&lt;a href&gt;</code> (encoded path segments, raw ref). Plain click: if it is the current file, just close; otherwise send <code>SUPPRESS</code> {url} to the background (kept in a <code>Map</code> keyed by <code>sender.tab.id</code>, in memory only, 10 s TTL), then <code>location.assign</code>. The next content-script visit in that tab asks <code>CONSUME</code>: it matches only that URL, is removed on first read, and any visit to another URL discards it. Modifier / middle click: browser default new tab; the new tab follows the setting (its tab id is unknown in advance) and the PR records that limit.</li>
+    <li><b>Images:</b> shown by the same same-origin URL GitHub's own page uses (probed: <code>/blob/main/icons/icon48.png?raw=true</code> → 302 → raw host, allowed by GitHub's CSP for its own image). Only adjacent images are preloaded; closing clears <code>src</code> of pending loads. On an error, the background <code>PROBE</code> reads the file through the Contents API / Git blob: 404 with a readable source → "removed"; bytes received → shown as a <code>data:</code> image, or "damaged" if that also fails to decode; otherwise neutral.</li>
+  </ul>
+
+  <h2>Changes by file</h2>
+  <table>
+    <tr><th>File</th><th>Change</th><th>Why</th></tr>
+    <tr><td><code>features/image-gallery/model.js</code> (new)</td><td>Pure helpers: route parsing, supported extension, set filtering, state precedence, counter / announcement text, middle cut, href encoding. Exposed on <code>globalThis</code> for content.js and unit tests.</td><td>Testable logic, IIFE-friendly.</td></tr>
+    <tr><td><code>features/image-gallery/content.js</code> (new)</td><td>Anchor, button, notice, dialog (<code>&lt;dialog&gt;</code> + <code>showModal</code>, named <code>Image gallery</code>, live region), keys, focus/scroll restore, SPA (URL poll + turbo events), bfcache, cleanup, storage toggles.</td><td>Content-script half.</td></tr>
+    <tr><td><code>features/image-gallery/content.css</code> (new)</td><td>Primer tokens with light/dark, 28px buttons, responsive sheet ≤ 767px.</td><td>Native look.</td></tr>
+    <tr><td><code>background/image-gallery.js</code> (new)</td><td><code>LIST</code>, <code>PROBE</code>, <code>SUPPRESS</code>/<code>CONSUME</code> message types; reuses <code>ghFetch</code>, <code>resolveTokenRecord</code> and HTML preview's exported <code>encodePath</code>.</td><td>Background half; no new client code.</td></tr>
+    <tr><td><b>Shared</b> <code>background.js</code></td><td>Register the module(s) in <code>FEATURES</code>; pass <code>sender</code> as a second argument to <code>handleMessage</code> (ignored by every existing feature).</td><td>Suppression needs the tab id.</td></tr>
+    <tr><td><b>Shared</b> <code>manifest.json</code></td><td>One new <code>content_scripts</code> entry on <code>https://github.com/*</code> (SPA). <code>permissions</code> / <code>host_permissions</code> unchanged.</td><td>Wiring only.</td></tr>
+    <tr><td><b>Shared</b> <code>options/options.html</code>, <code>options.js</code></td><td>Features row last with <code>Configure →</code> (<code>ghigEnabled</code>, on); Advanced group last with <code>Open automatically</code> (<code>ghigAutoOpen</code>, on), always editable; Tokens row Contents: "private HTML previews and image galleries".</td><td>Settings contract.</td></tr>
+    <tr><td><code>README.md</code>, <code>PRIVACY.md</code>, <code>screenshots/image-gallery.svg</code></td><td>Feature section, permission table row, privacy sentence naming <code>github.com</code> and its raw image host (no token, nothing stored), new storage keys; SVG mockup.</td><td>Docs in the same pass.</td></tr>
+    <tr><td><code>test/…</code></td><td>Unit + e2e specs and fixtures listed below.</td><td>Tests first.</td></tr>
+  </table>
+  <p class="meta"><code>features/html-preview/</code> is not modified (only its background's already-exported helper is imported).</p>
+
+  <h2>Data, permissions, privacy</h2>
+  <ul>
+    <li><b>Token permissions: none new.</b> The listing uses the Contents API, already covered by the documented <code>Contents: Read-only</code> / <code>repo</code>; public repositories need no token. No write call.</li>
+    <li><b>Storage:</b> two new boolean keys, <code>ghigEnabled</code> and <code>ghigAutoOpen</code>. Nothing else: no image data, no "last image", no notice-shown flag, no suppression flag (memory only).</li>
+    <li><b>Network:</b> <code>api.github.com</code> via the existing client; images from github.com's own image URL in the user's browser, as GitHub shows them, no token attached. No third party, no telemetry.</li>
+    <li><b>SVG:</b> only ever an <code>&lt;img&gt;</code> source, never inserted as markup.</li>
+  </ul>
+
+  <h2>Test plan</h2>
+  <p class="meta">Fixtures to add, from the live probe and with real class names (<code>blobContentSection__g1-z7P</code>, <code>react-blob-header-edit-and-raw-actions</code>, <code>prc-SegmentedControl-…</code>, <code>Box_3__…</code>): <code>blob-image.html</code> (PNG, embedded data, wide header), <code>blob-image-svg.html</code> (Preview / Code / Blame segmented control), <code>blob-image-narrow.html</code> (<code>…-actions-combined</code> kebab variant). Images: tiny PNG / JPEG / EXIF-rotated JPEG / WebP / animated GIF / SVG-with-script served by route. API answers mocked per test (complete, 1000+, 404, 403 rate limit, 500, delayed).</p>
+  <table>
+    <tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
+    <tr><td>Route rules, extensions, ref split, set filter, order kept, precedence (a)(c) rate (listing)(d), counter / <code>+</code> / announcements, middle cut, href encoding</td><td>unit</td><td><code>image-gallery-model.test.js</code></td></tr>
+    <tr><td>LIST / PROBE classification, sender-tab suppression map (consume once, discard on other URL, TTL), no write call, token only via client</td><td>unit</td><td><code>image-gallery-background.test.js</code></td></tr>
+    <tr><td>Default auto-open on <code>b.png</code> → <code>2 of 3</code>, README excluded; folder of 8 → <code>3 of 8</code>; 200 → plain count</td><td>e2e</td><td><code>image-gallery.spec.js › opens on the URL's file</code></td></tr>
+    <tr><td>Auto-open off (also after SPA change and new context); Gallery opens the same set; feature off → nothing; settings independent</td><td>e2e</td><td><code>image-gallery.spec.js › settings</code>, <code>options-advanced.spec.js</code></td></tr>
+    <tr><td>Focus returns to Gallery after closing; Esc / close / backdrop restore focus and scroll; URL, hash, <code>history.length</code>, <code>history.state</code> unchanged through a→b→c→a and back</td><td>e2e</td><td><code>image-gallery-navigation.spec.js</code></td></tr>
+    <tr><td><code>y</code> blocked while open, untouched when closed; one image → no arrows, "Esc to close", arrows inert</td><td>e2e</td><td><code>image-gallery-keys.spec.js</code></td></tr>
+    <tr><td>Formats, orientation, GIF animation, no upscale, huge image fits, SVG script does not run</td><td>e2e</td><td><code>image-gallery-formats.spec.js</code></td></tr>
+    <tr><td>Exclusions: PR files, tree, raw, README / PDF / BMP blob, SVG Code and Blame, SVG Code → Preview reopens</td><td>e2e</td><td><code>image-gallery-routes.spec.js</code></td></tr>
+    <tr><td>SPA file → file, ref change (slash branch, tag, SHA), Back / Forward with gallery open, bfcache, reload, no duplicates, cleanup on excluded page</td><td>e2e</td><td><code>image-gallery-routes.spec.js</code></td></tr>
+    <tr><td>Open file on GitHub: encoding, one history entry, no reopen once, reload / Back / Forward follow setting, aborted navigation discarded, same file closes, modifier click keeps tab; storage / cookies / URL / <code>history.state</code> untouched</td><td>e2e</td><td><code>image-gallery-open-file.spec.js</code></td></tr>
+    <tr><td>Delayed listing; rate limit; 5xx / timeout / bad JSON; private without token; ambiguous 404; file not in list; 1000+ incomplete and current outside; image failure neutral / removed / damaged</td><td>e2e</td><td><code>image-gallery-states.spec.js</code></td></tr>
+    <tr><td>Anchor: primary action group used on current markup (wide and <code>-combined</code>); no anchor → nothing inserted, retried; 8px gap, 28px height, widths unchanged, hover / focus ring; light / dark; 390 px no overlap, Gallery keeps text</td><td>e2e</td><td><code>image-gallery-layout.spec.js</code></td></tr>
+    <tr><td>Manifest permissions unchanged; English strings; html-preview specs still green</td><td>unit + existing</td><td><code>manifest.test.js</code> (assert), full <code>npm test</code></td></tr>
+  </table>
+  <p><b>Live check (plan phase):</b> anonymous Playwright on <code>cattanisimone/gh-reloaded/blob/main/icons/icon48.png</code> and <code>icons/icon.svg</code> at 1280 and 390. Found: embedded <code>react-app.embeddedData</code> carries <code>fileTree["icons"].items</code> (files in byte order, same as the Contents API), <code>totalCount</code>, <code>repo.private</code>, <code>refInfo.name</code>; it is <b>not refreshed</b> by SPA navigation (still <code>icons/icon.svg</code> after moving to <code>icon48.png</code>). The image is the same-origin <code>?raw=true</code> URL. Action group: parent of <code>.react-blob-header-edit-and-raw-actions</code> (flex, gap 8px), neighbours 28px small buttons; at 390 it becomes <code>…-actions-combined</code> (kebab). SVG Code view adds <code>?short_path=</code>. Private repositories: Not verified on live github.com yet; the implementation will try the playground login.</p>
+
+  <h2>Risks and open questions</h2>
+  <ul>
+    <li>Order of numeric / mixed-case names (<code>B.png a.png 10.png 2.png</code>) vs GitHub's directory page. (default: keep the source order, which matched the embedded tree on this repo; verify live on a public folder and record any limit.)</li>
+    <li>Private image by URL from a content-script <code>&lt;img&gt;</code> under GitHub's CSP. (default: same URL as GitHub's own image; on error the token path via PROBE; else neutral message.)</li>
+    <li>Service worker restart drops the suppression entry. (default: the gallery then reopens per setting, the safe direction; recorded in the PR.)</li>
+    <li>Embedded data shape changes. (default: validated against the URL; any mismatch falls through to the API.)</li>
+    <li>Assumptions (also on the issue): pending Gallery is inactive, not queued; notice moves to its own header line ≤ 767 px; new-tab Open file follows the setting; Gallery is a small (28px) primary button to match its neighbours.</li>
+  </ul>
+
+  <h2>Out of scope</h2>
+  <ul><li>Thumbnails, grid, subfolders, PR diffs, issue / comment attachments, annotations, bulk download, persistent caching, localization, an in-lightbox auto-open toggle, retry or Settings actions in notices, changes to HTML preview.</li></ul>
+</main></body></html>
