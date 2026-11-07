@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.6.1...v1.7.0) (2026-11-07)
+
+
+### Features
+
+* add an Image gallery to browse the images of a repository folder ([#123](https://github.com/cattanisimone/gh-reloaded/issues/123)) ([623c3d4](https://github.com/cattanisimone/gh-reloaded/commit/623c3d4bbf2132ea0f0e192122e01133b3b516ae))
+
 ## [1.6.1](https://github.com/cattanisimone/gh-reloaded/compare/v1.6.0...v1.6.1) (2026-11-04)
 
 
