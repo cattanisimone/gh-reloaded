@@ -89,13 +89,14 @@ test.describe("browsing and closing", () => {
         window.scrollTo(0, 120);
         window.__marker = 1;
       });
+      await galleryButton(page).evaluate((b) => b.focus({ preventScroll: true }));
       await page.keyboard.press("Enter");
       await expect(dialog(page)).toBeVisible();
       if (how === "Escape") await page.keyboard.press("Escape");
       else if (how === "close button") await page.locator(".ghig-close").click();
       else await page.mouse.click(10, 10);
       await expect(dialog(page)).toHaveCount(0);
-      await expect(galleryButton(page)).toBeFocused();
+      await expect(galleryButton(page), `active: ${await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 120) + " hasFocus=" + document.hasFocus())}`).toBeFocused();
       expect(await page.evaluate(() => ({ y: window.scrollY, marker: window.__marker, url: location.href }))).toEqual({ y: 120, marker: 1, url: URL_B });
     });
   }

@@ -573,8 +573,14 @@
     }
     root.remove();
     window.scrollTo(state.scroll[0], state.scroll[1]);
-    const target = state.auto ? button : state.focus && state.focus.isConnected ? state.focus : button;
+    // Focus can sit on <body> when the button was moved by the layout; <body> is not a place to return to.
+    const prior = state.focus && state.focus.isConnected && state.focus !== document.body && state.focus !== document.documentElement ? state.focus : null;
+    const target = state.auto ? button : prior || button;
     target?.focus({ preventScroll: true });
+    // A pointer close (backdrop) can finish its default focus handling after this handler; take focus back once if it was lost.
+    requestAnimationFrame(() => {
+      if (!dialog && target?.isConnected && document.activeElement !== target) target.focus({ preventScroll: true });
+    });
   }
 
   function closeIfOpen() {
