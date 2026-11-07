@@ -185,6 +185,19 @@
         "features/quick-assign/content.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://github.com/*"
+      ],
+      "js": [
+        "features/image-gallery/model.js",
+        "features/image-gallery/content.js"
+      ],
+      "css": [
+        "features/image-gallery/content.css"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "sandbox": {

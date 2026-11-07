@@ -175,3 +175,27 @@ test("GitHub Status: the feature switch has a Configure link; the notice switch 
   await expect(notice).toHaveAttribute("aria-checked", "false");
   expect(await worker.evaluate(() => chrome.storage.local.get("ghgsNotice"))).toEqual({ ghgsNotice: false });
 });
+
+test("Image gallery: the feature switch has a Configure link; Open automatically lives in Advanced; both default on, persist, and stay independent", async ({ context, page }) => {
+  const worker = await openOptions(context, page, "#features");
+  const sw = page.locator("#feature-ghig");
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator(".row", { has: sw }).locator("a.cfg")).toHaveAttribute("href", "#advanced-image-gallery");
+  await expect(page.locator(".row", { has: sw }).locator(".row-title")).toHaveText("Image gallery");
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "false");
+  expect(await worker.evaluate(() => chrome.storage.local.get("ghigEnabled"))).toEqual({ ghigEnabled: false });
+  // Switching the feature off keeps the child editable and its value.
+  await page.locator(".row", { has: sw }).locator("a.cfg").click();
+  const auto = page.getByRole("switch", { name: "Open automatically" });
+  await expect(auto).toHaveAttribute("aria-checked", "true");
+  await expect(auto).toBeEnabled();
+  await auto.click();
+  await expect(auto).toHaveAttribute("aria-checked", "false");
+  expect(await worker.evaluate(() => chrome.storage.local.get(["ghigEnabled", "ghigAutoOpen"]))).toEqual({ ghigEnabled: false, ghigAutoOpen: false });
+  await page.evaluate(() => (location.hash = "#features"));
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+  await page.evaluate(() => (location.hash = "#advanced-image-gallery"));
+  await expect(auto).toHaveAttribute("aria-checked", "false"); // switching the feature on again keeps the previous value
+});

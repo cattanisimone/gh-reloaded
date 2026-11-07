@@ -1,0 +1,114 @@
+<!--
+  Fixture: a repository image blob page (PNG, anonymous) for the image-gallery feature.
+  Header markup follows what was probed live on 2026-11-07 (cattanisimone/gh-reloaded, icons/): the
+  react-blob-view-header-sticky box (sticky, 0px high; its Box is absolute, so GitHub sets an inline
+  margin-top equal to the header height on blobContentSection, measured once), the row Box_1 (flex,
+  padding 8px 0 8px 8px, bordered, #f6f8fa) with the left
+  metadata Box_2 and the action group (Box_3__<hash>, flex, gap 8px, margin-right 8px) whose last
+  real child is react-blob-header-edit-and-raw-actions, plus the -combined kebab variant swapped by
+  a max-width: 767px rule. 
+  The Embedded data script carries the folder tree as GitHub embeds it (codeViewFileTreeLayoutRoute.fileTree).
+  Anchors the feature uses: [class*="react-blob-header-edit-and-raw-actions"] (parent = action group),
+  ul[aria-label="File view"] (SVG), the repository crumb of the global header nav[aria-label="Breadcrumbs"] (a private repository carries svg.octicon-lock in it; this public fixture has no icon, as live), the Private repo flag in the embedded data (absent on live pages probed 2026-11-07).
+  See fixtures/README.md.
+-->
+<!doctype html>
+<html lang="en" data-color-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>web/shots/b.png at main · acme/web</title>
+    <style>
+      :root { color-scheme: light; --fg:#1f2328; --bg:#fff; --bd:#d1d9e0; --btn:#f6f8fa; }
+      html[data-color-mode="dark"] { color-scheme: dark; --fg:#f0f6fc; --bg:#0d1117; --bd:#3d444d; --btn:#212830; }
+      body { margin: 0; font: 14px/21px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--fg); background: var(--bg); }
+      .page { display: flex; }
+      .tree { width: 337px; flex: none; box-sizing: border-box; padding: 16px; border-right: 1px solid var(--bd); min-height: 600px; }
+      .main { flex: 1; min-width: 0; padding: 16px 16px 16px 0; }
+      @media (max-width: 1011px) { .tree { display: none; } .main { padding: 16px; } }
+      .stickyHeader__iOrrW6 { position: sticky; top: 0; z-index: 4; background: var(--bg); }
+      .Box__pIkMkv { display: flex; flex-direction: column; position: absolute; top: 0; left: 0; right: 0; }
+      .react-blob-sticky-header { display: block; height: 0; overflow: hidden; }
+      .Box_1__1bJV7g { display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 8px 0 8px 8px; border: 1px solid var(--bd); border-radius: 6px 6px 0 0; background: var(--btn); }
+      .Box_2__Is-e-Y { display: flex; align-items: center; gap: 8px; min-width: 0; }
+      .Box_3__OE5Y7F, .Box_3__OE5Y7F { display: flex; align-items: center; gap: 8px; flex: none; margin-right: 8px; }
+      .Box_4__C-NqPq { display: flex; align-items: center; gap: 8px; }
+      .Box__wO1jqt, .text-mono { display: flex; min-width: 0; font: 12px/18px ui-monospace, monospace; }
+      .text-mono { padding-right: 16px; }
+      .Truncate_1__fzkDk_ { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+      .d-none { display: none !important; }
+      .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .prc-TooltipV2-Tooltip-tLeuB { display: none; }
+      .prc-Button-IconButton-fyge7, .prc-Button-ButtonBase-9n-Xk { box-sizing: border-box; height: 28px; min-width: 28px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; font: inherit; font-size: 12px; font-weight: 500; color: var(--fg); background: var(--btn); border: 1px solid var(--bd); border-radius: 6px; box-shadow: 0 1px 0 rgba(31,35,40,.04); cursor: pointer; text-decoration: none; }
+      .prc-ButtonGroup-ButtonGroup-vFUrY { display: inline-flex; }
+      .prc-ButtonGroup-Item-PqvDl { display: inline-flex; }
+      .prc-ButtonGroup-Item-PqvDl:not(:first-child) .prc-Button-ButtonBase-9n-Xk { margin-left: -1px; }
+      .prc-ButtonGroup-Item-PqvDl:not(.solo):not(:first-child):not(:last-child) .prc-Button-ButtonBase-9n-Xk { border-radius: 0; }
+      .prc-ButtonGroup-ButtonGroup-vFUrY .prc-ButtonGroup-Item-PqvDl:first-child .prc-Button-ButtonBase-9n-Xk { border-radius: 6px 0 0 6px; padding: 0 12px; }
+      .prc-ButtonGroup-ButtonGroup-vFUrY .prc-ButtonGroup-Item-PqvDl:last-child .prc-Button-ButtonBase-9n-Xk { border-radius: 0 6px 6px 0; }
+      .prc-Button-Label-FWkx3, .prc-Button-ButtonContent-Iohp5 { display: inline-flex; align-items: center; }
+      .SegmentedControl__GioqBZ { display: inline-flex; list-style: none; margin: 0; padding: 0; background: var(--btn); border: 1px solid var(--bd); border-radius: 6px; height: 28px; box-sizing: border-box; }
+      .prc-SegmentedControl-Button-E48xz { height: 26px; padding: 0 12px; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 12px; cursor: pointer; border-radius: 6px; }
+      .prc-SegmentedControl-Button-E48xz[aria-pressed="true"] { background: var(--bg); font-weight: 600; }
+      .react-blob-header-edit-and-raw-actions-combined { display: none; }
+      @media (max-width: 767px) {
+        .react-blob-header-edit-and-raw-actions { display: none; }
+        .react-blob-header-edit-and-raw-actions-combined { display: block; }
+      }
+      .blobContentSection__g1-z7P { border: 1px solid var(--bd); border-top: 0; border-radius: 0 0 6px 6px; padding: 24px; display: flex; justify-content: center; }
+      .blobContentSection__g1-z7P img { max-width: 100%; }
+      .crumbs { margin: 0; padding: 0 0 16px; font-size: 20px; }
+    </style>
+    <script type="application/json" data-target="react-app.embeddedData">{"payload":{"codeViewLayoutRoute":{"path":"shots/b.png","refInfo":{"name":"main"},"repo":{"ownerLogin":"acme","name":"web","public":true,"private":false}},"codeViewFileTreeLayoutRoute":{"fileTree":{"shots":{"items":[{"name":"a.png","path":"shots/a.png","contentType":"file"},{"name":"b.png","path":"shots/b.png","contentType":"file"},{"name":"c.svg","path":"shots/c.svg","contentType":"file"},{"name":"README.md","path":"shots/README.md","contentType":"file"},{"name":"x.png","path":"shots/x.png","contentType":"directory"}],"totalCount":5}},"refName":"main"}}}</script>
+  </head>
+  <body>
+    <header class="GlobalNav styles-module_gNfHta_appHeader prc-Stack-Stack-UQ9k6" aria-label="Global navigation menu">
+      <nav class="styles-module_iipd_W_contextRegion prc-Breadcrumbs-BreadcrumbsBase-3Gb-B" aria-label="Breadcrumbs" data-component="Breadcrumbs">
+        <ol class="prc-Breadcrumbs-BreadcrumbsList-BKjpe">
+          <li class="prc-Breadcrumbs-ItemWrapper-k0NLn"><a class="styles-module_iipd_W_contextCrumb prc-Breadcrumbs-Item-jcraJ" data-component="Breadcrumbs.Item" href="/acme"><span>acme</span></a></li>
+          <li class="prc-Breadcrumbs-ItemWrapper-k0NLn"><a class="styles-module_iipd_W_contextCrumb styles-module_iipd_W_contextCrumbLast styles-module_iipd_W_repoPickerCrumb prc-Breadcrumbs-Item-jcraJ active" aria-current="page" data-component="Breadcrumbs.Item" href="/acme/web" data-status="active">web</a></li>
+        </ol>
+      </nav>
+    </header>
+    <div class="page">
+      <aside class="tree" aria-label="File tree">Files</aside>
+      <main class="main">
+        <div class="crumbs"><a href="/acme/web/tree/main">web</a> / <a href="/acme/web/tree/main/shots">shots</a> / b.png</div>
+        <div class="react-blob-view-header-sticky stickyHeader__iOrrW6">
+          <div class="Box__pIkMkv">
+            <div class="react-blob-sticky-header"></div>
+            <div class="Box_1__1bJV7g">
+              <h2 class="sr-only">File metadata and controls</h2>
+              <div class="Box_2__Is-e-Y">
+                
+                <div class="react-code-size-details-in-header Box__wO1jqt"><div class="text-mono Box_1__NgV1zw"><span>184 KB</span></div></div>
+              </div>
+              <div class="Box_3__OE5Y7F">
+                <div class="d-none"></div>
+                
+                <div class="react-blob-header-edit-and-raw-actions Box_4__C-NqPq">
+                  <div class="d-none"></div>
+                  <button type="button" class="prc-Button-ButtonBase-9n-Xk prc-Button-IconButton-fyge7 " aria-labelledby="tt-Downloadrawfile"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14ZM7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.969a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"/></svg></button><span class="prc-TooltipV2-Tooltip-tLeuB" id="tt-Downloadrawfile" aria-hidden="true" popover="auto">Download raw file</span>
+                </div>
+                <div class="react-blob-header-edit-and-raw-actions-combined">
+                  <button type="button" title="More file actions" aria-haspopup="true" aria-expanded="false" class="prc-Button-ButtonBase-9n-Xk js-blob-dropdown-click IconButton__0qsoRg prc-Button-IconButton-fyge7"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM1.5 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm13 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg></button>
+                  <span class="prc-TooltipV2-Tooltip-tLeuB" aria-hidden="true">Edit and raw actions</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <section class="blobContentSection__g1-z7P" aria-labelledby="file-name-id-wide" style="margin-top: 46px;">
+          <img alt="b.png" src="/acme/web/blob/main/shots/b.png?raw=true" />
+        </section>
+      </main>
+    </div>
+    <script>
+      // The SVG file-view toggle behaves like GitHub's: Code adds ?short_path= and selects Code.
+      document.querySelectorAll('ul[aria-label="File view"] button').forEach((b) => b.addEventListener("click", () => {
+        document.querySelectorAll('ul[aria-label="File view"] button').forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+        const t = b.textContent.trim();
+        history.replaceState({}, "", location.pathname + (t === "Code" ? "?short_path=abc" : ""));
+      }));
+    </script>
+  </body>
+</html>

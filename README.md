@@ -45,7 +45,7 @@ Go to [github.com/settings/personal-access-tokens/new](https://github.com/settin
 | --- | --- | --- |
 | Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues, confirming a Quick assignment (read-only), Notification reason tags (mentions) |
 | Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage, Linked PR status, Notification reason tags (review requests and mentions) |
-| Repository | **Contents** | **HTML preview** of files in private repos (public repos work without a token) |
+| Repository | **Contents** | **HTML preview** and **Image gallery** of files in private repos (public repos work without a token) |
 | Repository | **Metadata** | added by GitHub automatically |
 | Organization | **Projects** | Projects v2 Status, Standup mode, My Issues project memberships |
 
@@ -238,6 +238,21 @@ On the inbox (`github.com/notifications`), every row gets a small tag on its own
 - On by default; switch it off under **Settings → Features**, or turn on **Native inbox**, and the page is exactly GitHub's own. It reads review requests and mentions across every repository in your inbox (read-only, cached for 60 seconds, nothing is written to GitHub), with the **Pull requests: Read** and **Issues: Read** permissions already listed under [Install](#install).
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
+
+### Image gallery — [features/image-gallery](features/image-gallery)
+
+On a repository image file page (PNG, JPEG, WebP, GIF, and SVG in its Preview view), browse the other images of the same folder in a lightbox, without going back to the folder listing.
+
+- A small neutral **Gallery** button is the first control of the file header's action group. It opens the images directly in the current folder, on the same repository and ref, in the order GitHub lists them, starting from the file you are on. When the header has no room for it (for example when GitHub folds its file actions into a menu on a phone), **Gallery** moves to its own band under the header row and the file content moves down.
+- **Open automatically** (Settings → Advanced → Image gallery, on by default) opens the gallery as soon as you open an image file page. The button stays either way; switching the feature off removes both.
+- The lightbox shows the image scaled down to fit (never enlarged), its name, a counter such as `3 of 8`, previous and next, close, and **Open file on GitHub**. Arrow keys change image, Esc closes, navigation is circular, and GitHub's single-key shortcuts do not reach the page while it is open. Browsing never changes the URL or the history; closing restores the page, scroll position and focus. On a phone the lightbox fills the screen, with previous, **Open file on GitHub** and next in its bottom row.
+- **Open file on GitHub** is a normal same-tab navigation to the selected file. The gallery does not reopen for that one navigation; the exception is kept in the extension's memory only and nothing is saved for it.
+- The folder list comes from the page's own data when it is valid for the URL, otherwise from the GitHub API through the shared client. When it cannot be read, the native preview is untouched, **Gallery** is inactive and a notice in the header says why (rate limit, a private repository with no token that applies, an unreadable list, a file that is not in the list, or a very large folder whose list may be incomplete). It never says the folder is empty and never claims a permission it cannot prove.
+- Images are shown through GitHub's own image URL in your browser, with no token attached. If one cannot be shown, a neutral message appears; a specific one ("no longer available", "may be damaged") only when that is proven.
+
+![Image gallery mockup: a file header with a neutral Gallery button before the download button, and the lightbox over it showing 2 of 5 with previous and next, a hint and Open file on GitHub, fictional repository acme/web.](screenshots/image-gallery.svg)
+
+Needs no new permission: public repositories work without a token, and a private repository uses the token already documented for HTML preview (**Contents: Read-only**, or `repo` for a classic token).
 
 ## Known limitations
 

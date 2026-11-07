@@ -18,21 +18,22 @@ import * as githubStatus from "./background/github-status.js";
 import * as notifications from "./background/notifications.js";
 import * as quickAssign from "./background/quick-assign.js";
 import * as linkedPrStatus from "./background/linked-pr-status.js";
+import * as imageGallery from "./background/image-gallery.js";
 
-const FEATURES = [dependencyGraph, boardDependencies, standupMode, htmlPreview, myIssues, prTriage, githubStatus, notifications, notifications.settings, linkedPrStatus, linkedPrStatus.detail, linkedPrStatus.settings, quickAssign];
+const FEATURES = [dependencyGraph, boardDependencies, standupMode, htmlPreview, myIssues, prTriage, githubStatus, notifications, notifications.settings, linkedPrStatus, linkedPrStatus.detail, linkedPrStatus.settings, quickAssign, imageGallery, imageGallery.probeFile, imageGallery.suppression, imageGallery.consumption];
 
 chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage();
 });
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   const feature = FEATURES.find((f) => f.MESSAGE_TYPE === msg?.type);
   if (!feature) return;
 
   (async () => {
     const hasToken = await hasAnyToken();
     try {
-      const data = await feature.handleMessage(msg.payload);
+      const data = await feature.handleMessage(msg.payload, sender);
       sendResponse({ ok: true, hasToken, ...data });
     } catch (e) {
       sendResponse({ ok: false, error: e.message || String(e), status: e.status, hasToken });
