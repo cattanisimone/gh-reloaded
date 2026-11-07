@@ -2,19 +2,20 @@
 import { test, expect } from "./support/extension.js";
 import { openOptions } from "./support/options.js";
 
-const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt", "ghqa", "ghlps", "ghgs", "ghnt-reason-tags"];
+const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt", "ghqa", "ghlps", "ghgs", "ghnt-reason-tags", "ghig"];
 
-test("Features lists 12 switches and Configure only for Quick-create, Standup, My Issues, GitHub Status", async ({ context, page }) => {
+test("Features lists 13 switches and Configure only for Quick-create, Standup, My Issues, GitHub Status, Image gallery", async ({ context, page }) => {
   await openOptions(context, page);
   const features = page.locator("#features");
-  await expect(features.getByRole("switch")).toHaveCount(12);
+  await expect(features.getByRole("switch")).toHaveCount(13);
   for (const s of SWITCHES) await expect(page.locator(`#feature-${s}`)).toHaveCount(1);
   const links = features.locator("a.cfg");
-  await expect(links).toHaveCount(4);
+  await expect(links).toHaveCount(5);
   await expect(links.nth(0)).toHaveAttribute("href", "#shortcuts-section");
   await expect(links.nth(1)).toHaveAttribute("href", "#advanced-standup");
   await expect(links.nth(2)).toHaveAttribute("href", "#advanced-my-issues");
   await expect(links.nth(3)).toHaveAttribute("href", "#advanced-github-status");
+  await expect(links.nth(4)).toHaveAttribute("href", "#advanced-image-gallery");
   await expect(features.locator("input")).toHaveCount(0);
 });
 
@@ -27,6 +28,7 @@ test("Standup and tile fields live in their Advanced groups", async ({ context, 
   await expect(page.locator("#advanced-my-issues #ghmi-tile-reset")).toHaveCount(1);
   await expect(page.locator("#advanced-section [role=switch]")).toHaveCount(1);
   await expect(page.locator("#advanced-github-status #feature-ghgs-notice")).toHaveCount(1);
+  await expect(page.locator("#advanced-image-gallery #feature-ghig-auto")).toHaveCount(1);
 });
 
 test("seeded keys load into the new controls unchanged", async ({ context, page }) => {

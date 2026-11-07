@@ -204,9 +204,11 @@
   let noticeEl = null;
   let lineEl = null;
   let rowEl = null;
+  let groupEl = null; // GitHub's action group, the button's home
 
   function ensureButton(group) {
-    if (button && button.isConnected && button.parentElement === group && group.firstElementChild === button) return;
+    // The button lives in the group or, on narrow or crowded headers, on our own line.
+    if (button && button.isConnected && (button.parentElement === group || (lineEl && button.parentElement === lineEl))) return;
     button?.remove();
     description?.remove();
     button = el("button", "ghig-btn");
@@ -219,6 +221,7 @@
       if (button.getAttribute("aria-disabled") === "true" || !visit || visit.status !== "ready") return;
       openGallery(false);
     });
+    groupEl = group;
     group.insertBefore(description, group.firstChild);
     group.insertBefore(button, group.firstChild);
     observeRow(group.parentElement);
@@ -275,8 +278,8 @@
   // Where the button and the notice sit. Fit is decided by measuring our own
   // elements, never by fixed thresholds; native controls keep their boxes.
   function layout() {
-    if (!button || !button.isConnected) return;
-    const group = button.parentElement;
+    if (!button || !button.isConnected || !groupEl) return;
+    const group = groupEl;
     const row = group.parentElement;
     const left = group.previousElementSibling; // the native metadata block (Preview / Code / Blame, size)
     const notice = noticeEl && visit?.notice ? M.noticeFor(visit.notice) : null;
@@ -322,27 +325,27 @@
     }
     // Own line: Gallery (when it lives there) keeps its place on the right.
     lineEl.insertBefore(noticeEl, lineEl.firstChild);
-    const lineAvail = lineEl.clientWidth - (lineEl.contains(button) ? button.offsetWidth + 8 : 0);
+    const lineAvail = lineEl.clientWidth - parseFloat(getComputedStyle(lineEl).paddingLeft) - (lineEl.contains(button) ? button.offsetWidth + 8 : 0);
     if (probe(notice.full) <= lineAvail) return place(notice.full);
     if (probe(notice.short) <= lineAvail) return place(notice.short);
     place(notice.short, lineAvail < 48 ? "icon" : undefined);
   }
 
   function toInline() {
-    const group = button.parentElement;
+    const group = groupEl;
     if (lineEl && lineEl.contains(button)) group.insertBefore(button, group.firstChild);
     if (lineEl) {
       lineEl.remove();
       lineEl = null;
-      group.parentElement.classList.remove("ghig-wrap");
     }
   }
 
+  // The own line is a sibling after GitHub's header row, inside the same header
+  // box, so the native row keeps its own flex layout untouched.
   function toLine() {
     if (!lineEl) {
       lineEl = el("div", "ghig-line");
-      rowEl.classList.add("ghig-wrap");
-      rowEl.appendChild(lineEl);
+      rowEl.after(lineEl);
     }
     if (!lineEl.contains(button)) lineEl.appendChild(button);
   }
@@ -353,10 +356,9 @@
     description?.remove();
     noticeEl?.remove();
     lineEl?.remove();
-    rowEl?.classList.remove("ghig-wrap");
     observer?.disconnect();
     observer = null;
-    button = description = noticeEl = lineEl = rowEl = null;
+    button = description = noticeEl = lineEl = rowEl = groupEl = null;
   }
 
   function toInlineSafe() {

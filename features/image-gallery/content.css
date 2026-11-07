@@ -99,17 +99,15 @@ html[data-color-mode="dark"] {
 .ghig-notice.ghig-measure .ghig-notice-text { overflow: visible; }
 .ghig-notice-icon-only .ghig-notice-text { display: none; }
 
-/* --- own line inside the header row (narrow or crowded headers) */
-.ghig-wrap { flex-wrap: wrap; }
+/* --- own line: a sibling after GitHub's header row, inside the header box (narrow or crowded headers) */
 .ghig-line {
-  flex: 0 0 100%;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
   min-width: 0;
-  margin-top: 8px;
+  padding: 0 0 8px 8px;
 }
 .ghig-line .ghig-notice { flex: 1 1 auto; justify-content: flex-start; }
 
