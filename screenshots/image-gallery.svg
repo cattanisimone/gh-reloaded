@@ -13,23 +13,30 @@
 <rect x="32" y="108" width="1136" height="500" fill="#fff" stroke="#d1d9e0"/>
 <rect x="0" y="0" width="1200" height="640" fill="#1f2328" opacity="0.5"/>
 <rect x="64" y="40" width="1072" height="560" fill="#fff" stroke="#d1d9e0" rx="12"/>
-<rect x="64" y="40" width="1072" height="48" fill="#f6f8fa" stroke="#d1d9e0" rx="12"/>
-<rect x="84" y="55" width="86" height="20" fill="none" stroke="#d1d9e0" rx="10"/>
-<text x="94" y="70" font-size="11" font-weight="600" fill="#59636e">GH Reloaded</text>
-<text x="184" y="70" font-size="14" font-weight="600" fill="#1f2328">Image gallery</text>
-<text x="1000" y="70" font-size="12" fill="#59636e">2 of 5</text>
-<rect x="1088" y="52" width="32" height="32" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
-<text x="1099" y="73" font-size="15" fill="#1f2328">✕</text>
-<text x="84" y="116" font-size="12" fill="#59636e">acme / web / shots</text>
-<text x="226" y="116" font-size="12" font-weight="600" fill="#1f2328">dashboard.png</text>
-<rect x="88" y="320" width="36" height="56" fill="#f6f8fa" stroke="#d1d9e0" rx="8"/>
-<text x="100" y="356" font-size="24" fill="#1f2328">‹</text>
-<rect x="1076" y="320" width="36" height="56" fill="#f6f8fa" stroke="#d1d9e0" rx="8"/>
-<text x="1088" y="356" font-size="24" fill="#1f2328">›</text>
-<rect x="200" y="140" width="800" height="400" fill="#eaeef2" stroke="#d1d9e0"/>
-<path d="M200 540l230-190 150 120 120-90 300 160z" fill="#b6e3ff"/>
-<circle cx="820" cy="220" r="36" fill="#ffd8b5"/>
-<rect x="64" y="552" width="1072" height="48" fill="#f6f8fa" stroke="#d1d9e0"/>
-<text x="84" y="581" font-size="12" fill="#59636e">←→ to navigate · Esc to close</text>
-<text x="980" y="581" font-size="12" font-weight="600" fill="#0969da">Open file on GitHub</text>
+<text x="84" y="64" font-size="12" fill="#59636e">Image gallery</text>
+<rect x="174" y="51" width="86" height="20" fill="#fff" stroke="#d1d9e0" rx="10"/>
+<text x="183" y="65" font-size="12" font-weight="500" fill="#1f2328">GH Reloaded</text>
+<text x="84" y="90" font-size="16" fill="#1f2328">shots/<tspan font-weight="600">dashboard.png</tspan></text>
+<rect x="1018" y="62" width="60" height="24" fill="#e6eaef" rx="12"/>
+<text x="1030" y="79" font-size="14" font-weight="600" fill="#1f2328">2 of 5</text>
+<text x="1094" y="80" font-size="15" fill="#59636e">✕</text>
+<path d="M64 106h1072v438H64z" fill="#f6f8fa" stroke="#d1d9e0"/>
+<circle cx="106" cy="325" r="22" fill="#fff" stroke="#d1d9e0"/>
+<path d="M109 318l-7 7 7 7" fill="none" stroke="#1f2328" stroke-width="1.6"/>
+<circle cx="1094" cy="325" r="22" fill="#fff" stroke="#d1d9e0"/>
+<path d="M1091 318l7 7-7 7" fill="none" stroke="#1f2328" stroke-width="1.6"/>
+<rect x="250" y="135" width="700" height="380" fill="#eaeef2" stroke="#d1d9e0"/>
+<path d="M250 515l200-165 130 105 105-80 265 140z" fill="#b6e3ff"/>
+<circle cx="790" cy="205" r="32" fill="#ffd8b5"/>
+<rect x="84" y="562" width="14" height="16" fill="#f6f8fa" stroke="#d1d9e0" rx="4"/>
+<text x="87" y="574" font-size="10" fill="#1f2328">←</text>
+<rect x="101" y="562" width="14" height="16" fill="#f6f8fa" stroke="#d1d9e0" rx="4"/>
+<text x="104" y="574" font-size="10" fill="#1f2328">→</text>
+<text x="121" y="575" font-size="12" fill="#59636e">to navigate ·</text>
+<rect x="204" y="562" width="26" height="16" fill="#f6f8fa" stroke="#d1d9e0" rx="4"/>
+<text x="208" y="574" font-size="10" fill="#1f2328">Esc</text>
+<text x="236" y="575" font-size="12" fill="#59636e">to close</text>
+<rect x="960" y="554" width="160" height="32" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<rect x="974" y="562" width="12" height="15" fill="none" stroke="#59636e" stroke-width="1.4" rx="2"/>
+<text x="994" y="575" font-size="14" font-weight="500" fill="#1f2328">Open file on GitHub</text>
 </svg>
