@@ -50,7 +50,11 @@ function measure(page) {
       noticeTruncated: text ? text.scrollWidth > text.clientWidth : null,
       galleryInline: btn ? btn.parentElement === g : null,
       noticeInline: notice ? notice.parentElement === g : null,
-      lineRight: btn?.closest(".ghig-line") ? rect(btn.closest(".ghig-line")).r : null,
+      line: document.querySelector(".ghig-line") ? rect(document.querySelector(".ghig-line")) : null,
+      row: rect(row),
+      lineBg: document.querySelector(".ghig-line") ? getComputedStyle(document.querySelector(".ghig-line")).backgroundColor : null,
+      rowBg: getComputedStyle(row).backgroundColor,
+      content: rect(document.querySelector('[class*="blobContentSection"]')),
       rowSW: row.scrollWidth,
       rowCW: row.clientWidth,
       pageSW: document.documentElement.scrollWidth,
@@ -194,8 +198,17 @@ test.describe("header behaviour by width", () => {
           expect(on.gallery.w).toBeGreaterThan(60); // never icon-only
           if (width <= 767) {
             expect(on.galleryInline, "kebab shown: Gallery on its own line").toBe(false);
-            expect(Math.abs(on.lineRight - on.group.r)).toBeLessThanOrEqual(1);
+            // Same right inset as the native group, and the line spans the header band.
+            expect(Math.abs(on.gallery.r - on.group.r), `gallery right ${on.gallery.r} vs group right ${on.group.r}`).toBeLessThanOrEqual(1);
+            expect(Math.abs(on.line.x - on.row.x) + Math.abs(on.line.r - on.row.r)).toBeLessThanOrEqual(1);
+            expect(Math.abs(on.line.y - on.row.b)).toBeLessThanOrEqual(1);
+            expect(on.lineBg).toBe(on.rowBg);
           }
+          // The file content starts below everything we added: it moves down, it is never covered.
+          for (const ours of [on.line, on.gallery, on.notice].filter(Boolean)) {
+            expect(on.content.y, `content top ${on.content.y} under our ${JSON.stringify(ours)} at ${width}`).toBeGreaterThanOrEqual(ours.b - 0.5);
+          }
+          if (!on.line) expect(Math.abs(on.content.y - off.content.y), `content moved at ${width} with no own line`).toBeLessThanOrEqual(1);
         }
       });
     }

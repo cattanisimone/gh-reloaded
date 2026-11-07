@@ -34,6 +34,12 @@
   const SVG_IMAGE =
     '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M16 13.25A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25V2.75C0 1.784.784 1 1.75 1h12.5c.966 0 1.75.784 1.75 1.75ZM1.75 2.5a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h.94l6.01-6.01a.75.75 0 0 1 1.06 0l4.74 4.74V2.75a.25.25 0 0 0-.25-.25ZM5.5 6a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"/></svg>';
 
+  const svg16 = (d) => `<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>`;
+  const SVG_X = svg16("M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z");
+  const SVG_PREV = svg16("M9.78 12.78a.75.75 0 0 1-1.06 0L4.47 8.53a.75.75 0 0 1 0-1.06l4.25-4.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L6.06 8l3.72 3.72a.75.75 0 0 1 0 1.06Z");
+  const SVG_NEXT = svg16("M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z");
+  const SVG_FILE = svg16("M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 0 0 .25-.25V6h-2.75A1.75 1.75 0 0 1 9 4.25V1.5Zm6.75.062V4.25c0 .138.112.25.25.25h2.688l-.011-.013-2.914-2.914-.013-.011Z");
+
   function extensionAlive() {
     try {
       return !!(chrome.runtime && chrome.runtime.id);
@@ -208,6 +214,7 @@
   let description = null;
   let noticeEl = null;
   let lineEl = null;
+  let spacerEl = null;
   let rowEl = null;
   let groupEl = null; // GitHub's action group, the button's home
 
@@ -285,6 +292,7 @@
   function layout() {
     const focused = !!button && document.activeElement === button;
     placeUi();
+    fitLine();
     if (focused && button?.isConnected && document.activeElement !== button) button.focus({ preventScroll: true });
   }
 
@@ -363,15 +371,49 @@
     if (!noticeOnly && !lineEl.contains(button)) lineEl.appendChild(button);
   }
 
+  // The line continues the row's band (fill, side and bottom borders, insets read
+  // from the row and the group). GitHub's header box is absolutely positioned and
+  // the file content is pushed down by a margin measured once, so a taller box would
+  // cover the content: a spacer in the header's flow moves the content down instead.
+  function fitLine() {
+    if (!lineEl || !lineEl.isConnected || !rowEl) {
+      spacerEl?.remove();
+      spacerEl = null;
+      return;
+    }
+    const row = getComputedStyle(rowEl);
+    const st = lineEl.style;
+    st.backgroundColor = row.backgroundColor;
+    for (const side of ["Left", "Right", "Bottom"]) {
+      st[`border${side}`] = `${row[`border${side}Width`]} ${row[`border${side}Style`]} ${row[`border${side}Color`]}`;
+    }
+    st.paddingLeft = row.paddingLeft;
+    st.paddingRight = `${parseFloat(row.paddingRight) + (groupEl ? parseFloat(getComputedStyle(groupEl).marginRight) || 0 : 0)}px`;
+
+    const box = rowEl.parentElement;
+    if (!box || getComputedStyle(box).position !== "absolute") {
+      spacerEl?.remove();
+      spacerEl = null;
+      return;
+    }
+    if (!spacerEl || !spacerEl.isConnected) {
+      spacerEl = el("div", "ghig-spacer");
+      spacerEl.setAttribute("aria-hidden", "true");
+      box.after(spacerEl);
+    }
+    spacerEl.style.height = `${lineEl.offsetHeight}px`;
+  }
+
   function removeUi() {
     toInlineSafe();
     button?.remove();
     description?.remove();
     noticeEl?.remove();
     lineEl?.remove();
+    spacerEl?.remove();
     observer?.disconnect();
     observer = null;
-    button = description = noticeEl = lineEl = rowEl = groupEl = null;
+    button = description = noticeEl = lineEl = spacerEl = rowEl = groupEl = null;
   }
 
   function toInlineSafe() {
@@ -399,29 +441,34 @@
     root.innerHTML = `
       <div class="ghig-panel">
         <div class="ghig-top">
-          <span class="ghig-kicker">GH Reloaded</span>
-          <span class="ghig-title">Image gallery</span>
+          <div class="ghig-heading">
+            <div class="ghig-kickrow"><span class="ghig-label">Image gallery</span><span class="ghig-kicker">GH Reloaded</span></div>
+            <div class="ghig-where"><span class="ghig-dir"></span><span class="ghig-name"><span class="ghig-name-cut"></span><span class="ghig-name-full"></span></span></div>
+          </div>
           <span class="ghig-counter"></span>
-          <button type="button" class="ghig-close" aria-label="Close gallery"><svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg></button>
+          <button type="button" class="ghig-close" aria-label="Close gallery">${SVG_X}</button>
         </div>
-        <div class="ghig-where"><span class="ghig-path"></span><span class="ghig-name"><span class="ghig-name-cut"></span><span class="ghig-name-full"></span></span></div>
         <div class="ghig-stage">
-          <button type="button" class="ghig-nav ghig-prev" aria-label="Previous image">‹</button>
+          <button type="button" class="ghig-nav ghig-prev" aria-label="Previous image">${SVG_PREV}</button>
           <div class="ghig-frame"><img class="ghig-img" alt=""><div class="ghig-loading" hidden>Loading…</div><div class="ghig-fail" hidden><strong class="ghig-fail-title"></strong><span class="ghig-fail-text"></span></div></div>
-          <button type="button" class="ghig-nav ghig-next" aria-label="Next image">›</button>
+          <button type="button" class="ghig-nav ghig-next" aria-label="Next image">${SVG_NEXT}</button>
         </div>
-        <div class="ghig-foot"><span class="ghig-hint"></span><a class="ghig-open">Open file on GitHub</a></div>
+        <div class="ghig-foot"><span class="ghig-hint"></span><a class="ghig-open">${SVG_FILE}<span>Open file on GitHub</span></a></div>
         <div class="ghig-sr" aria-live="polite"></div>
       </div>`;
     const q = (s) => root.querySelector(s);
     const count = v.items.length;
     const multi = count > 1;
-    q(".ghig-hint").textContent = M.hintText(count);
+    // Key names in the hint render as key chips; the text stays the model's.
+    for (const part of M.hintText(count).split(/(←|→|Esc)/)) {
+      if (part) q(".ghig-hint").append(/^(←|→|Esc)$/.test(part) ? el("kbd", null, part) : part);
+    }
     if (!multi) {
       q(".ghig-prev").remove();
       q(".ghig-next").remove();
     }
-    q(".ghig-path").textContent = [v.info.owner, v.info.repo, ...v.path.split("/").slice(0, -1)].join(" / ");
+    const dir = M.dirOf(v.path);
+    q(".ghig-dir").textContent = dir ? `${dir}/` : "";
 
     function show(i, announce) {
       state.index = i;
@@ -511,6 +558,7 @@
   function loadImage(q, item, token, state) {
     const v = state.v;
     const img = q(".ghig-img");
+    img.style.maxWidth = img.style.maxHeight = "";
     const loading = q(".ghig-loading");
     const fail = q(".ghig-fail");
     img.hidden = false;
@@ -534,6 +582,11 @@
       if (token !== state.token) return;
       clearTimeout(state.timer);
       loading.hidden = true;
+      // Never upscaled: an SVG with only a viewBox would otherwise stretch to the stage.
+      if (img.naturalWidth && img.naturalHeight) {
+        img.style.maxWidth = `min(100%, ${img.naturalWidth}px)`;
+        img.style.maxHeight = `min(100%, ${img.naturalHeight}px)`;
+      }
     };
     img.onerror = async () => {
       if (token !== state.token) return;
