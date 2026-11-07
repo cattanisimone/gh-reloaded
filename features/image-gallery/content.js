@@ -278,7 +278,7 @@
     if (!button || !button.isConnected) return;
     const group = button.parentElement;
     const row = group.parentElement;
-    const left = row.firstElementChild === group ? null : row.firstElementChild;
+    const left = group.previousElementSibling; // the native metadata block (Preview / Code / Blame, size)
     const notice = noticeEl && visit?.notice ? M.noticeFor(visit.notice) : null;
 
     // Start from inline, no notice, to see what inserting Gallery does.

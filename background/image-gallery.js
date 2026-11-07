@@ -93,12 +93,13 @@ export async function list({ owner, repo, segments, ref, privateHint } = {}) {
 }
 
 async function fileBase64(owner, repo, path, ref) {
-  const data = await withTimeout(ghFetch(contentsPath(owner, repo, path, ref), { owner }));
+  // fresh: this read is about what the repository holds now, not a cached answer.
+  const data = await withTimeout(ghFetch(contentsPath(owner, repo, path, ref), { owner, fresh: true }));
   if (Array.isArray(data)) throw Object.assign(new Error("directory"), { status: 404 });
   if (data.size > MAX_PROBE_BYTES) throw Object.assign(new Error("too large"), { tooLarge: true });
   if (typeof data.content === "string") return data.content.replace(/\n/g, "");
   if (data.sha) {
-    const blob = await withTimeout(ghFetch(`/repos/${owner}/${repo}/git/blobs/${data.sha}`, { owner }));
+    const blob = await withTimeout(ghFetch(`/repos/${owner}/${repo}/git/blobs/${data.sha}`, { owner, fresh: true }));
     if (typeof blob.content === "string") return blob.content.replace(/\n/g, "");
   }
   throw new Error("no content");
@@ -116,7 +117,7 @@ export async function probe({ owner, repo, ref, path } = {}) {
   } catch (err) {
     if (err?.status === 404 && !err.rateLimited) {
       try {
-        const dir = await withTimeout(ghFetch(contentsPath(owner, repo, dirOf(path), ref), { owner }));
+        const dir = await withTimeout(ghFetch(contentsPath(owner, repo, dirOf(path), ref), { owner, fresh: true }));
         if (Array.isArray(dir) && !dir.some((e) => e && e.path === path)) return { kind: "removed" };
       } catch {
         /* the parent is unreadable too: proves nothing */
