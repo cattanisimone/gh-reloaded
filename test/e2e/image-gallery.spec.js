@@ -82,6 +82,8 @@ test.describe("browsing and closing", () => {
     test(`${how} restores scroll and focus without reload or URL change`, async ({ context, page }) => {
       await setup(context, { storage: { ghigAutoOpen: false } });
       await page.goto(URL_B);
+      // keyboard.press does not wait for the button to be enabled as click() does: wait for the folder list first.
+      await expect(galleryButton(page)).toHaveAttribute("aria-disabled", "false");
       await galleryButton(page).focus();
       // Scroll after focusing (focus scrolls the header into view) and open from the keyboard, as a click would scroll too.
       await page.evaluate(() => {
@@ -91,7 +93,7 @@ test.describe("browsing and closing", () => {
       });
       await galleryButton(page).evaluate((b) => b.focus({ preventScroll: true }));
       await page.keyboard.press("Enter");
-      await expect(dialog(page)).toBeVisible();
+      await expect(dialog(page), `button: ${await galleryButton(page).evaluate((b) => b.outerHTML.slice(0, 160) + " focused=" + (document.activeElement === b))}`).toBeVisible();
       if (how === "Escape") await page.keyboard.press("Escape");
       else if (how === "close button") await page.locator(".ghig-close").click();
       else await page.mouse.click(10, 10);
