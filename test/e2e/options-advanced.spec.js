@@ -193,6 +193,9 @@ test("Image gallery: the feature switch has a Configure link; Open automatically
   await auto.click();
   await expect(auto).toHaveAttribute("aria-checked", "false");
   expect(await worker.evaluate(() => chrome.storage.local.get(["ghigEnabled", "ghigAutoOpen"]))).toEqual({ ghigEnabled: false, ghigAutoOpen: false });
+  await page.evaluate(() => (location.hash = "#features"));
   await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+  await page.evaluate(() => (location.hash = "#advanced-image-gallery"));
   await expect(auto).toHaveAttribute("aria-checked", "false"); // switching the feature on again keeps the previous value
 });

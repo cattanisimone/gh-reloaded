@@ -26,7 +26,7 @@ test("Standup and tile fields live in their Advanced groups", async ({ context, 
   await expect(page.locator("#advanced-my-issues #ghmi-tile-min")).toHaveCount(1);
   await expect(page.locator("#advanced-my-issues #ghmi-tile-max")).toHaveCount(1);
   await expect(page.locator("#advanced-my-issues #ghmi-tile-reset")).toHaveCount(1);
-  await expect(page.locator("#advanced-section [role=switch]")).toHaveCount(1);
+  await expect(page.locator("#advanced-section [role=switch]")).toHaveCount(2); // GitHub Status notice, Image gallery Open automatically
   await expect(page.locator("#advanced-github-status #feature-ghgs-notice")).toHaveCount(1);
   await expect(page.locator("#advanced-image-gallery #feature-ghig-auto")).toHaveCount(1);
 });
