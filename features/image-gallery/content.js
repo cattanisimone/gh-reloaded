@@ -100,8 +100,15 @@
     }
   }
 
-  function pageSaysPrivate(payload) {
+  // GitHub marks a private repository with a lock icon on the repository
+  // crumb of the global header (Breadcrumbs nav, link to /owner/repo); the
+  // embedded payload and the older repository header are extra sources.
+  function pageSaysPrivate(info, payload) {
     if (payload?.codeViewLayoutRoute?.repo?.private === true) return true;
+    const repoPath = `/${info.owner}/${info.repo}`.toLowerCase();
+    for (const a of document.querySelectorAll('nav[aria-label="Breadcrumbs"] a[href]')) {
+      if (a.getAttribute("href").replace(/\/+$/, "").toLowerCase() === repoPath && a.querySelector("svg.octicon-lock")) return true;
+    }
     for (const l of document.querySelectorAll('#repository-container-header [class*="Label"], [data-testid="repo-title-component"] + span, [data-testid="repo-title-component"] ~ * [class*="Label"]')) {
       if (l.textContent.trim() === "Private") return true;
     }
@@ -161,7 +168,7 @@
           owner: info.owner,
           repo: info.repo,
           segments: info.segments,
-          privateHint: pageSaysPrivate(payload),
+          privateHint: pageSaysPrivate(info, payload),
         });
 
     Promise.all([consume, listing]).then(([c, data]) => {

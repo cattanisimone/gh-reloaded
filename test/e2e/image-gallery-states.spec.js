@@ -50,6 +50,44 @@ test.describe("listing states", () => {
     expect(calls).toBe(0);
   });
 
+  // Live github.com (2026-11-07) embeds no folder tree and no private flag: the
+  // only private signal is the lock icon on the global header's repository crumb.
+  const LOCK = '<svg data-component="Octicon" aria-hidden="true" focusable="false" class="octicon octicon-lock styles-module_iipd_W_crumbIcon" viewBox="0 0 16 16" width="16" height="16"></svg>';
+  const lockCrumb = (href = "/acme/web") => (h) => h.replace(`href="/acme/web" data-status="active">`, `href="${href}" data-status="active">${LOCK}`);
+
+  for (const fixture of ["blob-image.html", "blob-image-svg-signed.html"]) {
+    test(`${fixture}: the breadcrumb lock alone gives the private notice, with no list request`, async ({ context, page }) => {
+      let calls = 0;
+      const url = fixture.includes("svg") ? "https://github.com/acme/web/blob/main/shots/c.svg" : URL_B;
+      await setup(context, { fixture, embedded: false, api: [{ match: LIST, status: () => (++calls, 404), json: { message: "Not Found" } }], transform: lockCrumb() });
+      await page.goto(url);
+      expect(await page.locator('script[data-target="react-app.embeddedData"]').count()).toBe(0);
+      await expectBlocked(page, "Gallery unavailable: no GH Reloaded token applies to this private repository.");
+      expect(calls).toBe(0);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(notice(page)).toContainText("Gallery: no token for this repository");
+      expect(await notice(page).getAttribute("title")).toMatch(/^Gallery unavailable: this repository is private and no GH Reloaded token applies to it/);
+    });
+  }
+
+  test("the breadcrumb lock with a token for the owner: the list comes from the API", async ({ context, page }) => {
+    await setup(context, {
+      embedded: false,
+      storage: { githubTokens: [{ id: "t", name: "d", token: "tok", owner: "acme" }], defaultTokenId: "t" },
+      transform: lockCrumb(),
+    });
+    await page.goto(URL_B);
+    await expect(counter(page)).toHaveText("2 of 3");
+  });
+
+  test("a lock on another repository's crumb does not make this one private", async ({ context, page }) => {
+    let calls = 0;
+    await setup(context, { embedded: false, api: [{ match: LIST, status: () => (++calls, 200), json: FOLDER }], transform: lockCrumb("/acme/other") });
+    await page.goto(URL_B);
+    await expect(counter(page)).toHaveText("2 of 3");
+    expect(calls).toBe(1);
+  });
+
   test("a private repository with a saved token for its owner works fully", async ({ context, page }) => {
     await setup(context, {
       storage: { githubTokens: [{ id: "t", name: "d", token: "tok", owner: "acme" }], defaultTokenId: "t" },
