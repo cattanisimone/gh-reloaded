@@ -213,6 +213,27 @@ test.describe("header behaviour by width", () => {
     await expect.poll(async () => (await measure(page)).galleryInline).toBe(true);
   });
 
+  test("a focused Gallery keeps keyboard focus while resizes move it between the row and its own line", async ({ context, page }) => {
+    await setup(context, { fixture: "blob-image.html", storage: { ghigAutoOpen: false } });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("https://github.com/acme/web/blob/main/shots/b.png");
+    await expect(galleryButton(page)).toHaveAttribute("aria-disabled", "false");
+    await galleryButton(page).focus();
+    for (const [width, inline] of [[1100, true], [390, false], [1100, true], [1280, true]]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(async () => (await measure(page)).galleryInline, `inline at ${width}px`).toBe(inline);
+      // Two frames: the ResizeObserver queues the layout on the next one.
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+      await expect(galleryButton(page), `focus at ${width}px: ${await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 80))}`).toBeFocused();
+    }
+    // A page that grows a scrollbar (as the close specs do) narrows the row without a viewport change.
+    await page.evaluate(() => (document.body.style.minHeight = "3000px"));
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    await expect(galleryButton(page)).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("dialog.ghig-dialog")).toBeVisible();
+  });
+
   test("a truncated notice keeps its full text as title and as Gallery's description", async ({ context, page }) => {
     await setup(context, { fixture: "blob-image-svg-signed.html", embedded: false, api: [{ match: /\/contents\//, json: BIG }], storage: { ghigAutoOpen: false } });
     await page.setViewportSize({ width: 390, height: 800 });

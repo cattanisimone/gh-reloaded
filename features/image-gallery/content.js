@@ -280,9 +280,17 @@
     return node.scrollWidth;
   }
 
+  // Measuring moves the button between the row and its own line, and moving a
+  // focused element blurs it: a keyboard user would lose their place on every resize.
+  function layout() {
+    const focused = !!button && document.activeElement === button;
+    placeUi();
+    if (focused && button?.isConnected && document.activeElement !== button) button.focus({ preventScroll: true });
+  }
+
   // Where the button and the notice sit. Fit is decided by measuring our own
   // elements, never by fixed thresholds; native controls keep their boxes.
-  function layout() {
+  function placeUi() {
     if (!button || !button.isConnected || !groupEl) return;
     const group = groupEl;
     const row = group.parentElement;
