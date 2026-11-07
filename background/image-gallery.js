@@ -97,10 +97,10 @@ async function fileBase64(owner, repo, path, ref) {
   const data = await withTimeout(ghFetch(contentsPath(owner, repo, path, ref), { owner, fresh: true }));
   if (Array.isArray(data)) throw Object.assign(new Error("directory"), { status: 404 });
   if (data.size > MAX_PROBE_BYTES) throw Object.assign(new Error("too large"), { tooLarge: true });
-  if (typeof data.content === "string") return data.content.replace(/\n/g, "");
+  if (typeof data.content === "string" && data.content !== "" && data.encoding !== "none") return data.content.replace(/\n/g, "");
   if (data.sha) {
     const blob = await withTimeout(ghFetch(`/repos/${owner}/${repo}/git/blobs/${data.sha}`, { owner, fresh: true }));
-    if (typeof blob.content === "string") return blob.content.replace(/\n/g, "");
+    if (typeof blob.content === "string" && blob.content !== "") return blob.content.replace(/\n/g, "");
   }
   throw new Error("no content");
 }

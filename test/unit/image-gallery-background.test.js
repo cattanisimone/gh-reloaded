@@ -144,6 +144,13 @@ test("probe falls back to the Git blob when the Contents API omits the content",
   assert.equal(out.dataUrl, "data:image/gif;base64,QUJD");
 });
 
+test("probe treats the empty content of a file over 1 MB as missing and reads the Git blob", async () => {
+  const r = repo();
+  mock((url) => (url.includes("/git/blobs/") ? reply(200, { content: "QUJD", encoding: "base64" }) : reply(200, { sha: "abc", size: 2000000, content: "", encoding: "none" })));
+  const out = await probe({ owner: "acme", repo: r, ref: "main", path: "shots/big.png" });
+  assert.equal(out.dataUrl, "data:image/png;base64,QUJD");
+});
+
 test("suppression: consumed once, only for the clicked URL, per tab, with a TTL", () => {
   const tab = { tab: { id: 7 } };
   assert.equal(suppress({ url: "/a/b/blob/main/x.png" }, tab, 1000).stored, true);

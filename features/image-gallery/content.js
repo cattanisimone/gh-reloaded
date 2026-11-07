@@ -123,6 +123,11 @@
 
   // --- visit ------------------------------------------------------------
 
+  function sameFileAtSha(oldPath, newPath) {
+    const m = /^(\/[^/]+\/[^/]+\/blob\/)[0-9a-f]{40}\/(.+)$/i.exec(newPath);
+    return !!m && oldPath.startsWith(m[1]) && oldPath.endsWith("/" + m[2]);
+  }
+
   function startVisit(info) {
     const v = {
       id: ++visitCounter,
@@ -321,7 +326,7 @@
       if (long <= avail) return place(notice.full);
       if (probe(notice.short) <= avail) return place(notice.short);
       noticeEl.remove();
-      toLine();
+      toLine(true);
     }
     // Own line: Gallery (when it lives there) keeps its place on the right.
     lineEl.insertBefore(noticeEl, lineEl.firstChild);
@@ -342,12 +347,12 @@
 
   // The own line is a sibling after GitHub's header row, inside the same header
   // box, so the native row keeps its own flex layout untouched.
-  function toLine() {
+  function toLine(noticeOnly) {
     if (!lineEl) {
       lineEl = el("div", "ghig-line");
       rowEl.after(lineEl);
     }
-    if (!lineEl.contains(button)) lineEl.appendChild(button);
+    if (!noticeOnly && !lineEl.contains(button)) lineEl.appendChild(button);
   }
 
   function removeUi() {
@@ -408,7 +413,7 @@
       q(".ghig-prev").remove();
       q(".ghig-next").remove();
     }
-    q(".ghig-path").textContent = `${v.info.owner} / ${v.info.repo} / ${v.path.split("/").slice(0, -1).join(" / ")}`;
+    q(".ghig-path").textContent = [v.info.owner, v.info.repo, ...v.path.split("/").slice(0, -1)].join(" / ");
 
     function show(i, announce) {
       state.index = i;
@@ -596,7 +601,11 @@
     if (!visit || visit.key !== location.pathname) {
       closeIfOpen();
       removeUi();
+      const prev = visit;
       startVisit(info);
+      // GitHub's permalink shortcut only swaps the ref for a commit SHA on the
+      // same file: a gallery the user already dealt with must not pop open again.
+      if (prev && (prev.interacted || prev.opened) && sameFileAtSha(prev.key, location.pathname)) visit.interacted = true;
     }
     const had = button && button.isConnected;
     ensureButton(group);
