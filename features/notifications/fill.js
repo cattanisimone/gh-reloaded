@@ -94,7 +94,7 @@
     // The invariant over page rows, outside entries and items not verified.
     function summarize() {
       const page = getPage();
-      const out = { outside: [], k: 0, u: 0, pending: 0, m: page.rows.length, byCat: { attention: 0, waiting: 0, informational: 0, unverifiable: 0 }, denied: false };
+      const out = { outside: [], k: 0, u: 0, pending: 0, pageRows: page.rows.length, m: page.rows.length, byCat: { attention: 0, waiting: 0, informational: 0, unverifiable: 0 }, denied: false };
       if (!entry) return out;
       out.denied = entry.denied.size > 0;
       const onPage = new Set(page.rows.map((r) => r.key));
