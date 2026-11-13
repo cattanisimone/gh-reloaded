@@ -214,7 +214,9 @@ export function lastTestLabel(rec, now = new Date()) {
   const d = new Date(rec.at);
   const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const sameDay = d.toDateString() === now.toDateString();
-  const day = sameDay ? "Today" : d.toLocaleDateString([], { month: "short", day: "numeric" });
+  const y = new Date(now);
+  y.setDate(y.getDate() - 1);
+  const day = sameDay ? "Today" : d.toDateString() === y.toDateString() ? "Yesterday" : d.toLocaleDateString([], { month: "short", day: "numeric" });
   const { ok, total } = countOk(rec);
   return `${day} ${time} · ${ok} of ${total} OK`;
 }

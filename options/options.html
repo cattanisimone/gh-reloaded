@@ -163,6 +163,10 @@
             The default token covers every repository owner. Add a token for an organization or account that needs its own credential.
             A request uses that owner's token, else the default; it never tries saved tokens in turn.
           </p>
+          <div class="privacy">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></svg>
+            <span>Tokens stay in this browser's extension storage and are only sent to api.github.com. Once saved, a token is never shown again.</span>
+          </div>
           <div id="token-warning" class="warning" role="region" aria-labelledby="warning-title" hidden>
             <div class="warning-head"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6.46 1.5a1.75 1.75 0 0 1 3.08 0l5.25 9.5A1.75 1.75 0 0 1 13.25 13.5H2.75A1.75 1.75 0 0 1 1.21 11ZM8 5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8 5Zm1 6a1 1 0 1 0-2 0 1 1 0 0 0 2 0Z"/></svg><strong id="warning-title"></strong></div>
             <p id="warning-body" class="warning-body"></p>
@@ -183,12 +187,9 @@
             <p id="tokens-status" class="status" role="status"></p>
           </div>
           <div id="notifications-permission-slot"></div>
-          <div class="privacy">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></svg>
-            <span>Tokens stay in this browser's extension storage and are only sent to api.github.com. Once saved, a token is never shown again.</span>
-          </div>
           <div id="token-guide" class="guide">
-            <p class="guide-steps"><strong>New token? Three steps.</strong> 1. Create a token on GitHub. 2. Paste it with <em>Add token</em>. 3. Press <em>Test</em>.</p>
+            <h3 class="guide-title">New token? Three steps</h3>
+            <ol class="guide-steps"><li>Create a token on GitHub.</li><li>Paste it with <em>Add token</em>.</li><li>Press <em>Test</em>.</li></ol>
             <details id="full-guide" class="full-guide">
               <summary>Full guide</summary>
               <div class="section-intro">
@@ -232,13 +233,14 @@
                 <input id="panel-secret" type="password" class="tok-secret" placeholder="github_pat_… or ghp_…" autocomplete="off" spellcheck="false" />
                 <span class="field-error" id="panel-secret-error" hidden></span>
               </div>
-              <p class="field-help" id="panel-which"></p>
+              <div class="which-box" id="panel-which"></div>
               <p id="panel-changes" class="changes-tag" role="status" hidden></p>
               <div class="actions">
                 <button id="panel-test" type="button" class="btn btn-secondary">Test</button>
                 <button id="panel-check" type="button" class="btn btn-secondary" aria-expanded="false" aria-controls="panel-diag">Check a specific repository</button>
               </div>
               <p id="panel-test-hint" class="field-help" hidden></p>
+              <p class="field-help">Test checks permissions without saving or changing anything.</p>
               <div id="panel-result" class="tr-result" hidden></div>
               <div id="panel-diag" class="diag-host" hidden></div>
               <p id="panel-status" class="status" role="status"></p>

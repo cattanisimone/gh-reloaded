@@ -24,8 +24,12 @@ test("appears from stored codes: names the feature and the token, details with t
   await expect(page.locator("#warning-title")).toHaveText("Linked PR status needs a permission your token doesn't have");
   await expect(page.locator("#warning-body")).toHaveText("Tokens: «Work – acme-demo». Features you already use keep working.");
   await page.locator(".warning-details summary").click();
-  const version = await page.evaluate(() => chrome.runtime.getManifest().version);
-  await expect(page.locator("#warning-details")).toContainText(`GH Reloaded ${version} uses Pull requests (Read-only) for Linked PR status: to show the status of linked pull requests.`);
+  const row = page.locator("#warning-details .warning-perm");
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText("Pull requests");
+  await expect(row.locator(".wp-tag")).toHaveText("Read-only");
+  await expect(row).toContainText("Linked PR status: to show the status of linked pull requests.");
+  await expect(page.locator("#warning-details")).toContainText("GH Reloaded never writes to GitHub.");
   await expect(warning(page).getByRole("button", { name: "How to add it" })).toBeVisible();
   await expect(warning(page).getByRole("button", { name: "Test again" })).toBeVisible();
   await expect(warning(page).getByRole("button", { name: "Later" })).toBeVisible();

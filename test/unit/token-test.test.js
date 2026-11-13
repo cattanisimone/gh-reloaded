@@ -191,7 +191,8 @@ test("last test label and session storage of codes only", async () => {
   const at = new Date(2026, 10, 13, 9, 12).getTime();
   const rec = { at, codes: { identity: "available", contents: "available", pulls: "denied", issues: "unverified", projects: "available", actions: "available" } };
   assert.equal(lastTestLabel(rec, new Date(2026, 10, 13, 18, 0)), "Today 09:12 · 3 of 5 OK");
-  assert.match(lastTestLabel(rec, new Date(2026, 10, 14, 8, 0)), /^\w+ \d+ 09:12 · 3 of 5 OK$/);
+  assert.equal(lastTestLabel(rec, new Date(2026, 10, 14, 8, 0)), "Yesterday 09:12 · 3 of 5 OK");
+  assert.match(lastTestLabel(rec, new Date(2026, 10, 16, 8, 0)), /^\w+ \d+ 09:12 · 3 of 5 OK$/);
   let stored = {};
   const area = { get: async () => ({ ...stored }), set: async (o) => { Object.assign(stored, o); } };
   await writeTest("t1", rec, area);

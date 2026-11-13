@@ -96,7 +96,17 @@ function resultHtml(e, r, { draft = false } = {}) {
   const summary = r.outcome === "not-working"
     ? "GitHub rejected this token: it is invalid, expired or revoked."
     : `${ok} of ${total} OK.${missing.length ? ` Missing permissions: ${missing.join(", ")}.` : ""}`;
-  return `<h3>${title}</h3>${r.outcome === "not-working" ? "" : `<ul class="tr-lines">${lines}</ul>`}<p class="tr-summary">${escapeHtml(summary)}</p>`;
+  const owner = e.isDefault ? "the owner" : e.owner || "the owner";
+  const advice = r.outcome === "not-working"
+    ? ["Replace this token: create a new one on GitHub, use Edit → Replace token to paste it, then press Test."]
+    : TYPES.filter((t) => req.has(t.id)).flatMap((t) => {
+      const l = r.lines[t.id];
+      if (l.status === STATUS.DENIED) return [`${t.label}: on GitHub, edit this token and set ${t.label} to Read-only, then press Test again.`];
+      if (l.status === STATUS.NOT_VERIFIED) return [`${t.label}: we can't tell why. If ${owner} requires approval or SSO, see the SSO note below, then press Test again.`];
+      return [];
+    });
+  const adviceHtml = advice.length ? `<ul class="tr-advice">${advice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>` : "";
+  return `<h3>${title}</h3>${r.outcome === "not-working" ? "" : `<ul class="tr-lines">${lines}</ul>`}<p class="tr-summary">${escapeHtml(summary)}</p>${adviceHtml}`;
 }
 
 function rowHtml(e) {
@@ -153,7 +163,16 @@ function renderWarning() {
   box.dataset.ids = w.ids.join(",");
   document.getElementById("warning-title").textContent = w.title;
   document.getElementById("warning-body").textContent = `Tokens: ${w.tokens.map((n) => `«${n}»`).join(", ")}. Features you already use keep working.`;
-  document.getElementById("warning-details").replaceChildren(...w.details.map((d) => Object.assign(document.createElement("li"), { textContent: d })));
+  const rows = w.perms.map((p) => {
+    const li = document.createElement("li");
+    li.className = "warning-perm";
+    const head = Object.assign(document.createElement("span"), { className: "wp-head" });
+    head.append(Object.assign(document.createElement("strong"), { textContent: p.name }), Object.assign(document.createElement("span"), { className: "wp-tag", textContent: "Read-only" }));
+    li.append(head, Object.assign(document.createElement("span"), { className: "wp-why", textContent: p.reasons.join(" ") }));
+    return li;
+  });
+  rows.push(Object.assign(document.createElement("li"), { className: "wp-note", textContent: "Read-only: GH Reloaded never writes to GitHub." }));
+  document.getElementById("warning-details").replaceChildren(...rows);
 }
 
 // --- Testing a saved token (a row) ---
@@ -388,9 +407,11 @@ function updatePanel() {
   const hasSaved = !!panel.saved.token && !panel.isNew && !panel.removed;
   $p("saved").hidden = !(hasSaved && !panel.replacing);
   $p("secret").hidden = !panel.replacing;
-  $p("which").textContent = panel.isDefault
-    ? "Used for every repository owner without a token of its own. If it fails, no other token is tried."
-    : `Repositories owned by ${normalizeOwner(panel.owner) || "this owner"} use this token; others use the default. If it fails, no other token is tried.`;
+  const ownerName = normalizeOwner(panel.owner) || "this owner";
+  const rules = panel.isDefault
+    ? ["Used for every repository owner without a token of its own.", "If it fails, GH Reloaded doesn't try another token."]
+    : [`Repositories owned by ${ownerName} use this token.`, "Every other owner uses the default token.", "If it fails, GH Reloaded doesn't try another token."];
+  $p("which").innerHTML = `<strong>Which token is used</strong><span class="which-save">Changes apply only when you press Save.</span><ul>${rules.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`;
   const changes = changedFields();
   const tag = $p("changes");
   tag.hidden = !changes.length;

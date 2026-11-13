@@ -91,5 +91,10 @@ export function warningFor({ features, tokens, version }) {
     seen.add(key);
     details.push(`GH Reloaded ${version} uses ${typeName(type)} (Read-only) for ${feature.name}: ${feature.reason}.`);
   }
-  return { title, tokens: [...named.values()], ids: [...named.keys()], details, maybe };
+  const perms = new Map();
+  for (const { feature, type } of maybe ? unknown : denied) {
+    if (!perms.has(type)) perms.set(type, { type, name: typeName(type), reasons: [] });
+    perms.get(type).reasons.push(`${feature.name}: ${feature.reason}.`);
+  }
+  return { title, tokens: [...named.values()], ids: [...named.keys()], details, perms: [...perms.values()], maybe };
 }
