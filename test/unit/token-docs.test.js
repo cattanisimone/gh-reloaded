@@ -33,9 +33,27 @@ test("no source claims classic tokens are unsupported", () => {
 });
 
 test("the token placeholder is type-neutral", () => {
-  assert.ok(js.includes("github_pat_… or ghp_…"));
+  assert.ok(html.includes("github_pat_… or ghp_…"));
 });
 
 test("Settings lists the Pull requests permission that PR triage needs", () => {
   assert.match(html, /<span>Pull requests\b/);
+});
+
+const privacy = read("PRIVACY.md");
+
+test("README and PRIVACY document Test, the session-only codes and Check a specific repository", () => {
+  for (const [name, text] of [["README", readme], ["PRIVACY", privacy]]) {
+    assert.ok(text.includes("**Test**"), `${name} names Test`);
+    assert.ok(text.includes("chrome.storage.session"), `${name} says where the outcome is kept`);
+    assert.ok(text.includes("Check a specific repository"), `${name} names the repository check`);
+    assert.doesNotMatch(text, /\*\*Verify access\*\*/, `${name} no longer documents the old Verify access button`);
+  }
+  assert.match(readme, /at most 7 read-only requests/);
+  assert.ok(readme.includes("screenshots/token-settings/light.svg") && readme.includes("screenshots/token-settings/dark.svg"));
+});
+
+test("Settings has the list, the panel, the Full guide and no Verify access button", () => {
+  for (const id of ['id="token-list"', 'id="token-panel"', 'id="full-guide"', 'id="token-warning"', 'id="notifications-permission-slot"']) assert.ok(html.includes(id), id);
+  assert.doesNotMatch(html + js, /Verify access/);
 });
