@@ -200,3 +200,21 @@ test("last test label and session storage of codes only", async () => {
   assert.deepEqual(await readTests(area), {});
   assert.doesNotMatch(JSON.stringify(rec), /github_pat|ghp_|acme/);
 });
+
+test("GraphQL FORBIDDEN from SAML or a token policy is unverified, not denied", async () => {
+  for (const message of ["Resource protected by organization SAML enforcement. You must grant your token access", "The 'acme' organization forbids access via a personal access tokens (classic)"]) {
+    const body = { data: null, errors: [{ type: "FORBIDDEN", message }] };
+    const res = await runTokenTest({ token: CLASSIC, owner: "acme" }, { fetch: fakeFetch([[/POST .*graphql/, { body }], ...happy()]) });
+    assert.equal(res.record.codes.projects, "unverified");
+    assert.equal(res.record.sso, true);
+  }
+});
+
+test("a revoked token counts 0 of 5, and overlapping session writes all survive", async () => {
+  assert.deepEqual(countOk({ at: 1, codes: { identity: "denied" } }), { ok: 0, total: 5 });
+  let stored = {};
+  const area = { get: async () => { await new Promise((r) => setTimeout(r, 5)); return { ...stored }; }, set: async (o) => { Object.assign(stored, o); } };
+  const rec = { at: 1, codes: { identity: "available" } };
+  await Promise.all([writeTest("A", rec, area), writeTest("B", rec, area)]);
+  assert.deepEqual(Object.keys((await readTests(area))).sort(), ["A", "B"]);
+});

@@ -319,3 +319,27 @@ test("Save adopts a draft result taken with exactly the saved token and owner; o
   await expect(r).toContainText("Not tested");
   expect((await storageOf(page, "session", "ghrTokenTests")).ghrTokenTests?.o).toBeUndefined();
 });
+
+test("Esc on another section does not discard the hidden token draft", async ({ context, page }) => {
+  await open(context, page);
+  await rowEdit(page, 1).click();
+  await page.locator("#panel-name").fill("Kept draft");
+  await page.locator('.nav a[href="#features"]').click();
+  await expect(page.locator("#tokens-section")).toBeHidden();
+  await page.keyboard.press("Escape");
+  await page.locator('.nav a[href="#tokens-section"]').click();
+  await expect(page.locator("#token-panel")).toBeVisible();
+  await expect(page.locator("#panel-name")).toHaveValue("Kept draft");
+});
+
+test("re-rendering the list keeps an open repository check and its focus", async ({ context, page }) => {
+  await mockApi(context, allGood);
+  await open(context, page);
+  await page.locator('#token-list .token-item').nth(1).locator('.token-row [data-act="test"]').click();
+  const item = page.locator("#token-list .token-item").nth(1);
+  await item.getByRole("button", { name: "Check a specific repository" }).click();
+  await item.locator(".diag-repo").fill("acme-demo/ap");
+  await page.locator('#token-list .token-item').first().locator('.token-row [data-act="test"]').click();
+  await expect(page.locator("#token-list .token-item").first()).toContainText("Works");
+  await expect(item.locator(".diag-repo")).toHaveValue("acme-demo/ap");
+});

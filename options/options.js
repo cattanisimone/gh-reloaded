@@ -124,11 +124,17 @@ function rowHtml(e) {
 function render() {
   const active = document.activeElement;
   const keep = active && tokensRoot.contains(active) && active.dataset?.act ? { act: active.dataset.act, id: active.dataset.id } : null;
+  // An open repository check keeps its DOM (typed values, a run in flight).
+  const oldHosts = new Map([...tokenListEl.querySelectorAll("[data-diag]")].map((h) => [h.dataset.diag, h]));
+  const inDiag = active && [...oldHosts.values()].some((h) => h.contains(active)) ? active : null;
   tokenListEl.innerHTML = entries().map(rowHtml).join("");
   for (const [id, diag] of rowDiags) {
     const host = tokenListEl.querySelector(`[data-diag="${CSS.escape(id)}"]`);
-    if (host) diag.attach(host);
+    if (!host) continue;
+    if (oldHosts.has(id)) host.replaceWith(oldHosts.get(id));
+    else diag.attach(host);
   }
+  if (inDiag && inDiag.isConnected && document.activeElement !== inDiag) inDiag.focus();
   if (keep) tokenListEl.querySelector(`[data-act="${keep.act}"][data-id="${CSS.escape(keep.id)}"]`)?.focus();
   renderWarning();
   if (!guideSet) {
@@ -162,7 +168,7 @@ async function testRow(id) {
     const res = await runTokenTest({ token: e.token, owner: e.owner }, { signal: ctl.signal });
     if (ctl.signal.aborted) return;
     results.set(id, res);
-    if (res.record) {
+    if (res.record && entryById(id)?.token === e.token && entryById(id)?.owner === e.owner) {
       tests[id] = res.record;
       await writeTest(id, res.record);
     }
@@ -527,7 +533,7 @@ $p("check").addEventListener("click", () => {
   }
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && panel && !panelEl.hidden) closePanel();
+  if (e.key === "Escape" && panel && !panelEl.hidden && !document.getElementById("tokens-section").hidden) closePanel();
 });
 
 function openGuide() {

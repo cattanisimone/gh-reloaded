@@ -156,7 +156,9 @@ export async function runTokenTest(rec, { signal, fetch = globalThis.fetch, time
       } else {
         const node = plan.mode === "viewer" ? data?.viewer : data?.organization;
         if (readable(node)) setLine("projects", { code: "available", line: line(STATUS.AVAILABLE) });
-        else if (types.includes("INSUFFICIENT_SCOPES") || types.includes("FORBIDDEN") || /resource not accessible by personal access token/i.test(msg)) {
+        else if (/saml|forbids access via|not been approved|pending|lifetime/i.test(msg)) {
+          setLine("projects", { code: "unverified", sso: true, line: line(STATUS.NOT_VERIFIED, "The organization's SSO or token policy may be blocking this token.", NO_PRIVATE) });
+        } else if (types.includes("INSUFFICIENT_SCOPES") || types.includes("FORBIDDEN") || /resource not accessible by personal access token/i.test(msg)) {
           setLine("projects", { code: "denied", line: line(STATUS.DENIED, "GitHub says the token lacks the permission to read Projects.") });
         } else setLine("projects", { code: "unverified", line: line(STATUS.NOT_VERIFIED, "GitHub returned no project data.", NO_PRIVATE) });
       }
@@ -201,6 +203,7 @@ export const STATE_LABEL = {
 
 // Count = available / types tested (optional ones included).
 export function countOk(rec) {
+  if (rec?.codes?.identity === "denied") return { ok: 0, total: TYPE_IDS.length };
   const tested = TYPE_IDS.filter((id) => rec?.codes?.[id] && rec.codes[id] !== "unchecked");
   return { ok: tested.filter((id) => rec.codes[id] === "available").length, total: tested.length };
 }
@@ -245,7 +248,15 @@ export async function readTests(area) {
   return Object.fromEntries(memory);
 }
 
-export async function writeTest(id, rec, area) {
+let queue = Promise.resolve();
+// Writes run one after another: each reads the whole map and writes it back.
+export function writeTest(id, rec, area) {
+  const run = queue.then(() => doWrite(id, rec, area));
+  queue = run.catch(() => {});
+  return run;
+}
+
+async function doWrite(id, rec, area) {
   const all = await readTests(area);
   if (rec) all[id] = rec;
   else delete all[id];
