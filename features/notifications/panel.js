@@ -189,7 +189,7 @@
       // Only while the engine runs: it is the only source of these states.
       if (engine.isActive()) {
         const notes = capabilityNotes(engine.getState());
-        const cov = el("section", { class: "ghnt-section" }, el("h3", { text: "Coverage and permissions" }), el("p", { class: "ghnt-hint", text: "Counts cover the loaded notifications only. When data is missing a notification is “Unverifiable”." }));
+        const cov = el("section", { class: "ghnt-section" }, el("h3", { text: "Coverage and permissions" }), el("p", { class: "ghnt-hint", text: "Counts cover this page and what a category check reads outside it (N+ while partial). Missing data: “Unverifiable”." }));
         for (const n of notes) cov.append(el("p", { class: "ghnt-warn", text: n }));
         if (notes.length) {
           const link = el("button", { type: "button", class: "ghnt-link", text: "Settings → GitHub tokens", "data-ghnt-focus": "settings" });

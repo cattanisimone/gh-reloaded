@@ -478,6 +478,14 @@ test("Grouped: the action starts the fill, headers N+, inert sub-lists of at mos
   const sub = page.locator('li.ghnt-sec-outside[data-ghnt-sec-outside="informational"]');
   await expect(sub.locator(".ghnt-out-item")).toHaveCount(5);
   await expect(sub.getByRole("button", { name: /^Show \d+ more outside this page$/ })).toBeVisible();
+  // The sub-list text starts where the section's label text starts (not at the header button's dot).
+  const aligned = await page.evaluate(() => {
+    const textLeft = (n) => { const r = document.createRange(); r.selectNodeContents(n); return r.getBoundingClientRect().left; };
+    const label = document.querySelector('li.ghnt-sec[data-ghnt-sec="informational"] .ghnt-label');
+    const meta = document.querySelector('li.ghnt-sec-outside[data-ghnt-sec-outside="informational"] .ghnt-out-meta');
+    return [textLeft(label), textLeft(meta)];
+  });
+  expect(Math.abs(aligned[0] - aligned[1])).toBeLessThanOrEqual(1);
   const heads = await page.locator(".ghnt-sec-btn .ghnt-count").allInnerTexts();
   expect(heads.every((t) => /\+$/.test(t.trim()))).toBe(true);
   await expect(line(page, "unverified")).toContainText("not verified yet. 1 of them can only be opened from GitHub's list: Next page ›");
@@ -555,4 +563,21 @@ test("the outside list is read-only: a click on an entry opens its thread, there
   await page.keyboard.press("Shift");
   const ring = await outside(page).locator("a").first().evaluate((a) => getComputedStyle(a).outlineStyle);
   expect(ring).not.toBe("none");
+});
+
+test("Stop and Load more look like GitHub's small default button: hover darkens, keyboard focus shows the 2px ring", async ({ context, page }) => {
+  const { world } = await boot(context, page, { pages: makePages(8, { reasonOf: (n) => (n >= 3000 && n % 7 === 0 ? "weird" : "subscribed") }), viewport: { width: 1280, height: 900 } });
+  await ready(world, page);
+  await cat(page, "unverifiable").click();
+  await fillDone(world);
+  const btn = page.getByRole("button", { name: "Load more" });
+  const rest = await btn.evaluate((b) => { const c = getComputedStyle(b); return [c.height, c.borderTopLeftRadius, c.borderTopWidth, c.fontSize, c.paddingLeft, c.backgroundColor]; });
+  expect(rest.slice(0, 5)).toEqual(["28px", "6px", "1px", "12px", "12px"]);
+  await btn.hover();
+  const hover = await btn.evaluate((b) => getComputedStyle(b).backgroundColor);
+  expect(hover).not.toBe(rest[5]);
+  await btn.focus();
+  await page.keyboard.press("Shift");
+  const ring = await btn.evaluate((b) => { const c = getComputedStyle(b); return [c.outlineStyle, c.outlineWidth, c.outlineOffset]; });
+  expect(ring).toEqual(["solid", "2px", "-2px"]);
 });
