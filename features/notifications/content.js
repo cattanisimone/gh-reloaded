@@ -43,7 +43,8 @@
     getWindowDays: () => windowDays,
     getApiQuery: () => {
       const q = nativeQuery();
-      return { key: q.key, all: q.params.all, participating: q.params.participating };
+      // A filter applied in memory (repo:, org:, reason:) is not a new read: only the API parameters are.
+      return { key: globalThis.GHNT_QUERY.paramsKey(q), all: q.params.all, participating: q.params.participating };
     },
     send: async (payload) => {
       if (!extensionAlive()) return null;

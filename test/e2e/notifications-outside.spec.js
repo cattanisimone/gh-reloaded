@@ -580,3 +580,58 @@ test("Stop and Load more look like GitHub's small default button: hover darkens,
   const ring = await btn.evaluate((b) => { const c = getComputedStyle(b); return [c.outlineStyle, c.outlineWidth, c.outlineOffset]; });
   expect(ring).toEqual(["solid", "2px", "-2px"]);
 });
+
+test("Group by Repository: the outside box goes after the last repository box, never between them", async ({ context, page }) => {
+  const { world } = await boot(context, page, { pages: makePages(3, { reasonOf: weirdFrom(1) }), hash: "#repo" });
+  await ready(world, page);
+  await cat(page, "unverifiable").click();
+  await expect(outside(page)).toHaveCount(1);
+  const where = await page.evaluate(() => {
+    const out = document.querySelector('[data-ghnt-triage="outside"]');
+    const boxes = [...document.querySelectorAll(".Box")].filter((b) => b.querySelector("li.notifications-list-item"));
+    return { boxes: boxes.length, afterLast: out.previousElementSibling === boxes.at(-1), between: boxes.slice(0, -1).some((b) => b.nextElementSibling === out) };
+  });
+  expect(where).toEqual({ boxes: 2, afterLast: true, between: false });
+});
+
+test("unselecting a category, Clear triage or picking another one ends the running fill; Stop is not left behind", async ({ context, page }) => {
+  const { world, log } = await boot(context, page, { pages: makePages(8, { reasonOf: () => "subscribed" }), delay: 400 });
+  await expect.poll(() => state(world).then((s) => s.phase)).toBe("ready");
+  await cat(page, "attention").click();
+  await expect(page.getByRole("button", { name: "Stop" })).toBeVisible();
+  await cat(page, "attention").click(); // unselect
+  expect(await world.evaluate("GHNotifications.fill.isRunning()")).toBe(false);
+  const n = notif(log).length;
+  await page.waitForTimeout(1500);
+  expect(notif(log).length).toBe(n);
+  await cat(page, "attention").click();
+  await expect(page.getByRole("button", { name: "Stop" })).toBeVisible();
+  await page.getByRole("button", { name: "Clear triage" }).click();
+  expect(await world.evaluate("GHNotifications.fill.isRunning()")).toBe(false);
+});
+
+test("keyboard focus on an outside entry's link survives a re-render", async ({ context, page }) => {
+  const { world } = await boot(context, page, { pages: makePages(8, { reasonOf: (n) => (n >= 3000 && n % 7 === 0 ? "weird" : "subscribed") }) });
+  await ready(world, page);
+  await cat(page, "unverifiable").click();
+  await fillDone(world);
+  const link = outside(page).locator(".ghnt-out-link").first();
+  const key = await outside(page).locator(".ghnt-out-item").first().getAttribute("data-ghnt-entry");
+  await link.focus();
+  await world.evaluate("GHNotifications.fill.start({ category: 'unverifiable', force: true })");
+  await fillDone(world);
+  await expect(page.locator(`[data-ghnt-entry="${key}"] a`)).toBeFocused();
+});
+
+test("the panel hint wraps to no more lines than the 1.7.0 hint at 1280 px, and its last line is visible at 1280x900", async ({ context, page }) => {
+  const { world } = await boot(context, page, { pages: makePages(2), viewport: { width: 1280, height: 900 } });
+  await ready(world, page);
+  await page.locator(".ghnt-triage-btn").click();
+  const hint = page.locator(".ghnt-section .ghnt-hint", { hasText: "Counts cover this page" });
+  await expect(hint).toBeVisible();
+  const lines = await hint.evaluate((n) => Math.round(n.getBoundingClientRect().height / parseFloat(getComputedStyle(n).lineHeight)));
+  const old = await hint.evaluate((n) => { const c = n.cloneNode(true); c.textContent = "Counts cover the loaded notifications only. When data is missing a notification is “Unverifiable”."; n.after(c); const l = Math.round(c.getBoundingClientRect().height / parseFloat(getComputedStyle(c).lineHeight)); c.remove(); return l; });
+  expect(lines).toBeLessThanOrEqual(old);
+  const bottom = await page.locator(".ghnt-panel, [role=dialog]").last().evaluate((n) => n.getBoundingClientRect().bottom);
+  expect(bottom).toBeLessThanOrEqual(900);
+});

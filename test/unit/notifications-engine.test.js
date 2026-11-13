@@ -223,7 +223,7 @@ test("the baseline read sends the native query's parameters and is read again wh
   assert.deepEqual(JSON.parse(JSON.stringify([env.engine.getApi().state, env.engine.getApi().pages, env.engine.getApi().next, env.engine.getApi().lastModified, env.engine.getApi().key])), ["ok", 1, true, "LM", ""]);
   await env.engine.scan();
   assert.equal(env.sent.filter((p) => p.api).length, 1, "same query, within 60 s: no second read");
-  env.query = { key: "is:unread", all: false, participating: false };
+  env.query = { key: "all=false;participating=false", all: false, participating: false };
   await env.engine.scan();
   assert.equal(env.sent.filter((p) => p.api).length, 2, "a new query is a new read");
   assert.equal(env.sent[1].apiQuery.all, false);

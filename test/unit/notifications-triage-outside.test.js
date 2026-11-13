@@ -28,12 +28,13 @@ test("triage-model: N+ while a next page exists, aria-label says the scope", () 
   const v = V(counts({ informational: 3 }), null, snap({}, { byCat: { informational: 7, attention: 0, waiting: 0, unverifiable: 0 }, m: 20 }));
   const c = v.cats.find((x) => x.id === "informational");
   assert.equal(c.count, "10+");
-  assert.match(c.aria, /^10\+ Informational of 20 notifications checked, more notifications not checked yet$/);
+  assert.equal(c.aria, "Informational, 10 found so far, 20 notifications checked, more not checked");
 });
 
 test("triage-model: bare N only when complete (no next page, nothing unverified)", () => {
   const v = V(counts({ informational: 3 }), null, snap({ next: false }, { outside: [], m: 6 }));
   assert.equal(v.cats.find((x) => x.id === "informational").count, "3");
+  assert.equal(v.cats.find((x) => x.id === "informational").aria, "Informational, 3 in all 6 notifications checked");
 });
 
 test("triage-model: 99+ cap with N+ and N", () => {

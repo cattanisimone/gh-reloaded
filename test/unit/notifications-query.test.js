@@ -78,3 +78,10 @@ test("query.narrowHref appends the reason token, drops paging, and is absent whe
   assert.equal(Q.narrowHref("/notifications?query=is%3Adone", "mention"), null);
   assert.equal(Q.narrowHref("/notifications", "nope"), null);
 });
+
+test("query.paramsKey: only all and participating change what the API read returns", () => {
+  assert.equal(Q.paramsKey(a("repo:acme/web")), Q.paramsKey(Q.analyse("/notifications")));
+  assert.equal(Q.paramsKey(a("reason:mention")), Q.paramsKey(a("org:acme")));
+  assert.notEqual(Q.paramsKey(a("is:unread")), Q.paramsKey(a("is:read")));
+  assert.notEqual(Q.paramsKey(a("reason:participating")), Q.paramsKey(Q.analyse("/notifications")));
+});

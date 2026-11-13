@@ -47,7 +47,7 @@ function rig({ pages = [], baseline = 1, apiPages, pageRows = [], me = "mira", c
   });
   fill.setQuery(Q.analyse(search));
   const baseItems = all.slice(0, baseline).flat();
-  fill.seed({ state: "ok", key: Q.analyse(search).key, items: baseItems, pages: baseline, next: all.length > baseline, at: clock.t, lastModified: "LM" });
+  fill.seed({ state: "ok", key: Q.paramsKey(Q.analyse(search)), items: baseItems, pages: baseline, next: all.length > baseline, at: clock.t, lastModified: "LM" });
   return { fill, log, clock, restPages: () => log.filter((l) => l.rest).map((l) => l.rest) };
 }
 rig.nextPage = null;
@@ -328,4 +328,24 @@ test("fill: Load more aims at 10 more matches than it has, not at the first targ
   assert.deepEqual(j(r.restPages()), [2]);
   assert.equal(await r.fill.start({ category: "unverifiable", force: true }), "target");
   assert.deepEqual(j(r.restPages()), [2, 3]);
+});
+
+test("fill: a stale cache's refresh counts in the 4 REST pages and is spaced like the others", async () => {
+  const r = rig({ pages: Array.from({ length: 8 }, () => []), baseline: 1 });
+  r.clock.t += 121_000;
+  await r.fill.start({ category: "unverifiable" });
+  const rest = r.log.filter((l) => l.rest);
+  assert.equal(rest.length, 4);
+  assert.deepEqual(j(rest.map((l) => l.rest)), [1, 2, 3, 4]);
+  for (let i = 1; i < rest.length; i++) assert.ok(rest[i].at - rest[i - 1].at >= 250);
+});
+
+test("fill: asking for another category ends the running fill first, even when that category was already filled", async () => {
+  const r = rig({ pages: [[pr(1, "unknown")], [pr(2, "unknown")], [pr(3, "unknown")], [pr(4, "unknown")], [pr(5, "unknown")], [pr(6, "unknown")]], baseline: 1, limits: { ms: 1e9 } });
+  await r.fill.start({ category: "informational" }); // filled
+  const running = r.fill.start({ category: "unverifiable", force: true });
+  assert.equal(r.fill.isRunning(), true);
+  assert.equal(await r.fill.start({ category: "informational" }), "filled");
+  assert.equal(await running, "aborted");
+  assert.equal(r.fill.isRunning(), false);
 });

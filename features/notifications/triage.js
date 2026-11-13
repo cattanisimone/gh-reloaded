@@ -141,6 +141,8 @@
     const btn = el("button", { type: "button", class: cls, "aria-pressed": String(cat.pressed), "aria-label": cat.aria, "data-ghnt-cat": cat.id }, dot(cat.id), el("span", { class: "ghnt-label", text: cat.label }), el("span", { class: "ghnt-count", text: cat.count }));
     btn.addEventListener("click", () => {
       selected = selected === cat.id ? null : cat.id;
+      // A fill belongs to the selected category: another one (or none) ends it.
+      if (fill?.isRunning()) fill.abort();
       render();
       if (selected) startFill({ category: selected });
     });
@@ -181,6 +183,7 @@
       const b = el("button", { type: "button", class: "ghnt-linkbtn", "data-ghnt-select": seg.cat, text: seg.label });
       b.addEventListener("click", () => {
         selected = seg.cat;
+        if (fill?.isRunning()) fill.abort();
         render();
         startFill({ category: selected });
       });
@@ -255,6 +258,7 @@
       clear.addEventListener("click", () => {
         const was = selected;
         selected = null;
+        if (fill?.isRunning()) fill.abort();
         render();
         // The status (and the focused button in it) is gone: keep the keyboard position.
         document.querySelector(`[data-ghnt-cat="${was}"]`)?.focus();
@@ -452,9 +456,12 @@
 
   // The box copies the list box's side margins, borders and radius, so it is
   // edge-to-edge exactly where the native list is, whatever the width.
+  // The box of the LAST native list: with Group by Repository there is one box per repository and the outside box goes after all of them.
+  const lastList = () => nativeLists().at(-1);
+
   function measureOutside() {
     const node = live.get("outside");
-    const ul = nativeLists()[0];
+    const ul = lastList();
     const box = ul && boxOf(ul);
     if (!node?.isConnected || !box || box === ul) return;
     const cs = getComputedStyle(box);
@@ -467,20 +474,34 @@
   }
 
   function syncOutside(list) {
-    const ul = nativeLists()[0];
+    const ul = lastList();
     const box = ul && boxOf(ul);
     // No list box (or a bare list): nothing is inserted; the next scan retries.
     if (!list || !list.k || !box || box === ul) return removeOutside();
     const old = live.get("outside");
     const next = buildOutside(list);
     if (old?.isConnected && old.dataset.ghntSig === next.outerHTML && box.nextElementSibling === old) return;
-    const key = old?.contains(document.activeElement) ? (document.activeElement.classList.contains("ghnt-out-more") ? ".ghnt-out-more" : null) : null;
+    const key = focusedOutside(old);
     next.dataset.ghntSig = next.outerHTML;
     old?.remove();
     box.after(next);
     live.set("outside", next);
-    if (key) next.querySelector(key)?.focus();
+    restoreOutside(next, key);
     measureOutside();
+  }
+
+  // Keyboard position inside an outside list: the "Show more" button or one entry's link, found again after a rebuild.
+  function focusedOutside(root) {
+    const a = document.activeElement;
+    if (!root?.contains(a)) return null;
+    if (a.classList.contains("ghnt-out-more")) return { more: true };
+    const entry = a.closest("[data-ghnt-entry]");
+    return entry ? { entry: entry.getAttribute("data-ghnt-entry") } : null;
+  }
+  function restoreOutside(root, key) {
+    if (!key) return;
+    if (key.more) root.querySelector(".ghnt-out-more")?.focus();
+    else [...root.querySelectorAll("[data-ghnt-entry]")].find((n) => n.getAttribute("data-ghnt-entry") === key.entry)?.querySelector("a")?.focus();
   }
 
   // Grouped: an inert sub-list under the rows of an expanded section. Not a row of
@@ -686,9 +707,12 @@
       if (sub) {
         const next = buildSub(sub);
         if (!subLi || !subLi.isConnected || subLi.outerHTML !== next.outerHTML) {
+          const key = focusedOutside(subLi);
           subLi?.remove();
           subLi = next;
           live.set(`sub-${id}`, subLi);
+          // Re-inserted by the order pass below: focus once it is in the list.
+          queueMicrotask(() => restoreOutside(subLi, key));
         }
         desired.push(subLi);
       } else if (subLi) {

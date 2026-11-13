@@ -108,5 +108,8 @@
     }
   }
 
-  global.GHNT_QUERY = { REASONS, analyse, matches, narrowHref, queryOf };
+  // What the API read depends on: all/unread and participating (the rest is filtered in memory).
+  const paramsKey = (q) => `all=${q.params.all};participating=${q.params.participating}`;
+
+  global.GHNT_QUERY = { REASONS, paramsKey, analyse, matches, narrowHref, queryOf };
 })(typeof window !== "undefined" ? window : globalThis);

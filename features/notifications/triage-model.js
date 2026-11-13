@@ -242,9 +242,12 @@
   // The "+" of a count: more may be reachable or unverified.
   const partialOf = (snap) => !!snap && snap.active && (snap.next || snap.summary.k > 0);
 
+  // "Needs attention, 7 found so far, 300 notifications checked, more not checked" while partial,
+  // "…, 7 in all 40 notifications checked" when complete; the unverified ones are named too.
   function checkedAria(id, n, plus, snap) {
     const s = snap.summary;
-    return `${n}${plus ? "+" : ""} ${labelOf(id)} of ${s.m} notifications checked${s.k ? `, ${s.k} not verified yet` : ""}${snap.next ? ", more notifications not checked yet" : ""}`;
+    const nv = s.k ? `, ${s.k} not verified yet` : "";
+    return plus ? `${labelOf(id)}, ${n} found so far, ${s.m} notifications checked${snap.next ? ", more not checked" : ""}${nv}` : `${labelOf(id)}, ${n} in all ${s.m} notifications checked`;
   }
 
   // Everything any layout shows, computed once: no renderer formats a count,

@@ -71,7 +71,7 @@
     function seed(api) {
       apiState = api?.state || "not-tried";
       apiAt = api?.at || 0;
-      if (!api || api.state !== "ok" || api.key !== q.key || !q.supported || api.at < clearedAt) return;
+      if (!api || api.state !== "ok" || api.key !== query.paramsKey(q) || !q.supported || api.at < clearedAt) return;
       let e = entries.get(q.key);
       if (!e || now() - e.at >= ITEMS_MS) {
         e = newEntry();
@@ -249,6 +249,8 @@
       if (e.retryAt && now() < e.retryAt) return "rate-limited";
       const category = opts.grouped ? null : opts.category || null;
       const filledKey = opts.grouped ? "*" : category;
+      // A fill for another category is over as soon as this one is asked for.
+      if (run && (run.grouped !== !!opts.grouped || run.category !== category)) abort();
       if (!opts.force && e.filled[filledKey]) return "filled";
       abort(true);
       const myGen = ++gen;
@@ -271,6 +273,11 @@
       let reason = "complete";
       emit();
       try {
+        // The refresh of a stale cache is a REST call like any other: it counts in the fill's 4 and is spaced.
+        if (now() - e.at >= ITEMS_MS && now() >= e.pollUntil) {
+          pages++;
+          lastRest = now();
+        }
         if (!(await refresh(e, myGen))) {
           if (myGen !== gen) return "aborted";
           reason = e.retryAt ? "rate-limited" : "error";
