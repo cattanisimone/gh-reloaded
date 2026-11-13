@@ -91,5 +91,5 @@ export function warningFor({ features, tokens, version }) {
     seen.add(key);
     details.push(`GH Reloaded ${version} uses ${typeName(type)} (Read-only) for ${feature.name}: ${feature.reason}.`);
   }
-  return { title, tokens: [...named.values()], details, maybe };
+  return { title, tokens: [...named.values()], ids: [...named.keys()], details, maybe };
 }

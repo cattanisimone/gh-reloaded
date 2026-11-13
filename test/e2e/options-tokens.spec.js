@@ -1,39 +1,74 @@
-// E2E: the token help box on the Settings page offers both token types.
-import { test, expect, backgroundWorker } from "./support/extension.js";
+// E2E: the GitHub tokens list on the Settings page: one row per token, no
+// secret in the page, the guide, and the save round-trip.
+import { test, expect, seedStorage } from "./support/extension.js";
+import { openOptions } from "./support/options.js";
+import { mockApi, allGood, storageOf } from "./support/tokens.js";
 
-async function openOptions(context, page) {
-  const worker = await backgroundWorker(context);
-  const id = new URL(worker.url()).host;
-  await page.goto(`chrome-extension://${id}/options/options.html#tokens-section`);
-}
+const DEF = "ghp_defaultAAAA";
+const OWN = "ghp_ownerBBBB";
+const two = {
+  githubTokens: [
+    { id: "d", name: "Personal", owner: "", token: DEF },
+    { id: "o", name: "Work", owner: "acme-org", token: OWN },
+  ],
+  defaultTokenId: "d",
+};
 
-test("the token box documents fine-grained and classic tokens", async ({ context, page }) => {
-  await openOptions(context, page);
-  const intro = page.locator("#tokens-section .section-intro");
-  const boxes = intro.locator(".permission-box");
-  await expect(boxes).toHaveCount(2);
+test("list shows default and owner rows without secrets", async ({ context, page }) => {
+  await seedStorage(context, two);
+  await openOptions(context, page, "#tokens-section");
+  const rows = page.locator("#token-list .token-item");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toContainText("Personal");
+  await expect(rows.nth(0)).toContainText("Used for: all repositories");
+  await expect(rows.nth(0)).toContainText("Not tested");
+  await expect(rows.nth(0)).toContainText("Never tested");
+  await expect(rows.nth(1)).toContainText("Work");
+  await expect(rows.nth(1)).toContainText("Used for: acme-org");
+  const html = await page.content();
+  for (const secret of [DEF, OWN, "AAAA", "BBBB"]) expect(html).not.toContain(secret);
+});
 
-  const fine = boxes.nth(0);
-  await expect(fine.locator(".permission-row")).toHaveCount(4);
-  await expect(fine).toContainText("Fine-grained");
-  await expect(intro.getByRole("link", { name: /Create a fine-grained token/ }))
-    .toHaveAttribute("href", "https://github.com/settings/personal-access-tokens/new");
+test("empty state opens the guide and sends nothing; with a token the guide is closed", async ({ context, page }) => {
+  const calls = await mockApi(context, allGood);
+  await openOptions(context, page, "#tokens-section");
+  await expect(page.locator("#token-list .token-item")).toHaveCount(1);
+  await expect(page.locator("#token-list")).toContainText("Not set");
+  await expect(page.locator("#full-guide")).toHaveJSProperty("open", true);
+  await expect(page.locator("#token-guide")).toContainText("New token? Three steps");
+  expect(calls).toHaveLength(0);
 
-  const classic = boxes.nth(1);
-  await expect(classic).toContainText("repo");
-  await expect(classic).toContainText("read:project");
-  await expect(classic).toContainText("public_repo");
-  const link = intro.getByRole("link", { name: /Create a classic token/ });
-  const href = new URL((await link.getAttribute("href")));
+  const second = await context.newPage();
+  await seedStorage(context, two);
+  await openOptions(context, second, "#tokens-section");
+  await expect(second.locator("#full-guide")).toHaveJSProperty("open", false);
+});
+
+test("technical words only inside the Full guide", async ({ context, page }) => {
+  await seedStorage(context, two);
+  await openOptions(context, page, "#tokens-section");
+  const outside = await page.locator("#tokens-section").evaluate((section) => {
+    const clone = section.cloneNode(true);
+    clone.querySelector("#full-guide").remove();
+    clone.querySelectorAll("[hidden]").forEach((el) => el.remove());
+    return clone.innerText;
+  });
+  expect(outside).not.toMatch(/capabilit|scope|fine-grained/i);
+  const guide = page.locator("#full-guide");
+  await guide.locator("summary").click();
+  await expect(guide).toContainText("Fine-grained token");
+  await expect(guide).toContainText("read:project");
+  await expect(guide.getByRole("link", { name: /Create a fine-grained token/ })).toHaveAttribute("href", "https://github.com/settings/personal-access-tokens/new");
+  const href = new URL(await guide.getByRole("link", { name: /Create a classic token/ }).getAttribute("href"));
   expect(href.origin + href.pathname).toBe("https://github.com/settings/tokens/new");
   expect(href.searchParams.get("scopes")).toBe("read:project,public_repo");
-
-  await expect(intro).not.toContainText(/not classic/i);
+  await expect(guide.locator(".permission-box")).toHaveCount(2);
+  await expect(guide.locator(".permission-box").first().locator(".permission-row")).toHaveCount(4);
 });
 
 test("the classic box looks like the fine-grained box", async ({ context, page }) => {
-  await openOptions(context, page);
-  const boxes = page.locator("#tokens-section .permission-box");
+  await openOptions(context, page, "#tokens-section");
+  const boxes = page.locator("#full-guide .permission-box");
   const style = (b) => b.evaluate((el) => {
     const c = getComputedStyle(el);
     const row = getComputedStyle(el.querySelector(".permission-row"));
@@ -43,21 +78,30 @@ test("the classic box looks like the fine-grained box", async ({ context, page }
 });
 
 test("the token placeholder does not imply a token type", async ({ context, page }) => {
-  await openOptions(context, page);
-  await expect(page.locator("#token-default input").first()).toHaveAttribute("placeholder", "github_pat_… or ghp_…");
+  await openOptions(context, page, "#tokens-section");
+  await page.locator("#token-list [data-act=edit]").first().click();
+  await expect(page.locator("#panel-secret")).toHaveAttribute("placeholder", "github_pat_… or ghp_…");
 });
 
-test("default and owner token save round-trip, last 4 shown", async ({ context, page }) => {
-  await openOptions(context, page);
-  await page.locator("#token-default .tok-secret").fill("ghp_defaultAAAA");
+test("a default and an owner token save from the panel, storage keys unchanged", async ({ context, page }) => {
+  await openOptions(context, page, "#tokens-section");
+  await page.locator('#token-list [data-act="edit"]').first().click();
+  await page.locator("#panel-secret").fill(DEF);
+  await page.locator("#panel-save").click();
+  await expect(page.locator("#tokens-status")).toContainText("Saved");
   await page.locator("#add-token").click();
-  await page.locator(".tok-name").fill("Work");
-  await page.locator(".tok-owner").fill("@acme-org");
-  await page.locator("#token-list .tok-secret").fill("ghp_ownerBBBB");
-  await page.locator("#save-tokens").click();
-  await expect(page.locator("#tokens-status")).toHaveText("Saved 2 tokens.");
+  await page.locator("#panel-name").fill("Work");
+  await page.locator("#panel-owner").fill("@acme-org");
+  await page.locator("#panel-secret").fill(OWN);
+  await page.locator("#panel-save").click();
+  await expect(page.locator("#token-list .token-item")).toHaveCount(2);
+  const stored = await storageOf(page, "local", ["githubTokens", "defaultTokenId"]);
+  expect(stored.githubTokens.map(({ name, owner, token }) => ({ name, owner, token }))).toEqual([
+    { name: "Default", owner: "", token: DEF },
+    { name: "Work", owner: "acme-org", token: OWN },
+  ]);
+  expect(stored.defaultTokenId).toBe(stored.githubTokens[0].id);
   await page.reload();
-  await expect(page.locator("#token-default .tok-hint")).toHaveText("Saved · ends in …AAAA");
-  await expect(page.locator("#token-list .tok-hint")).toHaveText("Saved · ends in …BBBB");
-  await expect(page.locator("#token-list .tok-owner")).toHaveValue("acme-org");
+  await expect(page.locator("#token-list .token-item")).toHaveCount(2);
+  await expect(page.locator("#token-list .token-item").nth(1)).toContainText("Used for: acme-org");
 });

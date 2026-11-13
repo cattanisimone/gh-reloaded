@@ -1,5 +1,7 @@
 import { getTokenRecords, getDefaultTokenId } from "../lib/github-api.js";
-import { parseTargets, runDiagnostics, summarize, STATUS_LABEL } from "./token-diagnostics.js";
+import { parseTargets, runDiagnostics, summarize, STATUS, STATUS_LABEL } from "./token-diagnostics.js";
+import { runTokenTest, tokenState, STATE_LABEL, countOk, lastTestLabel, readTests, writeTest, TYPES } from "./token-test.js";
+import { requiredTypes, enabledFeatures, warningFor, SWITCH_KEYS } from "./token-requirements.js";
 
 const { version } = chrome.runtime.getManifest();
 document.querySelectorAll("[data-version]").forEach((el) => {
@@ -19,113 +21,36 @@ function setStatus(el, text, kind) {
 
 // --- GitHub tokens ---
 // Stored as a flat list of {id, name, token, owner} plus `defaultTokenId`.
-// The page presents it as one fixed "Default token" slot (the record
-// `defaultTokenId` points at, owner always blank) and a list of owner
-// tokens, each of which must name the owner login (an organization or a
-// personal account) it's used for — a non-default token with no owner
-// would never be picked by lib/github-api.js's resolveTokenRecord().
-// Saved secrets are never written back into an input's value, only their
-// last 4 characters are shown, so `existingTokenById` is how a card whose
-// secret field was left blank on save keeps its previously-saved token.
+// The page presents it as one list: the default token first (the record
+// `defaultTokenId` points at, owner always blank) and the owner tokens, each
+// of which must name the owner login (an organization or a personal account)
+// it is used for: a non-default token with no owner would never be picked by
+// lib/github-api.js's resolveTokenRecord(). Editing happens in a side panel
+// on a draft; nothing is written until Save. A saved secret is never put back
+// into the page: the panel shows "Saved" and a Replace token button.
 
 function genId() {
   return `tok_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 const tokensRoot = document.getElementById("tokens");
-const defaultSlot = document.getElementById("token-default");
-const ownerList = document.getElementById("token-list");
+const tokenListEl = document.getElementById("token-list");
 const tokensStatus = document.getElementById("tokens-status");
-let existingTokenById = new Map();
-let defaultId = null;
+const shell = document.querySelector(".shell");
+const panelEl = document.getElementById("token-panel");
+const $p = (id) => document.getElementById(`panel-${id}`);
 
-function tokenHint(token) {
-  return token ? `Saved · ends in …${token.slice(-4)}` : "Not set";
-}
-
-function secretPlaceholder(token) {
-  return token ? "Paste a new token to replace it" : "github_pat_… or ghp_…";
-}
-
-function diagnosticsHtml(t) {
-  const f = (cls, label, placeholder, extra = "") =>
-    `<label class="field"><span class="field-label">${label}</span><input type="text" class="diag-in ${cls}" placeholder="${placeholder}" autocomplete="off" spellcheck="false"${extra} /><span class="field-error" hidden></span></label>`;
-  return `
-      <div class="diag" id="diag-${escapeHtml(t.id)}" hidden>
-        <div class="diag-head"><strong>Access diagnostics</strong><span class="diag-tag"></span></div>
-        <div class="diag-grid">
-          ${f("diag-repo", "Repository (required)", "owner/repo")}
-          ${f("diag-issue", "Issue # (optional)", "12")}
-          ${f("diag-project", "Project URL (optional)", "github.com/orgs/acme/projects/3")}
-          ${f("diag-file", "Private file (optional)", "docs/index.html")}
-        </div>
-        <div class="diag-actions"><button type="button" class="btn btn-secondary diag-run">Run checks</button><span class="diag-meta"></span></div>
-        <p class="diag-note">Name a repository to check. The token is checked against the targets you name only: a resource it cannot see does not prove a missing permission. Results stay on this page.</p>
-        <ul class="diag-results"></ul>
-        <p class="status diag-summary" role="status"></p>
-      </div>`;
-}
-
-function secretFieldHtml(t) {
-  const inputId = `secret-${t.id}`;
-  return `
-    <div class="field">
-      <div class="field-label"><label for="${escapeHtml(inputId)}">Token</label><span class="field-hint tok-hint">${escapeHtml(tokenHint(t.token))}</span></div>
-      <div class="input-row">
-        <input id="${escapeHtml(inputId)}" type="password" class="tok-secret" placeholder="${escapeHtml(secretPlaceholder(t.token))}" autocomplete="off" spellcheck="false" />
-        <button type="button" class="btn btn-secondary tok-test">Test</button>
-        <button type="button" class="btn btn-secondary tok-verify" aria-expanded="false" aria-controls="diag-${escapeHtml(t.id)}">Verify access</button>
-      </div>
-      <p class="status tok-test-status" role="status"></p>
-      ${diagnosticsHtml(t)}
-    </div>`;
-}
-
-function defaultCardHtml(t) {
-  return `
-    <div class="card token-card is-default" data-id="${escapeHtml(t.id)}">
-      <div class="card-head">
-        <span class="card-kicker"><span class="dot"></span>Default token</span>
-        <button type="button" class="link-btn danger tok-clear"${t.token ? "" : " hidden"}>Remove</button>
-      </div>
-      <p class="card-desc">Used for every repository owner without a token of its own below.</p>
-      ${secretFieldHtml(t)}
-    </div>`;
-}
-
-function ownerCardHtml(t) {
-  return `
-    <div class="card token-card" data-id="${escapeHtml(t.id)}">
-      <div class="card-head">
-        <span class="card-index">Owner token</span>
-        <button type="button" class="link-btn danger tok-remove">Remove</button>
-      </div>
-      <div class="field-grid">
-        <label class="field">
-          <span class="field-label">Name</span>
-          <input type="text" class="tok-name" placeholder="Work, Acme SSO…" value="${escapeHtml(t.name || "")}" />
-        </label>
-        <label class="field">
-          <span class="field-label">Owner login</span>
-          <input type="text" class="tok-owner" placeholder="acme-org" value="${escapeHtml(t.owner || "")}" spellcheck="false" />
-        </label>
-      </div>
-      ${secretFieldHtml(t)}
-    </div>`;
-}
-
-function renderTokens(list, savedDefaultId) {
-  abortAllDiagnostics();
-  existingTokenById = new Map(list.map((t) => [t.id, t.token || ""]));
-  const defaultRecord = list.find((t) => t.id === savedDefaultId);
-  defaultId = defaultRecord ? defaultRecord.id : genId();
-  defaultSlot.innerHTML = defaultCardHtml(defaultRecord || { id: defaultId });
-  ownerList.innerHTML = list.filter((t) => t !== defaultRecord).map(ownerCardHtml).join("");
-}
-
-function readSecret(card) {
-  return card.querySelector(".tok-secret").value.trim() || existingTokenById.get(card.dataset.id) || "";
-}
+let records = []; // saved {id, name, owner, token}
+let defaultId = genId();
+let tests = {}; // session outcome codes by token id
+let switches = {}; // stored feature switches
+const results = new Map(); // token id -> last result shown under its row
+const runs = new Map(); // token id -> AbortController of a row test in flight
+const rowDiags = new Map(); // token id -> diagnostics controller
+let laterHidden = false;
+let panel = null; // draft of the token open in the side panel
+let panelDiag = null;
+let guideSet = false;
 
 // Accepts "acme-org", "@acme-org" or a pasted "https://github.com/acme-org/…"
 // — all mean the same owner, and a near-miss here would otherwise fail
@@ -134,62 +59,220 @@ function normalizeOwner(value) {
   return value.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/^@/, "").split("/")[0];
 }
 
-async function testToken(card) {
-  const statusEl = card.querySelector(".tok-test-status");
-  const token = readSecret(card);
-  if (!token) {
-    setStatus(statusEl, "Paste a token first.", "error");
-    return;
+function entries() {
+  const def = records.find((t) => t.id === defaultId);
+  const owners = records.filter((t) => t.id !== defaultId);
+  return [{ id: defaultId, isDefault: true, name: def?.name || "", owner: "", token: def?.token || "" }, ...owners.map((t) => ({ ...t, isDefault: false }))];
+}
+const entryById = (id) => entries().find((e) => e.id === id);
+const displayName = (e) => (e.isDefault ? (e.name && e.name !== "Default" ? e.name : "Default token") : e.name || e.owner || "Owner token");
+const required = () => requiredTypes(enabledFeatures(switches));
+const timeLabel = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+// --- Rendering ---
+
+function stateOf(e) {
+  if (runs.has(e.id)) return { state: "testing", label: "Testing…", note: "" };
+  const st = tokenState({ hasToken: !!e.token, rec: tests[e.id] || null, required: required() });
+  return { ...st, label: STATE_LABEL[st.state] };
+}
+
+function resultHtml(e, r, { draft = false } = {}) {
+  if (!r) return "";
+  const req = required();
+  const title = draft ? "Result for the changes in this panel (not saved)" : `Test result · ${escapeHtml(displayName(e))}`;
+  if (r.outcome === "temporary" || r.outcome === "aborted") {
+    return `<h3>${title}</h3><p class="status error" role="status">Not checked: ${escapeHtml(r.message)}</p>`;
   }
-  setStatus(statusEl, "Testing…");
+  const lines = TYPES.map((t) => {
+    const l = r.lines[t.id];
+    const optional = !req.has(t.id);
+    const why = optional ? "No feature you turned on uses this, so it doesn't make the token Missing permissions." : "A feature you turned on needs it.";
+    const detail = l.status === STATUS.NOT_VERIFIED ? l.hint || l.reason || "We can't tell why." : l.status === STATUS.DENIED ? `${why} ${l.hint || ""}`.trim() : l.status === STATUS.AVAILABLE ? why : l.reason || why;
+    return `<li class="tr-line" data-type="${t.id}"><div><strong>${escapeHtml(t.label)}${optional ? ' <span class="opt">optional</span>' : ""}</strong><span class="diag-reason">${escapeHtml(detail)}</span></div><span class="diag-pill is-${l.status}">${STATUS_LABEL[l.status]}</span></li>`;
+  }).join("");
+  const { ok, total } = countOk(r.record);
+  const missing = TYPES.filter((t) => req.has(t.id) && r.record.codes[t.id] === "denied").map((t) => t.name);
+  const summary = r.outcome === "not-working"
+    ? "GitHub rejected this token: it is invalid, expired or revoked."
+    : `${ok} of ${total} OK.${missing.length ? ` Missing permissions: ${missing.join(", ")}.` : ""}`;
+  return `<h3>${title}</h3>${r.outcome === "not-working" ? "" : `<ul class="tr-lines">${lines}</ul>`}<p class="tr-summary">${escapeHtml(summary)}</p>`;
+}
+
+function rowHtml(e) {
+  const st = stateOf(e);
+  const rec = tests[e.id];
+  const last = !e.token ? "Never tested" : st.state === "testing" ? "Testing…" : lastTestLabel(rec);
+  const r = results.get(e.id);
+  const editing = panel && panel.id === e.id;
+  const id = escapeHtml(e.id);
+  return `
+    <li class="token-item${editing ? " is-editing" : ""}" data-id="${id}">
+      <div class="token-row">
+        <div class="tr-main"><span class="tr-name">${escapeHtml(displayName(e))}${e.isDefault && displayName(e) !== "Default token" ? ' <span class="tag">default</span>' : ""}</span><span class="tr-use">Used for: ${e.isDefault ? "all repositories" : escapeHtml(e.owner)}</span></div>
+        <div class="tr-state"><span class="state-pill state-${st.state}">${escapeHtml(st.label)}</span><span class="tr-last">${escapeHtml(st.note || last)}${st.note && e.token ? ` · ${escapeHtml(last)}` : ""}</span></div>
+        <div class="tr-actions">
+          ${e.token ? `<button type="button" class="btn btn-secondary" data-act="test" data-id="${id}"${runs.has(e.id) ? " disabled" : ""}>Test</button>` : ""}
+          <button type="button" class="btn btn-secondary" data-act="edit" data-id="${id}">Edit</button>
+        </div>
+      </div>
+      ${r ? `<div class="tr-result" data-result="${id}">${resultHtml(e, r)}<div class="tr-actions-row">${r.outcome === "done" ? `<button type="button" class="btn btn-secondary" data-act="advice">What should I do?</button>` : ""}<button type="button" class="btn btn-secondary" data-act="test" data-id="${id}"${runs.has(e.id) ? " disabled" : ""}>Test again</button><button type="button" class="btn btn-secondary" data-act="row-check" data-id="${id}" aria-expanded="${rowDiags.has(e.id)}">Check a specific repository</button></div></div>` : ""}
+      ${rowDiags.has(e.id) ? `<div class="diag-host" data-diag="${id}"></div>` : ""}
+    </li>`;
+}
+
+function render() {
+  const active = document.activeElement;
+  const keep = active && tokensRoot.contains(active) && active.dataset?.act ? { act: active.dataset.act, id: active.dataset.id } : null;
+  tokenListEl.innerHTML = entries().map(rowHtml).join("");
+  for (const [id, diag] of rowDiags) {
+    const host = tokenListEl.querySelector(`[data-diag="${CSS.escape(id)}"]`);
+    if (host) diag.attach(host);
+  }
+  if (keep) tokenListEl.querySelector(`[data-act="${keep.act}"][data-id="${CSS.escape(keep.id)}"]`)?.focus();
+  renderWarning();
+  if (!guideSet) {
+    document.getElementById("full-guide").open = !records.some((t) => t.token);
+    guideSet = true;
+  }
+  if (panel) updatePanel();
+}
+
+function renderWarning() {
+  const box = document.getElementById("token-warning");
+  const tokens = entries().filter((e) => e.token).map((e) => ({ id: e.id, name: displayName(e), codes: tests[e.id]?.codes || null }));
+  const w = laterHidden ? null : warningFor({ features: enabledFeatures(switches), tokens, version });
+  box.hidden = !w;
+  if (!w) return;
+  box.dataset.ids = w.ids.join(",");
+  document.getElementById("warning-title").textContent = w.title;
+  document.getElementById("warning-body").textContent = `Tokens: ${w.tokens.map((n) => `«${n}»`).join(", ")}. Features you already use keep working.`;
+  document.getElementById("warning-details").replaceChildren(...w.details.map((d) => Object.assign(document.createElement("li"), { textContent: d })));
+}
+
+// --- Testing a saved token (a row) ---
+
+async function testRow(id) {
+  const e = entryById(id);
+  if (!e || !e.token || runs.has(id)) return;
+  const ctl = new AbortController();
+  runs.set(id, ctl);
+  render();
   try {
-    const res = await fetch("https://api.github.com/user", {
-      headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" },
-    });
-    if (!res.ok) {
-      setStatus(statusEl, `Rejected by GitHub (HTTP ${res.status}) — check it hasn't expired or been revoked.`, "error");
-      return;
+    const res = await runTokenTest({ token: e.token, owner: e.owner }, { signal: ctl.signal });
+    if (ctl.signal.aborted) return;
+    results.set(id, res);
+    if (res.record) {
+      tests[id] = res.record;
+      await writeTest(id, res.record);
     }
-    const user = await res.json();
-    setStatus(statusEl, `Authenticated as ${user.login}. Feature access not checked: use Verify access.`, "ok");
   } catch (err) {
-    setStatus(statusEl, `Network error: ${err.message}`, "error");
+    if (ctl.signal.aborted) return;
+    results.set(id, { outcome: "temporary", message: "The test could not run. Try again." });
+  } finally {
+    if (runs.get(id) === ctl) runs.delete(id);
+    render();
   }
 }
 
-// --- Access diagnostics (per card, on request, in memory only) ---
-const diagRuns = new WeakMap(); // card -> AbortController of the run in flight
-
-function abortAllDiagnostics() {
-  tokensRoot.querySelectorAll(".token-card").forEach((card) => diagRuns.get(card)?.abort());
+async function testAll(ids) {
+  for (const id of ids) await testRow(id);
 }
 
-function diagEls(card) {
-  const q = (s) => card.querySelector(s);
-  return { panel: q(".diag"), tag: q(".diag-tag"), results: q(".diag-results"), summary: q(".diag-summary"), meta: q(".diag-meta"), run: q(".diag-run"), verify: q(".tok-verify") };
+// --- Check a specific repository (today's diagnostics, on demand) ---
+
+function createDiag({ getToken, getOwner }) {
+  let host = null;
+  let run = null;
+  const q = (s) => host.querySelector(s);
+  const html = `
+    <div class="diag">
+      <div class="diag-head"><strong>Check a specific repository</strong></div>
+      <div class="diag-grid">
+        ${[["repo", "Repository (required)", "owner/repo"], ["issue", "Issue # (optional)", "12"], ["project", "Project URL (optional)", "github.com/orgs/acme/projects/3"], ["file", "Private file (optional)", "docs/index.html"]]
+          .map(([k, l, ph]) => `<label class="field"><span class="field-label">${l}</span><input type="text" class="diag-in diag-${k}" placeholder="${ph}" autocomplete="off" spellcheck="false" /><span class="field-error" hidden></span></label>`).join("")}
+      </div>
+      <div class="diag-actions"><button type="button" class="btn btn-secondary diag-run">Run checks</button><span class="diag-meta"></span></div>
+      <p class="diag-note">Name a repository to check. The token is checked against the targets you name only: a resource it cannot see does not prove a missing permission. Results stay on this page.</p>
+      <ul class="diag-results"></ul>
+      <p class="status diag-summary" role="status"></p>
+    </div>`;
+  const values = { repo: "", issue: "", project: "", file: "" };
+  const self = {
+    attach(el) {
+      host = el;
+      host.innerHTML = html;
+      for (const k of Object.keys(values)) q(`.diag-${k}`).value = values[k];
+      if (!values.repo && getOwner()) q(".diag-repo").value = values.repo = `${getOwner()}/`;
+      host.addEventListener("input", (ev) => {
+        if (!ev.target.matches(".diag-in")) return;
+        for (const k of Object.keys(values)) values[k] = q(`.diag-${k}`).value;
+        self.reset("Targets changed: run the checks again.");
+      });
+      q(".diag-run").addEventListener("click", () => self.run());
+      if (self.last) q(".diag-results").replaceChildren(...self.last.map(renderDiagResult)), (q(".diag-meta").textContent = self.meta || "");
+    },
+    focus() { q(".diag-repo")?.focus(); },
+    reset(message = "") {
+      run?.abort();
+      run = null;
+      self.last = null;
+      if (!host) return;
+      q(".diag-results").replaceChildren();
+      q(".diag-meta").textContent = "";
+      const btn = q(".diag-run");
+      btn.disabled = false;
+      btn.textContent = "Run checks";
+      setStatus(q(".diag-summary"), message);
+    },
+    async run() {
+      if (run) return;
+      const els = { summary: q(".diag-summary"), btn: q(".diag-run") };
+      const token = getToken();
+      const parsed = parseTargets(values);
+      for (const k of ["repo", "issue", "project", "file"]) {
+        const input = q(`.diag-${k}`);
+        const err = input.parentElement.querySelector(".field-error");
+        err.textContent = parsed.errors[k] || "";
+        err.hidden = !parsed.errors[k];
+        if (parsed.errors[k]) input.setAttribute("aria-invalid", "true");
+        else input.removeAttribute("aria-invalid");
+      }
+      q(".diag-results").replaceChildren();
+      q(".diag-meta").textContent = "";
+      if (!token) return setStatus(els.summary, "Paste a token first.", "error");
+      if (!parsed.ok) return setStatus(els.summary, "Fix the highlighted fields.", "error");
+      const ctl = new AbortController();
+      run = ctl;
+      els.btn.disabled = true;
+      els.btn.textContent = "Checking…";
+      setStatus(els.summary, "Checking…");
+      try {
+        const out = await runDiagnostics(token, values, { signal: ctl.signal });
+        if (ctl.signal.aborted) return;
+        self.last = out;
+        self.meta = `Checked ${timeLabel()}`;
+        q(".diag-results").replaceChildren(...out.map(renderDiagResult));
+        q(".diag-meta").textContent = self.meta;
+        setStatus(els.summary, summarize(out), "");
+      } catch (err) {
+        if (ctl.signal.aborted) return;
+        setStatus(els.summary, "The checks could not run. Try again.", "error");
+      } finally {
+        if (run === ctl) {
+          run = null;
+          els.btn.disabled = false;
+          els.btn.textContent = "Run checks";
+        }
+      }
+    },
+    last: null,
+    meta: "",
+  };
+  return self;
 }
 
-function diagTag(card) {
-  const { tag } = diagEls(card);
-  const typed = card.querySelector(".tok-secret").value.trim();
-  const saved = existingTokenById.get(card.dataset.id) || "";
-  tag.classList.toggle("is-unsaved", !!typed);
-  tag.textContent = typed ? "Unsaved token" : saved ? `Saved token …${saved.slice(-4)}` : "No token";
-}
-
-function clearDiagnostics(card, message = "") {
-  diagRuns.get(card)?.abort();
-  const { results, summary, meta, run } = diagEls(card);
-  const had = results.childElementCount > 0 || diagRuns.has(card);
-  results.replaceChildren();
-  meta.textContent = "";
-  run.disabled = false;
-  run.textContent = "Run checks";
-  setStatus(summary, had ? message : "");
-  diagRuns.delete(card);
-}
-
-function renderResult(r) {
+function renderDiagResult(r) {
   const li = document.createElement("li");
   li.className = "diag-result";
   const text = document.createElement("div");
@@ -223,152 +306,272 @@ function renderResult(r) {
   return li;
 }
 
-function readTargets(card) {
-  const v = (s) => card.querySelector(s).value;
-  return { repo: v(".diag-repo"), issue: v(".diag-issue"), project: v(".diag-project"), file: v(".diag-file") };
+// --- Side panel (a draft of one token; nothing is written before Save) ---
+
+const panelSecret = () => (panel.isNew || panel.replacing ? panel.secret.trim() : panel.saved.token);
+const panelOwner = () => (panel.isDefault ? "" : normalizeOwner(panel.owner));
+const tokenOrOwnerChanged = () => panel.isNew || (panel.replacing && panel.secret.trim() !== "") || panelOwner() !== (panel.saved.owner || "");
+
+function changedFields() {
+  const f = [];
+  if (panel.removed) return ["Token removed"];
+  if (panel.name.trim() !== (panel.saved.name === "Default" ? "" : panel.saved.name || "")) f.push("Name");
+  if (!panel.isDefault && panelOwner() !== (panel.saved.owner || "")) f.push("GitHub owner");
+  if (panel.replacing && panel.secret.trim()) f.push("Token");
+  return f;
 }
 
-async function verifyAccess(card) {
-  const els = diagEls(card);
-  if (diagRuns.has(card)) return; // one run at a time
-  const token = readSecret(card);
-  const setFieldError = (cls, msg) => {
-    const input = card.querySelector(cls);
-    const err = input.parentElement.querySelector(".field-error");
-    err.textContent = msg || "";
-    err.hidden = !msg;
-    if (msg) input.setAttribute("aria-invalid", "true");
-    else input.removeAttribute("aria-invalid");
-  };
-  const parsed = parseTargets(readTargets(card));
-  for (const k of ["repo", "issue", "project", "file"]) setFieldError(`.diag-${k}`, parsed.errors[k]);
-  els.results.replaceChildren();
-  els.meta.textContent = "";
-  if (!token) {
-    setStatus(els.summary, "Paste a token first.", "error");
-    return;
+function openPanel(id) {
+  if (panel) closePanel({ keepFocus: true });
+  const isNew = id === null;
+  const e = isNew ? { id: genId(), isDefault: false, name: "", owner: "", token: "" } : entryById(id);
+  if (!e) return;
+  panel = { id: e.id, isNew, isDefault: e.isDefault, saved: { name: e.name, owner: e.owner, token: e.token }, name: e.name === "Default" ? "" : e.name, owner: e.owner, secret: "", replacing: !e.token, removed: false, draftResult: null, testCtl: null };
+  panelDiag = createDiag({ getToken: () => panelSecret(), getOwner: () => panelOwner() });
+  $p("title").textContent = isNew ? "Add token" : e.isDefault ? "Edit default token" : "Edit token";
+  $p("name").value = panel.name;
+  $p("owner").value = panel.owner;
+  $p("secret").value = "";
+  $p("owner-field").hidden = panel.isDefault;
+  $p("remove").hidden = isNew || !e.token;
+  $p("status").textContent = "";
+  $p("check").setAttribute("aria-expanded", "false");
+  $p("diag").hidden = true;
+  $p("result").hidden = true;
+  clearErrors();
+  panelEl.hidden = false;
+  syncSpace();
+  updatePanel();
+  render();
+  $p("name").focus();
+}
+
+function closePanel({ keepFocus = false } = {}) {
+  if (!panel) return;
+  const id = panel.id;
+  panel.testCtl?.abort();
+  panel = null;
+  panelDiag = null;
+  panelEl.hidden = true;
+  syncSpace();
+  render();
+  if (!keepFocus) (tokenListEl.querySelector(`[data-act="edit"][data-id="${CSS.escape(id)}"]`) || document.getElementById("add-token")).focus();
+}
+
+function syncSpace() {
+  const visible = !document.getElementById("tokens-section").hidden;
+  shell.classList.toggle("panel-open", !!panel && visible);
+}
+
+function clearErrors() {
+  for (const k of ["owner", "secret"]) {
+    $p(`${k}-error`).hidden = true;
+    $p(k).removeAttribute("aria-invalid");
   }
-  if (!parsed.ok) {
-    setStatus(els.summary, "Fix the highlighted fields.", "error");
+}
+
+function fieldError(k, msg) {
+  const el = $p(`${k}-error`);
+  el.textContent = msg;
+  el.hidden = false;
+  $p(k).setAttribute("aria-invalid", "true");
+  $p(k).focus();
+}
+
+function updatePanel() {
+  const hasSaved = !!panel.saved.token && !panel.isNew && !panel.removed;
+  $p("saved").hidden = !(hasSaved && !panel.replacing);
+  $p("secret").hidden = !panel.replacing;
+  $p("which").textContent = panel.isDefault
+    ? "Used for every repository owner without a token of its own. If it fails, no other token is tried."
+    : `Repositories owned by ${normalizeOwner(panel.owner) || "this owner"} use this token; others use the default. If it fails, no other token is tried.`;
+  const changes = changedFields();
+  const tag = $p("changes");
+  tag.hidden = !changes.length;
+  tag.textContent = changes.length ? (panel.removed ? "Token will be removed when you save" : `${changes.length} unsaved change${changes.length === 1 ? "" : "s"}: ${changes.join(", ")}`) : "";
+  const secret = panelSecret();
+  const hint = !secret ? "Enter a token to test it" : !panel.isDefault && !panelOwner() ? "Enter the GitHub owner to test it" : "";
+  const busy = !!panel.testCtl || runs.has(panel.id);
+  $p("test").disabled = !!hint || busy || panel.removed;
+  $p("test").textContent = busy ? "Testing…" : "Test";
+  const th = $p("test-hint");
+  th.hidden = !hint;
+  th.textContent = hint;
+  const res = $p("result");
+  const draft = tokenOrOwnerChanged();
+  const shown = draft ? panel.draftResult : results.get(panel.id);
+  res.hidden = !shown || panel.removed;
+  res.innerHTML = shown && !panel.removed ? resultHtml({ ...entryById(panel.id), name: panel.name, isDefault: panel.isDefault }, shown, { draft }) : "";
+}
+
+// Editing the token or the owner invalidates a test in flight and any result
+// taken with other values.
+function panelEdited(kind) {
+  if (kind === "name") return;
+  const running = panel.testCtl || runs.get(panel.id);
+  panel.testCtl?.abort();
+  runs.get(panel.id)?.abort();
+  runs.delete(panel.id);
+  panel.testCtl = null;
+  panelDiag?.reset("Token or owner changed: run the checks again.");
+  if (running) panel.draftResult = { outcome: "aborted", message: "The token or owner changed while testing. Test again." };
+  else panel.draftResult = null;
+  if (running && !tokenOrOwnerChanged()) results.set(panel.id, { outcome: "aborted", message: "The token or owner changed while testing. Test again." });
+}
+
+async function panelTest() {
+  if (!panel || $p("test").disabled) return;
+  if (!tokenOrOwnerChanged()) {
+    await testRow(panel.id);
     return;
   }
   const ctl = new AbortController();
-  diagRuns.set(card, ctl);
-  els.run.disabled = true;
-  els.run.textContent = "Checking…";
-  setStatus(els.summary, "Checking…");
+  const token = panelSecret();
+  const owner = panelOwner();
+  panel.testCtl = ctl;
+  panel.draftResult = null;
+  updatePanel();
   try {
-    const results = await runDiagnostics(token, readTargets(card), { signal: ctl.signal });
-    if (ctl.signal.aborted) return;
-    els.results.replaceChildren(...results.map(renderResult));
-    els.meta.textContent = `Checked ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-    setStatus(els.summary, summarize(results), "");
+    const res = await runTokenTest({ token, owner }, { signal: ctl.signal });
+    if (ctl.signal.aborted || !panel) return;
+    panel.draftResult = { ...res, token, owner };
   } catch (err) {
-    if (ctl.signal.aborted) return;
-    setStatus(els.summary, "The checks could not run. Try again.", "error");
+    if (ctl.signal.aborted || !panel) return;
+    panel.draftResult = { outcome: "temporary", message: "The test could not run. Try again." };
   } finally {
-    if (diagRuns.get(card) === ctl) {
-      diagRuns.delete(card);
-      els.run.disabled = false;
-      els.run.textContent = "Run checks";
-    }
+    if (panel && panel.testCtl === ctl) panel.testCtl = null;
+    if (panel) updatePanel();
   }
 }
 
-function toggleDiagnostics(card) {
-  const { panel, verify } = diagEls(card);
-  const open = panel.hidden;
-  panel.hidden = !open;
-  verify.setAttribute("aria-expanded", String(open));
-  if (!open) return;
-  diagTag(card);
-  const repo = card.querySelector(".diag-repo");
-  const owner = card.querySelector(".tok-owner");
-  if (owner && !repo.value && normalizeOwner(owner.value)) repo.value = `${normalizeOwner(owner.value)}/`;
-  repo.focus();
+async function savePanel() {
+  clearErrors();
+  $p("status").textContent = "";
+  const p = panel;
+  const others = records.filter((t) => t.id !== p.id);
+  let updated = null;
+  if (!p.removed) {
+    const owner = panelOwner();
+    const token = panelSecret();
+    if (!p.isDefault && !owner) return fieldError("owner", "Enter the GitHub owner this token is for.");
+    if (!token) return fieldError("secret", "Paste a token to save.");
+    if (!p.isDefault && others.some((t) => t.id !== defaultId && (t.owner || "").toLowerCase() === owner.toLowerCase())) {
+      return fieldError("owner", `${owner} already has a token — keep one per owner.`);
+    }
+    updated = p.isDefault
+      ? { id: p.id, name: p.name.trim() || "Default", owner: "", token }
+      : { id: p.id, name: p.name.trim(), owner, token };
+  }
+  const defaultRec = p.isDefault ? updated : records.find((t) => t.id === defaultId);
+  const ownerRecs = records.filter((t) => t.id !== defaultId);
+  const owners = p.isDefault ? ownerRecs : p.isNew ? [...ownerRecs, ...(updated ? [updated] : [])] : ownerRecs.flatMap((t) => (t.id === p.id ? (updated ? [updated] : []) : [t]));
+  const next = [...(defaultRec ? [defaultRec] : []), ...owners];
+  try {
+    await chrome.storage.local.set({ githubTokens: next, defaultTokenId: defaultRec ? defaultRec.id : null });
+  } catch (err) {
+    setStatus($p("status"), `Couldn't save the token: ${err?.message || "storage error"}. Your changes are kept.`, "error");
+    return;
+  }
+  const changed = p.removed || tokenOrOwnerChanged();
+  const adopt = !p.removed && p.draftResult && p.draftResult.record && p.draftResult.token === updated.token && p.draftResult.owner === updated.owner;
+  p.testCtl?.abort();
+  runs.get(p.id)?.abort();
+  runs.delete(p.id);
+  records = next;
+  if (p.isDefault && !updated) defaultId = genId();
+  if (adopt) {
+    tests[p.id] = p.draftResult.record;
+    results.set(p.id, p.draftResult);
+    await writeTest(p.id, p.draftResult.record);
+  } else if (changed) {
+    delete tests[p.id];
+    results.delete(p.id);
+    await writeTest(p.id, null);
+  }
+  if (p.removed) rowDiags.delete(p.id);
+  setStatus(tokensStatus, p.removed ? "Token removed." : `Saved ${displayName({ ...updated, isDefault: p.isDefault })}.`, "ok");
+  closePanel();
 }
 
-tokensRoot.addEventListener("input", (e) => {
-  const card = e.target.closest(".token-card");
-  if (!card) return;
-  if (e.target.matches(".tok-secret")) {
-    diagTag(card);
-    clearDiagnostics(card, "Token changed: run the checks again.");
-  } else if (e.target.matches(".diag-in")) {
-    clearDiagnostics(card, "Targets changed: run the checks again.");
+panelEl.addEventListener("input", (e) => {
+  if (!panel) return;
+  if (e.target.id === "panel-name") panel.name = e.target.value;
+  else if (e.target.id === "panel-owner" || e.target.id === "panel-secret") {
+    if (e.target.id === "panel-owner") panel.owner = e.target.value;
+    else panel.secret = e.target.value;
+    panelEdited(e.target.id);
+    $p(e.target.id === "panel-owner" ? "owner-error" : "secret-error").hidden = true;
+    e.target.removeAttribute("aria-invalid");
+    render();
+    return;
+  }
+  updatePanel();
+});
+$p("replace").addEventListener("click", () => { panel.replacing = true; updatePanel(); $p("secret").focus(); });
+$p("close").addEventListener("click", () => closePanel());
+$p("discard").addEventListener("click", () => closePanel());
+$p("save").addEventListener("click", savePanel);
+$p("test").addEventListener("click", panelTest);
+$p("remove").addEventListener("click", () => {
+  panel.removed = true;
+  panelEdited("secret");
+  updatePanel();
+});
+$p("check").addEventListener("click", () => {
+  const open = $p("diag").hidden;
+  $p("diag").hidden = !open;
+  $p("check").setAttribute("aria-expanded", String(open));
+  if (open) {
+    panelDiag.attach($p("diag"));
+    panelDiag.focus();
   }
 });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && panel && !panelEl.hidden) closePanel();
+});
+
+function openGuide() {
+  const g = document.getElementById("full-guide");
+  g.open = true;
+  g.scrollIntoView({ block: "start" });
+  g.querySelector("summary").focus();
+}
 
 tokensRoot.addEventListener("click", (e) => {
-  const card = e.target.closest(".token-card");
-  if (!card) return;
-  if (e.target.closest(".tok-verify")) {
-    toggleDiagnostics(card);
-  } else if (e.target.closest(".diag-run")) {
-    verifyAccess(card);
-  } else if (e.target.closest(".tok-remove")) {
-    diagRuns.get(card)?.abort();
-    card.remove();
-  } else if (e.target.closest(".tok-clear")) {
-    existingTokenById.delete(card.dataset.id);
-    const input = card.querySelector(".tok-secret");
-    input.value = "";
-    input.placeholder = secretPlaceholder("");
-    card.querySelector(".tok-hint").textContent = tokenHint("");
-    card.querySelector(".tok-clear").hidden = true;
-    diagTag(card);
-    clearDiagnostics(card, "Token removed: run the checks again.");
-    setStatus(card.querySelector(".tok-test-status"), "Removed — save to apply.");
-  } else if (e.target.closest(".tok-test")) {
-    testToken(card);
+  const btn = e.target.closest("[data-act]");
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.act === "test") testRow(id);
+  else if (btn.dataset.act === "edit") openPanel(id);
+  else if (btn.dataset.act === "advice") openGuide();
+  else if (btn.dataset.act === "row-check") {
+    if (rowDiags.has(id)) rowDiags.delete(id);
+    else rowDiags.set(id, createDiag({ getToken: () => entryById(id)?.token || "", getOwner: () => entryById(id)?.owner || "" }));
+    render();
+    rowDiags.get(id)?.focus();
   }
 });
 
-document.getElementById("add-token").addEventListener("click", () => {
-  ownerList.insertAdjacentHTML("beforeend", ownerCardHtml({ id: genId() }));
-  ownerList.lastElementChild.querySelector(".tok-name").focus();
-});
-
-document.getElementById("save-tokens").addEventListener("click", async () => {
-  const defaultToken = readSecret(defaultSlot.querySelector(".token-card"));
-  const owners = Array.from(ownerList.querySelectorAll(".token-card"))
-    .map((card) => ({
-      id: card.dataset.id,
-      name: card.querySelector(".tok-name").value.trim(),
-      owner: normalizeOwner(card.querySelector(".tok-owner").value),
-      token: readSecret(card),
-    }))
-    .filter((t) => t.name || t.owner || t.token);
-
-  const incomplete = owners.find((t) => !t.owner || !t.token);
-  if (incomplete) {
-    const label = incomplete.name || incomplete.owner || "An owner token";
-    setStatus(tokensStatus, `${label} needs ${incomplete.owner ? "a token" : "an owner login"}.`, "error");
-    return;
-  }
-  const seen = new Set();
-  const duplicate = owners.find((t) => {
-    const key = t.owner.toLowerCase();
-    if (seen.has(key)) return true;
-    seen.add(key);
-    return false;
-  });
-  if (duplicate) {
-    setStatus(tokensStatus, `${duplicate.owner} has more than one token — keep one per owner.`, "error");
-    return;
-  }
-
-  const list = defaultToken ? [{ id: defaultId, name: "Default", owner: "", token: defaultToken }, ...owners] : owners;
-  const savedDefaultId = defaultToken ? defaultId : null;
-  await chrome.storage.local.set({ githubTokens: list, defaultTokenId: savedDefaultId });
-  renderTokens(list, savedDefaultId);
-  setStatus(tokensStatus, `Saved ${list.length} token${list.length === 1 ? "" : "s"}.`, "ok");
-});
+document.getElementById("add-token").addEventListener("click", () => openPanel(null));
+document.getElementById("warning-how").addEventListener("click", openGuide);
+document.getElementById("warning-later").addEventListener("click", () => { laterHidden = true; renderWarning(); });
+document.getElementById("warning-retest").addEventListener("click", () => testAll((document.getElementById("token-warning").dataset.ids || "").split(",").filter(Boolean)));
 
 async function loadTokens() {
-  renderTokens(await getTokenRecords(), await getDefaultTokenId());
+  records = await getTokenRecords();
+  const savedDefault = await getDefaultTokenId();
+  defaultId = records.some((t) => t.id === savedDefault) ? savedDefault : genId();
+  tests = await readTests();
+  switches = await chrome.storage.local.get(SWITCH_KEYS);
+  render();
   tokensRoot.dataset.loaded = "true";
 }
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !SWITCH_KEYS.some((k) => changes[k])) return;
+  for (const k of SWITCH_KEYS) if (changes[k]) switches[k] = changes[k].newValue;
+  render();
+});
 
 // --- Quick-create shortcuts ---
 // A user-defined list of {label, url, project, color, icon} — this
@@ -702,6 +905,7 @@ function route() {
   });
   const active = NAV_LINKS.find((a) => a.dataset.panel === panel.id);
   if (active) active.scrollIntoView({ block: "nearest", inline: "nearest" });
+  syncSpace();
   const focusEl = target && target !== panel ? target.querySelector("h2, h1") || target : panel.querySelector("h1");
   focusEl.scrollIntoView({ block: "start" });
   focusEl.focus({ preventScroll: true });
