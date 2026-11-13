@@ -191,6 +191,10 @@
       getState: () => state,
       // The raw baseline read of the Notifications API (for the fill's cache).
       getApi: () => api,
+      // A native action changed the inbox: the next scan reads the API again.
+      invalidateApi() {
+        api = { ...api, at: 0 };
+      },
       subscribe(fn) {
         listeners.add(fn);
         return () => listeners.delete(fn);

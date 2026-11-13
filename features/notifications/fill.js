@@ -39,6 +39,7 @@
     let run = null; // { category, grouped, gen, startedAt }
     let visibleWaiters = [];
     let pageHref = "";
+    let clearedAt = -1;
     const stats = { fills: 0, rest: 0, notModified: 0, batches: 0, lastElapsedMs: 0, lastStopReason: "", nextClicks: 0 };
 
     const emit = () => {
@@ -70,7 +71,7 @@
     function seed(api) {
       apiState = api?.state || "not-tried";
       apiAt = api?.at || 0;
-      if (!api || api.state !== "ok" || api.key !== q.key || !q.supported) return;
+      if (!api || api.state !== "ok" || api.key !== q.key || !q.supported || api.at < clearedAt) return;
       let e = entries.get(q.key);
       if (!e || now() - e.at >= ITEMS_MS) {
         e = newEntry();
@@ -393,6 +394,7 @@
       abort();
       entries.clear();
       entry = null;
+      clearedAt = now();
     }
 
     function reset() {
@@ -400,6 +402,7 @@
       apiState = "not-tried";
       q = query.analyse("/notifications");
       pageHref = "";
+      clearedAt = -1;
     }
 
     return {

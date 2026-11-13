@@ -19,6 +19,13 @@
 // and stable classes only, never a CSS-module class; no other container is
 // used. Counts cover the rows loaded on the page.
 //
+// Beyond the page: picking a category (or the Grouped action "Check notifications
+// outside this page") asks the fill controller (fill.js) to read more of the
+// notifications through the API, on intent only. What the user sees about it is
+// decided by the model: progress with Stop, Load more, the coverage and state
+// lines, a separate read-only "Outside this page" box right after the native
+// list box (never inside it) and, in Grouped, inert sub-lists. Nothing is written.
+//
 // Registers itself with the registry content.js created, so it loads after it.
 
 (function () {
@@ -34,6 +41,16 @@
   if (!host || !M) return;
   const registry = host.registry;
   const engine = host.engine;
+  const fill = host.fill;
+  const Q = globalThis.GHNT_QUERY;
+  const SHOW_ALL = new Set(); // categories whose outside list is expanded (memory only)
+  let lastKeys = null; // page row keys at the last render, to see a row GitHub removed
+  let lastHref = "";
+  let rateTimer = null;
+  let announced = 0; // announcements of the current fill (at most 5)
+  let wasRunning = false;
+  let fillOff = null;
+  let lastRunSummary = "";
 
   let active = false;
   let layout = null; // the layout currently on the page
@@ -125,8 +142,15 @@
     btn.addEventListener("click", () => {
       selected = selected === cat.id ? null : cat.id;
       render();
+      if (selected) startFill({ category: selected });
     });
     return btn;
+  }
+
+  // A fill is only ever started from here, by a click: never on load, never by a scan.
+  function startFill(opts) {
+    if (!fill) return;
+    fill.start(opts).then(() => active && render());
   }
 
   function buildSidebar(v) {
@@ -148,13 +172,85 @@
 
   const nextLink = (v) => (v.next ? el("a", { class: "ghnt-next", href: v.next.href, text: v.next.label }) : null);
 
-  // The one block of ours above the list: [pills] + status + empty + coverage.
+  // One segment of a model line -> a node. Every action is a plain button or link.
+  function segNode(seg, v) {
+    if (seg.t === "text") return document.createTextNode(seg.v);
+    if (seg.t === "next") return el("a", { class: "ghnt-next", href: seg.href, text: seg.label });
+    if (seg.t === "link") return el("a", { class: "ghnt-link", href: seg.href, text: seg.label });
+    if (seg.t === "select") {
+      const b = el("button", { type: "button", class: "ghnt-linkbtn", "data-ghnt-select": seg.cat, text: seg.label });
+      b.addEventListener("click", () => {
+        selected = seg.cat;
+        render();
+        startFill({ category: selected });
+      });
+      return b;
+    }
+    if (seg.t === "settings") {
+      const b = el("button", { type: "button", class: "ghnt-linkbtn", text: seg.label });
+      b.addEventListener("click", () => {
+        try {
+          chrome.runtime.sendMessage({ type: "GHNT_OPEN_SETTINGS" });
+        } catch {
+          /* the extension was reloaded */
+        }
+      });
+      return b;
+    }
+    if (seg.t === "stop") {
+      const b = el("button", { type: "button", class: "ghnt-btn ghnt-fill-btn", "data-ghnt-action": "stop", text: "Stop" });
+      b.addEventListener("click", () => fill.stop());
+      return b;
+    }
+    if (seg.t === "check") {
+      const b = el("button", { type: "button", class: "ghnt-btn ghnt-fill-btn", "data-ghnt-action": "check", text: "Check notifications outside this page" });
+      b.addEventListener("click", () => startFill({ grouped: true, force: true }));
+      return b;
+    }
+    if (seg.t === "load-more") {
+      const id = `ghnt-lm-${++ownIds}`;
+      const b = el("button", { type: "button", class: "ghnt-btn ghnt-fill-btn", "data-ghnt-action": "load-more", "aria-disabled": seg.disabled ? "true" : false, "aria-describedby": seg.disabled ? id : false, text: "Load more" });
+      b.addEventListener("click", () => {
+        if (b.getAttribute("aria-disabled") === "true") return;
+        startFill({ category: v.selected, grouped: v.layout === "grouped", force: true });
+      });
+      return seg.disabled ? el("span", { class: "ghnt-btn-wrap" }, b, el("span", { id, class: "ghnt-sr", text: seg.desc })) : b;
+    }
+    return document.createTextNode("");
+  }
+
+  const lineNode = (line, v) => el("p", { class: `ghnt-line ghnt-line-${line.id}`, "data-ghnt-line": line.id }, line.segs.map((seg) => segNode(seg, v)));
+
+  // "Needs attention · 3 on this page + 2 outside · 40 notifications checked": the
+  // "2 outside" is a same-page link that moves focus to the outside list's heading.
+  function statusText(v) {
+    const text = el("span", { class: "ghnt-status-text" });
+    const frag = v.statusOutside ? ` + ${v.statusOutside}` : null;
+    const at = frag ? v.status.indexOf(frag) : -1;
+    if (at < 0) {
+      text.textContent = v.status;
+      return text;
+    }
+    const link = el("a", { class: "ghnt-link", href: "#ghnt-outside-heading", text: v.statusOutside });
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const h = document.querySelector("#ghnt-outside-heading");
+      h?.focus();
+      h?.scrollIntoView?.({ block: "nearest" });
+    });
+    text.append(v.status.slice(0, at), " + ", link, v.status.slice(at + frag.length));
+    return text;
+  }
+
+  // The one block of ours above the list: [pills] + status + lines + empty + coverage.
   function buildBlockKids(v, barKind, pendingInBlock = true) {
     const kids = [];
     if (barKind) kids.push(buildBar(v, barKind));
-    const status = el("div", { class: "ghnt-status", "data-ghnt-triage": "status", role: "status" });
+    const checking = !!v.lines.length;
+    // With a fill in play the progress is not a live region (it changes with every page): the visually hidden one announces at most 5 times.
+    const status = el("div", { class: "ghnt-status", "data-ghnt-triage": "status", role: checking ? false : "status" });
     if (v.status) {
-      status.append(el("span", { class: "ghnt-status-text", text: v.status }));
+      status.append(statusText(v));
       const clear = el("button", { type: "button", class: "ghnt-clear", text: "Clear triage" });
       clear.addEventListener("click", () => {
         const was = selected;
@@ -165,14 +261,15 @@
       });
       status.append(clear);
     }
-    if (v.empty) status.append(el("div", { class: "ghnt-empty" }, v.empty, v.next && " ", nextLink(v)));
+    if (v.empty) status.append(el("div", { class: "ghnt-empty" }, v.empty, !checking && v.next && " ", !checking && nextLink(v)));
     if (v.pending && pendingInBlock) status.append(el("div", { class: "ghnt-pending", text: v.pending }));
     if (status.childNodes.length) kids.push(status);
-    kids.push(el("p", { class: "ghnt-coverage", "data-ghnt-triage": "coverage" }, v.coverage, v.next && " ", nextLink(v)));
+    for (const line of v.lines) kids.push(lineNode(line, v));
+    if (v.coverage) kids.push(el("p", { class: "ghnt-coverage", "data-ghnt-triage": "coverage" }, v.coverage, v.next && " ", nextLink(v)));
     return kids;
   }
 
-  const focusKey = (node) => (node?.getAttribute?.("data-ghnt-cat") ? `[data-ghnt-cat="${node.getAttribute("data-ghnt-cat")}"]` : node?.classList?.contains("ghnt-clear") ? ".ghnt-clear" : null);
+  const focusKey = (node) => (node?.getAttribute?.("data-ghnt-cat") ? `[data-ghnt-cat="${node.getAttribute("data-ghnt-cat")}"]` : node?.classList?.contains("ghnt-clear") ? ".ghnt-clear" : node?.classList?.contains("ghnt-fill-btn") ? ".ghnt-fill-btn" : null);
 
   // Replaces the sidebar group in place, keeping focus on the same category.
   function sync(kind, build, place) {
@@ -324,6 +421,133 @@
     if (e.target?.matches?.('input[type="checkbox"]')) setTimeout(() => active && uncheckHidden(), 0);
   };
 
+  // ---- outside this page -----------------------------------------------------
+
+  // One entry: "owner/repo #n · reason · time" (muted), then the title as a link to
+  // the thread on github.com and the category tag. Read-only: no checkbox, no
+  // Done, Save or bulk action. A long title wraps, it is never cut.
+  function entryNode(e) {
+    const meta = [e.repo, e.reason, e.time].filter(Boolean).join(" · ");
+    return el("li", { class: "ghnt-out-item", "data-ghnt-entry": e.key }, el("div", { class: "ghnt-out-meta", text: meta }), el("div", { class: "ghnt-out-main" }, el("a", { class: "ghnt-out-link", href: e.href, "aria-label": e.aria, text: e.title }), el("span", { class: `ghnt-out-tag ghnt-out-tag-${e.category}` }, dot(e.category), e.categoryLabel)));
+  }
+
+  function moreButton(list) {
+    if (!list.more) return null;
+    const open = SHOW_ALL.has(list.cat);
+    const b = el("button", { type: "button", class: "ghnt-linkbtn ghnt-out-more", "aria-expanded": String(open), text: open ? "Show fewer outside this page" : list.moreLabel });
+    b.addEventListener("click", () => {
+      if (SHOW_ALL.has(list.cat)) SHOW_ALL.delete(list.cat);
+      else SHOW_ALL.add(list.cat);
+      render();
+    });
+    return b;
+  }
+
+  const shown = (list) => (SHOW_ALL.has(list.cat) ? [...list.entries, ...list.rest] : list.entries);
+
+  // The separate box right after GitHub's list box, outside its ul.
+  function buildOutside(list) {
+    return el("section", { class: "ghnt-outside", "data-ghnt-triage": "outside", "aria-labelledby": "ghnt-outside-heading" }, el("h2", { class: "ghnt-outside-title", id: "ghnt-outside-heading", tabindex: "-1", text: list.heading }), el("p", { class: "ghnt-outside-sub", text: list.sub }), el("ul", { class: "ghnt-out-list" }, shown(list).map(entryNode)), moreButton(list));
+  }
+
+  // The box copies the list box's side margins, borders and radius, so it is
+  // edge-to-edge exactly where the native list is, whatever the width.
+  function measureOutside() {
+    const node = live.get("outside");
+    const ul = nativeLists()[0];
+    const box = ul && boxOf(ul);
+    if (!node?.isConnected || !box || box === ul) return;
+    const cs = getComputedStyle(box);
+    for (const [prop, value] of [["marginLeft", cs.marginLeft], ["marginRight", cs.marginRight], ["borderTopLeftRadius", cs.borderTopLeftRadius], ["borderTopRightRadius", cs.borderTopRightRadius], ["borderBottomLeftRadius", cs.borderBottomLeftRadius], ["borderBottomRightRadius", cs.borderBottomRightRadius], ["borderLeftWidth", cs.borderLeftWidth], ["borderRightWidth", cs.borderRightWidth]]) node.style[prop] = value;
+  }
+
+  function removeOutside() {
+    live.get("outside")?.remove();
+    live.delete("outside");
+  }
+
+  function syncOutside(list) {
+    const ul = nativeLists()[0];
+    const box = ul && boxOf(ul);
+    // No list box (or a bare list): nothing is inserted; the next scan retries.
+    if (!list || !list.k || !box || box === ul) return removeOutside();
+    const old = live.get("outside");
+    const next = buildOutside(list);
+    if (old?.isConnected && old.dataset.ghntSig === next.outerHTML && box.nextElementSibling === old) return;
+    const key = old?.contains(document.activeElement) ? (document.activeElement.classList.contains("ghnt-out-more") ? ".ghnt-out-more" : null) : null;
+    next.dataset.ghntSig = next.outerHTML;
+    old?.remove();
+    box.after(next);
+    live.set("outside", next);
+    if (key) next.querySelector(key)?.focus();
+    measureOutside();
+  }
+
+  // Grouped: an inert sub-list under the rows of an expanded section. Not a row of
+  // GitHub's: no checkbox, not js-navigation-item, skipped by select-all and j/k.
+  function buildSub(list) {
+    const items = shown(list).map(entryNode);
+    const btn = moreButton(list);
+    return el("li", { class: "ghnt-sec-outside", "data-ghnt-triage": "sec", "data-ghnt-sec-outside": list.cat }, el("h3", { class: "ghnt-out-heading", text: list.heading }), el("ul", { class: "ghnt-out-list" }, items), btn);
+  }
+
+  // The visually hidden status that announces a fill's few milestones.
+  function announce(text) {
+    if (!text || announced >= 5) return;
+    announced++;
+    let sr = live.get("sr");
+    const block = live.get("block");
+    if (!sr || !sr.isConnected) {
+      sr = el("div", { class: "ghnt-sr", role: "status", "aria-live": "polite", "data-ghnt-triage": "sr" });
+      live.set("sr", sr);
+      block?.after(sr);
+    }
+    sr.textContent = text;
+  }
+
+  const plainLine = (line) => line.segs.map((s) => s.v || s.label || "").join("").replace(/\s+/g, " ").trim();
+
+  // A fill starting or ending is the only thing announced (at most 5 per fill).
+  function announceFill(snap, v) {
+    if (!snap) return;
+    if (snap.running && !wasRunning) {
+      announced = 0;
+      announce("Checking more notifications");
+    } else if (!snap.running && wasRunning) {
+      const first = v.lines.find((l) => ["rate", "error", "ceiling", "stopped"].includes(l.id));
+      announce(first ? plainLine(first) : `${snap.summary.m} notifications checked. ${snap.summary.outside.length} outside this page.`);
+    }
+    wasRunning = snap.running;
+  }
+
+  // A native Done, Save, Unsubscribe or mark action (a click inside a row's
+  // actions or the bulk bar): nothing read stays, so an item is never on the
+  // page and outside at once; the next scan reads the API again.
+  const NATIVE_ACTION = 'li.notifications-list-item button, [class*="notification-list-item-actions"] button, form[action*="notifications"] button, [class*="bulk"] button';
+  function nativeAction(e) {
+    const t = e.target;
+    if (!active || !t?.closest || t.closest("[data-ghnt-triage]") || !t.closest(NATIVE_ACTION)) return;
+    fill?.clear();
+    engine.invalidateApi?.();
+  }
+
+  // A row GitHub removed without navigating (Done) is a native action too.
+  function watchRemoved(list) {
+    const href = location.pathname + location.search;
+    const keys = new Set(list.map((r) => r.key).filter(Boolean));
+    if (lastKeys && lastHref === href && [...lastKeys].some((k) => !keys.has(k))) {
+      fill?.clear();
+      engine.invalidateApi?.();
+    }
+    lastKeys = keys;
+    lastHref = href;
+  }
+
+  // The next page link counts as a click for the development counters.
+  function countNext(e) {
+    if (active && fill && e.target?.closest?.('a.ghnt-next, a[rel="next"], nav[aria-label="Pagination"] a')) fill.stats.nextClicks++;
+  }
+
   // ---- grouped sections ------------------------------------------------------
 
   function slotOrder(a, b) {
@@ -456,6 +680,21 @@
       }
       heads.push(li);
       desired.push(li, ...groups[id].map((r) => r.li));
+      // The outside sub-list of an expanded section, below its native rows.
+      const sub = cat.outside && cat.outside.k > 0 ? cat.outside : null;
+      let subLi = live.get(`sub-${id}`);
+      if (sub) {
+        const next = buildSub(sub);
+        if (!subLi || !subLi.isConnected || subLi.outerHTML !== next.outerHTML) {
+          subLi?.remove();
+          subLi = next;
+          live.set(`sub-${id}`, subLi);
+        }
+        desired.push(subLi);
+      } else if (subLi) {
+        subLi.remove();
+        live.delete(`sub-${id}`);
+      }
       if (id === M.IDS[M.IDS.length - 1]) {
         // Sections built at the GROUP_WAIT_MS cap: the rows still being
         // classified are counted after the last section, not in the block above
@@ -532,6 +771,8 @@
     for (const id of [...M.IDS, "pending"]) {
       live.get(`sec-${id}`)?.remove();
       live.delete(`sec-${id}`);
+      live.get(`sub-${id}`)?.remove();
+      live.delete(`sub-${id}`);
     }
     document.querySelectorAll("ul.ghnt-grouped").forEach((ul) => ul.classList.remove("ghnt-grouped"));
     for (const li of collapsedRows) li.removeAttribute("hidden");
@@ -560,6 +801,9 @@
   function removeBlock() {
     live.get("block")?.remove();
     live.delete("block");
+    live.get("sr")?.remove();
+    live.delete("sr");
+    removeOutside();
     resizer?.disconnect();
     watched = [];
   }
@@ -601,7 +845,17 @@
       }
       const list = rows();
       const c = M.counts(list.map((r) => r.item || { inPage: true, pending: true }));
-      const v = M.view(c, { layout: want, selected, collapsed, nextHref: nextHref() });
+      // What this tab has read outside the page, for this query (nothing is read here).
+      let snap = null;
+      if (fill) {
+        watchRemoved(list);
+        fill.setQuery(Q.analyse(location.href));
+        fill.notePage(location.pathname + location.search);
+        fill.seed(engine.getApi());
+        snap = fill.snapshot();
+      }
+      const narrow = { review: Q.narrowHref(location.href, "review-requested"), mention: Q.narrowHref(location.href, "mention") };
+      const v = M.view(c, { layout: want, selected, collapsed, nextHref: nextHref(), fill: snap, now: Date.now(), narrow });
       if (want === "grouped") {
         selected = null;
         removeChrome();
@@ -620,7 +874,12 @@
       }
       const barKind = want === "quickbar" ? "quickbar" : compact ? "compact" : null;
       syncBlock(row, buildBlockKids(v, barKind, !(want === "grouped" && built)));
+      syncOutside(want === "grouped" ? null : v.outside);
+      announceFill(snap, v);
+      clearTimeout(rateTimer);
+      if (snap?.retryAt && Date.now() < snap.retryAt) rateTimer = setTimeout(() => active && render(), snap.retryAt - Date.now() + 50);
       measure();
+      measureOutside();
     } finally {
       uncheckHidden();
       observer?.takeRecords();
@@ -655,6 +914,8 @@
     if (!active) return;
     // The selection stays: Turbo caches on every visit, also from one inbox
     // page to the next; leaving the inbox stops the module, which resets it.
+    // A fill in progress is aborted: no answer is applied after the page left.
+    fill?.abort();
     unrender();
     layout = null;
   }
@@ -686,6 +947,10 @@
     document.addEventListener("change", afterSelect, true);
     document.addEventListener("click", afterSelect, true);
     document.addEventListener("turbo:before-cache", leaveForCache);
+    document.addEventListener("click", nativeAction, true);
+    document.addEventListener("submit", nativeAction, true);
+    document.addEventListener("click", countNext, true);
+    fillOff = fill?.subscribe(() => active && schedule());
     // A restored Turbo snapshot can carry marks of a view that is gone.
     document.querySelectorAll(".ghnt-off").forEach((n) => n.classList.remove("ghnt-off"));
     loadCollapsed();
@@ -709,6 +974,16 @@
     document.removeEventListener("change", afterSelect, true);
     document.removeEventListener("click", afterSelect, true);
     document.removeEventListener("turbo:before-cache", leaveForCache);
+    document.removeEventListener("click", nativeAction, true);
+    document.removeEventListener("submit", nativeAction, true);
+    document.removeEventListener("click", countNext, true);
+    fillOff?.();
+    fillOff = null;
+    clearTimeout(rateTimer);
+    fill?.abort();
+    lastKeys = null;
+    wasRunning = false;
+    SHOW_ALL.clear();
     unrender();
     layout = null;
     selected = null;

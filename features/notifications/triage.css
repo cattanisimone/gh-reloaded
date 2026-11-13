@@ -62,3 +62,47 @@ li.ghnt-sec-pending { padding: 8px 16px; list-style: none; border-top: 1px solid
 li.notifications-list-item.ghnt-moved { background: var(--bgColor-attention-muted, #fff8c5); transition: background-color 3s ease-out; }
 @media (prefers-reduced-motion: reduce) { li.notifications-list-item.ghnt-moved { transition: none; } }
 ul.ghnt-grouped { overflow-anchor: none; }
+
+/* Beyond the page: state lines, Stop / Load more, the Outside this page box. */
+.ghnt-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.ghnt-line { margin: 0 0 8px; font-size: 14px; line-height: 21px; color: var(--fgColor-default, #1f2328); overflow-wrap: anywhere; }
+.ghnt-line-partial, .ghnt-line-unverified, .ghnt-line-checked, .ghnt-line-sso, .ghnt-line-complete, .ghnt-line-grouped-start { color: var(--fgColor-muted, #59636e); font-size: 12px; line-height: 18px; }
+.ghnt-line-state, .ghnt-line-error, .ghnt-line-rate, .ghnt-line-ceiling { color: var(--fgColor-default, #1f2328); }
+.ghnt-link, .ghnt-linkbtn { color: var(--fgColor-accent, #0969da); }
+.ghnt-linkbtn { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
+.ghnt-linkbtn:hover, .ghnt-link:hover { text-decoration: underline; }
+.ghnt-linkbtn:focus-visible, .ghnt-link:focus-visible, .ghnt-next:focus-visible { outline: 2px solid var(--borderColor-accent-emphasis, #0969da); outline-offset: 1px; border-radius: 2px; }
+/* The native small default button ("Dismiss" in the inbox banner): 28px, 6px radius, 1px border. */
+.ghnt-btn { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; height: 28px; padding: 0 12px; border: 1px solid var(--button-default-borderColor-rest, #d1d9e0); border-radius: 6px; background: var(--button-default-bgColor-rest, #f6f8fa); color: var(--fgColor-default, #1f2328); font: inherit; font-size: 12px; font-weight: 500; line-height: 18px; white-space: nowrap; vertical-align: middle; cursor: pointer; box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04); transition: background-color 0.08s; }
+.ghnt-btn:hover { background: var(--button-default-bgColor-hover, #eff2f5); }
+.ghnt-btn:active { background: var(--button-default-bgColor-active, #e6eaef); box-shadow: none; }
+.ghnt-btn:focus-visible { outline: 2px solid var(--borderColor-accent-emphasis, #0969da); outline-offset: -2px; }
+.ghnt-btn[aria-disabled="true"] { opacity: 0.6; cursor: not-allowed; }
+.ghnt-btn-wrap { display: inline-block; }
+
+.ghnt-outside { box-sizing: border-box; margin-bottom: 16px; border: 1px solid var(--borderColor-default, #d1d9e0); border-radius: 6px; background: var(--bgColor-default, #fff); color: var(--fgColor-default, #1f2328); overflow: hidden; }
+.ghnt-outside-title { margin: 0; padding: 12px 16px 0; font-size: 14px; font-weight: 600; line-height: 21px; }
+.ghnt-outside-sub { margin: 0; padding: 0 16px 8px; font-size: 12px; line-height: 18px; color: var(--fgColor-muted, #59636e); }
+.ghnt-outside-title:focus-visible, .ghnt-out-heading:focus-visible { outline: 2px solid var(--borderColor-accent-emphasis, #0969da); outline-offset: -2px; }
+.ghnt-out-list { list-style: none; margin: 0; padding: 0; }
+.ghnt-out-item { margin: 0; padding: 8px 16px; list-style: none; border-top: 1px solid var(--borderColor-muted, #d1d9e0b3); }
+.ghnt-out-meta { font-size: 12px; line-height: 18px; color: var(--fgColor-muted, #59636e); overflow-wrap: anywhere; }
+.ghnt-out-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 14px; line-height: 21px; }
+.ghnt-out-link { flex: 1 1 auto; min-width: 0; color: var(--fgColor-default, #1f2328); font-weight: 600; overflow-wrap: anywhere; text-decoration: none; }
+.ghnt-out-link:hover { color: var(--fgColor-accent, #0969da); text-decoration: underline; }
+.ghnt-out-link:focus-visible { outline: 2px solid var(--borderColor-accent-emphasis, #0969da); outline-offset: 1px; border-radius: 2px; }
+.ghnt-out-tag { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; line-height: 18px; color: var(--fgColor-muted, #59636e); }
+.ghnt-out-more { display: block; width: 100%; box-sizing: border-box; padding: 8px 16px; border-top: 1px solid var(--borderColor-muted, #d1d9e0b3); text-align: left; font-size: 12px; }
+
+/* Grouped sub-list: text starts where the section label does (16 + dot 8 + gap 8). */
+li.ghnt-sec-outside { display: block; margin: 0; padding: 0 0 8px 32px; list-style: none; background: var(--bgColor-default, #fff); }
+.ghnt-sec-outside .ghnt-out-heading { margin: 0; padding: 4px 16px 4px 0; font-size: 12px; font-weight: 600; line-height: 18px; color: var(--fgColor-muted, #59636e); }
+.ghnt-sec-outside .ghnt-out-item { padding-left: 0; }
+.ghnt-sec-outside .ghnt-out-more { padding-left: 0; }
+
+/* Below 768px (where GitHub hides its sidebar): Stop, Load more and the Grouped action fill the block at a touch size. */
+@media (max-width: 767.98px) {
+  .ghnt-block .ghnt-btn { display: flex; width: 100%; min-height: 44px; margin-top: 8px; }
+  .ghnt-block .ghnt-btn-wrap { display: block; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .ghnt-btn { transition: none; } }

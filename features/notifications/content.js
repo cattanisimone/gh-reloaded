@@ -29,6 +29,11 @@
     return Number.isInteger(value) && value > 0 ? value : 7;
   }
 
+  const FILL_PAGE_TYPE = "GHNT_FILL_PAGE"; // matches background/notifications.js
+
+  // The native query, as the API read and the fill rebuild it.
+  const nativeQuery = () => globalThis.GHNT_QUERY.analyse(location.href);
+
   const engine = globalThis.GHNT_ENGINE.createEngine({
     collect: () => globalThis.GHNT_COLLECT.readPage(document),
     mergeApi: globalThis.GHNT_COLLECT.mergeApi,
@@ -36,10 +41,49 @@
     classify: globalThis.GHNT_CLASSIFY.classify,
     needsFacts: globalThis.GHNT_CLASSIFY.needsFacts,
     getWindowDays: () => windowDays,
+    getApiQuery: () => {
+      const q = nativeQuery();
+      return { key: q.key, all: q.params.all, participating: q.params.participating };
+    },
     send: async (payload) => {
       if (!extensionAlive()) return null;
       return chrome.runtime.sendMessage({ type: MESSAGE_TYPE, payload });
     },
+  });
+
+  // Reads more of the notifications on intent only (Triage selecting a category,
+  // Load more, the Grouped action). It never runs by itself.
+  const fill = globalThis.GHNT_FILL.createFill({
+    collect: globalThis.GHNT_COLLECT,
+    query: globalThis.GHNT_QUERY,
+    classify: globalThis.GHNT_CLASSIFY.classify,
+    needsFacts: globalThis.GHNT_CLASSIFY.needsFacts,
+    getWindowDays: () => windowDays,
+    isVisible: () => document.visibilityState !== "hidden",
+    getPage: () => {
+      const page = globalThis.GHNT_COLLECT.readPage(document);
+      const items = engine.getState().items.filter((i) => i.inPage !== false);
+      return { rows: page.rows, me: page.me, counts: globalThis.GHNT_TRIAGE_MODEL?.counts(items) || {} };
+    },
+    sendPage: async (payload) => {
+      if (!extensionAlive()) return null;
+      try {
+        return await chrome.runtime.sendMessage({ type: FILL_PAGE_TYPE, payload });
+      } catch {
+        return null;
+      }
+    },
+    sendLookup: async (payload) => {
+      if (!extensionAlive()) return null;
+      try {
+        return await chrome.runtime.sendMessage({ type: MESSAGE_TYPE, payload });
+      } catch {
+        return null;
+      }
+    },
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "hidden") fill.notifyVisible();
   });
 
   const panel = globalThis.GHNT_PANEL.create({
@@ -63,6 +107,7 @@
       registry.setRunning(true, { getState: engine.getState, subscribe: engine.subscribe });
     } else if (!run && engine.isActive()) {
       registry.setRunning(false);
+      fill.reset();
       engine.stop();
     } else if (run) {
       engine.scan();
@@ -86,7 +131,14 @@
 
   registry.onChange(sync);
 
-  globalThis.GHNotifications = { registry, engine };
+  globalThis.GHNotifications = { registry, engine, fill };
+  // Counters of the last fills, for a development build (an unpacked install has
+  // no update_url) in DevTools only: nothing is shown or stored.
+  try {
+    if (!chrome.runtime.getManifest().update_url) globalThis.GHNotifications.fillStats = fill.stats;
+  } catch {
+    /* no manifest, no counters */
+  }
 
   document.addEventListener("turbo:load", sync);
   document.addEventListener("turbo:render", sync);

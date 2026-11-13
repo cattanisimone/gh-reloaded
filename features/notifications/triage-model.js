@@ -164,7 +164,9 @@
     const complete = snap.active && !snap.next && k === 0;
     const filled = snap.filledKeys.includes(grouped ? "*" : selected || "") || snap.running;
 
-    // Not capable: say why, offer GitHub's own way on.
+    // Not capable: say why, offer GitHub's own way on. With no category in play the
+    // 1.7.0 coverage line says it all.
+    if (!snap.active && !selected && !grouped) return { lines: [], empty: "" };
     if (!snap.supported) return { lines: [{ id: "state", segs: [T(`The filter ${snap.unsupported} can't be applied outside this page, so only this page is counted.`), ...NEXT(nextHref)] }], empty: "" };
     const none = ["not-tried"].includes(snap.apiState);
     const noCap = ["missing-scope", "unavailable"].includes(snap.apiState);
@@ -295,7 +297,8 @@
     return {
       ...base,
       status,
-      empty: selected && !isPending(c, selected) ? (showOutside ? st.empty : st.lines.length ? "" : emptyText(selected, c)) : "",
+      empty: selected && !isPending(c, selected) ? (showOutside ? st.empty : emptyText(selected, c)) : "",
+      statusOutside: outsideSel > 0 ? `${outsideSel} outside` : "",
       coverage: st.lines.length || (snap && snap.active) ? "" : coverageText(c, !!next),
       lines: st.lines,
       outside: showOutside && selected ? listView(snap.summary.outside, selected, OUTSIDE_FIRST, o.now) : null,
