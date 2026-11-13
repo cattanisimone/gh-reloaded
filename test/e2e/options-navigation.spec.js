@@ -53,7 +53,8 @@ test("old hashes still open their section; unknown hashes show Features", async 
 
 test("unsaved edits survive a switch to another section", async ({ context, page }) => {
   await openOptions(context, page, "#tokens-section");
-  const input = page.locator("#token-default .tok-secret");
+  await page.locator('#token-list [data-act="edit"]').first().click();
+  const input = page.locator("#panel-secret");
   await input.fill("ghp_unsaved1234");
   await page.locator('.nav a[href="#features"]').click();
   await page.locator('.nav a[href="#tokens-section"]').click();
