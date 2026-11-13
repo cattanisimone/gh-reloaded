@@ -108,7 +108,7 @@
         res = null;
       }
       if (!active) return;
-      apply(res, wanted, wantQuery.key);
+      apply(res, wanted, wantQuery.key, apiStale);
       publish(build(collect(), "ready"));
     }
 
@@ -133,7 +133,7 @@
       return inflight;
     }
 
-    function apply(res, wanted, apiKey) {
+    function apply(res, wanted, apiKey, apiRead) {
       const at = now();
       if (!res || !res.ok) {
         for (const r of wanted) facts.set(r.key, { at, reason: r.reason, value: { ok: false, why: "request failed" } });
@@ -141,7 +141,8 @@
       }
       rate = { limited: !!res.rateLimited, retryAt: res.retryAt ?? null };
       capabilities = { ...capabilities, ...res.capabilities };
-      if (res.api) {
+      // Only a read that asked for the API replaces what the API said before.
+      if (res.api && apiRead) {
         api = { at, state: res.api.state, items: res.api.items || [], pages: res.api.pages || 0, next: !!res.api.next, lastModified: res.api.lastModified || "", key: apiKey };
         if (res.api.state !== "not-tried") capabilities["api:notifications"] = res.api.state;
       }

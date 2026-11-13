@@ -228,3 +228,14 @@ test("the baseline read sends the native query's parameters and is read again wh
   assert.equal(env.sent.filter((p) => p.api).length, 2, "a new query is a new read");
   assert.equal(env.sent[1].apiQuery.all, false);
 });
+
+test("a request that did not ask for the API keeps what the API said before", async () => {
+  const env = setup({ rows: [row(1)], respond: (p) => ({ ok: true, facts: Object.fromEntries(p.rows.map((r) => [r.key, pullFacts()])), capabilities: {}, api: p.api ? { state: "ok", items: [{ id: "9", reason: "subscribed", unread: true, subject: { url: "https://api.github.com/repos/acme/web/issues/9", type: "Issue", title: "t" }, repository: { full_name: "acme/web" } }], pages: 1, next: false } : { state: "not-tried", items: [] }, rateLimited: false, retryAt: null }) });
+  await env.engine.start();
+  assert.equal(env.engine.getApi().state, "ok");
+  env.rows = [row(1), row(2)];
+  await env.engine.scan();
+  assert.equal(env.sent.at(-1).api, false);
+  assert.equal(env.engine.getApi().state, "ok");
+  assert.equal(env.engine.getApi().items.length, 1);
+});
