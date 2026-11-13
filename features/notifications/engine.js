@@ -18,11 +18,11 @@
 (function (global) {
   const TTL_MS = 60_000;
 
-  function createEngine({ collect, mergeApi, fromApiItem, send, classify, needsFacts, getWindowDays = () => 7, now = () => Date.now(), setTimer = setTimeout, clearTimer = clearTimeout }) {
+  function createEngine({ collect, mergeApi, fromApiItem, send, classify, needsFacts, getWindowDays = () => 7, getApiQuery = () => ({ key: "", all: true, participating: false }), now = () => Date.now(), setTimer = setTimeout, clearTimer = clearTimeout }) {
     const facts = new Map(); // key -> { at, value }
     const results = new Map(); // key -> classification, kept across scans
     const listeners = new Set();
-    let api = { at: 0, state: "not-tried", items: [] };
+    let api = { at: 0, state: "not-tried", items: [], key: "" };
     let capabilities = {};
     let rate = { limited: false, retryAt: null };
     let timer = null;
@@ -90,7 +90,9 @@
         return;
       }
       const rateBlocked = rate.limited && rate.retryAt != null && now() < rate.retryAt;
-      const apiStale = now() - api.at >= TTL_MS;
+      const wantQuery = getApiQuery();
+      // A different native query is a different read.
+      const apiStale = now() - api.at >= TTL_MS || api.key !== wantQuery.key;
       // The effective reason (REST wins over the label) decides what is read.
       const known = mergeApi(page.rows, api.state === "ok" ? api.items.map(fromApiItem) : []);
       const wanted = known.filter((r) => r.inPage !== false && (r.kind === "pull" || r.kind === "issue") && !fresh(r));
@@ -101,12 +103,12 @@
       publish(build(page, "loading"));
       let res = null;
       try {
-        res = await send({ rows: wanted.map(({ key, kind, owner, repo, number, reason }) => ({ key, kind, owner, repo, number, reason })), api: apiStale });
+        res = await send({ rows: wanted.map(({ key, kind, owner, repo, number, reason }) => ({ key, kind, owner, repo, number, reason })), api: apiStale, apiQuery: { all: wantQuery.all, participating: wantQuery.participating } });
       } catch {
         res = null;
       }
       if (!active) return;
-      apply(res, wanted);
+      apply(res, wanted, wantQuery.key, apiStale);
       publish(build(collect(), "ready"));
     }
 
@@ -131,7 +133,7 @@
       return inflight;
     }
 
-    function apply(res, wanted) {
+    function apply(res, wanted, apiKey, apiRead) {
       const at = now();
       if (!res || !res.ok) {
         for (const r of wanted) facts.set(r.key, { at, reason: r.reason, value: { ok: false, why: "request failed" } });
@@ -139,8 +141,9 @@
       }
       rate = { limited: !!res.rateLimited, retryAt: res.retryAt ?? null };
       capabilities = { ...capabilities, ...res.capabilities };
-      if (res.api) {
-        api = { at, state: res.api.state, items: res.api.items || [] };
+      // Only a read that asked for the API replaces what the API said before.
+      if (res.api && apiRead) {
+        api = { at, state: res.api.state, items: res.api.items || [], pages: res.api.pages || 0, next: !!res.api.next, lastModified: res.api.lastModified || "", key: apiKey };
         if (res.api.state !== "not-tried") capabilities["api:notifications"] = res.api.state;
       }
       // The background knows the effective reason (REST wins over the label).
@@ -176,7 +179,7 @@
         rescan = false;
         results.clear();
         facts.clear();
-        api = { at: 0, state: "not-tried", items: [] };
+        api = { at: 0, state: "not-tried", items: [], key: "" };
         capabilities = {};
         rate = { limited: false, retryAt: null };
         publish(emptyState());
@@ -187,6 +190,12 @@
         if (active && state.phase !== "idle") publish(build(collect(), state.phase));
       },
       getState: () => state,
+      // The raw baseline read of the Notifications API (for the fill's cache).
+      getApi: () => api,
+      // A native action changed the inbox: the next scan reads the API again.
+      invalidateApi() {
+        api = { ...api, at: 0 };
+      },
       subscribe(fn) {
         listeners.add(fn);
         return () => listeners.delete(fn);

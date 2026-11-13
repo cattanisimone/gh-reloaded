@@ -50,8 +50,9 @@ test("fromApiItem keys by subject.url, like the page rows", () => {
   const a = C.fromApiItem({ id: "1", reason: "review_requested", subject: { url: "https://api.github.com/repos/Acme/Web/pulls/412", type: "PullRequest" }, repository: { full_name: "Acme/Web" } });
   assert.deepEqual([a.key, a.kind, a.reason, a.inPage], ["acme/web#412", "pull", "review_requested", false]);
   const other = C.fromApiItem({ id: "2", reason: "ci_activity", subject: { url: "https://api.github.com/repos/acme/web/check-suites/5", type: "CheckSuite" }, repository: { full_name: "acme/web" } });
-  assert.equal(other.kind, "checksuite");
+  assert.equal(other.kind, "run");
   assert.equal(other.number, null);
+  assert.equal(other.unkeyable, true);
 });
 
 test("mergeApi: REST reason wins in both directions, API-only items are inPage false", () => {
@@ -93,4 +94,59 @@ test("keyOf: the same key readPage uses, null without a subject link", async () 
   assert.equal(C.keyOf(li(["https://github.com/Acme/Web/pull/412?notification_referrer_id=1"])), "acme/web#412");
   assert.equal(C.keyOf(li(["https://github.com/acme/web/actions/runs/99"])), "run:/acme/web/actions/runs/99");
   assert.equal(C.keyOf(li([])), null);
+});
+
+const api = (over) => ({ id: "T1", reason: "mention", unread: true, updated_at: "2026-11-01T10:00:00Z", subject: { url: null, type: "Discussion", title: "Plan the release" }, repository: { full_name: "Acme/Web" }, ...over });
+
+test("collect: fromApiItem keys PullRequest / Issue as o/r#N with the web href", () => {
+  const p = C.fromApiItem(api({ subject: { url: "https://api.github.com/repos/Acme/Web/pulls/7", type: "PullRequest", title: "Fix it" } }));
+  assert.deepEqual([p.key, p.kind, p.number, p.href, p.unkeyable], ["acme/web#7", "pull", 7, "https://github.com/Acme/Web/pull/7", undefined]);
+  const i = C.fromApiItem(api({ subject: { url: "https://api.github.com/repos/acme/web/issues/8", type: "Issue", title: "Bug" } }));
+  assert.deepEqual([i.key, i.href, i.unread, i.id], ["acme/web#8", "https://github.com/acme/web/issues/8", true, "T1"]);
+});
+
+for (const [type, url, kind] of [["Discussion", null, "discussion"], ["CheckSuite", null, "run"], ["Commit", "https://api.github.com/repos/acme/web/commits/abc", "commit"], ["Release", "https://api.github.com/repos/acme/web/releases/9", "release"], ["RepositoryVulnerabilityAlert", null, "repositoryvulnerabilityalert"], ["RepositoryInvitation", null, "repositoryinvitation"], [undefined, null, "other"]]) {
+  test(`collect: ${type} (subject.url ${url ? "set" : "null"}) is unkeyable:<thread id>`, () => {
+    const u = C.fromApiItem(api({ id: "T9", subject: { url, type, title: "x" } }));
+    assert.deepEqual([u.unkeyable, u.key, u.kind, u.inPage], [true, "unkeyable:t9", kind, false]);
+  });
+}
+
+test("collect: an unkeyable key never equals a page key, so mergeApi lists no page row twice", () => {
+  const page = [{ key: "discussion:/acme/web/discussions/12", kind: "discussion", owner: "acme", repo: "web", title: "Other", reason: "mention" }];
+  const merged = C.mergeApi(page, [C.fromApiItem(api({ subject: { url: null, type: "Discussion", title: "Different" } }))]);
+  assert.equal(merged.length, 2);
+});
+
+test("collect: normTitle collapses whitespace, trims, lowercases and applies NFC", () => {
+  assert.equal(C.normTitle("  Plan \n the\t RELEASE "), "plan the release");
+  assert.equal(C.normTitle("Cafe\u0301"), C.normTitle("Caf\u00e9"));
+});
+
+const pageRow = (over) => ({ key: "discussion:/acme/web/discussions/12", kind: "discussion", owner: "Acme", repo: "Web", title: "Plan the  release", reason: "mention", ...over });
+
+test("collect: absorption is one-to-one on repository (lowercase), kind and normalised title", () => {
+  const item = C.fromApiItem(api({}));
+  assert.deepEqual([...C.absorbed([pageRow()], [item])], [item.key]);
+  assert.equal(C.mergeApi([pageRow()], [item]).length, 1);
+});
+
+test("collect: two API CheckSuite items with the same title as one page run row both stay unabsorbed", () => {
+  const run = { kind: "run", key: "run:/acme/web/actions/runs/1", title: "CI" };
+  const items = [C.fromApiItem(api({ id: "A", subject: { url: null, type: "CheckSuite", title: "CI" } })), C.fromApiItem(api({ id: "B", subject: { url: null, type: "CheckSuite", title: "CI" } }))];
+  assert.equal(C.absorbed([pageRow(run)], items).size, 0);
+  assert.equal(C.mergeApi([pageRow(run)], items).length, 3);
+});
+
+test("collect: no absorption without a title, with a different kind, repository or title (backticks rendered)", () => {
+  const item = C.fromApiItem(api({}));
+  assert.equal(C.absorbed([pageRow({ title: "" })], [item]).size, 0);
+  assert.equal(C.absorbed([pageRow({ kind: "run" })], [item]).size, 0);
+  assert.equal(C.absorbed([pageRow({ repo: "api" })], [item]).size, 0);
+  assert.equal(C.absorbed([pageRow()], [C.fromApiItem(api({ subject: { url: null, type: "Discussion", title: "Plan the `release`" } }))]).size, 0);
+  assert.equal(C.absorbed([pageRow({ kind: "pull", key: "acme/web#1" })], [item]).size, 0);
+});
+
+test("collect: two page rows with the same title, one API item: no absorption", () => {
+  assert.equal(C.absorbed([pageRow(), pageRow({ key: "discussion:/acme/web/discussions/13" })], [C.fromApiItem(api({}))]).size, 0);
 });

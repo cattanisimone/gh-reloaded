@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" font-family="DejaVu Sans, sans-serif">
+<rect width="1200" height="620" fill="#fff"/>
+<text x="32" y="30" font-size="15" font-weight="600" fill="#1f2328">Triage beyond the current page. Fictional data; dashed outline = new.</text>
+<!-- A: 1280 light, a category selected, partial -->
+<text x="32" y="62" font-size="12" font-weight="600" fill="#59636e">A · UNVERIFIABLE SELECTED, CHECK STOPPED AT ITS LIMIT</text>
+<rect x="32" y="72" width="760" height="520" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<rect x="44" y="84" width="170" height="120" rx="6" fill="#f6f8fa" stroke="#54aeff" stroke-dasharray="4 3"/>
+<text x="54" y="102" font-size="11" font-weight="600" fill="#59636e">Triage</text>
+<circle cx="60" cy="123" r="4" fill="#d1242f"/><text x="72" y="127" font-size="12" fill="#1f2328">Needs attention</text><text x="172" y="127" font-size="11" fill="#1f2328">0+</text>
+<circle cx="60" cy="147" r="4" fill="#0969da"/><text x="72" y="151" font-size="12" fill="#1f2328">Informational</text><text x="172" y="151" font-size="11" fill="#1f2328">10+</text>
+<rect x="46" y="160" width="164" height="26" rx="6" fill="#ddf4ff"/><circle cx="60" cy="173" r="4" fill="#8250df"/><text x="72" y="177" font-size="12" font-weight="600" fill="#0969da">Unverifiable</text><text x="172" y="177" font-size="11" fill="#0969da">22+</text>
+<rect x="232" y="84" width="548" height="150" rx="6" fill="#fff" stroke="#54aeff" stroke-dasharray="4 3"/>
+<text x="244" y="104" font-size="12" font-weight="600" fill="#1f2328">Unverifiable · 15 on this page + 7 outside · 35 notifications checked</text>
+<text x="690" y="104" font-size="12" fill="#0969da">Clear triage</text>
+<text x="244" y="130" font-size="12" fill="#59636e">3 not verified yet.</text>
+<text x="244" y="152" font-size="12" fill="#59636e">More notifications not checked yet.</text>
+<rect x="470" y="140" width="84" height="22" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="484" y="155" font-size="11" font-weight="600" fill="#1f2328">Load more</text>
+<text x="244" y="182" font-size="12" fill="#59636e">Notifications from organizations your token can't read may be missing.</text>
+<rect x="232" y="246" width="548" height="90" rx="6" fill="#fff" stroke="#d1d9e0"/>
+<text x="248" y="270" font-size="12" fill="#59636e">GitHub's own list (unchanged)</text>
+<text x="248" y="296" font-size="12" fill="#1f2328">Rename the helper · review wanted</text>
+<rect x="232" y="352" width="548" height="168" rx="6" fill="#fff" stroke="#54aeff" stroke-dasharray="4 3"/>
+<text x="248" y="376" font-size="13" font-weight="600" fill="#1f2328">Outside this page (7)</text>
+<text x="248" y="394" font-size="11" fill="#59636e">From your notifications on GitHub · read-only</text>
+<line x1="233" y1="402" x2="779" y2="402" stroke="#d1d9e0"/>
+<text x="248" y="420" font-size="11" fill="#59636e">acme/widgets #36 · unrecognised reason · 3 hours ago</text>
+<text x="248" y="440" font-size="13" font-weight="600" fill="#1f2328">Slow first render of the checks list</text><circle cx="700" cy="436" r="4" fill="#8250df"/><text x="710" y="440" font-size="11" fill="#59636e">Unverifiable</text>
+<line x1="233" y1="452" x2="779" y2="452" stroke="#d1d9e0"/>
+<text x="248" y="470" font-size="11" fill="#59636e">acme/api #52 · unrecognised reason · 1 day ago</text>
+<text x="248" y="490" font-size="13" font-weight="600" fill="#1f2328">Retry the upload when the token expires</text><circle cx="700" cy="486" r="4" fill="#8250df"/><text x="710" y="490" font-size="11" fill="#59636e">Unverifiable</text>
+<text x="248" y="540" font-size="11" fill="#59636e">ProTip! Use the filters to narrow the list.   1–25 of 35   Prev  Next</text>
+<!-- B: 390 dark, fill in progress -->
+<text x="840" y="62" font-size="12" font-weight="600" fill="#59636e">B · 390 PX, DARK, CHECK IN PROGRESS</text>
+<rect x="840" y="72" width="330" height="520" rx="6" fill="#0d1117" stroke="#3d444d"/>
+<rect x="852" y="84" width="150" height="32" rx="6" fill="#151b23" stroke="#3d444d"/><text x="866" y="104" font-size="12" fill="#f0f6fc">Informational 10+</text>
+<rect x="1008" y="84" width="150" height="32" rx="6" fill="#388bfd1a" stroke="#1f6feb"/><text x="1022" y="104" font-size="12" fill="#4493f8">Unverifiable 15+</text>
+<rect x="852" y="128" width="306" height="132" rx="6" fill="#0d1117" stroke="#1f6feb" stroke-dasharray="4 3"/>
+<text x="864" y="148" font-size="11" font-weight="600" fill="#f0f6fc">Unverifiable · 15 on this page · 25 checked</text>
+<text x="864" y="172" font-size="11" fill="#f0f6fc">Checking more notifications… 25 checked</text>
+<rect x="864" y="184" width="282" height="44" rx="6" fill="#151b23" stroke="#3d444d"/><text x="978" y="211" font-size="12" font-weight="600" fill="#f0f6fc">Stop</text>
+<text x="864" y="248" font-size="11" fill="#9198a1">More notifications not checked yet.</text>
+<rect x="840" y="276" width="330" height="110" fill="#0d1117" stroke="#3d444d"/>
+<text x="856" y="300" font-size="11" fill="#9198a1">GitHub's own list, edge to edge</text>
+<rect x="840" y="400" width="330" height="90" fill="#0d1117" stroke="#1f6feb" stroke-dasharray="4 3"/>
+<text x="856" y="424" font-size="12" font-weight="600" fill="#f0f6fc">Outside this page (4)</text>
+<text x="856" y="444" font-size="11" fill="#9198a1">acme/api #52 · mention · 1 day ago</text>
+<text x="856" y="466" font-size="12" font-weight="600" fill="#f0f6fc">Retry the upload when the token expires</text>
+</svg>

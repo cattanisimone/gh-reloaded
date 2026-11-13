@@ -8,8 +8,8 @@
 // first pages of GET /notifications (classic token, scope `notifications`).
 //
 // Limits: one aliased GraphQL query per repository and batch of 25, two in
-// flight; at most 2 pages of 50 from the Notifications API with the default
-// token. Nothing is written to GitHub, nothing is stored: text is read and
+// flight; the baseline read is at most 2 pages of 50 from the Notifications API
+// with the default token (more pages only through fillPage, on user intent). Nothing is written to GitHub, nothing is stored: text is read and
 // matched in memory only. Failures are reported in-band (capabilities,
 // rateLimited/retryAt) so the engine keeps what it already classified.
 
@@ -111,12 +111,19 @@ export function normalizeMention(node, kind, viewer) {
 }
 
 // Why the Notifications API did not answer. A classic token's scope headers
-// can prove the scope missing; everything else stays cause-less.
+// can prove the scope missing; a 403 that says the resource is not accessible
+// (a fine-grained token) and an ambiguous 404 stay "unavailable", the state the
+// view words as "needs a classic token with the notifications scope"; a 401 or
+// another 403 is "refused"; no answer at all or a 5xx is "no-answer".
 export function apiFailure(e) {
   if (e?.rateLimited) return { state: "rate-limited", retryAt: e.retryAt ?? null };
   const classic = Array.isArray(e?.scopes);
   const lacks = classic && !e.scopes.includes("notifications") && !e.scopes.includes("repo") && (e.acceptedScopes || []).includes("notifications");
-  return { state: lacks ? "missing-scope" : "unavailable" };
+  if (lacks) return { state: "missing-scope" };
+  if (!e?.status || e.status >= 500) return { state: "no-answer" };
+  if (e.status === 401) return { state: "refused" };
+  if (e.status === 403 && !/not accessible|scope|fine-grained|personal access token|not found/i.test(e.ghMessage || "")) return { state: "refused" };
+  return { state: "unavailable" };
 }
 
 const subjectKey = (item) => {
@@ -124,23 +131,67 @@ const subjectKey = (item) => {
   return m ? { key: `${m[1]}/${m[2]}#${m[4]}`.toLowerCase(), kind: m[3] === "pulls" ? "pull" : "issue", owner: m[1], repo: m[2], number: Number(m[4]) } : null;
 };
 
-async function readApi() {
+const PAGE_MAX = 20;
+
+// The REST path of one page of the user's notifications: read and unread with
+// "all", never Done, 50 per page, "participating" when the native query says so.
+export function notificationsPath(page, { all = true, participating = false } = {}) {
+  return `/notifications?all=${all ? "true" : "false"}&is_done=false&per_page=50&page=${page}${participating ? "&participating=true" : ""}`;
+}
+
+// Only the fields the page needs, in the REST shape collect.fromApiItem reads.
+const slim = (i) => ({ id: i.id, reason: i.reason, unread: !!i.unread, updated_at: i.updated_at || "", subject: { url: i.subject?.url || "", type: i.subject?.type || "", title: i.subject?.title || "" }, repository: { full_name: i.repository?.full_name || "" } });
+
+async function readApi(query) {
   if (!(await resolveTokenRecord())?.token) return { state: "not-tried", items: [] };
   const items = [];
+  let pages = 0;
+  let next = false;
+  let lastModified = "";
+  let classic = true;
   try {
     for (let page = 1; page <= API_PAGES; page++) {
-      const res = await ghFetchRaw(`/notifications?per_page=50&page=${page}`);
+      const res = await ghFetchRaw(notificationsPath(page, query));
+      pages = page;
+      if (page === 1) lastModified = res.lastModified;
+      if (res.scopes === null) classic = false;
       if (Array.isArray(res.data)) items.push(...res.data);
-      if (!/rel="next"/.test(res.link)) break;
+      next = /rel="next"/.test(res.link);
+      if (!next) break;
     }
   } catch (e) {
     return { ...apiFailure(e), items: [] };
   }
-  // Empty data proves nothing (a fine-grained token, a filtered account).
-  return { state: items.length ? "ok" : "unavailable", items };
+  // Empty data proves nothing (a fine-grained token, a filtered account), and a
+  // 200 without x-oauth-scopes is a fine-grained token, which cannot read this.
+  return { state: items.length && classic ? "ok" : "unavailable", items, pages, next, lastModified };
 }
 
-export async function handleMessage({ rows, api } = {}) {
+// One page of the API for the fill (GHNT_FILL_PAGE), default token only. The
+// answer is { ok: true, items, next, lastModified, pollInterval } or a 304
+// { ok: true, notModified: true } or { ok: false, failure } with failure one of
+// rate-limited (retryAt), no-capable-token, refused, no-answer.
+export const fillPage = {
+  MESSAGE_TYPE: "GHNT_FILL_PAGE",
+  handleMessage: async ({ page, all, participating, ifModifiedSince } = {}) => {
+    const n = Number(page);
+    if (!Number.isInteger(n) || n < 1 || n > PAGE_MAX) return { ok: false, failure: "refused" };
+    if (!(await resolveTokenRecord())?.token) return { ok: false, failure: "no-capable-token" };
+    try {
+      const headers = ifModifiedSince ? { "If-Modified-Since": String(ifModifiedSince) } : undefined;
+      const res = await ghFetchRaw(notificationsPath(n, { all: all !== false, participating: !!participating }), { headers, notModified: true });
+      if (res.status === 304) return { ok: true, notModified: true, pollInterval: res.pollInterval };
+      if (res.scopes === null) return { ok: false, failure: "no-capable-token" };
+      return { ok: true, items: Array.isArray(res.data) ? res.data.map(slim) : [], next: /rel="next"/.test(res.link), lastModified: res.lastModified, pollInterval: res.pollInterval };
+    } catch (e) {
+      const f = apiFailure(e);
+      if (f.state === "rate-limited") return { ok: false, failure: "rate-limited", retryAt: f.retryAt };
+      return { ok: false, failure: f.state === "missing-scope" || f.state === "unavailable" ? "no-capable-token" : f.state === "no-answer" ? "no-answer" : "refused" };
+    }
+  },
+};
+
+export async function handleMessage({ rows, api, apiQuery } = {}) {
   const result = { facts: {}, capabilities: {}, api: { state: "not-tried", items: [] }, rateLimited: false, retryAt: null, reasons: {} };
   const note = (e) => {
     result.rateLimited = true;
@@ -148,9 +199,8 @@ export async function handleMessage({ rows, api } = {}) {
   };
 
   if (api) {
-    const read = await readApi();
-    // Only the fields the page needs, in the REST shape collect.fromApiItem reads.
-    result.api = { state: read.state, items: read.items.map((i) => ({ id: i.id, reason: i.reason, unread: !!i.unread, subject: { url: i.subject?.url || "", type: i.subject?.type || "", title: i.subject?.title || "" }, repository: { full_name: i.repository?.full_name || "" } })) };
+    const read = await readApi(apiQuery);
+    result.api = { state: read.state, items: read.items.map(slim), pages: read.pages || 0, next: !!read.next, lastModified: read.lastModified || "" };
     if (read.state === "rate-limited") note({ retryAt: read.retryAt });
   }
 

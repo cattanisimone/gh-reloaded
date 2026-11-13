@@ -7,7 +7,7 @@ import "../support/chrome-stub.js"; // must come first: installs globalThis.chro
 import { resetStorage } from "../support/chrome-stub.js";
 import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { resolveTokenRecord, ghFetch, ghGraphQL, GQL_ERRORS, repoFromUrl, safeFields, mapWithLimit } from "../../lib/github-api.js";
+import { resolveTokenRecord, ghFetchRaw, ghFetch, ghGraphQL, GQL_ERRORS, repoFromUrl, safeFields, mapWithLimit } from "../../lib/github-api.js";
 
 const TOKENS = [
   { id: "tok_default", name: "Default", token: "secret-default", owner: "" },
@@ -259,4 +259,24 @@ test("ghFetch without noStore leaves fetch options unchanged", async () => {
   assert.equal("cache" in opts, false);
   await ghFetch("/repos/acme/web/issues/10", { owner: "acme", fresh: true });
   assert.equal("cache" in opts, false);
+});
+
+const hdrs = (o) => ({ get: (k) => o[k.toLowerCase()] ?? null });
+
+test("ghFetchRaw sends extra request headers and returns status, Last-Modified and X-Poll-Interval", async () => {
+  let sent;
+  globalThis.fetch = async (url, opts) => {
+    sent = opts.headers;
+    return { ok: true, status: 200, json: async () => [1], headers: hdrs({ link: '<x>; rel="next"', "x-oauth-scopes": "notifications", "last-modified": "Wed, 01 Jan 2026 00:00:00 GMT", "x-poll-interval": "60" }) };
+  };
+  const r = await ghFetchRaw("/notifications", { headers: { "If-Modified-Since": "Tue, 31 Dec 2025 00:00:00 GMT" } });
+  assert.equal(sent["If-Modified-Since"], "Tue, 31 Dec 2025 00:00:00 GMT");
+  assert.deepEqual([r.status, r.lastModified, r.pollInterval, r.scopes, r.data], [200, "Wed, 01 Jan 2026 00:00:00 GMT", 60, ["notifications"], [1]]);
+});
+
+test("ghFetchRaw returns a 304 only when the caller accepts it; existing callers still see an error", async () => {
+  globalThis.fetch = async () => ({ ok: false, status: 304, json: async () => ({}), clone() { return this; }, headers: hdrs({}) });
+  const r = await ghFetchRaw("/notifications", { notModified: true });
+  assert.deepEqual([r.status, r.data], [304, null]);
+  await assert.rejects(() => ghFetchRaw("/notifications"), (e) => e.status === 304);
 });
