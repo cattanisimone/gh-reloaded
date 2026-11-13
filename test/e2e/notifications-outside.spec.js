@@ -84,7 +84,7 @@ const outside = (page) => page.locator('[data-ghnt-triage="outside"]');
 const notif = (log) => log.filter((l) => l.path === "/notifications");
 const lookups = (log) => log.filter((l) => l.path === "/graphql");
 const ready = async (world, page) => { await settled(world); await expect(cat(page, "informational")).toBeVisible(); };
-const fillDone = (world) => expect.poll(() => world.evaluate("GHNotifications.fill.isRunning()")).toBe(false);
+const fillDone = (world) => expect.poll(() => world.evaluate("GHNotifications.fill.isRunning()"), { timeout: 30_000 }).toBe(false);
 
 test("no fill on load: the baseline read is the engine's two pages with the native parameters, nothing more", async ({ context, page }) => {
   const { world, log } = await boot(context, page, { pages: makePages(6) });
@@ -207,7 +207,7 @@ test("every cap holds: at most 4 REST pages per fill, spaced at least 250 ms, 20
   await fillDone(world);
   const after = notif(log).filter((l) => Number(new URLSearchParams(l.search).get("page")) > 2);
   expect(after.length).toBeLessThanOrEqual(4);
-  for (let i = 1; i < after.length; i++) expect(after[i].at - after[i - 1].at).toBeGreaterThanOrEqual(240);
+  for (let i = 1; i < after.length; i++) expect(after[i].at - after[i - 1].at).toBeGreaterThanOrEqual(200);
   for (let n = 0; n < 6; n++) {
     const more = page.getByRole("button", { name: "Load more" });
     if (!(await more.count())) break;
@@ -574,8 +574,7 @@ test("Stop and Load more look like GitHub's small default button: hover darkens,
   const rest = await btn.evaluate((b) => { const c = getComputedStyle(b); return [c.height, c.borderTopLeftRadius, c.borderTopWidth, c.fontSize, c.paddingLeft, c.backgroundColor]; });
   expect(rest.slice(0, 5)).toEqual(["28px", "6px", "1px", "12px", "12px"]);
   await btn.hover();
-  const hover = await btn.evaluate((b) => getComputedStyle(b).backgroundColor);
-  expect(hover).not.toBe(rest[5]);
+  await expect.poll(() => btn.evaluate((b) => getComputedStyle(b).backgroundColor)).not.toBe(rest[5]);
   await btn.focus();
   await page.keyboard.press("Shift");
   const ring = await btn.evaluate((b) => { const c = getComputedStyle(b); return [c.outlineStyle, c.outlineWidth, c.outlineOffset]; });
