@@ -55,13 +55,14 @@ test("a type nobody tested yet reads 'may need', and disappears once it is prove
   await expect(warning(page)).toBeHidden();
 });
 
-test("Later hides it for this page; How to add it opens the Full guide; Test again re-tests and clears it", async ({ context, page }) => {
+test("Later hides it for this page; How to add it shows the steps in the warning; Test again re-tests and clears it", async ({ context, page }) => {
   let broken = true;
   await mockApi(context, (c) => (broken && c.url.includes("/pulls?") ? { status: 403, body: { message: "Resource not accessible by personal access token" } } : allGood(c)));
   await start(context, page, { features: { ...OFF, ghlpsEnabled: true }, session: { d: codes({ pulls: "denied" }) } });
   await expect(page.locator("#full-guide")).toHaveJSProperty("open", false);
   await warning(page).getByRole("button", { name: "How to add it" }).click();
-  await expect(page.locator("#full-guide")).toHaveJSProperty("open", true);
+  await expect(page.locator("#warning-steps li")).toHaveCount(4);
+  await expect(page.locator("#full-guide")).toHaveJSProperty("open", false);
   broken = false;
   await warning(page).getByRole("button", { name: "Test again" }).click();
   await expect(warning(page)).toBeHidden();

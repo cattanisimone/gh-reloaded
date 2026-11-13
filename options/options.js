@@ -120,7 +120,7 @@ function rowHtml(e) {
     <li class="token-item${editing ? " is-editing" : ""}" data-id="${id}">
       <div class="token-row">
         <div class="tr-main"><span class="tr-name">${escapeHtml(displayName(e))}${e.isDefault && displayName(e) !== "Default token" ? ' <span class="tag">default</span>' : ""}</span><span class="tr-use">Used for: ${e.isDefault ? "all repositories" : escapeHtml(e.owner)}</span></div>
-        <div class="tr-state"><span class="state-pill state-${st.state}">${escapeHtml(st.label)}</span><span class="tr-last">${escapeHtml(st.note || last)}${st.note && e.token ? ` · ${escapeHtml(last)}` : ""}</span></div>
+        <div class="tr-state"><span class="state-pill state-${st.state}">${escapeHtml(st.label)}</span>${st.note && e.token ? `<span class="tr-note-line">${escapeHtml(st.note)}</span>` : ""}<span class="tr-last">${escapeHtml(st.note && !e.token ? st.note : last)}</span></div>
         <div class="tr-actions">
           ${e.token ? `<button type="button" class="btn btn-secondary" data-act="test" data-id="${id}"${runs.has(e.id) ? " disabled" : ""}>Test</button>` : ""}
           <button type="button" class="btn btn-secondary" data-act="edit" data-id="${id}">Edit</button>
@@ -411,7 +411,7 @@ function updatePanel() {
   const rules = panel.isDefault
     ? ["Used for every repository owner without a token of its own.", "If it fails, GH Reloaded doesn't try another token."]
     : [`Repositories owned by ${ownerName} use this token.`, "Every other owner uses the default token.", "If it fails, GH Reloaded doesn't try another token."];
-  $p("which").innerHTML = `<strong>Which token is used</strong><span class="which-save">Changes apply only when you press Save.</span><ul>${rules.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`;
+  $p("which").innerHTML = `<strong>Which token is used</strong><ul>${rules.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`;
   const changes = changedFields();
   const tag = $p("changes");
   tag.hidden = !changes.length;
@@ -580,7 +580,18 @@ tokensRoot.addEventListener("click", (e) => {
 });
 
 document.getElementById("add-token").addEventListener("click", () => openPanel(null));
-document.getElementById("warning-how").addEventListener("click", openGuide);
+document.getElementById("warning-how").addEventListener("click", () => {
+  const ol = document.getElementById("warning-steps");
+  const ids = (document.getElementById("token-warning").dataset.ids || "").split(",").filter(Boolean);
+  const classic = ids.map((id) => entryById(id)).some((e) => e && /^gh[pous]_/.test(e.token || ""));
+  const names = [...document.querySelectorAll("#warning-details .wp-head strong")].map((n) => n.textContent).join(", ");
+  const steps = classic
+    ? ["Open github.com/settings/tokens and edit the token.", `Tick the scopes that cover ${names} (read:project, public_repo or repo).`, "If the organization requires approval or SSO, authorize the token or wait for an admin.", "Come back here and press Test again."]
+    : ["Open github.com/settings/personal-access-tokens and edit the token.", `Set ${names} to Read-only.`, "If the organization requires approval, wait for an admin to approve it.", "Come back here and press Test again."];
+  ol.replaceChildren(...steps.map((t) => Object.assign(document.createElement("li"), { textContent: t })));
+  ol.hidden = false;
+  ol.focus();
+});
 document.getElementById("warning-later").addEventListener("click", () => { laterHidden = true; renderWarning(); });
 document.getElementById("warning-retest").addEventListener("click", () => testAll((document.getElementById("token-warning").dataset.ids || "").split(",").filter(Boolean)));
 
