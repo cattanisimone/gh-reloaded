@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #132 Actions log shortcuts</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--warn:#9a6700;--bg:#fff;--soft:#f6f8fa}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px} h3{font-size:15px;margin:16px 0 6px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:12.5px;word-break:break-word} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto} .tag{display:inline-block;font-size:12px;font-weight:600;padding:0 6px;border-radius:10px;background:#ddf4ff;color:var(--accent)}
+  /* mockup */
+  .gh{border:1px solid var(--line);border-radius:6px;background:#f6f8fa;padding:12px;margin:8px 0;min-width:300px}
+  .gh .lbl{font-size:12px;color:var(--muted);margin:0 0 6px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;margin-bottom:16px}
+  .row.narrow{justify-content:flex-start;padding:0 16px}
+  .btn{height:28px;padding:0 12px;font:500 12px/26px inherit;font-family:inherit;border:1px solid #d1d9e0;border-radius:6px;background:#f6f8fa;color:#25292e;box-shadow:0 1px 0 rgba(31,35,40,.04);white-space:nowrap;box-sizing:border-box}
+  .err{color:var(--bad);font-size:12px} .okmsg{color:var(--ok);font-size:12px}
+  .cmd{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;border:1px solid var(--line);border-radius:6px;padding:3px 6px;background:#fff;width:100%;box-sizing:border-box}
+  .card{border:1px solid var(--line);border-radius:6px;background:#fff;padding:10px 16px;margin-bottom:12px}
+  .card b{font-size:14px} .card small{display:block;color:var(--muted)}
+  .steps{border:1px solid var(--line);border-radius:6px;background:#fff}
+  .steps .h{padding:12px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .steps .h a{color:var(--accent);font-weight:600} .steps .s{padding:6px 28px;color:var(--muted);font-size:13px}
+  .search{border:1px solid var(--line);border-radius:6px;height:28px;width:160px;font-size:12px;color:var(--muted);padding:0 8px;line-height:28px;background:#fff}
+  .dark{background:#0d1117;color:#f0f6fc;border-color:#3d444d}
+  .dark .btn{background:#212830;color:#f0f6fc;border-color:#3d444d} .dark .card,.dark .steps{background:#151b23;border-color:#3d444d;color:#f0f6fc} .dark .steps .h{border-color:#3d444d}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+  .opt{border:1px solid var(--line);border-radius:6px;background:#fff;padding:10px 12px;font-size:13px}
+  .opt .t{font-weight:600} .opt .d{color:var(--muted)} .warnbox{border:1px solid #d4a72c66;background:#fff8c5;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12.5px}
+  .sw{float:right;width:32px;height:18px;border-radius:9px;background:#d1580b;position:relative} .sw::after{content:"";position:absolute;right:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff}
+  svg text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+</style></head><body><main>
+<h1>#132 · Copy gh command and adaptive Open raw log on Actions run and job pages</h1>
+<p class="meta">Issue <a href="https://github.com/cattanisimone/gh-reloaded/issues/132">cattanisimone/gh-reloaded#132</a> · Size: <b>normal</b> (new UI surface, new feature, Options and token docs) · Goal: two shortcuts to a run's or job's logs, no log bytes ever in the extension, no new permission.</p>
+
+<h2>What changes for users</h2>
+<ul>
+  <li>New feature <b>Actions log shortcuts</b>, on by default, one switch in Options → Features.</li>
+  <li>Run and job pages: a <b>Copy gh command</b> button above the content copies e.g. <code>gh run view --log-failed --job 132076068976 --repo OWNER/REPO</code>; "Copied" / "Copy failed" is announced, and on failure the command stays visible and selectable.</li>
+  <li>Job pages only: <b>Open raw log</b> next to it, only when the user's token proves it can read that repository's Actions logs (one read probe per repository and token per minute). It opens the page's own "View raw logs" link in a new tab.</li>
+  <li>No message on Actions pages in any state. When the last check for an owner was <code>not-permitted</code>, Options shows a warning in Features and on the token card used for that owner; Options → GitHub tokens lists <b>Actions: Read-only</b> as optional.</li>
+</ul>
+
+<h2>Mockup</h2>
+<p class="meta">Built from the issue's approved mockups and the live job page probed signed in (public run of this repository). New parts are outlined. Fictional owner <code>acme</code>.</p>
+<div class="scroll">
+<div class="gh"><p class="lbl">Job page, 1280 px, state <code>ok</code>, job concluded</p>
+  <div class="row"><button class="btn new">Copy gh command</button><button class="btn new">Open raw log</button></div>
+  <div class="card"><b>Annotations</b><small>1 error and 1 notice</small></div>
+  <div class="steps"><div class="h"><span><a>test</a><br><small style="color:#59636e">failed in 47s</small></span><span class="search">Search logs</span></div><div class="s">✓ Set up job</div><div class="s"><span style="color:#d1242f">✕</span> Run unit + e2e tests</div></div>
+</div>
+<div class="gh"><p class="lbl">Job page, any other state (<code>not-permitted</code>, <code>no-token</code>, <code>unknown</code>, <code>rate-limited</code>), or job not concluded, or no raw-log link on the page (signed out). No permission message.</p>
+  <div class="row"><button class="btn new">Copy gh command</button></div>
+  <div class="card"><b>Annotations</b><small>1 error and 1 notice</small></div>
+</div>
+<div class="gh"><p class="lbl">After a click: copy failed (left) · Open raw log failed (right)</p>
+  <div class="cols">
+   <div><div class="row" style="justify-content:flex-start"><button class="btn new">Copy gh command</button><span class="err new" role="status">Copy failed</span><input class="cmd new" readonly value="gh run view --log --job 132076068976 --repo acme/web"></div></div>
+   <div><div class="row"><button class="btn new">Copy gh command</button><button class="btn new">Open raw log</button><span class="err new">Could not open log</span></div></div>
+  </div>
+</div>
+<div class="cols">
+ <div class="gh dark"><p class="lbl" style="color:#9198a1">Job page, dark, 390 px, <code>ok</code></p>
+  <div class="row narrow"><button class="btn new">Copy gh command</button><button class="btn new">Open raw log</button></div>
+  <div class="card"><b>Annotations</b><small style="color:#9198a1">2 errors and 2 notices</small></div>
+  <div class="steps"><div class="h" style="padding:12px 16px"><span><b>test</b><br><small style="color:#9198a1">failed 3 days ago</small></span></div></div>
+ </div>
+ <div class="gh"><p class="lbl">Run page (Summary), 1280 px: Copy only, never Open raw log</p>
+  <div class="row"><button class="btn new">Copy gh command</button></div>
+  <div class="card"><b>Triggered via pull request</b><small>Status Failure · Total duration 1m 4s</small></div>
+ </div>
+</div>
+<div class="cols">
+ <div class="opt"><span class="sw"></span><div class="t">Actions log shortcuts</div><div class="d">On GitHub Actions run and job pages: Copy gh command. On job pages also Open raw log, where your token can read Actions.</div>
+  <div class="d new" style="margin-top:6px">Open raw log appears only when your token can read Actions for that repository. Fine-grained tokens need the optional Actions: Read-only permission and access to the repository; a classic token with repo usually already has it.</div>
+  <div class="warnbox new">The last check for acme could not read Actions logs (13 Nov, 10:42), so Open raw log may be hidden on its job pages. Copy gh command keeps working. To use it there: a fine-grained token with Actions: Read-only and access to the repository. <a href="#">Open GitHub tokens</a></div>
+ </div>
+ <div class="opt"><div class="t">Fine-grained token — permissions table</div>
+  <div style="display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:6px;padding-top:6px" class="new"><span>Actions <small style="color:#59636e">optional, only for Open raw log (Actions log shortcuts); without it that button stays hidden</small></span><b>Read-only</b></div>
+  <div class="t" style="margin-top:10px">Owner token · acme</div>
+  <div class="warnbox new">The last check for acme could not read Actions logs. Open raw log may be hidden on acme's job pages; everything else keeps working. Optional: use a fine-grained token with Actions: Read-only and access to the repository. Last check: 13 Nov, 10:42</div>
+ </div>
+</div>
+</div>
+
+<h2>Visual contract</h2>
+<table id="visual-contract">
+<tr><th>Reference</th><td>The issue's approved mockups "job page · light, 1280 px" and "job page · dark, 390 px": a row of Primer small buttons (<code>btn btn-sm</code>) above the job content, right-aligned on wide pages, left-aligned on narrow pages, 8px between buttons. Native neighbours named: the job box <code>#logs.CheckRun</code> and the run Summary card <code>.actions-workflow-stats</code>.</td></tr>
+<tr><th>Anchor</th><td>≥ 768px: the right border edge of the last button aligns to the right border edge of the job box <code>#logs</code> (run page: the border box of the Summary card). &lt; 768px: the left border edge of the first button aligns to the first glyph of the job title text in <code>.CheckRun-header</code> (16px in from the screen edge; run page: the first glyph of the Summary card's first label). Rejected: the Annotations header's padded block, whose box starts 16px before its text.</td></tr>
+<tr><th>Width</th><td>The row fills the content column (<code>div.flex-auto.min-width-0</code> on job pages, <code>div.flex-auto</code> on run pages), widthShare 1.0 of that column; the buttons hug their content (about 134px + 8px + 102px = 244px, as measured in the mockup), no px cap.</td></tr>
+<tr><th>Responsive</th><td>1500 / 1100 / 800 px: one line, right-aligned. 390 and 320 px: one line, left-aligned (244px fits in 358px and 288px). "Copy failed" with its command field and "Could not open log" wrap to the next line; nothing overlaps; no action disappears.</td></tr>
+<tr><th>Native controls</th><td>Annotations, job header, Search logs, the job menu, sidebar, page header and re-run controls are untouched and keep their size; they only move down by the row's constant height (28px + 16px margin), the same in every capability state, so switching state never shifts them. Never inside a native flex row; never clipped or crushed.</td></tr>
+<tr><th>Evidence</th><td>Live: the signed-in factory session and an anonymous session on a public job page and run page of this repository, before and after at the same state, same viewport (1500, 1100, 800, 390, 320) and same theme. Fixture tests (<code>actions-log-shortcuts-layout.spec.js</code>) are reported separately and are not live evidence. Private repositories: Not verified on live github.com.</td></tr>
+<tr><th>Expected</th><td>≥ 768px: dx of last button right edge to <code>#logs</code> right border edge 0 ±1px. &lt; 768px: dx of first button left edge to job-title first glyph 0 ±1px. Button height 28px ±0, radius 6px, gap 8px ±0.5; row widthShare of the column 1.0 ±0.01; at 320px both buttons on the same top ±1px; native card height unchanged 0 ±1px.</td></tr>
+</table>
+
+<h2>Route matrix</h2>
+<table>
+<tr><th>Route</th><th>Copy gh command</th><th>Open raw log</th></tr>
+<tr><td><code>/O/R/actions/runs/:run</code> (Summary)</td><td><code>gh run view :run &lt;flag&gt; --repo O/R</code>; flag from the run's status</td><td>never</td></tr>
+<tr><td><code>/O/R/actions/runs/:run/attempts/:n</code></td><td>as above plus <code>--attempt :n</code></td><td>never</td></tr>
+<tr><td><code>/O/R/actions/runs/:run/job/:job</code></td><td><code>gh run view &lt;flag&gt; --job :job --repo O/R</code>; flag from the job's status (a job ID already names its attempt, so no <code>--attempt</code>; C6 confirms)</td><td>adaptive: <code>ok</code> + job concluded + page carries its raw-log link + logs not declared unavailable</td></tr>
+<tr><td>Run or job in progress or queued</td><td>hidden (gh answers "still in progress; logs will be available when it is complete", observed); shown only if C6 proves a form works</td><td>hidden</td></tr>
+<tr><td><code>/actions</code>, workflow lists, <code>runs/:run/usage</code>, <code>runs/:run/workflow</code>, PR Checks tab, raw log page</td><td>nothing</td><td>nothing</td></tr>
+</table>
+<p class="meta">Summary ↔ job via the sidebar, job A ↔ job B, run in repo X → run in repo Y, browser back and forward: the row is rebuilt for the new path, never duplicated, never with the previous IDs or state (a per-scan path token discards late answers).</p>
+
+<h2>How it works</h2>
+<div class="scroll"><svg viewBox="0 0 860 300" width="100%" role="img" aria-label="Data flow between page, content script, service worker and GitHub">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+<g font-size="12" fill="#1f2328">
+<rect x="10" y="20" width="200" height="120" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="20" y="40" font-weight="600">github.com run / job page</text>
+<text x="20" y="60">URL → owner, repo, run, attempt, job</text><text x="20" y="78">header icon / job header text →</text><text x="20" y="94">  failed · concluded · in progress</text><text x="20" y="112">a.js-steps-dropdown-raw-logs</text><text x="20" y="128">  (hidden "View raw logs" link)</text>
+<rect x="270" y="20" width="230" height="120" rx="6" fill="#ddf4ff" stroke="#0969da"/><text x="280" y="40" font-weight="600">content script (model.js + content.js)</text>
+<text x="280" y="60">build command (pure, no network)</text><text x="280" y="78">navigator.clipboard.writeText</text><text x="280" y="96">render row; ask DETECT on job pages</text><text x="280" y="114">click Open → ask OPEN with link href</text>
+<rect x="560" y="20" width="290" height="120" rx="6" fill="#ddf4ff" stroke="#0969da"/><text x="570" y="40" font-weight="600">background/actions-log-shortcuts.js</text>
+<text x="570" y="60">resolveTokenRecord(owner) → none: no-token</text><text x="570" y="78">cache tokenId:owner/repo, 60 s / retryAt</text><text x="570" y="96">map answer → ok | not-permitted | …</text><text x="570" y="114">store {owner: state, at} (ok / not-perm.)</text><text x="570" y="130">OPEN: fresh probe, then chrome.tabs.create</text>
+<rect x="560" y="200" width="290" height="80" rx="6" fill="#fff" stroke="#d1d9e0"/><text x="570" y="220" font-weight="600">api.github.com</text><text x="570" y="240">GET /repos/O/R/actions/jobs/:job/logs</text><text x="570" y="258">fetch redirect:"manual" → opaqueredirect = ok</text><text x="570" y="274">redirect never followed: no log bytes</text>
+<rect x="270" y="200" width="230" height="80" rx="6" fill="#fff" stroke="#d1d9e0"/><text x="280" y="220" font-weight="600">new tab (user's session)</text><text x="280" y="240">github.com/O/R/commit/:sha/</text><text x="280" y="256">  checks/:job/logs</text><text x="280" y="272">extension never sees the body</text>
+<rect x="10" y="200" width="200" height="80" rx="6" fill="#fff" stroke="#d1d9e0"/><text x="20" y="220" font-weight="600">Options</text><text x="20" y="240">reads ghalsOutcomes</text><text x="20" y="256">Features warning + token card</text><text x="20" y="272">re-renders on storage change</text>
+</g>
+<g stroke="#59636e" fill="none" stroke-width="1.5" marker-end="url(#a)"><path d="M210 80H268"/><path d="M500 80H558"/><path d="M705 140V198"/><path d="M560 130L502 230"/><path d="M600 140L212 230"/></g>
+</svg></div>
+<table>
+<tr><th>GitHub answer to the probe (with a token)</th><th>State</th><th>Stored / Options warning</th></tr>
+<tr><td>opaque redirect (302) or 2xx</td><td><code>ok</code></td><td><code>ok</code>; clears the owner's warning</td></tr>
+<tr><td>403 / 404, no rate-limit, no <code>X-GitHub-SSO</code></td><td><code>not-permitted</code></td><td><code>not-permitted</code>; warning</td></tr>
+<tr><td>403 / 429 with remaining 0 or <code>Retry-After</code> (existing <code>rateInfo</code>)</td><td><code>rate-limited</code></td><td>unchanged; no request before <code>retryAt</code></td></tr>
+<tr><td>403 with <code>X-GitHub-SSO</code>, 401, 410, 5xx, network, anything else</td><td><code>unknown</code></td><td>unchanged; retried after 60 s</td></tr>
+<tr><td>no token resolved for the owner (owner token, else default, never another)</td><td><code>no-token</code>, no request</td><td>unchanged</td></tr>
+</table>
+<p class="meta">The scope header is never used to decide. Detection runs only on a job page, switch on, token resolved, and only once the page shows the job concluded (an in-progress job could answer 404 and be misread as <code>not-permitted</code>). Anchors read from the live probe: route by URL; job status from the visible text under the job title in <code>.CheckRun-header</code> ("failed in 47s", "Started … ago"); run status from the page-header icon's <code>aria-label</code> ("failed:", "currently running:") with the Summary "Status" value as second source; raw-log link by href <code>/commit/&lt;sha&gt;/checks/&lt;job&gt;/logs</code> (class <code>js-steps-dropdown-raw-logs</code> as a second match), never a CSS-module class. A missing anchor means no row, retried at the next scan.</p>
+
+<h2>Changes by file</h2>
+<table>
+<tr><th>File</th><th>Change</th><th>Why</th></tr>
+<tr><td><code>features/actions-log-shortcuts/model.js</code> (new)</td><td>Pure: parse route, read statuses, build command, decide visibility</td><td>Unit-testable logic</td></tr>
+<tr><td><code>features/actions-log-shortcuts/content.js</code>, <code>content.css</code> (new)</td><td>Row injection, clipboard, status messages, SPA rescans (turbo events, popstate, throttled observer)</td><td>Content-script half</td></tr>
+<tr><td><code>background/actions-log-shortcuts.js</code> (new)</td><td><code>GHALS_DETECT</code>, <code>GHALS_OPEN</code>; state cache; stored outcomes; clears them on any <code>githubTokens</code> / <code>defaultTokenId</code> change and on switch off</td><td>Background half</td></tr>
+<tr><td><code>lib/github-api.js</code> <b>shared</b></td><td>New <code>ghProbe(path, {owner})</code>: uncached GET with <code>redirect:"manual"</code>, returns <code>{status, redirected, rateLimited, retryAt, sso, tokenId}</code> and never reads a body beyond an error message</td><td>Auth stays in one place</td></tr>
+<tr><td><code>background.js</code> <b>shared</b></td><td>Register the two handlers in <code>FEATURES</code></td><td>Message routing</td></tr>
+<tr><td><code>manifest.json</code> <b>shared</b></td><td>New <code>content_scripts</code> entry on <code>https://github.com/*</code> (SPA arrivals); <code>permissions</code> and <code>host_permissions</code> unchanged</td><td>Wiring only</td></tr>
+<tr><td><code>options/options.html</code>, <code>options.js</code>, <code>options.css</code> <b>shared</b></td><td>Features row + switch (<code>ghalsEnabled</code>, default on) + note + per-owner warning; Actions row in the fine-grained table; warning on the token card used for the owner</td><td>Criterion 10</td></tr>
+<tr><td><code>README.md</code>, <code>PRIVACY.md</code>, <code>screenshots/actions-log-shortcuts.svg</code></td><td>Feature section, token table row (optional Actions: Read-only), troubleshooting, stored outcome and the probe request</td><td>Criterion 15</td></tr>
+<tr><td><code>test/unit/*</code>, <code>test/e2e/*</code>, fixtures</td><td>See the test plan</td><td>Test-first</td></tr>
+</table>
+
+<h2>Data, permissions, privacy</h2>
+<ul>
+  <li><b>Manifest permissions: none new.</b> <code>chrome.tabs.create</code> needs no permission; clipboard writes from the page in a click need none (check P1).</li>
+  <li><b>Token permission: none required, one optional.</b> Fine-grained: <b>Actions: Read-only</b> plus access to the repository, only for Open raw log. Classic: unchanged; a <code>repo</code> grant already present is used as is; no text recommends <code>repo</code> or a write permission. Missing-permission state: no button, no Actions-page message, warning only in Options. Verify access: not extended (VB1; the token page relies on detection), so no "available since release" line is needed.</li>
+  <li><b>Requests:</b> one read probe per repository and token per 60 s on job pages (plus one fresh probe per Open raw log click). Redirect not followed, target URL never read, stored or logged; no log bytes.</li>
+  <li><b>New storage keys:</b> <code>ghalsEnabled</code> (boolean) and <code>ghalsOutcomes</code> = <code>{ "&lt;owner&gt;": { state: "ok"|"not-permitted", at: &lt;ms&gt; } }</code>: no token, repository, URL, job ID or log. Cleared on any saved-token change and when the switch goes off (OL1: the stored-outcome design).</li>
+</ul>
+
+<h2>Test plan</h2>
+<table>
+<tr><th>Criterion</th><th>Test</th><th>Name</th></tr>
+<tr><td>1 command form, repo, IDs, flag, attempt, no token</td><td>unit + e2e</td><td><code>actions-log-shortcuts.test.js › buildCommand</code>; <code>actions-log-shortcuts.spec.js › copies the job command</code></td></tr>
+<tr><td>2 forms run on real runs (C6)</td><td>manual, recorded in PR</td><td>C6 table: failed run, success job in failed run, previous attempt, in progress</td></tr>
+<tr><td>3 outcome shown, announced, selectable on failure</td><td>e2e</td><td><code>› announces Copied</code>, <code>› copy failure keeps the command selectable</code></td></tr>
+<tr><td>4 Copy makes no request, same in every state</td><td>e2e</td><td><code>› copy sends no request</code> (request log empty) for each state</td></tr>
+<tr><td>5 wording rules</td><td>e2e</td><td><code>› no permission text on Actions pages</code> (all states)</td></tr>
+<tr><td>6, 8, 14 state mapping and visibility</td><td>unit + e2e</td><td><code>› mapAnswer</code> (302, 200, 403, 404, 403+rate, 429, 403+SSO, 401, 410, 500, network); e2e one test per state</td></tr>
+<tr><td>7 at most one probe per repo and token per window, no body read</td><td>unit + e2e</td><td><code>› cache per tokenId:repo</code>; <code>› two job pages of one repo send one probe</code></td></tr>
+<tr><td>9 opens new tab, failure shows message and re-detects</td><td>e2e</td><td><code>› opens the raw-log link in a new tab</code>, <code>› click failure shows Could not open log</code></td></tr>
+<tr><td>10 Options note, warnings, Actions row</td><td>e2e</td><td><code>options-actions-log-shortcuts.spec.js</code> (owner card, default card naming the owner, switch off hides)</td></tr>
+<tr><td>11, 12 nothing new required, manifest unchanged</td><td>unit</td><td><code>manifest.test.js › permissions unchanged</code></td></tr>
+<tr><td>13 job only, concluded, not unavailable</td><td>e2e</td><td><code>› run page never shows Open raw log</code>, <code>› in-progress job</code>, <code>› logs expired</code></td></tr>
+<tr><td>16 storage content and clearing</td><td>unit + e2e</td><td><code>› stored outcome shape</code>, <code>› token change clears</code>, <code>› switch off clears</code></td></tr>
+<tr><td>17 SPA navigation</td><td>e2e</td><td><code>actions-log-shortcuts-nav.spec.js</code>: job A→B→A, run→job, repo X→Y, back/forward, late answer discarded</td></tr>
+<tr><td>18 native viewer untouched</td><td>e2e</td><td><code>› step expansion and Search logs unaffected</code></td></tr>
+<tr><td>19 labels, focus, keyboard, themes, narrow</td><td>e2e</td><td><code>actions-log-shortcuts-layout.spec.js</code>: Tab/Enter, focus ring, dark, 390/320 one line, geometry of the visual contract</td></tr>
+<tr><td>Anchors</td><td>e2e</td><td>primary anchors (<code>#logs</code>, Summary card) asserted on current markup; missing anchor → no row, no fallback container</td></tr>
+<tr><td>Disabled state</td><td>e2e</td><td><code>› switch off: no row, no probe</code></td></tr>
+</table>
+<p>Fixtures from the live markup captured for this plan: <code>actions-job-failed.html</code> (signed in, with the hidden "View raw logs" link), <code>actions-job-signed-out.html</code>, <code>actions-job-in-progress.html</code>, <code>actions-run-failed.html</code>, plus success-in-failed-run, previous-attempt and expired-logs variants captured from real public runs during implementation (expired wording taken from GitHub, not invented). Dummy owner <code>acme/web</code>.</p>
+<p><b>Live check (done for this plan):</b> public failed run of this repository at 1280 and 390 px, anonymous and signed in. Content column <code>div.flex-auto.min-width-0</code> x360 w896 at 1280 (Annotations card and <code>#logs</code> share its right edge 1256); at 390 the column is the full width and the job title text starts at x16. Signed in, the job menu holds <code>a.js-steps-dropdown-raw-logs</code> → <code>/OWNER/REPO/commit/&lt;sha&gt;/checks/&lt;job&gt;/logs</code> ("View raw logs"); signed out it is absent and logs read "Sign in to view logs". Job status text: "failed in 47s" / "Started … ago"; run header icon <code>aria-label</code> "failed:" / "currently running:". Private repositories: Not verified on live github.com.</p>
+<p><b>Engineering checks during implementation</b>, results in the PR: R1 (page-link route, no new permission), D1/D2 (probe mapping matrix with test tokens; fail-closed whatever the outcome), OL1 (stored outcome), VB1 (not extending Verify access), P1 (clipboard without permission), C6 (command forms).</p>
+
+<h2>Risks and open questions</h2>
+<ul>
+  <li><b>Signed out, or no raw-log link on the page</b>: the page-link route has nothing to open, so Open raw log stays hidden even when detection says <code>ok</code>. Assumption, recorded on the issue (default: hidden; R1 records it as the one known disagreement).</li>
+  <li><b>Manual-redirect probe</b> might not behave as expected for some token type (D1). Default: keep it fail-closed (anything but a redirect or 2xx is not <code>ok</code>); if it cannot distinguish, stop and report rather than add a metadata guess.</li>
+  <li><b>Expired or unavailable logs not declared on the page</b>: the button can appear and the click's fresh probe (410 → <code>unknown</code>) shows "Could not open log". Accepted by the issue.</li>
+  <li><b>Timed-out jobs</b>: if GitHub labels them "failed" in the job header, they get <code>--log-failed</code>. Default: follow the visible status; only the word "failed" selects <code>--log-failed</code>.</li>
+  <li><b>In-progress runs</b>: Copy is hidden until C6 proves a form; default stays hidden.</li>
+</ul>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Go to failed step, "Failed steps: N", Download logs, log search, an alternative viewer, log analysis, storing or sending logs, any change to the native interface.</li>
+  <li>Any new <code>permissions</code> / <code>host_permissions</code>, any write request, any required token permission, an Actions check in Verify access.</li>
+</ul>
+</main></body></html>
