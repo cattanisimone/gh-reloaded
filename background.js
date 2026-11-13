@@ -20,7 +20,7 @@ import * as quickAssign from "./background/quick-assign.js";
 import * as linkedPrStatus from "./background/linked-pr-status.js";
 import * as imageGallery from "./background/image-gallery.js";
 
-const FEATURES = [dependencyGraph, boardDependencies, standupMode, htmlPreview, myIssues, prTriage, githubStatus, notifications, notifications.settings, linkedPrStatus, linkedPrStatus.detail, linkedPrStatus.settings, quickAssign, imageGallery, imageGallery.probeFile, imageGallery.suppression, imageGallery.consumption];
+const FEATURES = [dependencyGraph, boardDependencies, standupMode, htmlPreview, myIssues, prTriage, githubStatus, notifications, notifications.settings, notifications.fillPage, linkedPrStatus, linkedPrStatus.detail, linkedPrStatus.settings, quickAssign, imageGallery, imageGallery.probeFile, imageGallery.suppression, imageGallery.consumption];
 
 chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage();

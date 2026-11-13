@@ -7,7 +7,7 @@ import { test, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { resetStorage } from "../support/chrome-stub.js";
 import { rateInfo } from "../../lib/github-api.js";
-import { apiFailure, buildQuery, chunk, handleMessage, normalizeMention, normalizeReview } from "../../background/notifications.js";
+import { apiFailure, buildQuery, chunk, fillPage, handleMessage, normalizeMention, normalizeReview, notificationsPath } from "../../background/notifications.js";
 
 let realFetch;
 let calls;
@@ -212,14 +212,14 @@ test("api: works with a classic token, two pages when rel=next, compact items", 
   const res = await handleMessage({ rows: [], api: true });
   assert.equal(res.api.state, "ok");
   assert.equal(res.api.items.length, 2);
-  assert.deepEqual(Object.keys(res.api.items[0]).sort(), ["id", "reason", "repository", "subject", "unread"]);
+  assert.deepEqual(Object.keys(res.api.items[0]).sort(), ["id", "reason", "repository", "subject", "unread", "updated_at"]);
   assert.equal(calls.filter((c) => c.path.startsWith("/notifications")).length, 2);
   assert.ok(res.facts["acme/web#5"].ok, "an API-only review request gets its facts");
   assert.ok(res.facts["acme/web#6"].ok);
 });
 
 test("api: at most 2 pages even when rel=next keeps coming", async () => {
-  mockFetch((c) => c.path.startsWith("/notifications") ? reply(200, [apiItem("1", "subscribed", "https://api.github.com/repos/acme/web/issues/1")], { link: '<x>; rel="next"' }) : reply(200, { data: {} }));
+  mockFetch((c) => c.path.startsWith("/notifications") ? reply(200, [apiItem("1", "subscribed", "https://api.github.com/repos/acme/web/issues/1")], { link: '<x>; rel="next"', "x-oauth-scopes": "notifications" }) : reply(200, { data: {} }));
   await handleMessage({ rows: [], api: true });
   assert.equal(calls.filter((c) => c.path.startsWith("/notifications")).length, 2);
 });
@@ -266,7 +266,7 @@ test("api: uses the default token, never an owner's", async () => {
   const seen = [];
   globalThis.fetch = async (url, init) => {
     seen.push([new URL(url).pathname, init.headers.Authorization]);
-    return new URL(url).pathname === "/notifications" ? reply(200, [apiItem("1", "review_requested", "https://api.github.com/repos/acme/web/pulls/1")]) : reply(200, { data: { viewer: { login: "mira" }, repository: {} } });
+    return new URL(url).pathname === "/notifications" ? reply(200, [apiItem("1", "review_requested", "https://api.github.com/repos/acme/web/pulls/1")], { "x-oauth-scopes": "notifications" }) : reply(200, { data: { viewer: { login: "mira" }, repository: {} } });
   };
   await handleMessage({ rows: [row(1)], api: true });
   assert.deepEqual(seen.find((s) => s[0] === "/notifications"), ["/notifications", "Bearer default"]);
@@ -287,4 +287,70 @@ test("the panel's Settings link opens the tokens section of the options page", a
   globalThis.chrome.runtime = { ...globalThis.chrome.runtime, getURL: (p) => `chrome-extension://abc/${p}` };
   assert.deepEqual(await settings.handleMessage(), {});
   assert.deepEqual(created, ["chrome-extension://abc/options/options.html#tokens-section"]);
+});
+
+test("api: the baseline read sends all=true, is_done=false, per_page=50 and the native participating / unread parameters", async () => {
+  mockFetch(() => reply(200, [apiItem("1", "subscribed", "https://api.github.com/repos/acme/web/issues/1")], { "x-oauth-scopes": "notifications", "last-modified": "LM" }));
+  const res = await handleMessage({ rows: [], api: true });
+  assert.equal(calls[0].path, "/notifications?all=true&is_done=false&per_page=50&page=1");
+  assert.deepEqual([res.api.pages, res.api.next, res.api.lastModified], [1, false, "LM"]);
+  calls.length = 0;
+  await handleMessage({ rows: [], api: true, apiQuery: { all: false, participating: true } });
+  assert.equal(calls[0].path, "/notifications?all=false&is_done=false&per_page=50&page=1&participating=true");
+  assert.equal(notificationsPath(3), "/notifications?all=true&is_done=false&per_page=50&page=3");
+});
+
+test("api: a 200 without x-oauth-scopes (a fine-grained token) is unavailable, not ok", async () => {
+  mockFetch(() => reply(200, [apiItem("1", "subscribed", "https://api.github.com/repos/acme/web/issues/1")]));
+  assert.equal((await handleMessage({ rows: [], api: true })).api.state, "unavailable");
+});
+
+test("apiFailure: 401 and another 403 are refused, a network error and 5xx are no-answer, a not-accessible 403 is unavailable", () => {
+  assert.equal(apiFailure({ status: 401 }).state, "refused");
+  assert.equal(apiFailure({ status: 403, ghMessage: "Forbidden" }).state, "refused");
+  assert.equal(apiFailure({ status: 403, ghMessage: "Resource not accessible by personal access token" }).state, "unavailable");
+  assert.equal(apiFailure({}).state, "no-answer");
+  assert.equal(apiFailure({ status: 502 }).state, "no-answer");
+});
+
+test("fill page: one page, default token, slim items, next, Last-Modified and poll interval; never a write", async () => {
+  mockFetch(() => reply(200, [apiItem("9", "subscribed", "https://api.github.com/repos/acme/web/issues/9")], { link: '<x>; rel="next"', "x-oauth-scopes": "notifications", "last-modified": "LM", "x-poll-interval": "60" }));
+  const r = await fillPage.handleMessage({ page: 3, all: true });
+  assert.equal(calls[0].path, "/notifications?all=true&is_done=false&per_page=50&page=3");
+  assert.equal(calls[0].method, "GET");
+  assert.deepEqual([r.ok, r.next, r.lastModified, r.pollInterval, r.items.length], [true, true, "LM", 60, 1]);
+});
+
+test("fill page: If-Modified-Since is sent and a 304 is a notModified answer, not an error", async () => {
+  let sent;
+  globalThis.fetch = async (url, init) => {
+    sent = init.headers["If-Modified-Since"];
+    return reply(304, null, { "x-poll-interval": "120" });
+  };
+  const r = await fillPage.handleMessage({ page: 1, ifModifiedSince: "Wed, 01 Jan 2026 00:00:00 GMT" });
+  assert.equal(sent, "Wed, 01 Jan 2026 00:00:00 GMT");
+  assert.deepEqual([r.ok, r.notModified, r.pollInterval], [true, true, 120]);
+});
+
+test("fill page: failure classes rate-limited (with retryAt), no-capable-token, refused, no-answer", async () => {
+  mockFetch(() => reply(429, {}, { "retry-after": "30" }));
+  const rl = await fillPage.handleMessage({ page: 2 });
+  assert.deepEqual([rl.ok, rl.failure], [false, "rate-limited"]);
+  assert.ok(rl.retryAt > Date.now());
+  mockFetch(() => reply(403, { message: "Resource not accessible by personal access token" }));
+  assert.equal((await fillPage.handleMessage({ page: 2 })).failure, "no-capable-token");
+  mockFetch(() => reply(200, [apiItem("1", "subscribed", "https://api.github.com/repos/acme/web/issues/1")]));
+  assert.equal((await fillPage.handleMessage({ page: 2 })).failure, "no-capable-token");
+  mockFetch(() => reply(401, { message: "Bad credentials" }));
+  assert.equal((await fillPage.handleMessage({ page: 2 })).failure, "refused");
+  globalThis.fetch = async () => { throw new TypeError("network"); };
+  assert.equal((await fillPage.handleMessage({ page: 2 })).failure, "no-answer");
+  assert.equal((await fillPage.handleMessage({ page: 99 })).failure, "refused");
+});
+
+test("fill page: no token at all makes no request", async () => {
+  resetStorage({ githubTokens: [] });
+  mockFetch(() => reply(200, []));
+  assert.equal((await fillPage.handleMessage({ page: 2 })).ok, false);
+  assert.equal(calls.length, 0);
 });

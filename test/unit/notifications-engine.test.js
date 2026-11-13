@@ -20,6 +20,7 @@ function setup({ rows = [row(1)], respond } = {}) {
     classify: g.GHNT_CLASSIFY.classify,
     needsFacts: g.GHNT_CLASSIFY.needsFacts,
     getWindowDays: () => env.days,
+    getApiQuery: () => env.query || { key: "", all: true, participating: false },
     now: () => env.now,
     setTimer: (fn, ms) => env.timers.push({ fn, ms }) && env.timers.length,
     clearTimer: () => {},
@@ -174,7 +175,7 @@ test("stop resets to idle and later scans do nothing", async () => {
 test("the request carries no more than the page rows and never a write", async () => {
   const env = setup({ rows: [row(1), row(2, "subscribed"), { ...row(3), kind: "run", number: null, key: "run:/x" }] });
   await env.engine.start();
-  assert.deepEqual(Object.keys(env.sent[0]).sort(), ["api", "rows"]);
+  assert.deepEqual(Object.keys(env.sent[0]).sort(), ["api", "apiQuery", "rows"]);
   assert.ok(env.sent[0].rows.every((r) => r.kind === "pull" || r.kind === "issue"));
 });
 
@@ -213,4 +214,17 @@ test("a REST reason that differs from the label does not cause a read on every s
   await env.engine.scan();
   await env.engine.scan();
   assert.equal(env.sent.length, 1, "the label said mention but REST said review_requested: one read");
+});
+
+test("the baseline read sends the native query's parameters and is read again when the query changes", async () => {
+  const env = setup({ respond: (p) => ({ ok: true, facts: Object.fromEntries(p.rows.map((r) => [r.key, pullFacts()])), capabilities: {}, api: p.api ? { state: "ok", items: [], pages: 1, next: true, lastModified: "LM" } : undefined, rateLimited: false, retryAt: null }) });
+  await env.engine.start();
+  assert.deepEqual(JSON.parse(JSON.stringify(env.sent[0].apiQuery)), { all: true, participating: false });
+  assert.deepEqual(JSON.parse(JSON.stringify([env.engine.getApi().state, env.engine.getApi().pages, env.engine.getApi().next, env.engine.getApi().lastModified, env.engine.getApi().key])), ["ok", 1, true, "LM", ""]);
+  await env.engine.scan();
+  assert.equal(env.sent.filter((p) => p.api).length, 1, "same query, within 60 s: no second read");
+  env.query = { key: "is:unread", all: false, participating: false };
+  await env.engine.scan();
+  assert.equal(env.sent.filter((p) => p.api).length, 2, "a new query is a new read");
+  assert.equal(env.sent[1].apiQuery.all, false);
 });
