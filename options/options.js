@@ -116,7 +116,7 @@ function rowHtml(e) {
           <button type="button" class="btn btn-secondary" data-act="edit" data-id="${id}">Edit</button>
         </div>
       </div>
-      ${r ? `<div class="tr-result" data-result="${id}">${resultHtml(e, r)}<div class="tr-actions-row">${r.outcome === "done" ? `<button type="button" class="btn btn-secondary" data-act="advice">What should I do?</button>` : ""}<button type="button" class="btn btn-secondary" data-act="test" data-id="${id}"${runs.has(e.id) ? " disabled" : ""}>Test again</button><button type="button" class="btn btn-secondary" data-act="row-check" data-id="${id}" aria-expanded="${rowDiags.has(e.id)}">Check a specific repository</button></div></div>` : ""}
+      ${r ? `<div class="tr-result" data-result="${id}">${resultHtml(e, r)}<div class="tr-actions-row">${(r.outcome === "done" || r.outcome === "not-working") ? `<button type="button" class="btn btn-secondary" data-act="advice">What should I do?</button>` : ""}<button type="button" class="btn btn-secondary" data-act="test" data-id="${id}"${runs.has(e.id) ? " disabled" : ""}>Test again</button><button type="button" class="btn btn-secondary" data-act="row-check" data-id="${id}" aria-expanded="${rowDiags.has(e.id)}">Check a specific repository</button></div></div>` : ""}
       ${rowDiags.has(e.id) ? `<div class="diag-host" data-diag="${id}"></div>` : ""}
     </li>`;
 }

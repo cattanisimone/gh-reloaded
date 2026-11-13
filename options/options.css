@@ -432,7 +432,8 @@ h1, .group h2 { scroll-margin-top: 12px; }
 .tr-actions { display: flex; gap: 8px; }
 .state-pill { justify-self: start; padding: 0 8px; border: 1px solid currentColor; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .state-works { color: var(--ok); }
-.state-missing, .state-not-working { color: var(--bad); }
+.state-not-working { color: var(--bad); }
+.state-missing { color: var(--warn); }
 .state-cant-verify { color: var(--warn); }
 .state-not-tested, .state-not-set, .state-testing { color: var(--muted); }
 @container (max-width: 559px) {
@@ -473,14 +474,14 @@ h2.panel-title { margin: 0; padding: 0; box-shadow: none; font-size: 15px; }
 .panel-foot .spacer { flex: 1; }
 .field-help { margin: 0; color: var(--muted); font-size: 12px; }
 .field-help[hidden], .changes-tag[hidden], .saved-row[hidden], .field-error[hidden] { display: none; }
-.changes-tag { align-self: start; margin: 0; padding: 2px 8px; border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: 12px; font-weight: 600; }
+.changes-tag { justify-self: start; width: fit-content; margin: 0; padding: 2px 8px; border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: 12px; font-weight: 600; }
 .saved-row { display: flex; align-items: center; gap: 8px; }
 .saved-chip { padding: 0 8px; border: 1px solid var(--ok); border-radius: 10px; color: var(--ok); font-size: 12px; font-weight: 600; }
 input[aria-invalid="true"] { border-color: var(--bad); }
-@media (min-width: 1024px) {
+@media (min-width: 721px) {
   .shell.panel-open { padding-right: 420px; }
 }
-@media (max-width: 1023px) {
+@media (max-width: 720px) {
   .token-panel { left: 0; width: 100%; border-left: 0; box-shadow: none; }
 }
 

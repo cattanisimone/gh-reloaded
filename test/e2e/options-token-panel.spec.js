@@ -42,7 +42,7 @@ for (const width of [1500, 1100, 1024]) {
   });
 }
 
-for (const width of [1023, 800]) {
+for (const width of [720, 500]) {
   test(`at ${width} the panel is a full-width sheet`, async ({ context, page }) => {
     await open(context, page, { width, height: 800 });
     await rowEdit(page, 0).click();
