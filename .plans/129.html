@@ -40,7 +40,7 @@
 <ul>
   <li>Settings → GitHub tokens becomes <b>one list</b>: a row per token (default + owner tokens) with name, <i>Used for</i>, state (<code>Works</code>, <code>Missing permissions</code>, <code>Not tested</code>, <code>Not working</code>, <code>Can't verify</code>, <code>Not set</code>) and last test (<code>Today 09:12 · 4 of 5 OK</code>).</li>
   <li><b>Test</b> on a row checks each of the 5 permission types on its own (at most 7 read requests) and opens the result under the row, with <code>What should I do?</code>, <code>Test again</code>, <code>Check a specific repository</code>.</li>
-  <li><b>Edit</b> / <b>+ Add token</b> open a 420&nbsp;px side panel (full-width sheet ≤720&nbsp;px); a saved token is never shown again (<code>Saved</code> + <code>Replace token</code>); <code>Save</code> still applies everything at once.</li>
+  <li><b>Edit</b> / <b>+ Add token</b> open a 420&nbsp;px side panel that <b>reserves its space</b> (the list reflows to its left, never under it) from 1024&nbsp;px up, and a full-width sheet below 1024&nbsp;px; a saved token is never shown again (<code>Saved</code> + <code>Replace token</code>); <code>Save</code> still applies everything at once.</li>
   <li>Permission tables move into a closed <b>Full guide</b> under a 3-step box; <code>Verify access</code> disappears (its diagnostics live on as <b>Check a specific repository</b>).</li>
   <li>A <b>warning</b> above the list appears when a feature that is on needs a type a token's last test shows as denied.</li>
 </ul>
@@ -70,7 +70,7 @@
   <div class="sso">Organization enforces SSO? Open <a>GitHub token settings ↗</a> and authorize the token for that organization, or ask an admin to approve it. Until then GitHub answers with empty results or a 404, and we can't tell why.</div>
 </div></div>
 
-<h3>2 · Side panel (edit) with the list visible</h3>
+<h3>2 · Side panel (edit) with the list visible (≥1024 px, space reserved)</h3>
 <div class="scroll"><div class="m split" style="padding:0">
   <div class="left" style="padding:12px">
     <div class="cap">TOKENS</div>
@@ -91,7 +91,7 @@
   </div>
 </div></div>
 
-<h3>3 · States &amp; narrow (≤720 px: sheet; 320 px)</h3>
+<h3>3 · States &amp; narrow (≤1023 px: sheet; 320 px)</h3>
 <div class="scroll"><div class="two">
   <div class="phone new"><b>Edit token</b> <span style="float:right">✕</span><br><span class="legend">full-width sheet, list underneath; no horizontal scroll at 390 / 320 px</span><div class="box" style="margin-top:6px;padding:6px">Name · GitHub owner · Token (Saved / Replace token) · Which token is used · Test · Check a specific repository · Discard changes · Save · Remove token</div></div>
   <div class="m" style="min-width:0;flex:1">
@@ -108,15 +108,27 @@
   </div>
 </div></div>
 
+<h2>Panel open: behaviour by width</h2>
+<p>Mechanism: at ≥1024&nbsp;px, opening the panel adds <code>padding-right: 420px</code> to <code>.shell</code> (class <code>panel-open</code>), so the content column reflows into the remaining space and the fixed panel sits in the reserved strip. The token list is a size container: below 560&nbsp;px of list width a row stacks (line 1 name + <i>Used for</i>, line 2 state + last test, line 3 <code>Test</code> / <code>Edit</code>). Below 1024&nbsp;px the panel is a full-width sheet over the page (no space to keep a usable list beside it).</p>
+<div class="scroll"><table id="panel-widths">
+<tr><th>Viewport</th><th>Space (sidebar | content column | panel)</th><th>List with panel open</th><th>Covered</th><th>Usable</th></tr>
+<tr><td>1500</td><td>220 | 860 (inner 804, unchanged) | 420; 0 px reflow, the column already ends at 1080</td><td>one-line rows: name + use, state + last test, actions</td><td>nothing</td><td>every row's name, state, last test, <code>Test</code>, <code>Edit</code>; panel fields</td></tr>
+<tr><td>1100</td><td>220 | 460 (inner 404) | 420</td><td>stacked rows (list &lt; 560): name/use, state/last test, actions</td><td>nothing</td><td>same as 1500; the highlighted row stays visible</td></tr>
+<tr><td>1024</td><td>220 | 384 (inner 328) | 420</td><td>stacked rows; long names wrap</td><td>nothing</td><td>same</td></tr>
+<tr><td>1023 – 721</td><td>220 | content | sheet = 100% viewport</td><td>under the sheet (sheet header names the token being edited)</td><td>list and sidebar, until the sheet closes</td><td>panel only; close (✕ / Esc / Discard / Save) returns to the list with the row highlighted and focus on its <code>Edit</code></td></tr>
+<tr><td>≤720 (390, 320)</td><td>tabs row | content | sheet = 100% viewport</td><td>under the sheet</td><td>list, tabs</td><td>panel only; no horizontal scroll</td></tr>
+</table></div>
+<p>Never: a row's name, state pill or <code>Test</code>/<code>Edit</code> under the panel at ≥1024; a horizontal scrollbar; the panel over the sidebar at ≥1024.</p>
+
 <h2>Visual contract</h2>
 <table id="visual-contract">
 <tr><th>Reference</th><td>The issue's three approved images (token list with test result, edit side panel, missing-permission warning) on the real GH Reloaded 1.7.0 Settings page, with the issue text winning on the three listed differences; native neighbours are the page's own <code>.card</code>, <code>.btn</code>/<code>.btn-secondary</code>/<code>.btn-primary</code>, <code>.callout</code> and <code>.link-btn.danger</code>.</td></tr>
 <tr><th>Anchor</th><td>Left border box of the <code>.content</code> column (the same edge the <code>h1#tokens-title</code> visible text and today's token cards start at); list, warning, guide and SSO callout align to it 0 ±1px. The side panel anchors to the viewport's right edge, not to the content column.</td></tr>
-<tr><th>Width</th><td>List, warning, guide and callout fill the content column (widthShare ≥ 0.98 of <code>.content</code> inner width, the page's existing column, unchanged). Side panel: 420px, the width the issue mockup and text specify; ≤720px it is 100% of the viewport width.</td></tr>
-<tr><th>Responsive</th><td>1500 / 1100: row = name+use | state+last test | actions on one line; panel open beside the list without a backdrop. 800: same, the state column narrows and the last test wraps under the state. ≤720 (page breakpoint): row wraps to two lines (actions under text), panel becomes a full-width sheet. 390 and 320: no horizontal scroll, buttons wrap, nothing overlaps.</td></tr>
+<tr><th>Width</th><td>List, warning, guide and callout fill the content column (widthShare ≥ 0.98 of <code>.content</code> inner width, the page's existing column, unchanged). Side panel: 420px, the width the issue mockup and text specify, with the same 420px reserved on the right of <code>.shell</code> at ≥1024px so the content column (and the list) narrows to the remaining space; ≤1023px the panel is 100% of the viewport width (sheet).</td></tr>
+<tr><th>Responsive</th><td>Panel closed: list ≥560px wide → row = name+use | state+last test | actions on one line; narrower (≤720 page breakpoint, 390, 320) → row stacks. Panel open: 1500 one-line rows beside the panel; 1100 and 1024 the column narrows to 460 / 384px and rows stack, nothing covered; ≤1023 full-width sheet over the page. 390 and 320: no horizontal scroll, buttons wrap, nothing overlaps. See <i>Panel open: behaviour by width</i>.</td></tr>
 <tr><th>Native controls</th><td>Row buttons <code>Test</code> / <code>Edit</code>, <code>+ Add token</code>, <code>Discard changes</code> reuse <code>.btn .btn-secondary</code> unchanged (32px high, 6px radius, 1px border); <code>Save</code> and <code>How to add it</code> reuse <code>.btn-primary</code>; <code>Remove token</code> reuses <code>.link-btn.danger</code>. The sidebar nav and its tabs below 720px keep their space; the panel never covers the sticky tab bar.</td></tr>
 <tr><th>Evidence</th><td>The Settings page is extension UI, not a github.com page: verified in Playwright on the real <code>options/options.html</code> loaded from the unpacked extension (light and dark, 1500 / 1100 / 800 / 390 / 320), before (main) and after captured at the same state (one default and two owner tokens) and the same viewport. Not verified on live github.com: not applicable to this surface. The Test requests are checked live with fictional-owner test tokens [R] and recorded in the PR (request count, endpoints).</td></tr>
-<tr><th>Expected</th><td>List, warning, guide left edge to <code>.content</code> inner left edge 0 ±1px at every width; widthShare ≥ 0.98; button height 32 ±1px and radius 6px equal before and after; panel width 420 ±1px at ≥721px and = viewport width ±1px at ≤720px; <code>document.documentElement.scrollWidth</code> = viewport width at 390 and 320; list visible (bounding box not covered) with the panel open at 1100.</td></tr>
+<tr><th>Expected</th><td>List, warning, guide left edge to <code>.content</code> inner left edge 0 ±1px at every width; widthShare ≥ 0.98; button height 32 ±1px and radius 6px equal before and after; panel width 420 ±1px at ≥721px and = viewport width ±1px at ≤720px; <code>document.documentElement.scrollWidth</code> = viewport width at 390, 320 and with the panel open at 1100; with the panel open at 1500, 1100 and 1024, for every row the right edge of its name, state pill, <code>Test</code> and <code>Edit</code> bounding boxes ≤ panel left edge (viewport − 420) ±1px; panel width = viewport width ±1px at 1023 and 800.</td></tr>
 </table>
 
 <h2>How it works</h2>
@@ -143,13 +155,14 @@
 <table>
 <tr><th>#</th><th>Request</th><th>Type proven</th></tr>
 <tr><td>1</td><td><code>GET /user</code></td><td>identity (401 → <code>Not working</code>, stop)</td></tr>
-<tr><td>2</td><td>Listing, one result: default token <code>GET /user/repos?per_page=1&amp;sort=pushed</code>; owner token <code>GET /orgs/{owner}/repos?per_page=1&amp;type=all</code>, or <code>/user/repos?affiliation=owner&amp;per_page=1</code> when owner = login</td><td>picks one repo <code>R</code> the token itself returns; empty or 404 → repository types <code>Not verified</code> without a request</td></tr>
+<tr><td>2</td><td>Listing of a <b>private</b> repository, one result: default token <code>GET /user/repos?visibility=private&amp;sort=pushed&amp;per_page=1</code>; owner token (organization) <code>GET /orgs/{owner}/repos?type=private&amp;sort=pushed&amp;per_page=1</code>; owner token whose owner = login <code>GET /user/repos?visibility=private&amp;affiliation=owner&amp;sort=pushed&amp;per_page=1</code></td><td>picks one repo <code>R</code> the token itself returns and checks <code>R.private === true</code> in the response. Empty list, 404, or <code>private</code> not <code>true</code> → requests 3, 4, 5, 7 are not sent and Contents, Pull requests, Issues, Actions logs are <code>Not verified</code> with "We can't tell why." (a public repository answers 200 without any permission, so it proves nothing)</td></tr>
 <tr><td>3</td><td><code>GET /repos/R/contents/</code> (status only, body discarded)</td><td>Repository contents</td></tr>
 <tr><td>4</td><td><code>GET /repos/R/pulls?per_page=1&amp;state=all</code></td><td>Pull requests</td></tr>
 <tr><td>5</td><td><code>GET /repos/R/issues?per_page=1&amp;state=all</code></td><td>Issues</td></tr>
-<tr><td>6</td><td><code>POST /graphql</code> read query: <code>organization(login){projectsV2(first:1){totalCount}}</code> or <code>viewer{projectsV2(first:1){totalCount}}</code></td><td>Projects</td></tr>
+<tr><td>6</td><td><code>POST /graphql</code> read query: owner token of an organization <code>organization(login){projectsV2(first:1){totalCount}}</code>; personal-account owner (default token, or owner = login) with a classic token <code>viewer{projectsV2(first:1){totalCount}}</code>. <b>Not sent</b> for a personal-account owner with a fine-grained token.</td><td>Projects. Organization (any token kind) or classic token: <code>INSUFFICIENT_SCOPES</code> / <code>FORBIDDEN</code> → <code>Access denied</code>. Personal-account owner + fine-grained token → <code>Not verified</code>, hint "Projects owned by a personal account can't be read with a fine-grained token. Use a classic token with read:project." (no <code>How to add it</code> for a permission that cannot be added)</td></tr>
 <tr><td>7</td><td><code>GET /repos/R/actions/runs?per_page=1</code></td><td>Actions logs (optional: no feature uses it today)</td></tr>
 </table>
+<p><b>Token kind</b> (for row 6): fine-grained when the secret starts with <code>github_pat_</code>, or when <code>GET /user</code> answers without an <code>X-OAuth-Scopes</code> header; classic otherwise. Read from the row's own token and response; nothing stored besides the outcome codes.</p>
 <h3>State rules (pure function, unit-tested)</h3>
 <table>
 <tr><th>Input (stored codes + required types from switches)</th><th>State</th></tr>
@@ -162,10 +175,32 @@
 </table>
 <p>Count = <code>available</code> codes / types tested (optional included). SSO-required, org-policy and pending-approval 403s map to <code>unverified</code> with a hint flag, never <code>denied</code>. Network, timeout, 5xx, rate limit, panel closed or token edited mid-test → <code>unchecked</code>, temporary error shown, stored record <b>not</b> overwritten.</p>
 
+<h3>Feature → permission types (from the code on <code>main</code>)</h3>
+<div class="scroll"><table id="feature-types">
+<tr><th>Feature (switch key)</th><th>Contents</th><th>Pull requests</th><th>Issues</th><th>Projects</th><th>Read in</th></tr>
+<tr><td>Dependency graph (<code>ghdgEnabled</code>)</td><td></td><td></td><td>✓</td><td>✓</td><td><code>background/dependency-graph.js</code>: <code>/issues/{n}</code>, <code>/sub_issues</code>, <code>safeDeps</code> (<code>/dependencies</code>), <code>safeFields</code> (<code>/issue-field-values</code>); <code>safeStatus</code> (GraphQL <code>projectItems</code>)</td></tr>
+<tr><td>Board dependency arrows (<code>ghbdEnabled</code>)</td><td></td><td></td><td>✓</td><td></td><td><code>background/board-dependencies.js</code>: <code>/issues/{n}/dependencies/*</code></td></tr>
+<tr><td>Standup mode (<code>ghsmEnabled</code>)</td><td></td><td></td><td>✓</td><td>✓</td><td><code>background/standup-mode.js</code>: <code>/dependencies/blocked_by</code>; GraphQL <code>projectItems</code>, <code>projectV2.view</code></td></tr>
+<tr><td>HTML preview (<code>ghhpEnabled</code>)</td><td>✓</td><td></td><td></td><td></td><td><code>background/html-preview.js</code>: <code>/contents</code>, <code>/git/blobs</code></td></tr>
+<tr><td>Image gallery (<code>ghigEnabled</code>)</td><td>✓</td><td></td><td></td><td></td><td><code>background/image-gallery.js</code>: <code>/contents</code>, <code>/git/blobs</code></td></tr>
+<tr><td>My Issues by project (<code>ghmiEnabled</code>)</td><td></td><td></td><td>✓</td><td>✓</td><td><code>background/my-issues.js</code>: GraphQL <code>search(type: ISSUE)</code> + <code>projectItems</code></td></tr>
+<tr><td>PR triage (<code>ghprtEnabled</code>)</td><td></td><td>✓</td><td></td><td></td><td><code>background/pr-triage.js</code>: GraphQL <code>pullRequest</code></td></tr>
+<tr><td>Quick assignment (<code>ghqaEnabled</code>)</td><td></td><td></td><td>✓</td><td></td><td><code>background/quick-assign.js</code>: <code>/issues/{n}</code></td></tr>
+<tr><td>Linked PR status (<code>ghlpsEnabled</code>)</td><td></td><td>✓</td><td>✓</td><td></td><td><code>background/linked-pr-status.js</code>: GraphQL <code>issue.closedByPullRequestsReferences</code>, <code>pullRequest.commits.statusCheckRollup</code></td></tr>
+<tr><td>Notification reason tags (<code>ghntModules.reasonTags</code>)</td><td></td><td>✓</td><td>✓</td><td></td><td><code>background/notifications.js</code>: GraphQL <code>pullRequest</code>, <code>issue</code></td></tr>
+</table></div>
+<p>No type: Quick-create, Full-width board, GitHub Status (anonymous), Notifications settings panel. The Notifications triage view uses the <code>notifications</code> scope, which is the later notifications sub-block (out of scope). Actions logs: no feature, always <code>optional</code>. This table is <code>token-requirements.js</code>; a unit test pins it.</p>
+<h3>Warning text (exact)</h3>
+<ul>
+  <li>Title: <code>{feature} needs a permission your token doesn't have</code> (or, with no test of that type yet, <code>{feature} may need a permission your token doesn't have</code>).</li>
+  <li>Body: <code>Tokens: «{name}», «{name}». Features you already use keep working.</code></li>
+  <li>Detail, one line per missing type: <code>GH Reloaded {version} uses {permission} (Read-only) for {feature}: {reason}.</code> where <code>{version}</code> = <code>chrome.runtime.getManifest().version</code>, the <b>installed</b> version written by Release Please, and <code>{reason}</code> is the feature's sentence from the registry (e.g. "to show the status of linked pull requests"). It never says the version introduced the feature.</li>
+</ul>
+
 <h2>Changes by file</h2>
 <table>
 <tr><th>File</th><th>Change</th><th>Why</th></tr>
-<tr><td><code>options/token-requirements.js</code> (new)</td><td>Registry: 5 permission types (id, plain label, guide text) and feature → types (e.g. HTML preview, Image gallery → contents; PR triage, Linked PR status → pull requests; Dependency graph, My Issues, Standup, Board arrows, Quick assign → issues/projects as their code reads; Reason tags → issues + pull requests). <code>requiredTypes(switches)</code>, <code>warningFor(...)</code>.</td><td>One source for required/optional, state and warning; a future feature adds one entry and a sentence.</td></tr>
+<tr><td><code>options/token-requirements.js</code> (new)</td><td>Registry: 5 permission types (id, plain label, guide text) and feature → types (e.g. exactly the <i>Feature → permission types</i> table above, plus each feature's reason sentence). <code>requiredTypes(switches)</code>, <code>warningFor(...)</code>.</td><td>One source for required/optional, state and warning; a future feature adds one entry and a sentence.</td></tr>
 <tr><td><code>options/token-test.js</code> (new)</td><td><code>runTokenTest(record, {signal, fetch})</code> (plan above), <code>classifyForTest</code> (wraps <code>classify</code>), <code>tokenState</code>, <code>countOk</code>, session read/write of <code>{at, codes}</code>.</td><td>Pure, testable with <code>node --test</code>; uses only the row's token, never <code>resolveTokenRecord</code>.</td></tr>
 <tr><td><code>options/token-diagnostics.js</code> (shared)</td><td>Add a <code>cause</code> field (<code>sso</code>, <code>policy</code>, <code>invalid</code>, <code>permission</code>) to <code>classify</code>'s result; no label, wording or limit change.</td><td>Test needs to tell SSO/policy 403 from a proven denial; <code>Check a specific repository</code> keeps today's behaviour.</td></tr>
 <tr><td><code>options/options.html</code>, <code>options.css</code> (shared)</td><td>Tokens section: warning slot, list, result region, <code>+ Add token</code>, notifications sub-block slot (empty, own id), guide with <code>&lt;details&gt;</code> Full guide (today's tables moved in unchanged), reworded SSO callout; side panel <code>role="dialog" aria-modal="false"</code>. Styles reuse tokens/buttons; new pill styles for <code>Missing permissions</code> and <code>Not verified</code> distinct from <code>.status.error</code>.</td><td>Issue layout; no change to other panels.</td></tr>
@@ -189,7 +224,7 @@
 <tr><td>3 rows with name, use, state, last test; no token character in DOM</td><td>e2e</td><td><code>options-tokens: list shows default and owner rows without secrets</code></td></tr>
 <tr><td>No token: <code>Not set</code>, guide + Full guide open, no request; with a token Full guide closed</td><td>e2e</td><td><code>options-tokens: empty state opens the guide and sends nothing</code></td></tr>
 <tr><td>"capability", "scope", "fine-grained" only in Full guide</td><td>e2e</td><td><code>options-tokens: technical words only inside Full guide</code></td></tr>
-<tr><td>Panel opens beside list, row highlighted, sheet ≤720, Esc/close restore focus</td><td>e2e</td><td><code>options-token-panel: open, highlight, sheet, focus return</code></td></tr>
+<tr><td>Panel opens beside list with reserved space at ≥1024 (row name, state, Test, Edit right edge ≤ panel left edge at 1500/1100/1024; no horizontal scroll), sheet ≤1023, row highlighted, Esc/close restore focus</td><td>e2e</td><td><code>options-token-panel: open, highlight, sheet, focus return</code></td></tr>
 <tr><td>Owner required, error next to field, draft kept, focus; storage error names field</td><td>e2e</td><td><code>options-token-panel: validation and storage error keep the draft</code></td></tr>
 <tr><td><code>Saved</code> + <code>Replace token</code>; no token char in DOM, UI storage reads, console</td><td>e2e</td><td><code>options-token-panel: saved token never shown</code></td></tr>
 <tr><td>Unsaved tag, Discard, Remove→Discard, Remove→Save, nothing written before Save</td><td>e2e</td><td><code>options-token-panel: draft model</code></td></tr>
@@ -201,11 +236,14 @@
 <tr><td>Failing owner token not replaced by default; result names it</td><td>e2e</td><td><code>options-token-test: owner token used alone</code></td></tr>
 <tr><td>Only session written (time + codes); local unchanged; cleared session → Not tested</td><td>e2e</td><td><code>options-token-test: storage footprint</code></td></tr>
 <tr><td><code>Check a specific repository</code> from panel and result, today's fields and limit [R]</td><td>e2e (diagnostics spec rewritten)</td><td><code>options-token-diagnostics: *</code> (existing cases moved to the new entry points)</td></tr>
+<tr><td>Only public repositories listed (or <code>private</code> not <code>true</code>) → Contents, Pull requests, Issues, Actions <code>Not verified</code> "We can't tell why.", never <code>Available</code> / <code>Works</code>; private <code>R</code> → normal checks</td><td>unit + e2e</td><td><code>token-test: public repository proves nothing</code>, <code>options-token-test: no private repository</code></td></tr>
+<tr><td>Personal-account owner + fine-grained token → Projects <code>Not verified</code> with the classic-token hint, no GraphQL request; classic token or organization owner <code>INSUFFICIENT_SCOPES</code> → <code>Access denied</code></td><td>unit</td><td><code>token-test: personal projects with fine-grained token</code></td></tr>
+<tr><td>Feature → types table pinned</td><td>unit</td><td><code>token-requirements: feature table</code></td></tr>
 <tr><td>SSO / policy / approval 403 → Not verified + hint; all required → Can't verify [R]</td><td>unit + e2e</td><td><code>token-test: SSO and policy are unverified</code></td></tr>
 <tr><td><code>Testing…</code>, Test inactive, page usable; token changed → Not tested</td><td>e2e</td><td><code>options-token-test: running state</code></td></tr>
 <tr><td>Warning on turning a feature on (and after reload), names feature + tokens, detail, 3 buttons, Later</td><td>e2e</td><td><code>options-token-warning: appears from stored codes</code></td></tr>
 <tr><td>"may need" wording without a test for that type; gone after Available</td><td>unit + e2e</td><td><code>options-token-warning: may need, then cleared</code></td></tr>
-<tr><td>Version from release data, not a literal</td><td>unit</td><td><code>token-requirements: no hand-written version</code></td></tr>
+<tr><td>Version from release data, not a literal; detail reads "GH Reloaded {installed version} uses …"</td><td>unit + e2e</td><td><code>token-requirements: no hand-written version</code>, <code>options-token-warning: detail names installed version</code></td></tr>
 <tr><td>Permissions unchanged; api.github.com only; GET + read-only GraphQL</td><td>unit + e2e</td><td><code>manifest: permissions baseline</code>, <code>options-token-test: request methods</code></td></tr>
 <tr><td>Light/dark, 390/320, keyboard, 200 % text [R]</td><td>e2e + manual screenshots in PR</td><td><code>options-token-panel: responsive, dark, keyboard</code></td></tr>
 <tr><td>README / PRIVACY match [R]</td><td>unit + review</td><td><code>token-docs: Test and session storage documented</code></td></tr>
@@ -218,14 +256,16 @@
   <li><b>Five types incl. Actions logs</b>: no feature reads Actions today, so it is always <code>optional</code>; kept because the issue fixes the set at five and it is the slot the next feature uses. Rejected: dropping it (contradicts "n of 5").</li>
   <li><b>Version in the warning</b> = <code>chrome.runtime.getManifest().version</code>, the release data Release Please writes; the registry holds no version literal. Rejected: a hand-kept "since" field (forbidden by the issue).</li>
   <li><b>"May need" case</b> = the stored record has no code for a type that a now-enabled feature needs (record older than the type). Session storage clears on browser restart and extension update, so this mostly appears after an in-session reload of a newer build.</li>
-  <li><b>Narrow screens</b>: full-width sheet (not a modal), so one component serves both widths.</li>
+  <li><b>Panel space</b>: at ≥1024&nbsp;px the panel reserves 420&nbsp;px and the list reflows (stacked rows below 560&nbsp;px of list width); below 1024&nbsp;px a full-width sheet. Rejected: an overlay over the column (hides state and actions at 1100, plan review), a narrower panel (fields and the owner hint cramped below 360&nbsp;px, and still ~260&nbsp;px of list at 800). The issue's sheet breakpoint moves from 720 to 1023 because no side-by-side layout leaves a usable list below 1024.</li>
+<li><b>Private repository proof</b>: Test only checks repository types on a private repository the token lists; with none, those types are <code>Not verified</code>. Rejected: using a public repository (200 without permission would show <code>Works</code> with no proof).</li>
+<li><b>Personal-account Projects</b>: with a fine-grained token they are <code>Not verified</code> plus a classic-token hint, never <code>Access denied</code> (the permission cannot be added to that token).</li>
   <li><b>Owner-token listing</b>: <code>/orgs/{owner}/repos</code>, or <code>/user/repos?affiliation=owner</code> when the owner is the token's login; a 404 or empty list makes repository types <code>Not verified</code>, never a scan.</li>
 </ul>
 
 <h2>Risks and open questions</h2>
 <ul>
-  <li>The listed repository may be public: Contents/Issues then answer 200 without the permission. (default: <code>Available</code> is honest for features on public repos; README says a private repo is needed to prove private access, and <code>Check a specific repository</code> stays for that.)</li>
-  <li>Fine-grained token without an org owner cannot read user Projects. (default: GraphQL <code>INSUFFICIENT_SCOPES</code> → denied; null/empty → <code>Not verified</code>.)</li>
+  <li>A token with no private repository (e.g. limited to public ones) gets <code>Can't verify</code> when only repository types are required. (default: honest; <code>Check a specific repository</code> stays for a named repository.)</li>
+  <li>Token kind detection by prefix / <code>X-OAuth-Scopes</code> may miss a future token format. (default: unknown → classic rules, which can only produce <code>Access denied</code> from a GraphQL scope error GitHub actually returned.)</li>
   <li>Large rewrite of <code>options.js</code> tokens code. (default: move logic into two pure modules; keep the save function and validation messages as they are.)</li>
   <li><code>chrome.storage.session</code> unreadable on the options page. (default per issue: page-memory fallback, declared in PR.)</li>
 </ul>
