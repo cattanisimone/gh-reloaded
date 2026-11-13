@@ -297,6 +297,8 @@ test("no token at all: the settings link, Next page, zero requests to the API", 
   await cat(page, "attention").click();
   await expect(line(page, "state")).toContainText("Without a GitHub token, review requests and mentions can't be verified, so none is counted as Needs attention.");
   await expect(line(page, "state").getByRole("button", { name: "Settings → GitHub tokens" })).toBeVisible();
+  await expect(line(page, "state")).toContainText("Settings → GitHub tokens · Next page ›");
+  expect(await page.locator("#ghnt-triage, .ghnt-group, [data-ghnt-line]").evaluateAll((n) => n.map((x) => x.textContent).join(" "))).not.toMatch(/\b(false|null|undefined)\b/);
   expect(log.length).toBe(0);
   await cat(page, "attention").click();
   await cat(page, "unverifiable").click();

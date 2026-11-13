@@ -84,7 +84,7 @@
       else if (k === "text") node.textContent = v;
       else node.setAttribute(k, v === true ? "" : v);
     }
-    for (const kid of kids.flat()) if (kid != null) node.append(kid);
+    for (const kid of kids.flat()) if (kid != null && kid !== false) node.append(kid);
     return node;
   }
 
@@ -265,11 +265,11 @@
       });
       status.append(clear);
     }
-    if (v.empty) status.append(el("div", { class: "ghnt-empty" }, v.empty, !checking && v.next && " ", !checking && nextLink(v)));
+    if (v.empty) status.append(el("div", { class: "ghnt-empty" }, v.empty, ...(!checking && v.next ? [" ", nextLink(v)] : [])));
     if (v.pending && pendingInBlock) status.append(el("div", { class: "ghnt-pending", text: v.pending }));
     if (status.childNodes.length) kids.push(status);
     for (const line of v.lines) kids.push(lineNode(line, v));
-    if (v.coverage) kids.push(el("p", { class: "ghnt-coverage", "data-ghnt-triage": "coverage" }, v.coverage, v.next && " ", nextLink(v)));
+    if (v.coverage) kids.push(el("p", { class: "ghnt-coverage", "data-ghnt-triage": "coverage" }, v.coverage, ...(v.next ? [" ", nextLink(v)] : [])));
     return kids;
   }
 

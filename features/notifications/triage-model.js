@@ -150,6 +150,17 @@
   // The lines under the status: [{ id, segs }], plus the empty-state text.
   // o: { selected, grouped, snap, nextHref, narrow, now, fmtTime, pageCount }.
   function stateLines(o) {
+    const r = stateLinesRaw(o);
+    // Two links side by side must not read as one: separate them with " · ".
+    const isLink = (g) => g && g.t !== "text";
+    for (const line of r.lines) {
+      const a = line.segs;
+      for (let i = 1; i < a.length - 1; i++) if (a[i].t === "text" && a[i].v === " " && isLink(a[i - 1]) && isLink(a[i + 1])) a[i] = T(" · ");
+    }
+    return r;
+  }
+
+  function stateLinesRaw(o) {
     const { snap, selected, grouped, nextHref, narrow } = o;
     const fmt = o.fmtTime || localTime;
     const lines = [];

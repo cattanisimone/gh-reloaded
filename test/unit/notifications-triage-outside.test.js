@@ -76,7 +76,7 @@ test("state: complete -> bare N and the 'All m checked' line", () => {
 
 test("state: ceiling -> Stopped after m, narrowing links for Needs attention, Next page for label categories", () => {
   const s = snap({ ceiling: true, pages: 20, ended: "ceiling", filledKeys: ["attention", "informational"] }, { m: 1000 });
-  assert.equal(text(V(counts(), "attention", s).lines), "Stopped after 1000 notifications. Narrow with GitHub filters to check further. Narrow with GitHub filters: Review requests › Mentions ›" + " Next page ›");
+  assert.equal(text(V(counts(), "attention", s).lines), "Stopped after 1000 notifications. Narrow with GitHub filters to check further. Narrow with GitHub filters: Review requests › · Mentions › · Next page ›");
   assert.equal(text(V(counts(), "informational", s).lines), "Stopped after 1000 notifications. Narrow with GitHub filters to check further. Next page ›");
 });
 
@@ -92,7 +92,7 @@ test("state: rate limit -> Load more disabled with the reset time, enabled again
 
 test("state: default token fine-grained or lacking the scope", () => {
   const s = snap({ active: false, apiState: "missing-scope" });
-  assert.equal(text(V(counts(), "attention", s).lines), "Notifications outside this page can't be checked: the default GitHub token must be a classic token with the notifications scope. Narrow with GitHub filters: Review requests › Mentions › Next page ›");
+  assert.equal(text(V(counts(), "attention", s).lines), "Notifications outside this page can't be checked: the default GitHub token must be a classic token with the notifications scope. Narrow with GitHub filters: Review requests › · Mentions › · Next page ›");
   const label = text(V(counts(), "informational", s).lines);
   assert.equal(label, "Notifications outside this page can't be checked: the default GitHub token must be a classic token with the notifications scope. Only this page is counted. Next page ›");
   assert.ok(!label.includes("Review requests"));
@@ -101,7 +101,7 @@ test("state: default token fine-grained or lacking the scope", () => {
 
 test("state: no token at all", () => {
   const s = snap({ active: false, apiState: "not-tried" });
-  assert.equal(text(V(counts(), "attention", s).lines), "Without a GitHub token, review requests and mentions can't be verified, so none is counted as Needs attention. Settings → GitHub tokens Next page ›");
+  assert.equal(text(V(counts(), "attention", s).lines), "Without a GitHub token, review requests and mentions can't be verified, so none is counted as Needs attention. Settings → GitHub tokens · Next page ›");
   assert.equal(text(V(counts(), "unverifiable", s).lines), "Only this page is counted. Next page ›");
 });
 
@@ -113,13 +113,13 @@ test("state: unsupported native filter, named, zero links", () => {
 });
 
 test("state: 401 / other 403 / no answer", () => {
-  assert.equal(text(V(counts(), "attention", snap({ active: false, apiState: "refused" })).lines), "Couldn't check notifications outside this page: GitHub refused the token. Results on this page are unaffected. Narrow with GitHub filters: Review requests › Mentions › Next page ›");
+  assert.equal(text(V(counts(), "attention", snap({ active: false, apiState: "refused" })).lines), "Couldn't check notifications outside this page: GitHub refused the token. Results on this page are unaffected. Narrow with GitHub filters: Review requests › · Mentions › · Next page ›");
   assert.equal(text(V(counts(), "informational", snap({ active: false, apiState: "no-answer" })).lines), "Couldn't check notifications outside this page: GitHub did not answer. Results on this page are unaffected. Next page ›");
 });
 
 test("state: an error after the first answer keeps the entries, '+' stays, Load more retries", () => {
   const v = V(counts({ informational: 2 }), "informational", snap({ error: "no-answer", ended: "error", filledKeys: ["informational"] }, { outside: [entry(9, "informational")], byCat: { attention: 0, waiting: 0, informational: 1, unverifiable: 0 }, m: 7 }));
-  assert.match(text(v.lines), /^Couldn't check notifications outside this page: GitHub did not answer\. Results on this page are unaffected\. Next page › \[load-more\]/);
+  assert.match(text(v.lines), /^Couldn't check notifications outside this page: GitHub did not answer\. Results on this page are unaffected\. Next page › · \[load-more\]/);
   assert.equal(v.cats[2].count, "3+");
   assert.equal(v.outside.entries.length, 1);
 });
@@ -177,7 +177,7 @@ test("triage-model: Needs attention, lookups done, only unkeyable left -> not ve
 test("triage-model: Grouped, fill finished, k = 3 with u = 2 -> '{m} checked. 3 not verified yet. 2 of them…', never 'All … checked', every header N+", () => {
   const s = snap({ next: false, ended: "complete", filledKeys: ["*"] }, { pending: 1, k: 3, u: 2, m: 40, pageRows: 6 });
   const v = M.view(counts({ attention: 1 }), { layout: "grouped", now: NOW, nextHref: "/notifications?page=2", fill: s });
-  assert.equal(text(v.lines), "40 notifications checked. | 3 not verified yet. 2 of them can only be opened from GitHub's list: Next page › [load-more]");
+  assert.equal(text(v.lines), "40 notifications checked. | 3 not verified yet. 2 of them can only be opened from GitHub's list: Next page › · [load-more]");
   const settled = M.view(counts({ attention: 1 }), { layout: "grouped", now: NOW, nextHref: "/notifications?page=2", fill: snap({ next: false, ended: "complete", filledKeys: ["*"] }, { k: 2, u: 2, m: 40 }) });
   assert.equal(text(settled.lines), "40 notifications checked. | 2 not verified yet. 2 of them can only be opened from GitHub's list: Next page ›");
   assert.doesNotMatch(text(v.lines), /All 40/);
@@ -206,7 +206,7 @@ test("Grouped: after a fill each expanded section has an inert sub-list of at mo
 
 test("Grouped: nothing can be checked -> the Needs attention / Waiting text with Next page, headers keep page-only counts with no '+'", () => {
   const v = M.view(counts({ attention: 1 }), { layout: "grouped", now: NOW, nextHref: "/n", narrow, fill: snap({ active: false, apiState: "missing-scope" }) });
-  assert.match(text(v.lines), /^Notifications outside this page can't be checked: .*Narrow with GitHub filters: Review requests › Mentions › Next page ›$/);
+  assert.match(text(v.lines), /^Notifications outside this page can't be checked: .*Narrow with GitHub filters: Review requests › · Mentions › · Next page ›$/);
   assert.equal(v.cats[0].count, "1");
 });
 
@@ -233,4 +233,21 @@ test("ago: minutes, hours, days, then the date", () => {
   assert.equal(M.ago("2026-10-30T12:00:00Z", NOW), "2 days ago");
   assert.equal(M.ago("2026-08-01T12:00:00Z", NOW), "2026-08-01");
   assert.equal(M.ago("", NOW), "");
+});
+
+test("triage-model: adjacent links in a state line are separated, not read as one", () => {
+  const v = V(counts({ attention: 1 }), "attention", snap({ apiState: "not-tried", active: false }));
+  const line = v.lines.find((l) => l.id === "state");
+  const kinds = line.segs.map((s) => s.t);
+  const i = kinds.indexOf("settings");
+  assert.equal(kinds[i + 1], "text");
+  assert.equal(line.segs[i + 1].v, " · ");
+  assert.equal(kinds[i + 2], "next");
+});
+
+test("triage.js: el() skips false so no 'false' text reaches the DOM", async () => {
+  const fs = await import("node:fs");
+  const src = fs.readFileSync("features/notifications/triage.js", "utf8");
+  assert.match(src, /kid != null && kid !== false/);
+  assert.doesNotMatch(src, /v\.next && " "/);
 });
