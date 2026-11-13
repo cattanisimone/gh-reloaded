@@ -1,27 +1,9 @@
-// E2E: per-token "Verify access" panel on the Settings page. api.github.com is
-// mocked per test; nothing leaves the machine.
+// E2E: "Check a specific repository" (the former Verify access) from the side
+// panel and from a test result. api.github.com is mocked per test; nothing
+// leaves the machine.
 import { test, expect, seedStorage } from "./support/extension.js";
 import { openOptions } from "./support/options.js";
-
-const FINE = "github_pat_FINE1234";
-const CLASSIC = "ghp_CLASSIC5678";
-
-// handler(url, request) -> {status, headers, body}; every call is recorded.
-async function mockApi(context, handler) {
-  const calls = [];
-  await context.route("https://api.github.com/**", async (route) => {
-    const req = route.request();
-    const call = { url: req.url(), method: req.method(), auth: req.headers().authorization, body: req.postData() };
-    calls.push(call);
-    const { status = 200, headers = {}, body = {} } = (await handler(call)) || {};
-    await route.fulfill({
-      status,
-      headers: { "access-control-allow-origin": "*", "access-control-expose-headers": "*", "content-type": "application/json", ...headers },
-      body: typeof body === "string" ? body : JSON.stringify(body),
-    });
-  });
-  return calls;
-}
+import { mockApi, FINE, CLASSIC } from "./support/tokens.js";
 
 const ok = (call) => {
   if (call.url.endsWith("/user")) return { body: { login: "sam" } };
@@ -29,58 +11,47 @@ const ok = (call) => {
   return { body: [] };
 };
 
+// Opens the default token's panel (no token saved) and the repository check in it.
 async function openDefault(context, page) {
   await openOptions(context, page, "#tokens-section");
-  await page.locator("#token-default .tok-verify").click();
-  return page.locator("#token-default");
+  await page.locator('#token-list [data-act="edit"]').first().click();
+  await page.locator("#panel-check").click();
+  return page.locator("#panel-diag");
 }
+const secret = (page) => page.locator("#panel-secret");
 
-test("Verify access sits beside Test on default and owner cards, no new nav page", async ({ context, page }) => {
-  await openOptions(context, page, "#tokens-section");
-  await page.locator("#add-token").click();
-  for (const card of [page.locator("#token-default"), page.locator("#token-list .token-card")]) {
-    const test = card.locator(".tok-test");
-    const verify = card.locator(".tok-verify");
-    await expect(verify).toBeVisible();
-    const [a, b] = await Promise.all([test.boundingBox(), verify.boundingBox()]);
-    expect(Math.abs(a.y - b.y)).toBeLessThan(1);
-    expect(b.x).toBeGreaterThan(a.x);
-  }
-  await expect(page.locator(".nav a[data-panel]")).toHaveCount(4);
-});
-
-test("Verify access matches Test: size, radius, border, padding", async ({ context, page }) => {
-  await openOptions(context, page, "#tokens-section");
-  const read = (sel) => page.locator(sel).evaluate((el) => {
-    const c = getComputedStyle(el);
-    return [c.height, c.borderTopLeftRadius, c.borderTopWidth, c.borderTopColor, c.paddingLeft, c.paddingRight, c.fontSize, c.fontWeight, c.lineHeight];
-  });
-  expect(await read("#token-default .tok-verify")).toEqual(await read("#token-default .tok-test"));
-  const gap = await page.locator("#token-default .input-row").evaluate((r) => getComputedStyle(r).columnGap);
-  expect(gap).toBe("8px");
-});
-
-test("no api request on page load or when opening the panel", async ({ context, page }) => {
+test("no api request on page load or when opening the check", async ({ context, page }) => {
   const calls = await mockApi(context, ok);
   await seedStorage(context, { githubTokens: [{ id: "d", name: "Default", owner: "", token: FINE }], defaultTokenId: "d" });
-  const card = await openDefault(context, page);
-  await expect(card.locator(".diag")).toBeVisible();
-  await expect(card.locator(".tok-verify")).toHaveAttribute("aria-expanded", "true");
+  await openOptions(context, page, "#tokens-section");
+  await page.locator('#token-list [data-act="edit"]').first().click();
+  await page.locator("#panel-check").click();
+  await expect(page.locator("#panel-diag .diag")).toBeVisible();
+  await expect(page.locator("#panel-check")).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#panel-diag .diag-repo")).toBeFocused();
   expect(calls).toHaveLength(0);
 });
 
-test("Test stays authentication-only and says so", async ({ context, page }) => {
-  await mockApi(context, ok);
+test("the check is reachable from a test result too, with the saved token", async ({ context, page }) => {
+  const calls = await mockApi(context, (c) => (c.url.includes("/user/repos") ? { body: [] } : ok(c)));
+  await seedStorage(context, { githubTokens: [{ id: "o", name: "Work", owner: "acme", token: CLASSIC }], defaultTokenId: null });
   await openOptions(context, page, "#tokens-section");
-  await page.locator("#token-default .tok-secret").fill(FINE);
-  await page.locator("#token-default .tok-test").click();
-  await expect(page.locator("#token-default .tok-test-status")).toHaveText(/Authenticated as sam\. Feature access not checked/);
+  await page.locator('#token-list .token-item').nth(1).locator('.token-row [data-act="test"]').click();
+  const item = page.locator("#token-list .token-item").nth(1);
+  await item.getByRole("button", { name: "Check a specific repository" }).click();
+  await expect(item.locator(".diag-repo")).toHaveValue("acme/");
+  await item.locator(".diag-repo").fill("acme/app");
+  calls.length = 0;
+  await item.locator(".diag-run").click();
+  await expect(item.locator(".diag-summary")).toContainText("checked");
+  expect(calls.every((c) => c.auth === `Bearer ${CLASSIC}`)).toBe(true);
+  expect(calls.some((c) => c.url.includes("/repos/acme/app/issues"))).toBe(true);
 });
 
 test("a repository is required: no request, field marked invalid", async ({ context, page }) => {
   const calls = await mockApi(context, ok);
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-run").click();
   await expect(card.locator(".diag-repo")).toHaveAttribute("aria-invalid", "true");
   await expect(card.locator(".field-error:not([hidden])")).toContainText("Name a repository");
@@ -99,7 +70,7 @@ test("no token in the card: Paste a token first, no request", async ({ context, 
 test("success: requests only the named targets, results name target, time and status", async ({ context, page }) => {
   const calls = await mockApi(context, ok);
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-repo").fill("acme/app");
   await card.locator(".diag-issue").fill("12");
   await card.locator(".diag-project").fill("https://github.com/orgs/acme/projects/3");
@@ -120,35 +91,39 @@ test("success: requests only the named targets, results name target, time and st
   expect(calls.find((c) => c.url.endsWith("/graphql")).body).not.toMatch(/mutation/);
 });
 
-test("the unsaved token is used as typed and labelled", async ({ context, page }) => {
+test("the panel check uses the token as typed in the panel, and the saved one is untouched", async ({ context, page }) => {
   const calls = await mockApi(context, ok);
   await seedStorage(context, { githubTokens: [{ id: "d", name: "Default", owner: "", token: "ghp_SAVED9999" }], defaultTokenId: "d" });
-  const card = await openDefault(context, page);
-  await expect(card.locator(".diag-tag")).toHaveText("Saved token …9999");
-  await card.locator(".tok-secret").fill(CLASSIC);
-  await expect(card.locator(".diag-tag")).toHaveText("Unsaved token");
+  await openOptions(context, page, "#tokens-section");
+  await page.locator('#token-list [data-act="edit"]').first().click();
+  await page.locator("#panel-check").click();
+  const card = page.locator("#panel-diag");
   await card.locator(".diag-repo").fill("acme/app");
   await card.locator(".diag-run").click();
   await expect(card.locator(".diag-summary")).toContainText("checked");
-  expect(calls.every((c) => c.auth === `Bearer ${CLASSIC}`)).toBe(true);
+  expect(calls.every((c) => c.auth === "Bearer ghp_SAVED9999")).toBe(true);
+  await page.locator("#panel-replace").click();
+  await secret(page).fill(CLASSIC);
+  await expect(card.locator(".diag-summary")).toHaveText("Token or owner changed: run the checks again.");
+  await card.locator(".diag-run").click();
+  await expect(card.locator(".diag-summary")).toContainText("checked");
+  expect(calls.slice(-3).every((c) => c.auth === `Bearer ${CLASSIC}`)).toBe(true);
   const stored = await page.evaluate(() => chrome.storage.local.get("githubTokens"));
   expect(stored.githubTokens[0].token).toBe("ghp_SAVED9999");
 });
 
-test("two owner cards send their own tokens", async ({ context, page }) => {
+test("two owner tokens send their own tokens", async ({ context, page }) => {
   const calls = await mockApi(context, ok);
+  await seedStorage(context, { githubTokens: [{ id: "a", name: "", owner: "one", token: "ghp_ONEONE11" }, { id: "b", name: "", owner: "two", token: "ghp_TWOTWO22" }], defaultTokenId: null });
   await openOptions(context, page, "#tokens-section");
-  await page.locator("#add-token").click();
-  await page.locator("#add-token").click();
-  const cards = page.locator("#token-list .token-card");
-  for (const [i, tok, owner] of [[0, "ghp_ONEONE11", "one"], [1, "ghp_TWOTWO22", "two"]]) {
-    await cards.nth(i).locator(".tok-owner").fill(owner);
-    await cards.nth(i).locator(".tok-secret").fill(tok);
-    await cards.nth(i).locator(".tok-verify").click();
-    await expect(cards.nth(i).locator(".diag-repo")).toHaveValue(`${owner}/`);
-    await cards.nth(i).locator(".diag-repo").fill(`${owner}/app`);
-    await cards.nth(i).locator(".diag-run").click();
-    await expect(cards.nth(i).locator(".diag-summary")).toContainText("checked");
+  for (const [i, owner] of [[1, "one"], [2, "two"]]) {
+    await page.locator('#token-list [data-act="edit"]').nth(i).click();
+    await page.locator("#panel-check").click();
+    await expect(page.locator("#panel-diag .diag-repo")).toHaveValue(`${owner}/`);
+    await page.locator("#panel-diag .diag-repo").fill(`${owner}/app`);
+    await page.locator("#panel-diag .diag-run").click();
+    await expect(page.locator("#panel-diag .diag-summary")).toContainText("checked");
+    await page.locator("#panel-discard").click();
   }
   expect(calls.filter((c) => c.url.includes("/repos/one/")).every((c) => c.auth === "Bearer ghp_ONEONE11")).toBe(true);
   expect(calls.filter((c) => c.url.includes("/repos/two/")).every((c) => c.auth === "Bearer ghp_TWOTWO22")).toBe(true);
@@ -157,7 +132,7 @@ test("two owner cards send their own tokens", async ({ context, page }) => {
 test("401: authentication denied, the other checks not checked", async ({ context, page }) => {
   const calls = await mockApi(context, () => ({ status: 401, body: { message: "Bad credentials" } }));
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-repo").fill("acme/app");
   await card.locator(".diag-run").click();
   const pills = card.locator(".diag-pill");
@@ -171,7 +146,7 @@ test("rate limit and network errors are temporary, never denied", async ({ conte
     ? { body: { login: "sam" } }
     : { status: 403, headers: { "x-ratelimit-remaining": "0", "x-ratelimit-reset": "4102444800" }, body: { message: "API rate limit exceeded" } });
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-repo").fill("acme/app");
   await card.locator(".diag-run").click();
   await expect(card.locator(".diag-pill").nth(1)).toHaveText("Temporary error");
@@ -181,7 +156,7 @@ test("rate limit and network errors are temporary, never denied", async ({ conte
 test("network failure is a temporary error", async ({ context, page }) => {
   await context.route("https://api.github.com/**", (route) => route.abort());
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-repo").fill("acme/app");
   await card.locator(".diag-run").click();
   await expect(card.locator(".diag-pill").first()).toHaveText("Temporary error");
@@ -190,7 +165,7 @@ test("network failure is a temporary error", async ({ context, page }) => {
 test("an ambiguous 404 stays Not verified", async ({ context, page }) => {
   await mockApi(context, (c) => c.url.endsWith("/user") ? { body: { login: "sam" } } : { status: 404, body: { message: "Not Found" } });
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-repo").fill("acme/app");
   await card.locator(".diag-run").click();
   await expect(card.locator(".diag-pill").nth(1)).toHaveText("Not verified");
@@ -201,7 +176,7 @@ test("a user-owned project with a fine-grained token shows the classic read:proj
     ? { body: { login: "sam" } }
     : c.url.endsWith("/graphql") ? { body: { data: { user: null }, errors: [{ type: "NOT_FOUND" }] } } : { body: [] });
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-repo").fill("sam/app");
   await card.locator(".diag-project").fill("https://github.com/users/sam/projects/2");
   await card.locator(".diag-run").click();
@@ -219,7 +194,7 @@ test("no secret in the UI, console or storage even when GitHub echoes the token"
     ? { status: 401, body: { message: `Bad credentials for ${FINE}` } }
     : { body: [] });
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-repo").fill("acme/app");
   await card.locator(".diag-run").click();
   await expect(card.locator(".diag-pill").first()).toBeVisible();
@@ -236,14 +211,14 @@ test("editing the token clears results and aborts the run", async ({ context, pa
     return ok(c);
   });
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-repo").fill("acme/app");
   await card.locator(".diag-run").click();
   await expect(card.locator(".diag-run")).toBeDisabled();
   await expect(card.locator(".diag-run")).toHaveText("Checking…");
-  await card.locator(".tok-secret").fill(FINE + "x");
+  await secret(page).fill(FINE + "x");
   await expect(card.locator(".diag-run")).toBeEnabled();
-  await expect(card.locator(".diag-summary")).toHaveText("Token changed: run the checks again.");
+  await expect(card.locator(".diag-summary")).toHaveText("Token or owner changed: run the checks again.");
   await page.waitForTimeout(900);
   await expect(card.locator(".diag-result")).toHaveCount(0);
   expect(calls.length).toBeLessThanOrEqual(1);
@@ -262,7 +237,7 @@ test("a double click starts one run", async ({ context, page }) => {
     return ok(c);
   });
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-repo").fill("acme/app");
   await card.locator(".diag-run").dblclick();
   await expect(card.locator(".diag-summary")).toContainText("checked");
@@ -273,26 +248,27 @@ test("keyboard, ARIA, responsive and dark", async ({ context, page }) => {
   await mockApi(context, ok);
   await page.setViewportSize({ width: 400, height: 900 });
   await openOptions(context, page, "#tokens-section");
-  const verify = page.locator("#token-default .tok-verify");
-  await verify.focus();
-  await expect(verify).toHaveAttribute("aria-expanded", "false");
+  await page.locator('#token-list [data-act="edit"]').first().click();
+  const check = page.locator("#panel-check");
+  await check.focus();
+  await expect(check).toHaveAttribute("aria-expanded", "false");
   await page.keyboard.press("Enter");
-  await expect(verify).toHaveAttribute("aria-expanded", "true");
-  await expect(page.locator("#token-default .diag-repo")).toBeFocused();
-  await page.locator("#token-default .tok-secret").fill(FINE);
-  await page.locator("#token-default .diag-repo").fill("acme/app");
+  await expect(check).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#panel-diag .diag-repo")).toBeFocused();
+  await secret(page).fill(FINE);
+  await page.locator("#panel-diag .diag-repo").fill("acme/app");
   for (let i = 0; i < 4; i++) await page.keyboard.press("Tab");
-  await expect(page.locator("#token-default .diag-run")).toBeFocused();
+  await expect(page.locator("#panel-diag .diag-run")).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(page.locator("#token-default .diag-summary")).toHaveAttribute("role", "status");
-  await expect(page.locator("#token-default .diag-summary")).toContainText("checked");
+  await expect(page.locator("#panel-diag .diag-summary")).toHaveAttribute("role", "status");
+  await expect(page.locator("#panel-diag .diag-summary")).toContainText("checked");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
-  await verify.click();
-  await expect(page.locator("#token-default .diag")).toBeHidden();
+  await check.click();
+  await expect(page.locator("#panel-diag")).toBeHidden();
 
   await page.emulateMedia({ colorScheme: "dark" });
-  await verify.click();
-  const bg = await page.locator("#token-default .diag").evaluate((el) => getComputedStyle(el).backgroundColor);
+  await check.click();
+  const bg = await page.locator("#panel-diag .diag").evaluate((el) => getComputedStyle(el).backgroundColor);
   const [r, g, b] = bg.match(/\d+/g).map(Number);
   expect(r + g + b).toBeLessThan(150);
 });
@@ -301,7 +277,7 @@ test("Pull requests row: Available on 200, Access denied naming Pull requests: r
   let pulls = { body: [] };
   await mockApi(context, (call) => (call.url.includes("/pulls") ? pulls : ok(call)));
   const card = await openDefault(context, page);
-  await card.locator(".tok-secret").fill(FINE);
+  await secret(page).fill(FINE);
   await card.locator(".diag-repo").fill("acme/app");
   const row = card.locator(".diag-result").nth(2);
   await card.locator(".diag-run").click();

@@ -205,3 +205,117 @@ test("dark mode: surfaces and keyboard", async ({ context, page }) => {
   expect(bg).toBe("rgb(21, 27, 35)");
   await page.keyboard.press("Escape");
 });
+
+// --- Test inside the panel: a draft is tested in memory and writes nothing ---
+
+const spyStorage = (page) => page.evaluate(() => {
+  window.__writes = [];
+  for (const area of ["local", "session"]) {
+    const orig = chrome.storage[area].set.bind(chrome.storage[area]);
+    chrome.storage[area].set = (...a) => { window.__writes.push(area); return orig(...a); };
+  }
+});
+const writes = (page) => page.evaluate(() => window.__writes);
+
+test("panel Test: a new token, a replaced token and a changed owner test the draft values and write nothing", async ({ context, page }) => {
+  const calls = await mockApi(context, allGood);
+  await open(context, page);
+  await spyStorage(page);
+  const rowBefore = await page.locator("#token-list .token-item").nth(1).innerText();
+
+  // new token
+  await page.locator("#add-token").click();
+  await expect(page.locator("#panel-test")).toBeDisabled();
+  await expect(page.locator("#panel-test-hint")).toHaveText("Enter a token to test it");
+  await page.locator("#panel-secret").fill("ghp_draftNEW1");
+  await expect(page.locator("#panel-test-hint")).toHaveText("Enter the GitHub owner to test it");
+  await page.locator("#panel-owner").fill("new-org");
+  await page.locator("#panel-test").click();
+  await expect(page.locator("#panel-result")).toContainText("Result for the changes in this panel (not saved)");
+  await expect(page.locator("#panel-result")).toContainText("5 of 5 OK");
+  expect(calls.length).toBeGreaterThan(0);
+  expect(calls.every((c) => c.auth === "Bearer ghp_draftNEW1")).toBe(true);
+  expect(calls.some((c) => c.url.includes("/orgs/new-org/repos"))).toBe(true);
+  await page.locator("#panel-discard").click();
+
+  // replaced token on a saved row
+  calls.length = 0;
+  await rowEdit(page, 1).click();
+  await page.locator("#panel-replace").click();
+  await page.locator("#panel-secret").fill("ghp_draftREP2");
+  await page.locator("#panel-test").click();
+  await expect(page.locator("#panel-result")).toContainText("not saved");
+  expect(calls.every((c) => c.auth === "Bearer ghp_draftREP2")).toBe(true);
+  expect(calls.some((c) => c.url.includes("/orgs/acme-demo/repos"))).toBe(true);
+  await page.locator("#panel-discard").click();
+
+  // changed owner, saved token
+  calls.length = 0;
+  await rowEdit(page, 1).click();
+  await page.locator("#panel-owner").fill("moved-org");
+  await page.locator("#panel-test").click();
+  await expect(page.locator("#panel-result")).toContainText("not saved");
+  expect(calls.every((c) => c.auth === `Bearer ${OWN}`)).toBe(true);
+  expect(calls.some((c) => c.url.includes("/orgs/moved-org/repos"))).toBe(true);
+  await page.locator("#panel-discard").click();
+
+  expect(await writes(page)).toEqual([]);
+  expect((await storageOf(page, "session", "ghrTokenTests")).ghrTokenTests).toBeUndefined();
+  expect(await page.locator("#token-list .token-item").nth(1).innerText()).toBe(rowBefore);
+});
+
+test("panel Test on an unchanged saved token is the row's own test", async ({ context, page }) => {
+  await mockApi(context, allGood);
+  await open(context, page);
+  await rowEdit(page, 1).click();
+  await page.locator("#panel-name").fill("Only the name changed");
+  await page.locator("#panel-test").click();
+  await expect(page.locator("#panel-result")).toContainText("Test result");
+  await expect(page.locator("#panel-result")).not.toContainText("not saved");
+  await expect(page.locator("#token-list .token-item").nth(1)).toContainText("5 of 5 OK");
+  expect((await storageOf(page, "session", "ghrTokenTests")).ghrTokenTests.o.codes.issues).toBe("available");
+});
+
+test("editing the token or the owner while a panel Test runs aborts it: Not checked", async ({ context, page }) => {
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  await mockApi(context, async (c) => { if (c.url.endsWith("/user")) await gate; return allGood(c); });
+  await open(context, page);
+  await spyStorage(page);
+  await rowEdit(page, 1).click();
+  await page.locator("#panel-owner").fill("moved-org");
+  await page.locator("#panel-test").click();
+  await expect(page.locator("#panel-test")).toHaveText("Testing…");
+  await page.locator("#panel-owner").fill("moved-again");
+  await expect(page.locator("#panel-result")).toContainText("Not checked");
+  await expect(page.locator("#panel-result")).toContainText("The token or owner changed while testing. Test again.");
+  await expect(page.locator("#panel-test")).toBeEnabled();
+  release();
+  await page.waitForTimeout(300);
+  await expect(page.locator("#panel-result")).toContainText("Not checked");
+  expect(await writes(page)).toEqual([]);
+});
+
+test("Save adopts a draft result taken with exactly the saved token and owner; otherwise Not tested", async ({ context, page }) => {
+  await mockApi(context, allGood);
+  await open(context, page);
+  await rowEdit(page, 1).click();
+  await page.locator("#panel-replace").click();
+  await page.locator("#panel-secret").fill("ghp_adoptFFFF");
+  await page.locator("#panel-test").click();
+  await expect(page.locator("#panel-result")).toContainText("5 of 5 OK");
+  await page.locator("#panel-save").click();
+  await expect(page.locator("#token-list .token-item").nth(1)).toContainText("5 of 5 OK");
+  expect((await storageOf(page, "session", "ghrTokenTests")).ghrTokenTests.o).toBeTruthy();
+
+  // tested, then the owner changed: the result is for other values and is dropped
+  await rowEdit(page, 1).click();
+  await page.locator("#panel-owner").fill("elsewhere");
+  await page.locator("#panel-test").click();
+  await expect(page.locator("#panel-result")).toContainText("not saved");
+  await page.locator("#panel-owner").fill("elsewhere-2");
+  await page.locator("#panel-save").click();
+  const r = page.locator("#token-list .token-item").nth(1);
+  await expect(r).toContainText("Not tested");
+  expect((await storageOf(page, "session", "ghrTokenTests")).ghrTokenTests?.o).toBeUndefined();
+});
