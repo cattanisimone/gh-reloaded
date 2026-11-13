@@ -320,3 +320,12 @@ test("fill: Grouped fills all four sections at once with no per-category target"
   assert.deepEqual(j(r.restPages()), [2, 3]);
   assert.ok(r.log.some((l) => l.lookup));
 });
+
+test("fill: Load more aims at 10 more matches than it has, not at the first target again", async () => {
+  const pages = [[pr(1, "unknown")], ...Array.from({ length: 6 }, (_, i) => range(100 + i * 20, 119 + i * 20, "unknown"))];
+  const r = rig({ pages, baseline: 1 });
+  assert.equal(await r.fill.start({ category: "unverifiable" }), "target");
+  assert.deepEqual(j(r.restPages()), [2]);
+  assert.equal(await r.fill.start({ category: "unverifiable", force: true }), "target");
+  assert.deepEqual(j(r.restPages()), [2, 3]);
+});

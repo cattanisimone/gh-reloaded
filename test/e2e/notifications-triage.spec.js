@@ -141,7 +141,7 @@ test("an empty category says it covers only the loaded rows, never 'all clear'",
   expect(text).toContain("No match among the loaded notifications.");
   expect(text).not.toMatch(/all clear|nothing to do/i);
   // The API cannot be used here (the mock answers 404): the view says why instead of "more pages not loaded".
-  await expect(page.locator(".ghnt-line-state")).toContainText("Notifications outside this page can't be checked");
+  await expect(page.locator(".ghnt-sline-state")).toContainText("Notifications outside this page can't be checked");
 });
 
 test("while facts load, counts show an ellipsis and the list says 'Classifying N…'; pending rows are in no category", async ({ context, page }) => {
@@ -163,7 +163,7 @@ test("a native filter keeps working with a category selected: pagination re-coun
   await expect.poll(async () => (await state(world)).items.map((i) => i.key).join()).toContain("acme/web#300");
   await settled(world);
   await expect(cat(page, "attention")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".ghnt-line-state")).toContainText("Notifications outside this page can't be checked");
+  await expect(page.locator(".ghnt-sline-state")).toContainText("Notifications outside this page can't be checked");
   const after = await state(world);
   expect(after.items.map((i) => i.key)).not.toEqual(before.items.map((i) => i.key));
   await expect(visibleRows(page)).toHaveCount(after.items.filter((i) => i.section === "attention").length);
@@ -548,7 +548,7 @@ test("Next page: the coverage line and the empty state link to GitHub's own next
     if (layout === "grouped") await expect(secs(page)).toHaveCount(4);
     if (layout === "grouped") {
       // Grouped has no selection: nothing can be checked outside here, so its coverage line is the state line.
-      await expect(next(page.locator(".ghnt-line-state")), layout).toHaveAttribute("href", "/notifications?after=p2");
+      await expect(next(page.locator(".ghnt-sline-state")), layout).toHaveAttribute("href", "/notifications?after=p2");
       continue;
     }
     await expect(next(page.locator(".ghnt-coverage")), layout).toHaveAttribute("href", "/notifications?after=p2");
@@ -559,7 +559,7 @@ test("Next page: the coverage line and the empty state link to GitHub's own next
   const empty = page.locator(".ghnt-empty");
   await expect(empty).toContainText("No match among the loaded notifications.");
   // With a category selected the state line carries the Next page link (the empty text does not repeat it).
-  const stateLine = page.locator(".ghnt-line-state");
+  const stateLine = page.locator(".ghnt-sline-state");
   await expect(next(stateLine)).toHaveAttribute("href", "/notifications?after=p2");
   // It is GitHub's own link target: following it loads page 2, where there is no next page.
   await next(stateLine).click();
@@ -747,7 +747,7 @@ for (const variant of [
       await page.setViewportSize({ width, height: 800 });
       await blockOk(page, `${variant.name} selected ${width}`);
     }
-    await expect(page.locator(".ghnt-block .ghnt-line-state a.ghnt-next")).toHaveCount(1);
+    await expect(page.locator(".ghnt-block .ghnt-sline-state a.ghnt-next")).toHaveCount(1);
   });
 }
 
@@ -811,7 +811,7 @@ test("variant C: the empty state and its Clear triage / Next page row render wit
   const block = page.locator(".ghnt-block");
   await expect(block.locator(".ghnt-empty")).toContainText("No match among the loaded notifications.");
   await expect(block.getByRole("button", { name: "Clear triage" })).toBeVisible();
-  await expect(block.locator(".ghnt-line-state a.ghnt-next")).toHaveCount(1);
+  await expect(block.locator(".ghnt-sline-state a.ghnt-next")).toHaveCount(1);
 });
 
 for (const width of [400, 800, 1100, 1500]) {

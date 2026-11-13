@@ -176,7 +176,7 @@
   function segNode(seg, v) {
     if (seg.t === "text") return document.createTextNode(seg.v);
     if (seg.t === "next") return el("a", { class: "ghnt-next", href: seg.href, text: seg.label });
-    if (seg.t === "link") return el("a", { class: "ghnt-link", href: seg.href, text: seg.label });
+    if (seg.t === "link") return el("a", { class: "ghnt-slink", href: seg.href, text: seg.label });
     if (seg.t === "select") {
       const b = el("button", { type: "button", class: "ghnt-linkbtn", "data-ghnt-select": seg.cat, text: seg.label });
       b.addEventListener("click", () => {
@@ -219,7 +219,7 @@
     return document.createTextNode("");
   }
 
-  const lineNode = (line, v) => el("p", { class: `ghnt-line ghnt-line-${line.id}`, "data-ghnt-line": line.id }, line.segs.map((seg) => segNode(seg, v)));
+  const lineNode = (line, v) => el("p", { class: `ghnt-sline ghnt-sline-${line.id}`, "data-ghnt-line": line.id }, line.segs.map((seg) => segNode(seg, v)));
 
   // "Needs attention · 3 on this page + 2 outside · 40 notifications checked": the
   // "2 outside" is a same-page link that moves focus to the outside list's heading.
@@ -231,7 +231,7 @@
       text.textContent = v.status;
       return text;
     }
-    const link = el("a", { class: "ghnt-link", href: "#ghnt-outside-heading", text: v.statusOutside });
+    const link = el("a", { class: "ghnt-slink", href: "#ghnt-outside-heading", text: v.statusOutside });
     link.addEventListener("click", (e) => {
       e.preventDefault();
       const h = document.querySelector("#ghnt-outside-heading");

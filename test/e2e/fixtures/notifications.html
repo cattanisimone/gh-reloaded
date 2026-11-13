@@ -95,6 +95,10 @@
   /* Primer's base hr, as the live sidebar renders it between its groups: 1px muted bottom border, 15px margins. */
   hr { box-sizing: content-box; height: 0; margin: 15px 0; overflow: hidden; background: transparent; border: 0; border-bottom: 1px solid var(--borderColor-muted); }
   .Box { border: 1px solid #d1d9e0; border-radius: 6px; margin-bottom: 16px; overflow: hidden; }
+  /* Live: the list box is edge-to-edge only from 543px down (measured: 543 -> left 0, width 543, radius 0; 544 -> left 16, width 512, radius 6). */
+  @media (max-width: 543.98px) { .Box.notifications-list { border-radius: 0; border-left-width: 0; border-right-width: 0; } }
+  .Box--overlay { position: fixed; top: 10%; left: 25%; width: 50%; background: var(--bgColor-default); box-shadow: var(--shadow-floating-small); margin: 0; }
+  .ProTip { margin: 0 0 8px; color: var(--fgColor-muted); font-size: 12px; }
   .Box-header { padding: 8px 16px; background: #f6f8fa; border-bottom: 1px solid #d1d9e0; font-weight: 600; }
   ul.color-bg-subtle { background: #f6f8fa; }
   li.notifications-list-item { display: block; padding: 8px 16px; border-top: 1px solid #d1d9e0; background: #fff; }
@@ -137,7 +141,19 @@
     }
     return out;
   }
+  // Live row structure (shape measured): the subject link wraps repository, number, date and the title.
+  const liveRow = (id, href, repo, num, title, reason) =>
+    '<li class="notifications-list-item js-navigation-item" data-notification-id="NT_' + id + '"><div class="d-flex"><input type="checkbox" class="js-notifications-list-item-check" aria-label="Select ' + id + '">' +
+    '<a class="notification-list-item-link" href="' + href + '"><span class="repo-ref">' + repo + '</span> <span>' + num + ' Oct 29, 2026</span><p class="markdown-title" style="margin:0">' + title + '</p></a>' +
+    '<span class="reason-label">' + reason + '</span></div><ul class="notification-list-item-actions"><li><button type="button" class="btn-sm" data-action="done">Done</button></li><li><button type="button" class="btn-sm" data-action="save">Save</button></li></ul></li>';
   function rows(page, relative) {
+    if (location.hash === '#kinds') {
+      return [
+        row(1, '/acme/web/pull/412', 'Add retry to uploads', 'acme/web #412', 'review requested', true),
+        liveRow(2, '/acme/web/discussions/12', 'acme/web', '#12', 'Plan the release', 'mention'),
+        liveRow(3, '/acme/web/actions/runs/77', 'acme/web', '#2', 'Release check', 'ci activity'),
+      ];
+    }
     if (location.hash === '#many' || location.hash === '#repo') return manyRows(relative);
     const href = (path, id) => (relative ? path : abs(path, id));
     if (page === 'p2') {
@@ -184,7 +200,7 @@
         const box = (name, items) => '<div class="Box"><div class="Box-header">' + name + '</div><div class="Box-body"><ul class="list-style-none color-bg-subtle js-navigation-container">' + items.join('') + '</ul></div></div>';
         list = box('acme/web', all.slice(0, half)) + box('acme/api', all.slice(half));
       } else {
-        list = '<div class="Box"><div class="Box-body"><ul class="list-style-none color-bg-subtle js-navigation-container">' + all.join('') + '</ul></div></div>';
+        list = '<div class="Box notifications-list"><div class="Box-body"><ul class="list-style-none color-bg-subtle js-navigation-container">' + all.join('') + '</ul></div></div>';
       }
       const link = (label, current) => '<li><a href="/notifications"' + (current ? ' aria-current="page"' : '') + '>' + label + '</a></li>';
       const sidebar = '<div class="sidebar"><nav aria-label="Notifications"><nav aria-label="Inbox"><ul>' + link('Inbox', true) + link('Saved') + link('Done') + '</ul></nav><hr><nav aria-label="Filters"><ul>' + link('Assigned') + link('Participating') + '</ul></nav></nav></div>';
@@ -193,7 +209,8 @@
         '<div class="js-check-all-container">' + (path === '/notifications' ? (reason ? FILTERS_B : FILTERS_A) : '') +
         '<div class="js-bulk-action-toasts tmp-mb-3"></div><div class="js-notifications-banners-target"></div>' +
         '<div class="sr-only"><label><input type="checkbox" class="js-check-all" aria-label="Select all"> Select all</label></div>' + (done ? '' : '<div class="sr-only" role="status"></div>') + list + '</div>' +
-        '<div class="paginate-container"><nav aria-label="Pagination">' + (page === 'p1' ? '<a id="next" rel="next" href="/notifications?after=p2">Next</a>' : '<a id="prev" rel="prev" href="/notifications">Previous</a>') + '</nav></div></div></div>';
+        '<div class="pagination-wrapper"><p class="ProTip">ProTip! Use the filters to narrow the list.</p><div class="paginate-container"><nav aria-label="Pagination">' + (page === 'p1' ? '<a id="next" rel="next" href="/notifications?after=p2">Next</a>' : '<a id="prev" rel="prev" href="/notifications">Previous</a>') + '</nav></div></div></div></div>' +
+        '<div class="Box Box--overlay" role="dialog" aria-label="Filters" hidden><div class="Box-body">Overlay</div></div><div class="Popover" hidden><div class="Box"><div class="Box-body">Popover</div></div></div>';
     } else {
       main.innerHTML = '<h1>acme/web</h1><p>Code · Issues · Pull requests</p>';
     }

@@ -194,7 +194,8 @@
     // Capable: from here the numbers are checked ones.
     const selCount = selected ? (o.pageCount || 0) + (s.byCat[selected] || 0) : null;
     const limited = snap.retryAt != null && o.now < snap.retryAt;
-    const canMore = (snap.next || (!isLabel && p > 0)) && !snap.ceiling;
+    // Only a category (or the Grouped action) can ask for more; with nothing selected the text says where things stand.
+    const canMore = (selected || grouped) && (snap.next || (!isLabel && p > 0)) && !snap.ceiling;
     const nv = () => {
       if (!k) return [];
       const segs = [T(`${k} not verified yet.`)];
@@ -228,7 +229,7 @@
         // No further API page but lookups left (Needs attention, Waiting, Grouped): Load more continues them.
         if (nv().length) add("unverified", ...nv(), canMore && !snap.next ? [T(" "), { t: "load-more" }] : []);
         if (snap.next && canMore) add("partial", ...more, T(" "), { t: "load-more" });
-        else if (!k) add("partial", ...more);
+        else if (snap.next || !k) add("partial", ...more);
         if (!selected && !grouped) lines.unshift({ id: "checked", segs: [T(`${m} notifications checked.`)] });
       } else if (!complete && nv().length) add("unverified", ...nv());
       if (grouped && lines.length && !lines.some((l) => l.id === "complete") && !lines.some((l) => l.id === "checked")) lines.unshift({ id: "checked", segs: [T(`${m} notifications checked.`)] });

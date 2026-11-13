@@ -264,6 +264,9 @@
       let batches = 0;
       let lastRest = 0;
       const looked = new Set();
+      // The first fill aims at 10 matches; Load more at 10 more than it has.
+      const have = () => (category ? (getPage().counts?.[category] || 0) + summarize().byCat[category] : 0);
+      const goal = (opts.force ? have() : 0) + L.target;
       const wantLookups = !category || LOOKUP_CATS.includes(category);
       let reason = "complete";
       emit();
@@ -284,7 +287,7 @@
           const sum = summarize();
           if (category) {
             const mine = getPage().counts?.[category] || 0;
-            if (mine + sum.byCat[category] >= L.target) {
+            if (mine + sum.byCat[category] >= goal) {
               reason = "target";
               break;
             }
