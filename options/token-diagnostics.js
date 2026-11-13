@@ -172,7 +172,7 @@ export function classify(result, ctx) {
   const headers = result.headers || {};
   const message = String(result.message || "");
   const errors = result.errors || [];
-  const out = (status, reason, remedy = null) => ({ status, reason, remedy });
+  const out = (status, reason, remedy = null, cause = null) => ({ status, reason, remedy, cause });
   const userProject = kind === "project" && project && project.kind === "users";
 
   // Projects owned by a personal account: the remedy follows the URL, not the
@@ -193,13 +193,13 @@ export function classify(result, ctx) {
 
   const status = result.status;
   if (status === 401) {
-    return out(STATUS.DENIED, "GitHub rejected this token: it is invalid, expired or revoked.", { text: "Create or regenerate the token and paste it again.", href: type === "fine-grained" ? DOCS.fineGrained : DOCS.classic });
+    return out(STATUS.DENIED, "GitHub rejected this token: it is invalid, expired or revoked.", { text: "Create or regenerate the token and paste it again.", href: type === "fine-grained" ? DOCS.fineGrained : DOCS.classic }, "invalid");
   }
   if (status >= 500) return out(STATUS.TEMPORARY, `GitHub answered HTTP ${status}. Try again later.`);
 
   const limited = ((status === 403 || status === 429) && (headers["x-ratelimit-remaining"] === "0" || headers["retry-after"] !== undefined || status === 429 || /secondary rate limit|rate limit exceeded|abuse detection/i.test(message))) || errors.includes("RATE_LIMITED");
   if (limited) {
-    return out(STATUS.TEMPORARY, rateLimitReason(headers, now), { text: "Wait for the limit to reset, then run the checks again.", href: DOCS.rateLimit });
+    return out(STATUS.TEMPORARY, rateLimitReason(headers, now), { text: "Wait for the limit to reset, then run the checks again.", href: DOCS.rateLimit }, "rate");
   }
 
   if (status === 403) {
@@ -207,23 +207,23 @@ export function classify(result, ctx) {
     if (/required/i.test(sso)) {
       const url = (sso.match(/url=(\S+)/) || [])[1];
       const href = url && url.startsWith("https://github.com/") ? url : DOCS.sso;
-      return out(STATUS.DENIED, "This organization requires SAML SSO authorization for the token.", { text: "Authorize the token for the organization, then run the checks again.", href });
+      return out(STATUS.DENIED, "This organization requires SAML SSO authorization for the token.", { text: "Authorize the token for the organization, then run the checks again.", href }, "sso");
     }
     if (/resource not accessible by personal access token/i.test(message)) {
-      return withProjectRemedy(out(STATUS.DENIED, "GitHub says the token lacks access to this resource.", permissionRemedy(kind, type, headers, project)));
+      return withProjectRemedy(out(STATUS.DENIED, "GitHub says the token lacks access to this resource.", permissionRemedy(kind, type, headers, project), "permission"));
     }
     if (/forbids access via|personal access token.*(policy|not been approved|pending)|lifetime/i.test(message)) {
-      return withProjectRemedy(out(STATUS.DENIED, "The organization's token policy does not allow this token (approval, lifetime or classic-token restriction).", { text: "Ask an organization owner to approve the token or relax the policy.", href: DOCS.orgPolicy }));
+      return withProjectRemedy(out(STATUS.DENIED, "The organization's token policy does not allow this token (approval, lifetime or classic-token restriction).", { text: "Ask an organization owner to approve the token or relax the policy.", href: DOCS.orgPolicy }, "policy"));
     }
     return withProjectRemedy(out(STATUS.NOT_VERIFIED, "Forbidden, without a reason that proves what is missing.", ambiguousRemedy()));
   }
 
   if (kind === "project" && status === 200) {
     if (errors.includes("INSUFFICIENT_SCOPES")) {
-      return withProjectRemedy(out(STATUS.DENIED, "GitHub says the token lacks the scope or permission to read Projects.", permissionRemedy("project", type, headers, project)));
+      return withProjectRemedy(out(STATUS.DENIED, "GitHub says the token lacks the scope or permission to read Projects.", permissionRemedy("project", type, headers, project), "permission"));
     }
     if (/resource not accessible by personal access token/i.test(message)) {
-      return withProjectRemedy(out(STATUS.DENIED, "GitHub says the token lacks access to this resource.", permissionRemedy("project", type, headers, project)));
+      return withProjectRemedy(out(STATUS.DENIED, "GitHub says the token lacks access to this resource.", permissionRemedy("project", type, headers, project), "permission"));
     }
     if (errors.length || result.partial || result.projectNull) {
       return withProjectRemedy(out(STATUS.NOT_VERIFIED, "GitHub returned no project: it may not exist, or this token may not see it.", ambiguousRemedy()));
@@ -277,7 +277,7 @@ const lower = (headers) => {
   return out;
 };
 
-async function send(check, token, { signal, fetch, timeoutMs }) {
+export async function send(check, token, { signal, fetch, timeoutMs }) {
   const ctl = new AbortController();
   let timedOut = false;
   const timer = setTimeout(() => { timedOut = true; ctl.abort(); }, timeoutMs);
@@ -307,6 +307,7 @@ async function send(check, token, { signal, fetch, timeoutMs }) {
       if (res.ok) result.failure = "parse";
       return result;
     }
+    if (check.keepBody) result.body = body;
     if (body && typeof body.message === "string") result.message = body.message;
     if (check.kind === "auth" && res.ok && body && typeof body.login === "string") result.login = body.login;
     if (check.kind === "project") {
