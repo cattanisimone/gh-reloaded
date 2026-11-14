@@ -117,6 +117,26 @@
     return document.querySelector(".ghals-row");
   }
 
+  // Run page, narrow layout: the row's left edge follows the first glyph of
+  // the Summary card, measured, so no inset is hardcoded.
+  function fitRun(row) {
+    if (!row || !row.classList.contains("ghals-run")) return;
+    row.style.removeProperty("padding-left");
+    if (window.innerWidth > 768) return;
+    const card = document.querySelector(".actions-workflow-stats");
+    if (!card) return;
+    const w = document.createTreeWalker(card, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) });
+    const t = w.nextNode();
+    if (!t) return;
+    const rg = document.createRange();
+    rg.selectNodeContents(t);
+    const glyph = rg.getBoundingClientRect();
+    if (!glyph.width) return;
+    row.style.paddingLeft = "0px";
+    const inset = glyph.left - row.getBoundingClientRect().left;
+    row.style.paddingLeft = `${Math.max(0, Math.round(inset * 10) / 10)}px`;
+  }
+
   function removeRow() {
     for (const r of document.querySelectorAll(".ghals-row")) r.remove();
   }
@@ -232,6 +252,7 @@
       row = null;
     }
     if (!row) row = newRow(route, path, anchor);
+    fitRun(row);
 
     const status = route.kind === "job" ? jobStatus() : runStatus();
     if (!M.showCopy(status)) {
@@ -306,6 +327,7 @@
     }
     for (const ev of ["turbo:render", "turbo:load", "pjax:end", "popstate"]) document.addEventListener(ev, queue);
     window.addEventListener("popstate", queue);
+    window.addEventListener("resize", queue);
     new MutationObserver(queue).observe(document.documentElement, { childList: true, subtree: true });
     // A route change that swaps no DOM (history.pushState alone) fires no mutation: watch the path too.
     let lastPath = location.pathname;

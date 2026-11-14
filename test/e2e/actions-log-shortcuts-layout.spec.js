@@ -119,6 +119,23 @@ test("run page: row above the Summary card, right edge on the card's border edge
   expect(c.bottom).toBeLessThanOrEqual(card.y);
 });
 
+const glyphLeft = (page) => page.locator(".actions-workflow-stats").evaluate((card) => { const w = document.createTreeWalker(card, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) if (n.nodeValue.trim()) break; const r = document.createRange(); r.selectNodeContents(n); return r.getBoundingClientRect().left; });
+
+for (const width of [769, 768, 767, 390]) {
+  test(`run page at ${width}px: first button starts at the card's text${width === 769 ? ", right edge on the card edge" : ""}`, async ({ context, page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await setup(context, { fixture: "actions-run-failed.html" });
+    await page.goto(RUN_URL);
+    await expect(copyBtn(page)).toBeVisible();
+    const c = await rect(copyBtn(page));
+    const card = await rect(page.locator(".actions-workflow-stats"));
+    const glyph = await glyphLeft(page);
+    const msg = `width ${width}: button x=${c.x} right=${c.right}, card x=${card.x} right=${card.right}, text x=${glyph}`;
+    if (width === 769) expect(Math.abs(c.right - card.right), msg).toBeLessThanOrEqual(1);
+    else expect(Math.abs(c.x - glyph), msg).toBeLessThanOrEqual(1);
+  });
+}
+
 test("stability: Copy and the native content do not move through a slow detection answer", async ({ context, page }) => {
   await setup(context, { delay: 3000 });
   await page.goto(JOB_URL);

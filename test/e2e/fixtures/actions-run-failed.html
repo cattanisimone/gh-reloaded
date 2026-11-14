@@ -18,6 +18,9 @@ body{margin:0;font:14px/1.5 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
 .d-none{display:none} .d-md-block{display:block}
 @media(max-width:767px){.pane{display:none} .PageLayout-columns{padding:0} .d-md-block{display:block}}
 .f6{font-size:12px;display:block}
+/* live narrow card (probed 2026-11-13): margin -16 up to 768px; first glyph 20px inside the box at exactly 768, 16px from the viewport edge at 767 and below */
+@media(max-width:768px){.actions-workflow-stats{margin-inline:-16px;padding-left:19px}}
+@media(max-width:767px){.actions-workflow-stats{padding-left:15px}}
 </style></head><body>
 <div class="PageLayout-columns"><div class="pane"><nav aria-label="Workflow run"><ul><li><a data-test-selector="summary-link" href="/acme/web/actions/runs/11"><span>Summary</span></a></li><li><a href="/acme/web/actions/runs/11/job/22">test</a></li><li><a href="/acme/web/actions/runs/11/workflow">Workflow file</a></li></ul></nav></div>
 <div class="PageLayout-region PageLayout-content"><div class="PageHeader-leadingVisual actions-workflow-runs-status"><svg aria-label="failed: " width="16" height="16"></svg></div>
