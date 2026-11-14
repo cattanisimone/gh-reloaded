@@ -10,6 +10,10 @@ test.describe("Copy gh command", () => {
   test("copies the job command with --log-failed and announces Copied", async ({ context, page }) => {
     await setup(context);
     await page.goto(JOB_URL);
+    await expect(copyBtn(page)).toBeVisible();
+    // The live region is in the row, empty, before the click, so the text set on click is announced.
+    await expect(row(page).locator(".ghals-msg[role=status]")).toHaveCount(1);
+    await expect(row(page).locator(".ghals-msg[role=status]")).toHaveText("");
     await copyBtn(page).click();
     expect(await clip(page)).toBe("gh run view --log-failed --job 22 --repo acme/web");
     await expect(page.locator(".ghals-msg[role=status]")).toHaveText("Copied");

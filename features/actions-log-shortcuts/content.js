@@ -147,6 +147,11 @@
     row.setAttribute("aria-label", "Log shortcuts");
     row.dataset.path = path;
     row.dataset.painted = "no";
+    // The live region exists, empty, before any click: a region created and
+    // filled in the same tick is often not announced by screen readers.
+    const box = el("span", "ghals-msg");
+    box.setAttribute("role", "status");
+    row.appendChild(box);
     live.add(row);
     anchor.parent.insertBefore(row, anchor.before);
     return row;
@@ -159,15 +164,16 @@
     return b;
   }
 
+  const OK_MESSAGE_MS = 3000;
+  const sayTimers = new WeakMap();
+
   function say(row, text, kind, command) {
-    let box = row.querySelector(".ghals-msg");
-    if (!box) {
-      box = el("span", "ghals-msg");
-      box.setAttribute("role", "status");
-      row.appendChild(box);
-    }
+    const box = row.querySelector(".ghals-msg");
+    if (!box) return;
+    clearTimeout(sayTimers.get(row));
     box.className = `ghals-msg ${kind || ""}`;
     box.textContent = text;
+    if (kind === "ok") sayTimers.set(row, setTimeout(() => say(row, ""), OK_MESSAGE_MS));
     row.querySelector(".ghals-cmd")?.remove();
     if (command) {
       const input = el("input", "ghals-cmd");
@@ -223,7 +229,7 @@
         const res = link ? await send("GHALS_OPEN", { href: link.getAttribute("href"), path: route.path }) : null;
         if (res && res.state) known.set(`${route.owner}/${route.repo}`.toLowerCase(), { state: res.state, at: Date.now() });
         if (!res || !res.opened) say(row, "Could not open log", "err");
-        else row.querySelector(".ghals-msg")?.remove();
+        else say(row, "");
       });
       openBtn.classList.add("ghals-open");
       row.insertBefore(openBtn, copyBtn.nextSibling);
