@@ -40,8 +40,8 @@ export function resultView(entry, r, { required, draft = false, inPanel = false,
     ? [{ lead: "Replace this token:", body: `create a new one on GitHub, ${inPanel ? (panelTokenHidden ? "use Replace token above to paste it" : "paste it in the Token field") : "use Edit → Replace token to paste it"}, then press Test.` }]
     : TYPES.filter((t) => required.has(t.id)).flatMap((t) => {
       const l = r.lines[t.id];
-      if (l.status === STATUS.DENIED) return [{ lead: `${t.label}:`, body: `on GitHub, edit this token and set ${t.label} to Read-only, then press Test again.` }];
-      if (l.status === STATUS.NOT_VERIFIED) return [{ lead: `${t.label}:`, body: `we can't tell why. If ${owner} requires approval or SSO, see the SSO note below, then press Test again.` }];
+      if (l.status === STATUS.DENIED) return [{ lead: `${t.name}:`, body: `on GitHub, edit this token and set ${t.name} to Read-only, then press Test again.` }];
+      if (l.status === STATUS.NOT_VERIFIED) return [{ lead: `${t.name}:`, body: `we can't tell why. If ${owner} requires approval or SSO, see the SSO note below, then press Test again.` }];
       return [];
     });
   return { title, failed: "", lines: notWorking ? [] : lines, advice, summary, when: lastTestLabel(r.record), intro: notWorking ? "" : INTRO, canAdvise: true };

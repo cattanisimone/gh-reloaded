@@ -172,3 +172,16 @@ test("tokenView passes the missing types to the classic step", () => {
   assert.doesNotMatch(v.warning.steps.rest[0], /read:project/);
   assert.match(v.warning.steps.rest[0], /repo/);
 });
+
+test("advice names the permission (Projects), not the full label (Read Projects)", () => {
+  const lines = Object.fromEntries(["pulls", "issues", "contents", "projects", "actions"].map((t) => [t, { status: "available", reason: "", hint: "" }]));
+  lines.projects = { status: "denied", reason: "", hint: "" };
+  lines.pulls = { status: "not-verified", reason: "", hint: "" };
+  const r = { outcome: "ok", lines, record: { at: 0, codes: { projects: "denied" } } };
+  const advice = resultView(entries[1], r, { required: new Set(["projects", "pulls"]) }).advice;
+  const projects = advice.find((a) => a.lead === "Projects:");
+  assert.ok(projects, "lead is the permission name");
+  assert.match(projects.body, /set Projects to Read-only/);
+  assert.ok(advice.some((a) => a.lead === "Pull requests:"));
+  for (const a of advice) assert.doesNotMatch(`${a.lead} ${a.body}`, /Read Projects|Read Pull/);
+});

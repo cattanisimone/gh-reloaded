@@ -420,6 +420,7 @@ for (const scheme of ["light", "dark"]) {
       return {
         tagBorder: st(def, "borderTopColor"), tagColor: st(def, "color"), tagText: def?.textContent,
         missColor: st(miss, "color"),
+        resEdge: (() => { const li = res.closest(".token-item"); const id = R(li.querySelector(".tr-id")), act = R(li.querySelector(".tr-actions")), box = R(res); return { left: box.l - id.l, right: box.r - act.r }; })(),
         warnBg: st(warn, "backgroundColor"), warnBorder: st(warn, "borderTopColor"),
         headTitle: q(".tr-head h3", res)?.textContent, headWhen: q(".tr-head .tr-when", res)?.textContent,
         headRow: q(".token-item:nth-child(2) .tr-last")?.textContent,
@@ -444,6 +445,7 @@ for (const scheme of ["light", "dark"]) {
     eq("K2 border", d.tagBorder, rgb(A.accent));
     eq("K2 text", d.tagColor, rgb(A.accent));
     eq("K1 differs from --bad", d.missColor === rgb(A.bad), false);
+    if (Math.abs(d.resEdge.left) > 1 || Math.abs(d.resEdge.right) > 1) f.push(`result box edges vs row text/Edit: left ${d.resEdge.left}, right ${d.resEdge.right}`);
     eq("K3 background", d.warnBg, rgb(A.wBg));
     eq("K3 border", d.warnBorder, rgb(A.wLine));
     eq("S7 title", d.headTitle, "Test result · Work – acme-demo");
