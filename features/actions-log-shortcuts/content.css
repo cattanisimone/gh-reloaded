@@ -11,10 +11,14 @@
   margin-bottom: 16px;
   box-sizing: border-box;
 }
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .ghals-row {
     justify-content: flex-start;
     padding: 0 16px;
+  }
+  .ghals-row.ghals-run {
+    margin-inline: -16px;
+    padding-inline: 16px;
   }
   .ghals-msg { text-align: left; }
 }

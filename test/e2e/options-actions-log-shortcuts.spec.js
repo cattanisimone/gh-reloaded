@@ -43,7 +43,7 @@ test("not-permitted warns in Features and on the owner's card; Open GitHub token
   await openOptions(context, page);
   const f = row(page).locator(".ghals-warn");
   await expect(f).toHaveCount(1);
-  await expect(f).toContainText("Open raw log may be hidden for acme");
+  await expect(f).toContainText("Actions logs may be unreadable for acme");
   await expect(f).toContainText("Last check:");
   await expect(f.locator(".ghals-warn-link")).toHaveAttribute("href", "#tokens-section");
   await expect(f.locator("svg[aria-hidden=true]")).toHaveCount(1);
