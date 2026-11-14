@@ -20,7 +20,7 @@
     margin-inline: -16px;
     padding-inline: 16px;
   }
-  .ghals-msg { text-align: left; }
+  .ghals-row .ghals-msg { order: 0; } /* after the left-aligned buttons */
 }
 .ghals-btn {
   box-sizing: border-box;
@@ -53,8 +53,12 @@
   outline-offset: -2px;
 }
 .ghals-msg {
-  flex: 1 1 100%; /* own line: the buttons keep their place */
-  text-align: right;
+  /* An inline item of the row, never a line of its own: it sits left of the
+     right-aligned buttons (order -1) so they keep their place, and after the
+     left-aligned buttons at narrow widths; it wraps only when it cannot fit. */
+  flex: 0 1 auto;
+  order: -1;
+  min-width: 0;
   font-size: 12px;
   line-height: 18px;
   color: var(--fgColor-muted, #59636e);

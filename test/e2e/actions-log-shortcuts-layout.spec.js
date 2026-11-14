@@ -159,7 +159,7 @@ test("the native content moves down once, by the row, and never again from in-pr
   expect(Math.abs((await rect(page.locator("#logs"))).y - top)).toBeLessThanOrEqual(1);
 });
 
-test("a click message goes on its own line: the buttons keep their place at the job box's right edge", async ({ context, page }) => {
+test("a click message stays in the row: the buttons keep their place at the job box's right edge", async ({ context, page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await setup(context);
   await page.goto(JOB_URL);
@@ -170,4 +170,43 @@ test("a click message goes on its own line: the buttons keep their place at the 
   const after = await rect(openBtn(page));
   expect(Math.abs(after.right - before.right)).toBeLessThanOrEqual(1);
   expect(Math.abs((await rect(page.locator("#logs"))).right - after.right)).toBeLessThanOrEqual(1);
+});
+
+for (const width of [1500, 390]) {
+  test(`${width}px: a click message moves nothing below the row on the job page`, async ({ context, page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await setup(context);
+    await page.goto(JOB_URL);
+    await expect(openBtn(page)).toBeVisible();
+    const logs = await rect(page.locator("#logs"));
+    const c = await rect(copyBtn(page));
+    await copyBtn(page).click();
+    await expect(page.locator(".ghals-msg")).toHaveText("Copied");
+    const m = await rect(page.locator(".ghals-msg"));
+    const after = await rect(page.locator("#logs"));
+    const msg = `width ${width}: #logs y ${logs.y} -> ${after.y}, msg y=${m.y} h=${m.h}, copy y=${c.y}`;
+    expect(Math.abs(after.y - logs.y), msg).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(m.y + m.h / 2 - (c.y + c.h / 2)), msg).toBeLessThanOrEqual(1); // same line as the buttons
+  });
+
+  test(`${width}px: a click message moves nothing below the row on the run page`, async ({ context, page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await setup(context, { fixture: "actions-run-failed.html" });
+    await page.goto(RUN_URL);
+    await expect(copyBtn(page)).toBeVisible();
+    const card = await rect(page.locator(".actions-workflow-stats"));
+    await copyBtn(page).click();
+    await expect(page.locator(".ghals-msg")).toHaveText("Copied");
+    const cardAfter = await rect(page.locator(".actions-workflow-stats"));
+    expect(Math.abs(cardAfter.y - card.y), `width ${width}: card y ${card.y} -> ${cardAfter.y}`).toBeLessThanOrEqual(0.5);
+  });
+}
+
+test("Copied clears itself after about 3s; the status region stays in the row", async ({ context, page }) => {
+  await setup(context);
+  await page.goto(JOB_URL);
+  await copyBtn(page).click();
+  await expect(page.locator(".ghals-msg")).toHaveText("Copied");
+  await expect(page.locator(".ghals-msg")).toHaveText("", { timeout: 5000 });
+  await expect(page.locator(".ghals-msg[role=status]")).toHaveCount(1);
 });
