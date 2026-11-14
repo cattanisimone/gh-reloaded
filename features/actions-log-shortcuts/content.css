@@ -16,6 +16,7 @@
     justify-content: flex-start;
     padding: 0 16px;
   }
+  .ghals-msg { text-align: left; }
 }
 .ghals-btn {
   box-sizing: border-box;
@@ -48,6 +49,8 @@
   outline-offset: -2px;
 }
 .ghals-msg {
+  flex: 1 1 100%; /* own line: the buttons keep their place */
+  text-align: right;
   font-size: 12px;
   line-height: 18px;
   color: var(--fgColor-muted, #59636e);

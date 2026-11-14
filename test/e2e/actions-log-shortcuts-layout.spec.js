@@ -141,3 +141,16 @@ test("the native content moves down once, by the row, and never again from in-pr
   await expect(copyBtn(page)).toBeVisible();
   expect(Math.abs((await rect(page.locator("#logs"))).y - top)).toBeLessThanOrEqual(1);
 });
+
+test("a click message goes on its own line: the buttons keep their place at the job box's right edge", async ({ context, page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await setup(context);
+  await page.goto(JOB_URL);
+  await expect(openBtn(page)).toBeVisible();
+  const before = await rect(openBtn(page));
+  await copyBtn(page).click();
+  await expect(page.locator(".ghals-msg")).toHaveText("Copied");
+  const after = await rect(openBtn(page));
+  expect(Math.abs(after.right - before.right)).toBeLessThanOrEqual(1);
+  expect(Math.abs((await rect(page.locator("#logs"))).right - after.right)).toBeLessThanOrEqual(1);
+});

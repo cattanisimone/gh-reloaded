@@ -23,6 +23,7 @@
   let enabled = true;
   let scanTimer = null;
   const known = new Map(); // owner/repo -> { state, at }: what detection last said, for the first paint
+  const live = new WeakSet(); // rows this script built: a Turbo snapshot clone has the markup but no listeners
   const asked = new Set(); // `${path}|${owner/repo}` already asked on this page view
 
   function extensionAlive() {
@@ -126,6 +127,7 @@
     row.setAttribute("aria-label", "Log shortcuts");
     row.dataset.path = path;
     row.dataset.painted = "no";
+    live.add(row);
     anchor.parent.insertBefore(row, anchor.before);
     return row;
   }
@@ -225,7 +227,7 @@
     if (!anchor) return removeRow();
 
     let row = currentRow();
-    if (row && (row.dataset.path !== path || row.parentElement !== anchor.parent)) {
+    if (row && (row.dataset.path !== path || row.parentElement !== anchor.parent || !live.has(row))) {
       removeRow();
       row = null;
     }
@@ -245,6 +247,7 @@
     const askKey = `${path}|${key}`;
     const cached = known.get(key);
     const fresh = cached && Date.now() - cached.at < STATE_TTL_MS;
+    if (!fresh) asked.delete(askKey); // a stale answer must be asked again
     const ask = () => {
       asked.add(askKey);
       return send("GHALS_DETECT", { path }).then((res) => {

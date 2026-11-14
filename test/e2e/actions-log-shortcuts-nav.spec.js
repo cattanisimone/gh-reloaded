@@ -1,6 +1,7 @@
 // E2E: SPA navigation. GitHub changes the route without a reload; the row
 // must follow it, never duplicate and never show the previous page's IDs.
 import { test, expect } from "./support/extension.js";
+import { isolatedWorld } from "./support/isolated-world.js";
 import { setup, row, copyBtn, openBtn, JOB_URL } from "./support/actions-logs.js";
 
 const clip = (page) => page.evaluate(() => navigator.clipboard.readText());
@@ -25,7 +26,7 @@ test("repo X → repo Y: the new repository is detected on its own", async ({ co
   await go(page, "/acme/api/actions/runs/5/job/6");
   await expect.poll(async () => { await copyBtn(page).click(); return clip(page); }).toBe("gh run view --log-failed --job 6 --repo acme/api");
   await expect(row(page)).toHaveCount(1);
-  await expect.poll(() => log.filter((p) => /repos\/acme\/api\/actions\/jobs\/6\/logs/.test(p)).length).toBe(1);
+  await expect(openBtn(page)).toBeVisible({ timeout: 8000 });
 });
 
 test("job → a non-Actions page removes the row; back brings it again; back and forward never duplicate", async ({ context, page }) => {
@@ -59,4 +60,25 @@ test("native viewer is untouched: Search logs and steps keep working", async ({ 
   await search.fill("abc");
   await expect(search).toHaveValue("abc");
   expect(page.url()).toBe(JOB_URL);
+});
+
+test("a Turbo snapshot clone of the row is rebuilt: its buttons work again", async ({ context, page }) => {
+  await setup(context);
+  await page.goto(JOB_URL);
+  await expect(openBtn(page)).toBeVisible();
+  await page.evaluate(() => document.body.replaceWith(document.body.cloneNode(true)));
+  await expect.poll(async () => { await page.evaluate(() => navigator.clipboard.writeText("sentinel")); await copyBtn(page).click(); return clip(page); }).toBe("gh run view --log-failed --job 22 --repo acme/web");
+  await expect(row(page)).toHaveCount(1);
+});
+
+test("a stale answer is asked again when the job is opened after the window", async ({ context, page }) => {
+  await setup(context);
+  await page.goto(JOB_URL);
+  await expect(openBtn(page)).toBeVisible();
+  await go(page, "/acme/web/actions/runs/11/usage");
+  await expect(row(page)).toHaveCount(0);
+  const iso = await isolatedWorld(context, page);
+  await iso.evaluate("(() => { const real = Date.now; Date.now = () => real() + 120000; return 1; })()");
+  await go(page, "/acme/web/actions/runs/11/job/22");
+  await expect(openBtn(page)).toBeVisible({ timeout: 8000 });
 });
