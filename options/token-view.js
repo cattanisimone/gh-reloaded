@@ -63,7 +63,7 @@ export function tokenView({ entries, tests, results, runs, required, features, v
     const st = testing ? { state: "testing", note: "" } : tokenState({ hasToken: !!e.token, rec: tests[e.id] || null, required });
     const label = testing ? "Testing…" : STATE_LABEL[st.state];
     const name = displayName(e);
-    const last = !e.token ? "Never tested" : testing ? "Testing…" : lastTestLabel(tests[e.id] || null);
+    const last = !e.token ? "Never tested" : lastTestLabel(tests[e.id] || null);
     return {
       id: e.id,
       name,

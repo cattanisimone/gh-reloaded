@@ -40,6 +40,7 @@ test("a running test shows Testing… and disables Test", () => {
   const v = tokenView({ ...base, runs: new Set(["w"]) });
   assert.equal(v.rows[1].label, "Testing…");
   assert.match(rowHtml(v.rows[1]), /data-act="test"[^>]*disabled/);
+  assert.notEqual(v.rows[1].last, "Testing…", "Testing… appears once (the pill), not in the last-test line too");
 });
 
 test("warning: per-permission rows, the version sentence and the read-only note are all rendered", () => {

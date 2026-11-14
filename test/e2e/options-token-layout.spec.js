@@ -612,3 +612,23 @@ test("Used for sits directly under a one-line name and on the last-test line", a
     }
   }
 });
+
+test("card text insets: warning, guide and callout text start together, row text 2px further in (light and dark, edited row too)", async ({ context, page }) => {
+  for (const scheme of ["light", "dark"]) {
+    await start(context, page, { tokens: TOKENS, scheme, size: { width: 1500, height: 900 } });
+    const measure = () => page.evaluate(() => {
+      const textLeft = (el) => { const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.textContent.trim() && !n.parentElement.closest("[hidden]") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) }); const n = w.nextNode(); const rg = document.createRange(); rg.selectNodeContents(n); return rg.getClientRects()[0].left; };
+      const rows = [...document.querySelectorAll("#token-list .token-item")].map((li) => textLeft(li.querySelector(".tr-name")));
+      return { rows, warning: textLeft(document.getElementById("warning-body")), guide: textLeft(document.querySelector(".guide-title")), callout: textLeft(document.querySelector(".callout")) };
+    });
+    const m = await measure();
+    const ctx = `${scheme} ${JSON.stringify(m)}`;
+    expect(Math.abs(m.warning - m.guide), ctx).toBeLessThanOrEqual(1);
+    expect(Math.abs(m.warning - m.callout), ctx).toBeLessThanOrEqual(1);
+    for (const r of m.rows) expect(Math.abs(r - m.warning - 2), ctx).toBeLessThanOrEqual(1);
+    await page.locator("#token-list .token-item").nth(1).locator('.token-row [data-act="edit"]').click();
+    await expect(page.locator("#token-panel")).toBeVisible();
+    const e = await measure();
+    expect(Math.abs(e.rows[1] - m.rows[1]), `edited row moved: ${JSON.stringify(e)}`).toBeLessThanOrEqual(1);
+  }
+});

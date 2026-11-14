@@ -445,8 +445,8 @@ h1, .group h2 { scroll-margin-top: 12px; }
 .token-item { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; border-top: 1px solid var(--line); }
 .token-item:first-child { border-top: 0; }
 .token-item.is-editing { border-left: 3px solid var(--accent); background: var(--edit-bg); outline: none; }
-.token-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: start; padding: 12px 16px; }
-.token-item.is-editing .token-row { padding-left: 13px; }
+.token-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: start; padding: 12px 14px; }
+.token-item.is-editing .token-row { padding-left: 11px; }
 .tr-id { display: block; grid-column: 1; grid-row: 1; min-width: 0; }
 .tr-main { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
 .tr-name { min-width: 0; font-weight: 600; line-height: 20px; overflow-wrap: anywhere; }
@@ -488,7 +488,7 @@ h1, .group h2 { scroll-margin-top: 12px; }
 .panel-body .diag-host, .panel-body .tr-result { margin: 0; }
 
 /* Warning */
-.warning { display: grid; gap: 8px; margin: 14px 0; padding: 12px 14px; border: 1px solid var(--warn-line); border-radius: 8px; background: var(--warn-surface); }
+.warning { display: grid; gap: 8px; margin: 14px 0; padding: 12px; border: 1px solid var(--warn-line); border-radius: 8px; background: var(--warn-surface); }
 .warning-head { display: flex; align-items: flex-start; gap: 8px; color: var(--warn); }
 .warning-head svg { flex: none; margin-top: 2.5px; }
 .warning-head strong { line-height: 21px; }
@@ -506,7 +506,7 @@ h1, .group h2 { scroll-margin-top: 12px; }
 .warning-steps { margin: 0; padding-left: 20px; color: var(--text); }
 
 /* Guide */
-.guide { display: grid; gap: 8px; margin: 0 0 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.guide { display: grid; gap: 8px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .guide-title { margin: 0; font-size: 13px; }
 ol.guide-steps { margin: 0; padding-left: 20px; color: var(--muted); }
 .full-guide .section-intro { margin: 10px 0 0; }
