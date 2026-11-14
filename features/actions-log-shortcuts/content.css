@@ -1,0 +1,82 @@
+/* Actions log shortcuts. Own scoped classes (never the page's btn classes);
+   colours come from GitHub's own theme variables with the light value as
+   fallback, so every theme GitHub selects applies by itself. */
+.ghals-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 28px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+@media (max-width: 768px) {
+  .ghals-row {
+    justify-content: flex-start;
+    padding: 0 16px;
+  }
+  .ghals-row.ghals-run {
+    margin-inline: -16px;
+    padding-inline: 16px;
+  }
+  .ghals-row .ghals-msg { order: 0; } /* after the left-aligned buttons */
+}
+.ghals-btn {
+  box-sizing: border-box;
+  height: 28px;
+  margin: 0;
+  padding: 0 12px;
+  font: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 26px;
+  white-space: nowrap;
+  color: var(--button-default-fgColor-rest, #25292e);
+  background: var(--button-default-bgColor-rest, #f6f8fa);
+  border: 1px solid var(--button-default-borderColor-rest, #d1d9e0);
+  border-radius: 6px;
+  box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04);
+  cursor: pointer;
+  transition: background-color 80ms cubic-bezier(0.33, 1, 0.68, 1);
+}
+.ghals-btn:hover {
+  background: var(--button-default-bgColor-hover, #eff2f5);
+}
+.ghals-btn:active {
+  background: var(--button-default-bgColor-active, #e6eaef);
+  box-shadow: none;
+}
+.ghals-btn:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: -2px;
+}
+.ghals-msg {
+  /* An inline item of the row, never a line of its own: it sits left of the
+     right-aligned buttons (order -1) so they keep their place, and after the
+     left-aligned buttons at narrow widths; it wraps only when it cannot fit. */
+  flex: 0 1 auto;
+  order: -1;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--fgColor-muted, #59636e);
+}
+.ghals-msg.ok {
+  color: var(--fgColor-success, #1a7f37);
+}
+.ghals-msg.err {
+  color: var(--fgColor-danger, #d1242f);
+}
+.ghals-cmd {
+  box-sizing: border-box;
+  flex: 1 1 100%;
+  min-width: 0;
+  padding: 3px 8px;
+  font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--fgColor-default, #1f2328);
+  background: var(--bgColor-default, #fff);
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border-radius: 6px;
+}

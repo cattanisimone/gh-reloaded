@@ -544,3 +544,26 @@ input[aria-invalid="true"] { border-color: var(--bad); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* Actions log shortcuts: the note and the warnings (Features row, token card). */
+.ghals-note { margin-top: 4px; }
+.callout.warn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  padding-left: 34px;
+  background: #fff8c5;
+  border-color: rgba(212, 167, 44, 0.4);
+  color: var(--text);
+  font-size: 13px;
+}
+.callout.warn svg { position: absolute; left: 12px; top: 12px; color: #9a6700; }
+.callout.warn .ghals-warn-when, .callout.warn .ghals-warn-link { display: block; }
+.callout.warn .ghals-warn-when { color: var(--muted); }
+@media (prefers-color-scheme: dark) {
+  .callout.warn { background: rgba(187, 128, 9, 0.15); border-color: rgba(187, 128, 9, 0.4); }
+  .callout.warn svg { color: #d29922; }
+}
+.token-item > .ghals-warn { grid-column: 1 / -1; margin: 0 14px 12px; }

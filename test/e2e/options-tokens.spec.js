@@ -63,7 +63,7 @@ test("technical words only inside the Full guide", async ({ context, page }) => 
   expect(href.origin + href.pathname).toBe("https://github.com/settings/tokens/new");
   expect(href.searchParams.get("scopes")).toBe("read:project,public_repo");
   await expect(guide.locator(".permission-box")).toHaveCount(2);
-  await expect(guide.locator(".permission-box").first().locator(".permission-row")).toHaveCount(4);
+  await expect(guide.locator(".permission-box").first().locator(".permission-row")).toHaveCount(5);
 });
 
 test("the classic box looks like the fine-grained box", async ({ context, page }) => {

@@ -194,10 +194,13 @@
       ],
       "js": [
         "features/image-gallery/model.js",
-        "features/image-gallery/content.js"
+        "features/image-gallery/content.js",
+        "features/actions-log-shortcuts/model.js",
+        "features/actions-log-shortcuts/content.js"
       ],
       "css": [
-        "features/image-gallery/content.css"
+        "features/image-gallery/content.css",
+        "features/actions-log-shortcuts/content.css"
       ],
       "run_at": "document_idle"
     }
