@@ -69,9 +69,16 @@ const timeLabel = () => new Date().toLocaleTimeString([], { hour: "2-digit", min
 // --- Rendering ---
 // tokenView() decides what to show; render() only puts it on the page.
 
+// A button disabled while its test runs loses focus; the focus waits here and returns when it is enabled again.
+let pendingFocus = null;
+let pendingPanelTest = false;
+const focusKey = (el) => ({ act: el.dataset.act, id: el.dataset.id, fk: el.dataset.fk || "" });
+const atRest = () => !document.activeElement || document.activeElement === document.body;
+
 function render() {
   const active = document.activeElement;
-  const keep = active && tokensRoot.contains(active) && active.dataset?.act ? { act: active.dataset.act, id: active.dataset.id } : null;
+  let keep = active && tokensRoot.contains(active) && active.dataset?.act ? focusKey(active) : null;
+  if (!keep && pendingFocus && atRest()) keep = pendingFocus;
   // An open repository check keeps its DOM (typed values, a run in flight).
   const oldHosts = new Map([...tokenListEl.querySelectorAll("[data-diag]")].map((h) => [h.dataset.diag, h]));
   const inDiag = active && [...oldHosts.values()].some((h) => h.contains(active)) ? active : null;
@@ -87,7 +94,14 @@ function render() {
     else diag.attach(host);
   }
   if (inDiag && inDiag.isConnected && document.activeElement !== inDiag) inDiag.focus();
-  if (keep) tokenListEl.querySelector(`[data-act="${keep.act}"][data-id="${CSS.escape(keep.id)}"]`)?.focus();
+  if (keep) {
+    const target = [...tokenListEl.querySelectorAll(`[data-act="${keep.act}"][data-id="${CSS.escape(keep.id)}"]`)].find((el) => (el.dataset.fk || "") === keep.fk);
+    if (target && target.disabled) pendingFocus = keep;
+    else {
+      pendingFocus = null;
+      target?.focus();
+    }
+  }
   renderWarning(view.warning);
   if (!guideSet) {
     document.getElementById("full-guide").open = !records.some((t) => t.token);
@@ -272,7 +286,8 @@ function renderDiagResult(r) {
 
 // --- Side panel (a draft of one token; nothing is written before Save) ---
 
-const panelSecret = () => (panel.isNew || panel.replacing ? panel.secret.trim() : panel.saved.token);
+// Replace token with nothing typed keeps the saved token, so a rename can still be saved.
+const panelSecret = () => (panel.isNew || (panel.replacing && panel.secret.trim()) ? panel.secret.trim() : panel.saved.token);
 const panelOwner = () => (panel.isDefault ? "" : normalizeOwner(panel.owner));
 const tokenOrOwnerChanged = () => panel.isNew || (panel.replacing && panel.secret.trim() !== "") || panelOwner() !== (panel.saved.owner || "");
 
@@ -357,7 +372,7 @@ function updatePanel() {
   $p("replace").hidden = !saved;
   $p("secret").hidden = !panel.replacing;
   const def = entries().find((e) => e.isDefault);
-  const lines = whichLines({ isDefault: panel.isDefault, owner: normalizeOwner(panel.owner), defaultName: displayName(def) });
+  const lines = whichLines({ isDefault: panel.isDefault, owner: normalizeOwner(panel.owner), defaultName: displayName(def), hasDefault: !!def?.token });
   $p("which").innerHTML = `<strong>Which token is used</strong>${lines.map((l) => `<p>${escapeHtml(l)}</p>`).join("")}`;
   const changes = changedFields();
   const tag = $p("changes");
@@ -367,7 +382,11 @@ function updatePanel() {
   const secret = panelSecret();
   const hint = !secret ? "Enter a token to test it" : !panel.isDefault && !panelOwner() ? "Enter the GitHub owner to test it" : "";
   const busy = !!panel.testCtl || runs.has(panel.id);
-  $p("test").disabled = !!hint || busy || panel.removed;
+  const testBtn = $p("test");
+  if (document.activeElement === testBtn && busy) pendingPanelTest = true;
+  testBtn.disabled = !!hint || busy || panel.removed;
+  if (pendingPanelTest && !testBtn.disabled && atRest()) testBtn.focus();
+  if (!busy) pendingPanelTest = false;
   $p("test").textContent = busy ? "Testing…" : "Test";
   $p("test-hint").textContent = testHint(hint);
   const res = $p("result");

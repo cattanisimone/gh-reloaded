@@ -6,7 +6,7 @@
 
 Stored locally via the browser's `chrome.storage.local` (never synced, never sent anywhere on its own):
 
-- **GitHub tokens** — the personal access token(s) you paste into Settings: one default token, plus an optional token per repository owner (an organization or personal account) that needs its own credential. Each request uses the token mapped to the repository it's about, falling back to the default. Once saved, a token is never displayed again in full — only its last 4 characters.
+- **GitHub tokens** — the personal access token(s) you paste into Settings: one default token, plus an optional token per repository owner (an organization or personal account) that needs its own credential. Each request uses the token mapped to the repository it's about, falling back to the default. Once saved, a token is never displayed again, not even in part.
 - **Quick-create shortcuts** — the label, URL, icon, color, and project scope of each shortcut you configure.
 - **Feature toggles** — which features are turned on or off.
 - **Standup mode thresholds** — how many days a card may sit in a review-like column before it is flagged, and the status keywords that count as review-like.

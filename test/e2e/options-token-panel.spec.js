@@ -343,3 +343,39 @@ test("re-rendering the list keeps an open repository check and its focus", async
   await expect(page.locator("#token-list .token-item").first()).toContainText("Works");
   await expect(item.locator(".diag-repo")).toHaveValue("acme-demo/ap");
 });
+
+test("Replace token with nothing typed still saves a rename and keeps the saved token", async ({ context, page }) => {
+  await open(context, page);
+  await rowEdit(page, 1).click();
+  await page.locator("#panel-replace").click();
+  await page.locator("#panel-name").fill("Renamed");
+  await page.locator("#panel-save").click();
+  await expect(page.locator("#panel-secret-error")).toBeHidden();
+  const rec = (await storageOf(page, "local", "githubTokens")).githubTokens.find((t) => t.id === "o");
+  expect(rec.name).toBe("Renamed");
+  expect(rec.token).toBe(OWN);
+});
+
+test("without a default token the box does not claim one", async ({ context, page }) => {
+  await open(context, page, { width: 1500, height: 900 }, { githubTokens: [{ id: "o", name: "Work", owner: "acme-demo", token: OWN }], defaultTokenId: null });
+  await rowEdit(page, 1).click();
+  await expect(page.locator("#panel-which")).toContainText("read without a token");
+  await expect(page.locator("#panel-which")).not.toContainText("uses the default token");
+});
+
+test("keyboard focus comes back to Test after a row test and a panel test", async ({ context, page }) => {
+  await mockApi(context, allGood);
+  await open(context, page);
+  const rowTest = page.locator('#token-list [data-act="test"]').first();
+  await rowTest.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#token-list")).toContainText("5 of 5 OK");
+  await expect(page.locator('#token-list [data-act="test"][data-fk="again"]').first()).toBeVisible();
+  const tag = await page.evaluate(() => document.activeElement?.closest("[data-id]")?.dataset?.id || document.activeElement?.tagName);
+  expect(tag).not.toBe("BODY");
+  await rowEdit(page, 0).click();
+  await page.locator("#panel-test").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#panel-test")).toBeEnabled();
+  await expect(page.locator("#panel-test")).toBeFocused();
+});

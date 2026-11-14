@@ -112,7 +112,7 @@
       full: "Gallery unavailable: GitHub did not return this folder's list. GH Reloaded can't tell why.",
       short: "Gallery unavailable: can't tell why",
       description:
-        "Gallery unavailable: GitHub did not return the list for this folder, and GH Reloaded can't tell whether this is about access, the token or the file. The file preview works normally. You can check a token with Verify access in the GH Reloaded settings.",
+        "Gallery unavailable: GitHub did not return the list for this folder, and GH Reloaded can't tell whether this is about access, the token or the file. The file preview works normally. You can check the token with Test (or Check a specific repository) under Settings → GitHub tokens.",
     },
     "not-in-list": {
       full: "Gallery unavailable: this file isn't in the folder list GitHub returned.",

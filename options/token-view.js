@@ -113,9 +113,9 @@ export function resultHtml(res) {
 
 export function rowHtml(r) {
   const id = escapeHtml(r.id);
-  const testBtn = (text) => `<button type="button" class="btn btn-secondary" data-act="test" data-id="${id}"${r.testing ? " disabled" : ""}>${text}</button>`;
+  const testBtn = (text, fk = "") => `<button type="button" class="btn btn-secondary" data-act="test" data-id="${id}"${fk ? ` data-fk="${fk}"` : ""}${r.testing ? " disabled" : ""}>${text}</button>`;
   const result = r.result
-    ? `<div class="tr-result" data-result="${id}">${resultHtml(r.result)}<div class="tr-actions-row">${r.result.canAdvise ? '<button type="button" class="btn btn-secondary" data-act="advice">What should I do?</button>' : ""}${testBtn("Test again")}<button type="button" class="btn btn-secondary" data-act="row-check" data-id="${id}" aria-expanded="${r.diag}">Check a specific repository</button></div></div>`
+    ? `<div class="tr-result" data-result="${id}">${resultHtml(r.result)}<div class="tr-actions-row">${r.result.canAdvise ? '<button type="button" class="btn btn-secondary" data-act="advice">What should I do?</button>' : ""}${testBtn("Test again", "again")}<button type="button" class="btn btn-secondary" data-act="row-check" data-id="${id}" aria-expanded="${r.diag}">Check a specific repository</button></div></div>`
     : "";
   return `<li class="token-item${r.editing ? " is-editing" : ""}${r.note ? " has-note" : ""}" data-id="${id}">
       <div class="token-row">
@@ -143,9 +143,9 @@ export function warningStepsHtml(s) {
 
 // --- Side panel texts ---
 
-export function whichLines({ isDefault, owner, defaultName }) {
+export function whichLines({ isDefault, owner, defaultName, hasDefault = true }) {
   if (isDefault) return ["Used for every repository owner without a token of its own.", "If this token fails, GH Reloaded doesn't try another one."];
-  return [`Repositories owned by ${owner || "this owner"} use this token.`, `Every other owner uses the default token «${defaultName}».`, "If this token fails, GH Reloaded doesn't try another one."];
+  return [`Repositories owned by ${owner || "this owner"} use this token.`, hasDefault ? `Every other owner uses the default token «${defaultName}».` : "Every other owner is read without a token.", "If this token fails, GH Reloaded doesn't try another one."];
 }
 
 const TEST_HELP = "Test checks permissions without saving or changing anything.";
