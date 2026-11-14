@@ -599,6 +599,25 @@ test("pill and last test stay adjacent whatever the name does; the warning icon 
   }
 });
 
+test("the could-not-verify note follows the last-test line whatever the name length", async ({ context, page }) => {
+  const longName = "Team projects with a rather long descriptive name that wraps on two or three lines in a narrow list";
+  const tokens = TOKENS.map((t) => ({ ...t, name: t.id === "d" ? t.name : `${longName} (${t.id})` }));
+  for (const width of [1500, 1100, 900]) {
+    await start(context, page, { tokens, size: { width, height: 900 } });
+    const m = await page.evaluate(() => [...document.querySelectorAll("#token-list .token-item")].map((li) => {
+      const n = li.querySelector(".tr-note-line");
+      if (!n) return null;
+      const st = li.querySelector(".tr-state");
+      return { inState: n.parentElement === st, gap: n.getBoundingClientRect().top - li.querySelector(".tr-last").getBoundingClientRect().bottom, nameLines: Math.round(li.querySelector(".tr-name").getBoundingClientRect().height / 20) };
+    }).filter(Boolean));
+    expect(m.length, `${width}px rows with a note`).toBeGreaterThan(0);
+    for (const x of m) {
+      expect(x.inState, `${width}px note inside .tr-state ${JSON.stringify(m)}`).toBe(true);
+      expect(Math.abs(x.gap), `${width}px last→note gap ${JSON.stringify(m)}`).toBeLessThanOrEqual(1);
+    }
+  }
+});
+
 test("Used for sits directly under a one-line name and on the last-test line", async ({ context, page }) => {
   for (const width of [1500, 1100]) {
     await start(context, page, { tokens: TOKENS, size: { width, height: 900 } });

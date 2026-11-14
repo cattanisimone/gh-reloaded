@@ -95,6 +95,19 @@ test("result: header with time and count, intro, checks with reason lines, summa
   assert.ok(failed.includes("Not checked: offline"));
 });
 
+test("401 advice: the row says Edit → Replace token, the panel points at the Token field or Replace token above", () => {
+  const lines = Object.fromEntries(["pulls", "issues", "contents", "projects", "actions"].map((t) => [t, { status: "not-verified", reason: "", hint: "" }]));
+  const r = { outcome: "not-working", lines, record: { at: 0, codes: {} } };
+  const body = (opts) => resultView(entries[1], r, { required: base.required, ...opts }).advice[0].body;
+  assert.match(body({}), /Edit → Replace token/);
+  const add = body({ draft: true, inPanel: true });
+  assert.match(add, /paste it in the Token field, then press Test/);
+  assert.doesNotMatch(add, /Edit/);
+  const edit = body({ inPanel: true, panelTokenHidden: true });
+  assert.match(edit, /use Replace token above to paste it/);
+  assert.doesNotMatch(edit, /Edit/);
+});
+
 test("panel texts: the default token is named, the hint merges the reason with what Test does", () => {
   assert.deepEqual(whichLines({ isDefault: false, owner: "acme-demo", defaultName: displayName(entries[0]) }), [
     "Repositories owned by acme-demo use this token.",

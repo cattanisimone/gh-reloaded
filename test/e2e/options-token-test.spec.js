@@ -80,6 +80,24 @@ test("401: Not working", async ({ context, page }) => {
   await expect(row(page, 0).locator(".state-pill")).toHaveText("Not working");
 });
 
+test("401 advice: the row names Edit → Replace token, the Add panel the Token field, Edit with a saved token Replace token above", async ({ context, page }) => {
+  await start(context, page, () => ({ status: 401, body: { message: "Bad credentials" } }));
+  await testBtn(page, 0).click();
+  await expect(row(page, 0).locator(".tr-advice")).toContainText("use Edit → Replace token to paste it, then press Test");
+  await page.locator("#add-token").click();
+  await page.locator("#panel-owner").fill("acme-x");
+  await page.locator("#panel-secret").fill("ghp_FAKEFAKE1234");
+  await page.locator("#panel-test").click();
+  const panelAdvice = page.locator("#panel-result .tr-advice");
+  await expect(panelAdvice).toContainText("paste it in the Token field, then press Test");
+  await expect(panelAdvice).not.toContainText("Edit");
+  await page.locator("#panel-cancel, #panel-close").first().click();
+  await page.locator('#token-list [data-act="edit"]').nth(1).click();
+  await page.locator("#panel-test").click();
+  await expect(page.locator("#panel-result .tr-advice")).toContainText("use Replace token above to paste it, then press Test");
+  await expect(page.locator("#panel-result .tr-advice")).not.toContainText("Edit");
+});
+
 test("temporary failures keep the previous result and say Not checked", async ({ context, page }) => {
   let fail = false;
   await start(context, page, (c) => (fail && c.url.includes("/pulls?") ? { status: 502, body: {} } : allGood(c)));

@@ -464,7 +464,7 @@ function updatePanel() {
   const draft = tokenOrOwnerChanged();
   const shown = draft ? panel.draftResult : results.get(panel.id);
   res.hidden = !shown || panel.removed;
-  res.innerHTML = shown && !panel.removed ? resultHtml(resultView({ ...entryById(panel.id), name: panel.name, isDefault: panel.isDefault }, shown, { required: required(), draft })) : "";
+  res.innerHTML = shown && !panel.removed ? resultHtml(resultView({ ...entryById(panel.id), name: panel.name, isDefault: panel.isDefault }, shown, { required: required(), draft, inPanel: true, panelTokenHidden: saved })) : "";
 }
 
 // Editing the token or the owner invalidates a test in flight and any result

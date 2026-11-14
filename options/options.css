@@ -457,17 +457,16 @@ h1, .group h2 { scroll-margin-top: 12px; }
 .state-not-working { color: var(--bad); }
 .state-missing, .state-cant-verify { color: var(--warn); }
 .state-not-tested, .state-not-set, .state-testing { color: var(--muted); }
-.tr-note-line { grid-column: 2; grid-row: 2; color: var(--warn); font-size: 12px; line-height: 18px; }
+.tr-note-line { color: var(--warn); font-size: 12px; line-height: 18px; }
 .tr-use, .tr-last { color: var(--muted); font-size: 12px; line-height: 18px; }
 .tr-use { display: block; overflow-wrap: anywhere; }
 .tr-last { white-space: nowrap; }
-.tr-actions { display: flex; grid-column: 3; grid-row: 1 / span 2; gap: 8px; align-self: center; justify-self: end; }
+.tr-actions { display: flex; grid-column: 3; grid-row: 1; gap: 8px; align-self: center; justify-self: end; }
 @container (max-width: 559px) {
   .token-list { grid-template-columns: minmax(0, 1fr); }
-  .tr-id, .tr-state, .tr-note-line, .tr-actions { grid-column: 1; }
+  .tr-id, .tr-state, .tr-actions { grid-column: 1; }
   .tr-state { grid-row: 3; margin-top: 8px; }
-  .tr-note-line { grid-row: 4; }
-  .tr-actions { grid-row: 5; margin-top: 8px; justify-self: start; }
+  .tr-actions { grid-row: 4; margin-top: 8px; justify-self: start; }
 }
 
 /* Result under a row */

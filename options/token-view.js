@@ -20,7 +20,7 @@ const INTRO = "One read-only check per permission type, started only by Test. No
 
 // One test result (a row's or the panel's draft) as data.
 // entry: {name, owner, isDefault}; r: the object runTokenTest resolved to.
-export function resultView(entry, r, { required, draft = false } = {}) {
+export function resultView(entry, r, { required, draft = false, inPanel = false, panelTokenHidden = false } = {}) {
   if (!r) return null;
   const title = draft ? "Result for the changes in this panel (not saved)" : `Test result · ${displayName(entry)}`;
   if (r.outcome === "temporary" || r.outcome === "aborted") return { title, failed: `Not checked: ${r.message}`, lines: [], advice: [], summary: "", when: "", intro: "", canAdvise: false };
@@ -37,7 +37,7 @@ export function resultView(entry, r, { required, draft = false } = {}) {
   const summary = notWorking ? "GitHub rejected this token: it is invalid, expired or revoked." : `${ok} of ${total} OK.${missing.length ? ` Missing permissions: ${missing.join(", ")}.` : ""}`;
   const owner = entry.isDefault ? "the owner" : entry.owner || "the owner";
   const advice = notWorking
-    ? [{ lead: "Replace this token:", body: "create a new one on GitHub, use Edit → Replace token to paste it, then press Test." }]
+    ? [{ lead: "Replace this token:", body: `create a new one on GitHub, ${inPanel ? (panelTokenHidden ? "use Replace token above to paste it" : "paste it in the Token field") : "use Edit → Replace token to paste it"}, then press Test.` }]
     : TYPES.filter((t) => required.has(t.id)).flatMap((t) => {
       const l = r.lines[t.id];
       if (l.status === STATUS.DENIED) return [{ lead: `${t.label}:`, body: `on GitHub, edit this token and set ${t.label} to Read-only, then press Test again.` }];
@@ -134,8 +134,7 @@ export function rowHtml(r) {
       <div class="token-row">
         <span class="tr-id"><span class="tr-main"><span class="tr-name">${escapeHtml(r.name)}</span>${r.defaultTag ? '<span class="tag">default</span>' : ""}</span>
         <span class="tr-use">${escapeHtml(r.use)}</span></span>
-        <span class="tr-state"><span class="state-pill state-${r.state}">${escapeHtml(r.label)}</span><span class="tr-last">${escapeHtml(r.last)}</span></span>
-        ${r.note ? `<span class="tr-note-line">${escapeHtml(r.note)}</span>` : ""}
+        <span class="tr-state"><span class="state-pill state-${r.state}">${escapeHtml(r.label)}</span><span class="tr-last">${escapeHtml(r.last)}</span>${r.note ? `<span class="tr-note-line">${escapeHtml(r.note)}</span>` : ""}</span>
         <span class="tr-actions">${r.canTest ? testBtn("Test") : ""}<button type="button" class="btn btn-secondary" data-act="edit" data-id="${id}">Edit</button></span>
       </div>
       ${result}
