@@ -27,16 +27,22 @@ export function resetState() {
   cache.clear();
 }
 
-// owner/repo/job of the Actions job route a content-script frame URL is, else null.
-function jobRoute(url) {
+// owner/repo/job of the Actions job route this message comes from, else null.
+// The frame URL Chrome attaches (sender.url) proves the message comes from a
+// github.com page, but it is the URL of the last *document* load: GitHub's SPA
+// navigation (history.pushState) does not update it. So the route is read from
+// `path`, the content script's own location.pathname (the page cannot forge the
+// isolated world's message), and falls back to sender.url's path when absent.
+// sender.tab.url is never used: it is null without a host permission.
+function jobRoute(senderUrl, path) {
   let u;
   try {
-    u = new URL(String(url || ""));
+    u = new URL(String(senderUrl || ""));
   } catch {
     return null;
   }
   if (u.origin !== "https://github.com") return null;
-  const m = ROUTE.exec(u.pathname);
+  const m = ROUTE.exec(typeof path === "string" && path.startsWith("/") ? path : u.pathname);
   return m ? { owner: m[1], repo: m[2], run: m[3], job: m[4] } : null;
 }
 
@@ -82,16 +88,16 @@ async function detectFor(route, { fresh } = {}) {
   return state;
 }
 
-export async function handleMessage(_payload, sender) {
-  const route = jobRoute(sender?.url);
+export async function handleMessage(payload, sender) {
+  const route = jobRoute(sender?.url, payload?.path);
   if (!route) return { state: "unknown" };
   return { state: await detectFor(route) };
 }
 
 // The raw-log URL a link may be, rebuilt from validated parts: https://github.com/<owner>/<repo>/commit/<sha>/checks/<job>/logs,
 // owner, repo (case-insensitive) and job equal to the sender's job route. Else null.
-export function rawLogUrl(href, senderUrl) {
-  const route = jobRoute(senderUrl);
+export function rawLogUrl(href, senderUrl, path) {
+  const route = jobRoute(senderUrl, path);
   if (!route || !href || typeof href !== "string") return null;
   let u;
   try {
@@ -109,8 +115,8 @@ export function rawLogUrl(href, senderUrl) {
 export const open = {
   MESSAGE_TYPE: OPEN_TYPE,
   async handleMessage(payload, sender) {
-    const url = rawLogUrl(payload?.href, sender?.url);
-    const route = jobRoute(sender?.url);
+    const url = rawLogUrl(payload?.href, sender?.url, payload?.path);
+    const route = jobRoute(sender?.url, payload?.path);
     if (!url || !route) return { opened: false, state: "unknown" };
     const state = await detectFor(route, { fresh: true });
     if (state !== "ok") return { opened: false, state };

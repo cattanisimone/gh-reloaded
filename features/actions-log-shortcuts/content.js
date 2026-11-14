@@ -198,7 +198,7 @@
     if (withOpen) {
       const openBtn = button("Open raw log", async () => {
         const link = rawLink(route);
-        const res = link ? await send("GHALS_OPEN", { href: link.getAttribute("href") }) : null;
+        const res = link ? await send("GHALS_OPEN", { href: link.getAttribute("href"), path: route.path }) : null;
         if (res && res.state) known.set(`${route.owner}/${route.repo}`.toLowerCase(), { state: res.state, at: Date.now() });
         if (!res || !res.opened) say(row, "Could not open log", "err");
         else row.querySelector(".ghals-msg")?.remove();
@@ -219,6 +219,7 @@
     if (!extensionAlive()) return;
     const path = location.pathname;
     const route = enabled ? M.parseRoute(path) : null;
+    if (route) route.path = path;
     if (!route) return removeRow();
     const anchor = anchorFor(route);
     if (!anchor) return removeRow();
@@ -246,7 +247,7 @@
     const fresh = cached && Date.now() - cached.at < STATE_TTL_MS;
     const ask = () => {
       asked.add(askKey);
-      return send("GHALS_DETECT", {}).then((res) => {
+      return send("GHALS_DETECT", { path }).then((res) => {
         if (res && res.state) known.set(key, { state: res.state, at: Date.now() });
         return res;
       });
@@ -303,6 +304,14 @@
     for (const ev of ["turbo:render", "turbo:load", "pjax:end", "popstate"]) document.addEventListener(ev, queue);
     window.addEventListener("popstate", queue);
     new MutationObserver(queue).observe(document.documentElement, { childList: true, subtree: true });
+    // A route change that swaps no DOM (history.pushState alone) fires no mutation: watch the path too.
+    let lastPath = location.pathname;
+    setInterval(() => {
+      if (location.pathname !== lastPath) {
+        lastPath = location.pathname;
+        queue();
+      }
+    }, 400);
   }
 
   start();

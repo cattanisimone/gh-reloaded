@@ -157,6 +157,27 @@ test("detect: a sender that is not an Actions job route is refused", async () =>
   assert.equal(calls.length, 0);
 });
 
+test("detect: after SPA navigation the route comes from the payload path, not the stale frame URL", async () => {
+  mock(() => answer(0, { type: "opaqueredirect" }));
+  const stale = sender(JOB_URL("acme", "old", 1, 2));
+  const r = await bg.handleMessage({ path: "/acme/newrepo/actions/runs/5/job/6" }, stale);
+  assert.equal(r.state, "ok");
+  assert.match(calls[0].url, /\/repos\/acme\/newrepo\/actions\/jobs\/6\/logs$/);
+  assert.equal((await bg.handleMessage({ path: "https://evil.example/x" }, stale)).state, "ok", "a non-path payload falls back to the frame URL");
+  assert.equal((await bg.handleMessage({ path: "/acme/x/actions/runs/5" }, stale)).state, "unknown");
+  assert.equal((await bg.handleMessage({ path: "/acme/web/actions/runs/5/job/6" }, { url: "https://evil.example/a" })).state, "unknown");
+});
+
+test("open: validates the link against the payload path after SPA navigation", async () => {
+  const sha = "c".repeat(40);
+  mock(() => answer(0, { type: "opaqueredirect" }));
+  const res = await bg.open.handleMessage({ href: `/acme/newrepo/commit/${sha}/checks/6/logs`, path: "/acme/newrepo/actions/runs/5/job/6" }, sender(JOB_URL("acme", "old", 1, 2)));
+  assert.equal(res.opened, true);
+  assert.equal(created[0].url, `https://github.com/acme/newrepo/commit/${sha}/checks/6/logs`);
+  const stale = await bg.open.handleMessage({ href: `/acme/old/commit/${sha}/checks/2/logs`, path: "/acme/newrepo/actions/runs/5/job/6" }, sender(JOB_URL("acme", "old", 1, 2)));
+  assert.equal(stale.opened, false);
+});
+
 test("detect: the owner token is used, never another", async () => {
   resetStorage({
     githubTokens: [{ id: "t1", name: "d", token: "DEF", owner: "" }, { id: "t2", name: "o", token: "OWN", owner: "acme" }],
