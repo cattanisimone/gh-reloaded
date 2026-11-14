@@ -43,13 +43,14 @@ test("not-permitted warns in Features and on the owner's card; Open GitHub token
   await openOptions(context, page);
   const f = row(page).locator(".ghals-warn");
   await expect(f).toHaveCount(1);
-  await expect(f).toContainText("Actions logs may be unreadable for acme");
-  await expect(f).toContainText("Last check:");
+  await expect(f.locator(".ghals-warn-title, .ghals-warn-when")).toHaveCount(0);
+  await expect(f.locator(".ghals-warn-body")).toHaveText(/^The last check for acme could not read Actions logs \([^)]+\), so Open raw log may be hidden on its job pages\. Copy gh command keeps working\. To use it there: a fine-grained token with Actions: Read-only and access to the repository\.$/);
   await expect(f.locator(".ghals-warn-link")).toHaveAttribute("href", "#tokens-section");
   await expect(f.locator("svg[aria-hidden=true]")).toHaveCount(1);
   await page.goto(page.url().replace(/#.*$/, "") + "#tokens-section");
   const card = page.locator("#tokens .token-card", { has: page.locator(".tok-owner[value=acme]") });
   await expect(card.locator(".ghals-warn")).toContainText("Actions logs not readable for acme");
+  await expect(card.locator(".ghals-warn .ghals-warn-when")).toContainText("Last check:");
   await expect(page.locator("#tokens .ghals-warn")).toHaveCount(1);
 });
 
