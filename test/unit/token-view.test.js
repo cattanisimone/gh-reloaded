@@ -134,15 +134,18 @@ test("classic steps name the scopes that cover the missing types, not read:proje
   const step = (types, names) => stepsFor({ classic: true, names, ids: ["a"], types }).rest[0];
   assert.doesNotMatch(step(["pulls"], "Pull requests"), /read:project/);
   assert.match(step(["pulls"], "Pull requests"), /\brepo\b/);
-  assert.match(step(["issues", "contents"], "Issues, Contents"), /repo \(or public_repo for public repositories only\)/);
+  assert.match(step(["issues", "contents"], "Issues, Contents"), /repo \(public_repo is enough for public repositories only\)/);
   assert.doesNotMatch(step(["issues", "contents"], "Issues, Contents"), /read:project/);
-  assert.match(step(["projects"], "Projects"), /\(read:project\)/);
+  assert.match(step(["projects"], "Projects"), /: read:project\./);
   assert.doesNotMatch(step(["projects"], "Projects"), /\brepo\b/);
-  assert.equal(classicScopes(["projects", "pulls"]), " (read:project, repo (or public_repo for public repositories only))");
-  assert.equal(classicScopes(["actions"]), " (repo)");
-  assert.equal(classicScopes(["actions", "pulls"]), " (repo)");
+  assert.equal(classicScopes(["projects", "pulls"]), "read:project and repo (public_repo is enough for public repositories only)");
+  assert.equal(classicScopes(["actions"]), "repo");
+  assert.equal(classicScopes(["actions", "pulls"]), "repo");
   assert.doesNotMatch(step(["actions"], "Actions"), /public_repo/);
   assert.equal(classicScopes([]), "");
+  const mixed = step(["projects", "pulls"], "Projects, Pull requests");
+  assert.equal(mixed, "Tick the permissions that cover Projects, Pull requests: read:project and repo (public_repo is enough for public repositories only).");
+  assert.doesNotMatch(mixed, /\([^)]*\(/);
 });
 
 test("the fine-grained steps keep their wording", () => {

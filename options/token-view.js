@@ -56,14 +56,14 @@ export function classicScopes(types = []) {
   if (set.has("projects")) parts.push("read:project");
   const repoPublic = ["pulls", "issues", "contents"].some((t) => set.has(t));
   if (set.has("actions")) parts.push("repo");
-  else if (repoPublic) parts.push("repo (or public_repo for public repositories only)");
-  return parts.length ? ` (${parts.join(", ")})` : "";
+  else if (repoPublic) parts.push("repo (public_repo is enough for public repositories only)");
+  return parts.join(" and ");
 }
 
 export function stepsFor({ classic, names, ids, types = [] }) {
   const url = classic ? "https://github.com/settings/tokens" : "https://github.com/settings/personal-access-tokens";
   const rest = classic
-    ? [`Tick the permissions that cover ${names}${classicScopes(types)}.`, "If the organization requires approval or SSO, authorize the token or wait for an admin.", "Come back here and press Test again."]
+    ? [`Tick the permissions that cover ${names}${classicScopes(types) ? `: ${classicScopes(types)}` : ""}.`, "If the organization requires approval or SSO, authorize the token or wait for an admin.", "Come back here and press Test again."]
     : [`Set ${names} to Read-only.`, "If the organization requires approval, wait for an admin to approve it.", "Come back here and press Test again."];
   return { key: `${classic}|${names}|${ids.join(",")}`, url, rest };
 }
