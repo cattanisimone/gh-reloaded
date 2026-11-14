@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #129 Token settings, re-plan</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--warn:#9a6700;--bg:#fff;--soft:#f6f8fa;--or:#c2410c}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px} h3{font-size:14px;margin:16px 0 6px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:13.5px} th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:12.5px;overflow-wrap:anywhere} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto}
+  .open{color:var(--bad);font-weight:600} .done{color:var(--ok);font-weight:600} .live{color:var(--warn);font-weight:600}
+  .id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;white-space:nowrap}
+  /* mockup */
+  .m{font:13px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;min-width:620px;color:#1f2328}
+  .m .privacy{color:#59636e;margin-bottom:14px}
+  .m .warn{background:#f8f4ed;border:1px solid #9a6700;border-radius:8px;padding:10px 14px;margin-bottom:14px}
+  .m .warn b.t{color:#9a6700} .m .perm{background:#fff;border:1px solid #d1d9e0;border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;gap:8px;margin:6px 0}
+  .m .cap{font-size:11px;font-weight:600;letter-spacing:.06em;color:#59636e;margin:0 0 8px}
+  .m .list{border:1px solid #d1d9e0;border-radius:6px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) max-content}
+  .m .row{display:grid;grid-column:1/-1;grid-template-columns:subgrid;column-gap:16px;align-items:start;padding:10px 14px;border-top:1px solid #d1d9e0}
+  .m .row:first-child{border-top:0}
+  .m .n{font-weight:600;line-height:20px} .m .u,.m .l{color:#59636e;font-size:12px} .m .note{color:#9a6700;font-size:12px}
+  .m .pill{display:inline-block;border:1px solid;border-radius:10px;padding:0 8px;font-size:12px;font-weight:600;line-height:18px}
+  .m .acts{display:flex;gap:8px;justify-content:flex-end} .m .b{border:1px solid #d1d9e0;background:#eef1f4;border-radius:6px;padding:4px 12px;font-size:13px}
+  .m .b.p{background:#c2410c;color:#fff;border-color:transparent}
+  .m .tag{font-size:11px;border:1px solid #c2410c;color:#c2410c;border-radius:10px;padding:0 6px;margin-left:6px;font-weight:600}
+  .m .res{grid-column:1/-1;margin:0 14px 12px;border:1px solid #d1d9e0;border-radius:6px;padding:10px 12px;background:#f6f8fa}
+  .m .chk{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #d1d9e0;padding:5px 0}
+  .m .adv{margin:6px 0 0;padding:0;list-style:none}
+  .m .guide,.m .sso{border:1px solid #d1d9e0;border-radius:8px;padding:10px 14px;margin-top:12px}
+  .m a{color:#0969da} .g{color:#1a7f37} .r{color:#cf222e} .a{color:#9a6700} .mu{color:#59636e}
+  .tagid{display:inline-block;font:600 10px/1 ui-monospace,monospace;color:#fff;background:#0969da;border-radius:3px;padding:2px 3px;margin-left:4px;vertical-align:middle}
+  svg text{font:12px system-ui,sans-serif;fill:#1f2328} svg .mu{fill:#59636e;font-size:11px}
+</style></head><body><main>
+
+<h1>#129 · GitHub tokens settings: re-plan after five review rounds</h1>
+<p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/129">cattanisimone/gh-reloaded#129</a> · PR #130 · Size: normal · Goal: finish the approved feature by rebuilding <b>only its presentation layer</b> against one written list of measured constraints, instead of patching it a sixth time.</p>
+
+<div class="box"><b>What stays approved and unchanged:</b> the feature contract of the plan approved at <code>1e7706d</code> (states, Test engine and its ≤7 read requests, private-repository proof, Projects rules, session-only outcome codes, draft model of the panel, 420&nbsp;px panel reserved at ≥1024&nbsp;px and full-width sheet at ≤1023&nbsp;px, "Token permissions: none"). <b>What this re-plan changes:</b> how the Settings UI of the section is built and verified. No new product behaviour, no new text except where a reviewer already asked for it.</div>
+
+<h2>1 · Why the rounds did not converge</h2>
+<table>
+<tr><th>Review (head)</th><th>Asks</th><th>Of which repeated</th><th>Cause</th></tr>
+<tr><td>5faa225</td><td>8</td><td>–</td><td>C1 ×6, C2 (breakpoint)</td></tr>
+<tr><td>4eee836</td><td>7</td><td>guide list, Which box, helper copy, note order, breakpoint</td><td>C2 (switched to 720 → list crushed to 28–325&nbsp;px), C1, C4 (result inset 14&nbsp;px)</td></tr>
+<tr><td>188d72a</td><td>4</td><td>helper copy (3rd time)</td><td>C4 (0&nbsp;px gap), C3 (string join → orphan wrap), C1</td></tr>
+<tr><td>d3a8ab9</td><td>3</td><td>–</td><td>C3 (steps built in click handler, stale), C1 (step position, advice look)</td></tr>
+<tr><td>c7d41e9</td><td>6</td><td>–</td><td>C3 (<code>w.details</code> computed, never rendered), C1 (one card, colours), C4/C5 (column 31&nbsp;px off, baseline 11.5&nbsp;px off, 26&nbsp;px gaps)</td></tr>
+</table>
+<table style="margin-top:8px">
+<tr><th>Cause</th><th>What happened</th><th>Fix in the new approach</th></tr>
+<tr><td class="id">C1 spec source</td><td>The UI was built from the plan's own simplified mockup, not from the issue's three images. Each round the reviewer compared another region with the images and found new deltas (≈20 over five rounds).</td><td>§3 is an element-by-element inventory of the three images, each with a constraint ID. Nothing is built that is not in it.</td></tr>
+<tr><td class="id">C2 contract conflict</td><td>The issue says sheet at ≤720&nbsp;px, the approved plan said ≤1023. Round 1 enforced 720, round 2 measured the crushed list and asked for 1023.</td><td>Fixed at ≤1023 (L3), with the arithmetic and the reviewer's measurement; declared once as an assumption for the maintainer.</td></tr>
+<tr><td class="id">C3 partial rendering</td><td>HTML strings for rows plus imperative patches elsewhere (warning steps built on click and cached by <code>data-key</code>, details computed but dropped).</td><td>One pure <code>tokenView()</code> view model → one <code>render()</code>; handlers only change UI state. Unit tests assert every view-model field is rendered.</td></tr>
+<tr><td class="id">C4 CSS patching</td><td>Each round appended override rules at the end of <code>options.css</code> (<code>.warning-details ul</code> twice, margin resets). A fix moved another measurement.</td><td>One ordered CSS block for the section, every rule declared once; columns from CSS <code>subgrid</code> instead of per-row <code>auto</code>.</td></tr>
+<tr><td class="id">C5 tests ≠ review</td><td>Specs asserted the implementation; the reviewer measured gaps, column edges and baselines no spec checked. A spec title claimed the version without asserting it.</td><td>A layout spec written <b>first</b> encodes every row of §2 at every width and theme; the PR's "Observed" reports each ID with its measured value.</td></tr>
+</table>
+
+<h2>2 · Constraints shown by the reviewers</h2>
+<p class="meta">Every request from the five implementation reviews and the three plan reviews, as one testable line. Status is at head <code>c7d41e9</code>. Tolerance ±1&nbsp;px unless stated.</p>
+<div class="scroll"><table>
+<tr><th>ID</th><th>Constraint</th><th>Measurement</th><th>Widths / themes</th><th>From</th><th>At c7d41e9</th></tr>
+<tr><td class="id">L1</td><td>Privacy note, warning, list, guide, SSO note align with the title and fill the column</td><td>left edge − <code>.content</code> inner left = 0 ±1&nbsp;px; widthShare ≥ 0.98</td><td>1500 / 1100 / 800 / 390, light+dark</td><td>all</td><td class="done">ok</td></tr>
+<tr><td class="id">L2</td><td>Panel 420&nbsp;px, space reserved, list never covered</td><td>panel width 420 ±1; every row's right edge ≤ panel left edge</td><td>1500 / 1100 / 1024</td><td>plan r1–r3</td><td class="done">ok</td></tr>
+<tr><td class="id">L3</td><td>Full-width sheet whenever the list would be &lt; ~320&nbsp;px</td><td>panel width = viewport ±1</td><td>1023 / 950 / 800 / 721 / 390 / 320</td><td>4eee836</td><td class="done">ok</td></tr>
+<tr><td class="id">L4</td><td>No horizontal scroll, panel open or closed</td><td><code>scrollWidth ≤ clientWidth</code></td><td>all seven widths, light+dark</td><td>all</td><td class="done">ok</td></tr>
+<tr><td class="id">L5</td><td>List is <b>one</b> bordered card with 1&nbsp;px dividers; the test result sits inside it</td><td>one element with border; rows separated by <code>border-top</code> 1&nbsp;px, gap between rows 0</td><td>1500 / 800</td><td>c7d41e9</td><td class="open">open</td></tr>
+<tr><td class="id">L6</td><td>State column starts at the same x on every row, Not set row included</td><td>pill left edges equal ±1&nbsp;px (was 624.2 vs 593.2)</td><td>1500 / 1100 / 1024 (panel open)</td><td>c7d41e9</td><td class="open">open</td></tr>
+<tr><td class="id">L7</td><td>Name on the pill's line; Used for on the last-test line</td><td>name vs pill vertical centre ±1&nbsp;px; Used for vs last test baseline ±1&nbsp;px on rows without note (was 11.5&nbsp;px)</td><td>1500 / 1100</td><td>c7d41e9</td><td class="open">open</td></tr>
+<tr><td class="id">L8</td><td><code>{when} · {n} of {m} OK</code> on one line; rows equal height</td><td>last-test element height = one line; rows without note equal ±1&nbsp;px (61–63); with note + one line (≤ +21)</td><td>1500 / 1100 / 1024</td><td>188d72a</td><td class="done">ok</td></tr>
+<tr><td class="id">L9</td><td><code>{k} checks couldn't be verified</code> on its own line under the pill</td><td>note top ≥ pill bottom; note left = pill left</td><td>1500</td><td>188d72a</td><td class="done">ok</td></tr>
+<tr><td class="id">L10</td><td>Section order and gaps: lead, privacy note, warning, TOKENS, list, + Add token, guide, SSO note</td><td>DOM and y order as listed; privacy → warning gap 14 ±2&nbsp;px; no two blocks touching (gap ≥ 8)</td><td>1500 / 1100 / 800 / 390, light+dark</td><td>5faa225, 188d72a</td><td class="done">ok</td></tr>
+<tr><td class="id">L11</td><td>Panel test result spans the field column</td><td>result left/right = Name input left/right ±1</td><td>1500 / 800</td><td>4eee836</td><td class="done">ok</td></tr>
+<tr><td class="id">L12</td><td>Panel vertical rhythm, no empty-slot gaps; one hint line in Add mode</td><td>gap between consecutive visible blocks 12 ±2&nbsp;px (was 26); Add mode: one hint element under Test</td><td>1500 / 390</td><td>c7d41e9</td><td class="open">open</td></tr>
+<tr><td class="id">L13</td><td>Unsaved tag is a pill hugging its text</td><td>tag width = its content width ±2; left = field left</td><td>1440</td><td>5faa225</td><td class="done">ok</td></tr>
+<tr><td class="id">N1</td><td>Buttons native: 32&nbsp;px high, 6&nbsp;px radius, 1&nbsp;px border, 2&nbsp;px focus ring; Save and How to add it primary</td><td>computed style</td><td>1500, light+dark</td><td>all</td><td class="done">ok</td></tr>
+<tr><td class="id">S1</td><td>Guide: heading <i>New token? Three steps</i> + ordered list of 3 + closed Full guide (open with no token)</td><td>DOM: <code>h3</code> + <code>ol &gt; li</code>×3</td><td>–</td><td>5faa225, 4eee836</td><td class="done">ok</td></tr>
+<tr><td class="id">S2</td><td>Panel copy: <i>Changes apply only when you press Save.</i> under the title; Name, owner and Token hints; bordered <i>Which token is used</i> box (title + 3 rules); <i>Test checks permissions…</i> by Test</td><td>texts and order; box has a border</td><td>–</td><td>5faa225 → 188d72a</td><td class="done">ok</td></tr>
+<tr><td class="id">S3</td><td>Result advice: no bullets, bold lead (<i>Projects:</i>, <i>Replace this token:</i>), 13&nbsp;px body colour; 401 offers <i>What should I do?</i></td><td>computed <code>list-style</code>, weight, size, colour</td><td>light+dark</td><td>5faa225, d3a8ab9</td><td class="done">ok</td></tr>
+<tr><td class="id">S4</td><td>Warning detail: one row per missing permission with <i>Read-only</i> tag and reasons, the sentence <i>GH Reloaded {version} uses …</i>, then <i>Read-only: GH Reloaded never writes to GitHub.</i></td><td>text contains <code>getManifest().version</code></td><td>–</td><td>plan r1, 4eee836, c7d41e9</td><td class="open">open</td></tr>
+<tr><td class="id">S5</td><td>How to add it: 4 numbered steps <b>under</b> the buttons, step 1 a <i>GitHub ↗</i> link (fine-grained or classic page, <code>target=_blank rel=noopener</code>); rebuilt on every render; hidden when the warning hides or its permission set changes</td><td>y(steps) &gt; y(buttons); toggle feature off/on → steps hidden; retest with other perms → hidden</td><td>1500</td><td>188d72a, d3a8ab9</td><td class="done">ok</td></tr>
+<tr><td class="id">S6</td><td>Last test reads Today / Yesterday / date</td><td>unit</td><td>–</td><td>5faa225</td><td class="done">ok</td></tr>
+<tr><td class="id">K1</td><td>Missing permissions pill amber outline, distinct from the red of Not working / Access denied</td><td>colour ≠ <code>--bad</code></td><td>light+dark</td><td>5faa225</td><td class="done">ok</td></tr>
+<tr><td class="id">K2</td><td><i>default</i> tag: accent (orange) outline</td><td>border and text = <code>--accent</code></td><td>light+dark</td><td>c7d41e9</td><td class="open">open</td></tr>
+<tr><td class="id">K3</td><td>Warning: pale beige surface, amber border (not saturated yellow)</td><td>light <code>#f8f4ed</code> / <code>#9a6700</code> (sampled from the issue image); dark <code>#211c14</code> / <code>#9e6a03</code></td><td>light+dark</td><td>c7d41e9</td><td class="open">open</td></tr>
+<tr><td class="id">B1–B5</td><td>Esc/close return focus; no token character in the DOM; 401 = one <code>GET /user</code> → Not working; Later hides until next view; Replace / Remove / Discard flows</td><td>existing e2e</td><td>–</td><td>all</td><td class="done">ok</td></tr>
+<tr><td class="id">R1</td><td>Per-type result with real fine-grained and classic tokens; private-repository proof</td><td>manual, [R] criteria</td><td>–</td><td>every round</td><td class="live">needs maintainer</td></tr>
+</table></div>
+
+<h2>3 · Mockup (target, from the issue's images)</h2>
+<p class="meta">Fictional data. Blue tags are constraint IDs. The three issue images are the reference; where they differ from the issue text, the text wins (as in the approved plan).</p>
+<div class="scroll"><div class="m">
+  <div class="privacy">🛡 Tokens stay in this browser's extension storage and are only sent to api.github.com. Once saved, a token is never shown again.<span class="tagid">L10</span></div>
+  <div class="warn new"><b class="t">⚠ Linked PR status needs a permission your token doesn't have</b><span class="tagid">K3</span>
+    <div>Tokens: «Work – acme-demo». Features you already use keep working.</div>
+    <div style="color:#0969da">▾ Show which permissions are missing and why</div>
+    <div class="perm"><span><b>Pull requests</b> <span class="mu">to read the checks and review state of linked pull requests</span><br><span class="mu">GH Reloaded 1.7.0 uses Pull requests (Read-only) for Linked PR status.</span><span class="tagid">S4</span></span><span>Read-only</span></div>
+    <div class="mu">Read-only: GH Reloaded never writes to GitHub.</div>
+    <div style="margin:6px 0"><span class="b p">How to add it</span> <span class="b">Test again</span> <span class="b">Later</span></div>
+    <ol style="margin:0;padding-left:20px"><li>Open the token on <a>GitHub ↗</a> and edit it.<span class="tagid">S5</span></li><li>Set Pull requests to Read-only.</li><li>If the organization requires approval, wait for an admin.</li><li>Come back here and press Test again.</li></ol>
+  </div>
+  <div class="cap">TOKENS</div>
+  <div class="list new">
+    <div class="row"><div><div class="n">Personal<span class="tag">default</span><span class="tagid">K2</span></div><div class="u">Used for: all repositories</div></div><div><span class="pill g">Works</span><span class="tagid">L6</span><div class="l">Today 09:12 · 4 of 5 OK</div></div><div class="acts"><span class="b">Test</span><span class="b">Edit</span></div></div>
+    <div class="row"><div><div class="n">Work – acme-demo<span class="tagid">L7</span></div><div class="u">Used for: acme-demo</div></div><div><span class="pill a">Missing permissions</span><div class="l">Yesterday 17:40 · 2 of 5 OK</div></div><div class="acts"><span class="b">Test</span><span class="b">Edit</span></div></div>
+    <div class="res">
+      <b>Test result · Work – acme-demo</b>
+      <div class="chk"><span><b>Read repository contents</b><br><span class="mu">A feature you turned on needs it.</span></span><span class="pill g">Available</span></div>
+      <div class="chk"><span><b>Read pull requests</b><br><span class="mu">A feature you turned on needs it.</span></span><span class="pill r">Access denied</span></div>
+      <div class="chk"><span><b>Read issues</b><br><span class="mu">GitHub answered with an empty list. We can't tell why.</span></span><span class="pill a">Not verified</span></div>
+      <div style="margin-top:6px">2 of 5 OK. Missing permissions: Pull requests.</div>
+      <ul class="adv"><li><b>Pull requests:</b> on GitHub, edit this token and set Pull requests to Read-only, then press Test again.<span class="tagid">S3</span></li></ul>
+      <div style="margin-top:6px"><span class="b">What should I do?</span> <span class="b">Test again</span> <span class="b">Check a specific repository</span></div>
+    </div>
+    <div class="row"><div><div class="n">SSO org</div><div class="u">Used for: rossi-lab</div></div><div><span class="pill g">Works</span><div class="note">1 check couldn't be verified</div><span class="tagid">L9</span><div class="l">Today 08:05 · 3 of 5 OK</div></div><div class="acts"><span class="b">Test</span><span class="b">Edit</span></div></div>
+    <div class="row"><div><div class="n">Team projects</div><div class="u">Used for: example-lab</div></div><div><span class="pill mu">Not tested</span><div class="l">Never tested</div></div><div class="acts"><span class="b">Test</span><span class="b">Edit</span></div></div>
+  </div><span class="tagid">L5</span>
+  <div style="margin-top:12px"><span class="b">+ Add token</span></div>
+  <div class="guide"><b>New token? Three steps</b><span class="tagid">S1</span><ol style="margin:4px 0;padding-left:20px"><li>Create a token on GitHub.</li><li>Paste it with <b>Add token</b>.</li><li>Press <b>Test</b>.</li></ol><span style="color:#0969da">▸ Full guide</span></div>
+  <div class="sso">Organization enforces SSO? Open <a>GitHub token settings ↗</a> and authorize the token…</div>
+</div></div>
+<p class="meta">The edit panel keeps the layout already accepted in round c7d41e9 (S2, L11, L13), with one change: <b>L12</b>, every slot that has no content is <code>hidden</code>, so the 12&nbsp;px body gap is the only spacing; in Add mode <i>Enter a token to test it.</i> and <i>Test checks permissions…</i> become one line.</p>
+
+<h2>Visual contract</h2>
+<table id="visual-contract">
+<tr><th>Reference</th><td>The issue's three approved mockup images (token list with result, edit panel, missing-permission warning) and the reviewer's measurements listed in §2; native neighbours on the Settings page: <code>.btn</code>, <code>.card</code>, <code>.callout</code>, <code>.changes-tag</code>.</td></tr>
+<tr><th>Anchor</th><td>The visible text start of the section title <code>h1#tokens-title</code> (equal to the inner left of <code>.content</code>): the border box of the privacy note, warning, list card, guide and SSO note align to it. Inside a row: the pill's border box is the state column edge; the name's first glyph shares the pill's line. The panel anchors to the viewport's right edge.</td></tr>
+<tr><th>Width</th><td>Privacy note, warning, list card, guide and SSO note fill the content column (widthShare ≥ 0.98). Row columns from one shared grid: name 1fr, state 1fr, actions max-content of Test + Edit (subgrid, same on every row). Panel 420&nbsp;px, the width the issue mockup and text specify; full-width sheet below 1024&nbsp;px. Unsaved tag hugs its content.</td></tr>
+<tr><th>Responsive</th><td>1500 / 1100 / 1024: one-line rows, panel beside the list (420&nbsp;px reserved on <code>.shell</code>). 1023 / 800 / 721: panel is a full-width sheet over the page; list unchanged underneath. 720 and below: sidebar becomes tabs (unchanged). Below 560&nbsp;px of list width (390 / 320) a row stacks: name + Used for, then state + last test, then Test / Edit. No horizontal scroll at any width.</td></tr>
+<tr><th>Native controls</th><td>Row and panel buttons keep the native <code>.btn</code> metrics (32&nbsp;px, 6&nbsp;px radius, 1&nbsp;px border, 2&nbsp;px focus ring); Test and Edit are never clipped or wrapped under the panel. The sidebar and its tabs keep their space; the panel never covers the sticky tab bar.</td></tr>
+<tr><th>Evidence</th><td>Not verified on live github.com: the Settings page is extension UI with no github.com anchor. Evidence is Playwright on the real <code>options/options.html</code> (fixture tests, mocked api.github.com), light and dark, at 1500 / 1100 / 1024 / 1023 / 800 / 390 / 320, before (c7d41e9) and after captured at the same state (one default and three owner tokens, one result open, warning on) and the same viewport.</td></tr>
+<tr><th>Expected</th><td>Every row of §2: box left edge 0 ±1&nbsp;px to the title, widthShare ≥ 0.98; pill left edges equal ±1&nbsp;px across rows; name vs pill centre ±1&nbsp;px; privacy → warning gap 14 ±2&nbsp;px; panel body gaps 12 ±2&nbsp;px; panel 420 ±1&nbsp;px at ≥1024 and viewport width ±1&nbsp;px at ≤1023; buttons 32&nbsp;px / 6&nbsp;px.</td></tr>
+</table>
+
+<h2>4 · New approach: simpler mechanics</h2>
+<div class="scroll"><svg viewBox="0 0 860 170" width="100%" role="img" aria-label="state to view model to render">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+  <rect x="10" y="20" width="170" height="120" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+  <text x="22" y="42" font-weight="600">State (unchanged)</text><text class="mu" x="22" y="62">records, session codes,</text><text class="mu" x="22" y="78">feature switches, runs,</text><text class="mu" x="22" y="94">results, panel draft,</text><text class="mu" x="22" y="110">ui: later, stepsKey,</text><text class="mu" x="22" y="126">open result / check</text>
+  <rect x="230" y="20" width="200" height="120" rx="6" fill="#fff" stroke="#0969da" stroke-dasharray="5 3"/>
+  <text x="242" y="42" font-weight="600">tokenView(state)</text><text class="mu" x="242" y="62">pure, new file token-view.js</text><text class="mu" x="242" y="78">rows, result, warning,</text><text class="mu" x="242" y="94">steps, panel slots</text><text class="mu" x="242" y="110">unit-tested: every field</text><text class="mu" x="242" y="126">has a rendered target</text>
+  <rect x="480" y="20" width="170" height="120" rx="6" fill="#fff" stroke="#0969da" stroke-dasharray="5 3"/>
+  <text x="492" y="42" font-weight="600">render()</text><text class="mu" x="492" y="62">one pass: list, warning,</text><text class="mu" x="492" y="78">panel slots; keeps the</text><text class="mu" x="492" y="94">repository-check nodes</text><text class="mu" x="492" y="110">and focus (as today)</text>
+  <rect x="700" y="20" width="150" height="120" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+  <text x="712" y="42" font-weight="600">DOM + one</text><text x="712" y="58" font-weight="600">CSS block</text><text class="mu" x="712" y="80">subgrid columns,</text><text class="mu" x="712" y="96">tokens K1–K3,</text><text class="mu" x="712" y="112">no override rules</text>
+  <line x1="180" y1="80" x2="228" y2="80" stroke="#59636e" marker-end="url(#ar)"/><line x1="430" y1="80" x2="478" y2="80" stroke="#59636e" marker-end="url(#ar)"/><line x1="650" y1="80" x2="698" y2="80" stroke="#59636e" marker-end="url(#ar)"/>
+  <text class="mu" x="230" y="160">Event handlers only change state, then call render(). Nothing builds DOM in a click handler.</text>
+</svg></div>
+<table>
+<tr><th>#</th><th>Mechanism</th><th>Replaces</th><th>Satisfies</th></tr>
+<tr><td>1</td><td><b>Layout spec first.</b> <code>test/e2e/options-token-layout.spec.js</code>: one seeded state, a loop over 7 widths × 2 themes × panel open/closed, one assertion per ID of §2 with the measured values in the failure message. It must fail on c7d41e9 for L5, L6, L7, L12, K2, K3, S4 before any code changes.</td><td>scattered metric checks in <code>options-token-panel</code></td><td>C5, all L/K rows</td></tr>
+<tr><td>2</td><td><b>Pure view model</b> <code>options/token-view.js</code>: <code>tokenView({entries, tests, results, runs, required, features, version, ui})</code> → plain data (rows, result lines, advice, warning with per-permission rows <i>and</i> the version sentence, steps with link, panel slot texts). <code>options.js</code> keeps storage, Test, panel draft and events.</td><td><code>rowHtml</code>/<code>resultHtml</code> string building, <code>renderWarning</code> DOM patching, steps in the click handler</td><td>C3, S3–S6</td></tr>
+<tr><td>3</td><td><b>Steps state as data:</b> <code>ui.stepsKey</code> = the permission-set key when How to add it was pressed; steps are shown iff it equals the current key. Hiding the warning clears it.</td><td><code>dataset.key</code> on the <code>ol</code></td><td>S5</td></tr>
+<tr><td>4</td><td><b>One shared grid:</b> <code>.token-list</code> is the bordered card with <code>grid-template-columns: minmax(0,1fr) minmax(0,1fr) max-content</code>; each row and each result box uses <code>grid-template-columns: subgrid</code>. The Not set row inherits the actions column width; <code>align-items: start</code> with name and pill on the same 20&nbsp;px line box. Container query below 560&nbsp;px stacks rows (unchanged).</td><td>per-row <code>auto</code> column, separate cards with 8&nbsp;px gap</td><td>L5, L6, L7, L8</td></tr>
+<tr><td>5</td><td><b>One CSS block</b> for the section (replaces <code>options.css</code> lines 421–508), ordered list → result → warning → guide → panel, every selector once; colours as tokens on <code>:root</code> with dark values. A unit test fails on a duplicated selector inside the block.</td><td>appended override rules</td><td>C4, K1–K3, L10–L13</td></tr>
+<tr><td>6</td><td><b>Panel slots hidden when empty</b>, one hint element under Test whose text the view model picks (Add mode: one merged sentence).</td><td>always-present empty paragraphs</td><td>L12</td></tr>
+<tr><td>7</td><td><b>Handback check:</b> before marking ready, run the layout spec 3× and fill the PR's "Observed" with each ID and its measured value at 1500 / 1100 / 800 / 390.</td><td>"addressed" comments without numbers</td><td>C5</td></tr>
+</table>
+
+<h2>Changes by file</h2>
+<table>
+<tr><th>File</th><th>Change</th><th>Why</th></tr>
+<tr><td><code>options/token-view.js</code> (new)</td><td>Pure view model and small HTML builders for list, result, warning, panel slots</td><td>C3: one source of truth, unit-testable</td></tr>
+<tr><td><code>options/options.js</code> (shared page)</td><td>Token section: state + events + one <code>render()</code>; remove <code>rowHtml</code>, <code>resultHtml</code>, <code>renderWarning</code> patching. Other sections untouched.</td><td>C3</td></tr>
+<tr><td><code>options/options.css</code> (shared page)</td><td>Replace the token block with one ordered block (subgrid list, warning K3, default tag K2)</td><td>C4, L5–L7, K2, K3</td></tr>
+<tr><td><code>options/options.html</code></td><td>List container, warning order (details → buttons → steps), panel slots with <code>hidden</code></td><td>L5, L12, S5</td></tr>
+<tr><td><code>options/token-test.js</code>, <code>token-requirements.js</code>, <code>token-diagnostics.js</code></td><td>No change (approved and adversarially reviewed engine)</td><td>keep</td></tr>
+<tr><td><code>test/e2e/options-token-layout.spec.js</code> (new), <code>test/unit/token-view.test.js</code> (new)</td><td>§2 as assertions; view-model completeness, steps rule, version sentence, duplicate-selector check</td><td>C5</td></tr>
+<tr><td>existing <code>options-token-*.spec.js</code>, <code>options-tokens.spec.js</code></td><td>Selectors updated to the new structure; behaviour assertions kept; the warning spec asserts the manifest version</td><td>S4</td></tr>
+<tr><td><code>screenshots/token-settings/*.svg</code>, <code>README.md</code></td><td>Mockup refreshed (one card, beige warning, orange default tag)</td><td>docs in sync</td></tr>
+</table>
+
+<h2>Data, permissions, privacy</h2>
+<p>None changes. Token permissions: none. Same storage keys (<code>githubTokens</code>, <code>defaultTokenId</code>), outcome codes in <code>chrome.storage.session</code> only, no new host or permission. <code>PRIVACY.md</code> already matches.</p>
+
+<h2>Test plan</h2>
+<table>
+<tr><th>What</th><th>Test</th><th>Name</th></tr>
+<tr><td>L1–L13, N1, K1–K3 at 7 widths × light/dark × panel open/closed</td><td>e2e on the real options page, written first</td><td><code>options-token-layout.spec.js</code></td></tr>
+<tr><td>Every view-model field is rendered (version sentence, per-permission rows, advice, note, steps); steps hidden on set change / warning hidden</td><td>unit + e2e</td><td><code>token-view.test.js</code>, <code>options-token-warning.spec.js</code></td></tr>
+<tr><td>Issue's acceptance criteria (list, panel, Test, warning, constraints)</td><td>existing e2e and unit, kept green</td><td><code>options-tokens</code>, <code>options-token-panel</code>, <code>options-token-test</code>, <code>options-token-diagnostics</code>, <code>token-test</code>, <code>token-requirements</code></td></tr>
+<tr><td>Rest of Settings page unaffected</td><td>e2e</td><td>all <code>options-*.spec.js</code> (layout, responsive, a11y, theme, navigation)</td></tr>
+<tr><td>R1 per-type results with real tokens</td><td>manual by the maintainer</td><td>listed under "Not verified" in the PR</td></tr>
+</table>
+<p><b>Live check:</b> not applicable on github.com (extension page, no github.com anchor); the page itself is checked in Playwright at the widths above, before (c7d41e9) and after.</p>
+
+<h2>Assumptions</h2>
+<ul>
+<li>Sheet at ≤1023&nbsp;px, not ≤720 as the issue says — rejected: 720, because a 420&nbsp;px panel then leaves 28–325&nbsp;px of list (measured in review 4eee836); the reviewer accepted ≤1023 in the last round.</li>
+<li>Dark warning colours <code>#211c14</code> surface and <code>#9e6a03</code> border — rejected: reusing the saturated dark yellow, because the reviewer asked for a softer surface "in both themes" and the images are light only.</li>
+<li>With the <i>couldn't be verified</i> note, the row reads name | pill, (empty) | note, Used for | last test — rejected: putting the note after the last test, because the issue says "under the state" and the reviewer asked for it under the pill; Used for stays on the last-test line as in the images.</li>
+</ul>
+
+<h2>Risks and open questions</h2>
+<ul>
+<li>Re-rendering the list must keep an open repository check and focus (an adversarial finding fixed earlier). Default: keep today's node-preserving logic inside the new <code>render()</code>, and keep its regression test.</li>
+<li><code>subgrid</code> needs Chrome 117+. Default: acceptable for an MV3 extension in 2026; the stacked layout below 560&nbsp;px does not use it.</li>
+<li>The rebuild touches many selectors in existing specs. Default: change selectors only, never a behaviour assertion; any behaviour change is listed in the PR.</li>
+<li>R1 stays unverifiable by the agent (no real tokens). Default: named in the PR for the maintainer, as today.</li>
+</ul>
+
+<h2>Out of scope</h2>
+<ul><li>Any change to the Test engine, states, storage, token choice or request budget.</li><li>The notifications permission sub-block (slot kept).</li><li>New UI text beyond what the reviews already asked for.</li></ul>
+
+</main></body></html>
