@@ -62,6 +62,9 @@ test("Later hides it for this page; How to add it shows the steps in the warning
   await expect(page.locator("#full-guide")).toHaveJSProperty("open", false);
   await warning(page).getByRole("button", { name: "How to add it" }).click();
   await expect(page.locator("#warning-steps li")).toHaveCount(4);
+  await expect(page.locator("#warning-steps li").first().getByRole("link")).toHaveAttribute("href", "https://github.com/settings/tokens");
+  const ys = await page.evaluate(() => [document.querySelector(".warning-actions").getBoundingClientRect().bottom, document.querySelector("#warning-steps").getBoundingClientRect().top]);
+  expect(ys[1], `steps top ${ys[1]} must be below buttons bottom ${ys[0]}`).toBeGreaterThanOrEqual(ys[0]);
   await expect(page.locator("#full-guide")).toHaveJSProperty("open", false);
   broken = false;
   await warning(page).getByRole("button", { name: "Test again" }).click();

@@ -98,14 +98,14 @@ function resultHtml(e, r, { draft = false } = {}) {
     : `${ok} of ${total} OK.${missing.length ? ` Missing permissions: ${missing.join(", ")}.` : ""}`;
   const owner = e.isDefault ? "the owner" : e.owner || "the owner";
   const advice = r.outcome === "not-working"
-    ? ["Replace this token: create a new one on GitHub, use Edit → Replace token to paste it, then press Test."]
+    ? [["Replace this token:", "create a new one on GitHub, use Edit → Replace token to paste it, then press Test."]]
     : TYPES.filter((t) => req.has(t.id)).flatMap((t) => {
       const l = r.lines[t.id];
-      if (l.status === STATUS.DENIED) return [`${t.label}: on GitHub, edit this token and set ${t.label} to Read-only, then press Test again.`];
-      if (l.status === STATUS.NOT_VERIFIED) return [`${t.label}: we can't tell why. If ${owner} requires approval or SSO, see the SSO note below, then press Test again.`];
+      if (l.status === STATUS.DENIED) return [[`${t.label}:`, `on GitHub, edit this token and set ${t.label} to Read-only, then press Test again.`]];
+      if (l.status === STATUS.NOT_VERIFIED) return [[`${t.label}:`, `we can't tell why. If ${owner} requires approval or SSO, see the SSO note below, then press Test again.`]];
       return [];
     });
-  const adviceHtml = advice.length ? `<ul class="tr-advice">${advice.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>` : "";
+  const adviceHtml = advice.length ? `<ul class="tr-advice">${advice.map(([lead, body]) => `<li><strong>${escapeHtml(lead)}</strong> ${escapeHtml(body)}</li>`).join("")}</ul>` : "";
   return `<h3>${title}</h3>${r.outcome === "not-working" ? "" : `<ul class="tr-lines">${lines}</ul>`}<p class="tr-summary">${escapeHtml(summary)}</p>${adviceHtml}`;
 }
 
@@ -159,7 +159,7 @@ function renderWarning() {
   const tokens = entries().filter((e) => e.token).map((e) => ({ id: e.id, name: displayName(e), codes: tests[e.id]?.codes || null }));
   const w = laterHidden ? null : warningFor({ features: enabledFeatures(switches), tokens, version });
   box.hidden = !w;
-  if (!w) return;
+  if (!w) { document.getElementById("warning-steps").hidden = true; return; }
   box.dataset.ids = w.ids.join(",");
   document.getElementById("warning-title").textContent = w.title;
   document.getElementById("warning-body").textContent = `Tokens: ${w.tokens.map((n) => `«${n}»`).join(", ")}. Features you already use keep working.`;
@@ -173,6 +173,19 @@ function renderWarning() {
   });
   rows.push(Object.assign(document.createElement("li"), { className: "wp-note", textContent: "Read-only: GH Reloaded never writes to GitHub." }));
   document.getElementById("warning-details").replaceChildren(...rows);
+  const ol = document.getElementById("warning-steps");
+  const names = w.perms.map((p) => p.name).join(", ");
+  const classic = w.ids.map((id) => entryById(id)).some((e) => e && /^gh[pous]_/.test(e.token || ""));
+  const key = `${classic}|${names}`;
+  if (ol.dataset.key !== key) { ol.hidden = true; ol.dataset.key = key; }
+  const url = classic ? "https://github.com/settings/tokens" : "https://github.com/settings/personal-access-tokens";
+  const first = document.createElement("li");
+  const a = Object.assign(document.createElement("a"), { href: url, target: "_blank", rel: "noopener", textContent: "GitHub ↗" });
+  first.append("Open the token on ", a, " and edit it.");
+  const rest = classic
+    ? [`Tick the scopes that cover ${names} (read:project, public_repo or repo).`, "If the organization requires approval or SSO, authorize the token or wait for an admin.", "Come back here and press Test again."]
+    : [`Set ${names} to Read-only.`, "If the organization requires approval, wait for an admin to approve it.", "Come back here and press Test again."];
+  ol.replaceChildren(first, ...rest.map((t) => Object.assign(document.createElement("li"), { textContent: t })));
 }
 
 // --- Testing a saved token (a row) ---
@@ -582,13 +595,6 @@ tokensRoot.addEventListener("click", (e) => {
 document.getElementById("add-token").addEventListener("click", () => openPanel(null));
 document.getElementById("warning-how").addEventListener("click", () => {
   const ol = document.getElementById("warning-steps");
-  const ids = (document.getElementById("token-warning").dataset.ids || "").split(",").filter(Boolean);
-  const classic = ids.map((id) => entryById(id)).some((e) => e && /^gh[pous]_/.test(e.token || ""));
-  const names = [...document.querySelectorAll("#warning-details .wp-head strong")].map((n) => n.textContent).join(", ");
-  const steps = classic
-    ? ["Open github.com/settings/tokens and edit the token.", `Tick the scopes that cover ${names} (read:project, public_repo or repo).`, "If the organization requires approval or SSO, authorize the token or wait for an admin.", "Come back here and press Test again."]
-    : ["Open github.com/settings/personal-access-tokens and edit the token.", `Set ${names} to Read-only.`, "If the organization requires approval, wait for an admin to approve it.", "Come back here and press Test again."];
-  ol.replaceChildren(...steps.map((t) => Object.assign(document.createElement("li"), { textContent: t })));
   ol.hidden = false;
   ol.focus();
 });
