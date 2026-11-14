@@ -24,6 +24,12 @@ test("repo X → repo Y: the new repository is detected on its own", async ({ co
   await page.goto(JOB_URL);
   await expect(openBtn(page)).toBeVisible();
   await go(page, "/acme/api/actions/runs/5/job/6");
+  // pushState alone keeps the old page's DOM; a real navigation brings the new page's own raw-log link.
+  await page.evaluate(() => {
+    for (const a of document.querySelectorAll('a[href*="/checks/"][href$="/logs"], a.js-steps-dropdown-raw-logs')) {
+      a.setAttribute("href", a.getAttribute("href").replace("/acme/web/commit/", "/acme/api/commit/").replace(/\/checks\/\d+\/logs$/, "/checks/6/logs"));
+    }
+  });
   await expect.poll(async () => { await copyBtn(page).click(); return clip(page); }).toBe("gh run view --log-failed --job 6 --repo acme/api");
   await expect(row(page)).toHaveCount(1);
   await expect(openBtn(page)).toBeVisible({ timeout: 8000 });

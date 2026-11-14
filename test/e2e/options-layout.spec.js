@@ -2,12 +2,12 @@
 import { test, expect } from "./support/extension.js";
 import { openOptions } from "./support/options.js";
 
-const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt", "ghqa", "ghlps", "ghgs", "ghnt-reason-tags", "ghig"];
+const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt", "ghqa", "ghlps", "ghgs", "ghnt-reason-tags", "ghig", "ghals"];
 
-test("Features lists 13 switches and Configure only for Quick-create, Standup, My Issues, GitHub Status, Image gallery", async ({ context, page }) => {
+test("Features lists 14 switches and Configure only for Quick-create, Standup, My Issues, GitHub Status, Image gallery", async ({ context, page }) => {
   await openOptions(context, page);
   const features = page.locator("#features");
-  await expect(features.getByRole("switch")).toHaveCount(13);
+  await expect(features.getByRole("switch")).toHaveCount(14);
   for (const s of SWITCHES) await expect(page.locator(`#feature-${s}`)).toHaveCount(1);
   const links = features.locator("a.cfg");
   await expect(links).toHaveCount(5);
