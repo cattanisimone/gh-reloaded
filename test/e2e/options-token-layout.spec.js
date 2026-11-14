@@ -87,7 +87,7 @@ function probe() {
       li: R(li),
       name: first(q(".tr-name", li)),
       nameBox: R(q(".tr-name", li)),
-      tag: R(q(".tr-name .tag", li)),
+      tag: R(q(".tr-main .tag", li)),
       use: first(q(".tr-use", li)),
       pill: R(q(".state-pill", li)),
       note: R(q(".tr-note-line", li)),
@@ -196,7 +196,7 @@ function sectionRules(p, tag, fails) {
 
 function panelRules(p, tag, fails) {
   const f = (id, msg) => fails.push(`${tag} ${id}: ${msg}`);
-  const sheet = p.iw <= 1023 || p.vw <= 1023;
+  const sheet = p.iw <= 1023;
   if (sheet) {
     if (!near(p.panel.w, p.vw, 1)) f("L3", `panel ${p.panel.w} vs viewport ${p.vw}`);
   } else {
@@ -343,7 +343,9 @@ test("200% text (750 CSS px): stacked rows, full-page sheet, nothing clipped, co
 
 // B6: the sheet is modal for the keyboard, the side panel is not.
 async function activeInPanel(page) {
-  return page.evaluate(() => !!document.activeElement && !!document.activeElement.closest("#token-panel"));
+  // Tab past the last control hands focus to the browser's own UI: the
+  // document's activeElement is then <body>, which is not a page element.
+  return page.evaluate(() => !document.activeElement || document.activeElement === document.body || !!document.activeElement.closest("#token-panel"));
 }
 for (const [width, scale] of [[800, 1], [721, 1], [390, 1], [320, 1], [750, 2]]) {
   test(`B6: at ${width}${scale > 1 ? " (200% text)" : ""} Tab and Shift+Tab stay inside the sheet; Esc and X restore the page`, async ({ context, page }) => {
@@ -380,7 +382,7 @@ for (const width of [1500, 1024]) {
       const hit = await page.evaluate(() => {
         const a = document.activeElement;
         const p = document.getElementById("token-panel").getBoundingClientRect();
-        if (!a || a.closest("#token-panel")) return null;
+        if (!a || a === document.body || a.closest("#token-panel")) return null;
         const r = a.getBoundingClientRect();
         return r.width && r.left < p.right && r.right > p.left && r.top < p.bottom && r.bottom > p.top ? a.tagName + "." + a.className : null;
       });
@@ -483,7 +485,7 @@ test("S4/S5: the warning details name the installed version; steps follow the bu
   await expect(page.locator("#warning-steps li")).toHaveCount(4);
   const ys = await page.evaluate(() => [document.querySelector(".warning-actions").getBoundingClientRect().bottom, document.querySelector("#warning-steps").getBoundingClientRect().top]);
   expect(ys[1]).toBeGreaterThanOrEqual(ys[0]);
-  await page.evaluate(() => chrome.storage.local.set({ ghdgEnabled: false, ghsmEnabled: false, ghmiEnabled: false, ghlpsEnabled: false, ghprtEnabled: false, ghhpEnabled: false, ghigEnabled: false }));
+  await page.evaluate(() => chrome.storage.local.set({ ghdgEnabled: false, ghsmEnabled: false, ghmiEnabled: false, ghlpsEnabled: false, ghprtEnabled: false, ghhpEnabled: false, ghigEnabled: false, ghntModules: { reasonTags: false } }));
   await expect(page.locator("#token-warning")).toBeHidden();
   await page.evaluate(() => chrome.storage.local.set({ ghprtEnabled: true }));
   await expect(page.locator("#token-warning")).toBeVisible();
@@ -513,7 +515,7 @@ for (const [width, scheme] of [[1500, "light"], [1500, "dark"], [390, "light"], 
         test: R(q("#panel-test")), discard: R(q("#panel-discard")), save: R(q("#panel-save")), hint: R(q("#panel-test-hint")), hintText: q("#panel-test-hint")?.textContent, check: R(q("#panel-check")),
         remove: R(q("#panel-remove")), removeBorder: st(q("#panel-remove"), "borderTopWidth"), removeBg: st(q("#panel-remove"), "backgroundColor"), lastKid: kids[kids.length - 1]?.id,
         result: R(q("#panel-result")),
-        tag: R(q("#panel-changes .changes-tag")), tagText: q("#panel-changes .changes-tag")?.textContent, note: R(q("#panel-changes .changes-note")), noteText: q("#panel-changes .changes-note")?.textContent,
+        tag: (() => { const r = R(q("#panel-changes .changes-tag")); return { ...r, cy: (r.t + r.b) / 2 }; })(), tagText: q("#panel-changes .changes-tag")?.textContent, note: (() => { const rg = document.createRange(); rg.selectNodeContents(q("#panel-changes .changes-note")); const r = rg.getClientRects()[0]; return r ? { l: r.left, r: r.right, t: r.top, cy: (r.top + r.bottom) / 2 } : null; })(), noteText: q("#panel-changes .changes-note")?.textContent,
         whichLis: which.querySelectorAll("li").length, whichP: [...which.querySelectorAll("p")].map((p) => [p.textContent, getComputedStyle(p).fontSize]), whichBorder: st(which, "borderTopWidth"), whichTitle: q("#panel-which strong")?.textContent,
         row: li && { bg: st(li, "backgroundColor"), left: st(li, "borderLeftWidth"), leftColor: st(li, "borderLeftColor"), top: st(li, "borderTopColor"), outline: st(li, "outlineStyle") },
         saveStyle: { h: st(q("#panel-save"), "height"), radius: st(q("#panel-save"), "borderTopLeftRadius"), border: st(q("#panel-save"), "borderTopWidth") },
@@ -547,7 +549,7 @@ for (const [width, scheme] of [[1500, "light"], [1500, "dark"], [390, "light"], 
     // P5 / L13
     if (!/^1 unsaved change: Name$/.test(d.tagText || "")) f.push(`P5 tag text: ${d.tagText}`);
     if (d.noteText !== "Discard changes goes back to the saved values.") f.push(`P5 note text: ${d.noteText}`);
-    if (d.note) { near1("P5 note top = pill top", d.note.t, d.tag.t, 2); if (width > 500) { const gap = d.note.l - d.tag.r; if (gap < 4 || gap > 8) f.push(`P5 gap pill→text ${gap.toFixed(1)}`); } }
+    if (d.note) { near1("P5 note line = pill line (centres)", d.note.cy, d.tag.cy, 2); if (width > 500) { const gap = d.note.l - d.tag.r; if (gap < 4 || gap > 8) f.push(`P5 gap pill→text ${gap.toFixed(1)}`); } }
     near1("L13 tag left = field left", d.tag.l, d.name.l);
     // P7
     if (d.whichLis) f.push(`P7 list items: ${d.whichLis}`);

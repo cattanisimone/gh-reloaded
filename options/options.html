@@ -216,46 +216,6 @@
             Organization enforces SSO? Open <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">GitHub token settings ↗</a>
             and authorize the token for that organization, or ask an admin to approve it. Until then GitHub answers with empty results or a 404, and we can't tell why.
           </div>
-          <aside id="token-panel" class="token-panel" role="dialog" aria-modal="false" aria-labelledby="panel-title" hidden>
-            <div class="panel-head">
-              <h2 id="panel-title" class="panel-title" tabindex="-1">Edit token</h2>
-              <button id="panel-close" type="button" class="icon-btn" aria-label="Close">✕</button>
-            </div>
-            <p class="panel-save-note">Changes apply only when you press Save.</p>
-            <div class="panel-body">
-              <label class="field"><span class="field-label">Name <span class="field-hint">optional</span></span><input id="panel-name" type="text" placeholder="Work, Acme SSO…" autocomplete="off" /><span class="field-help">Only to recognise it in the list.</span></label>
-              <div class="field" id="panel-owner-field">
-                <label class="field-label" for="panel-owner">GitHub owner <span class="field-hint">required</span></label>
-                <input id="panel-owner" type="text" placeholder="acme-org" autocomplete="off" spellcheck="false" />
-                <span class="field-help">The user or organization this token is for.</span>
-                <span class="field-error" id="panel-owner-error" hidden></span>
-              </div>
-              <div class="field" id="panel-token-field">
-                <label class="field-label" for="panel-secret">Token</label>
-                <div class="saved-row" id="panel-saved" hidden><span class="saved-chip">Saved</span><button type="button" id="panel-replace" class="btn btn-secondary">Replace token</button></div>
-                <input id="panel-secret" type="password" class="tok-secret" placeholder="github_pat_… or ghp_…" autocomplete="off" spellcheck="false" />
-                <span class="field-help">For your safety a saved token is never shown again, not even in part.</span>
-                <span class="field-error" id="panel-secret-error" hidden></span>
-              </div>
-              <div class="which-box" id="panel-which"></div>
-              <p id="panel-changes" class="changes-tag" role="status" hidden></p>
-              <div class="actions">
-                <button id="panel-test" type="button" class="btn btn-secondary">Test</button>
-                <button id="panel-check" type="button" class="btn btn-secondary" aria-expanded="false" aria-controls="panel-diag">Check a specific repository</button>
-              </div>
-              <p id="panel-test-hint" class="field-help" hidden></p>
-              <p class="field-help">Test checks permissions without saving or changing anything.</p>
-              <div id="panel-result" class="tr-result" hidden></div>
-              <div id="panel-diag" class="diag-host" hidden></div>
-              <p id="panel-status" class="status" role="status"></p>
-            </div>
-            <div class="panel-foot">
-              <button id="panel-remove" type="button" class="link-btn danger">Remove token</button>
-              <span class="spacer"></span>
-              <button id="panel-discard" type="button" class="btn btn-secondary">Discard changes</button>
-              <button id="panel-save" type="button" class="btn btn-primary">Save</button>
-            </div>
-          </aside>
         </section>
 
         <section class="panel-view" id="shortcuts-section" aria-labelledby="shortcuts-title" hidden>
@@ -356,6 +316,44 @@
         </footer>
       </main>
     </div>
+
+    <aside id="token-panel" class="token-panel" role="dialog" aria-modal="false" aria-labelledby="panel-title" hidden>
+      <div class="panel-head">
+        <h2 id="panel-title" class="panel-title" tabindex="-1">Edit token</h2>
+        <button id="panel-close" type="button" class="icon-btn" aria-label="Close">✕</button>
+        <p class="panel-save-note">Changes apply only when you press Save.</p>
+      </div>
+      <div class="panel-body">
+        <label class="field"><span class="field-label">Name <span class="field-hint">optional</span></span><input id="panel-name" type="text" placeholder="Work, Acme SSO…" autocomplete="off" /><span class="field-help">Only to recognise it in the list.</span></label>
+        <div class="field" id="panel-owner-field">
+          <label class="field-label" for="panel-owner">GitHub owner <span class="field-hint">required</span></label>
+          <input id="panel-owner" type="text" placeholder="acme-org" autocomplete="off" spellcheck="false" />
+          <span class="field-help">The user or organization this token is for.</span>
+          <span class="field-error" id="panel-owner-error" hidden></span>
+        </div>
+        <div class="field" id="panel-token-field">
+          <label class="field-label" for="panel-secret">Token <span class="field-hint" id="panel-saved" hidden>Saved</span></label>
+          <input id="panel-secret" type="password" class="tok-secret" placeholder="github_pat_… or ghp_…" autocomplete="off" spellcheck="false" />
+          <span class="field-help">For your safety a saved token is never shown again, not even in part.</span>
+          <span class="field-error" id="panel-secret-error" hidden></span>
+          <button type="button" id="panel-replace" class="btn btn-secondary" hidden>Replace token</button>
+        </div>
+        <div class="which-box" id="panel-which"></div>
+        <p id="panel-changes" class="changes-line" role="status" hidden></p>
+        <div class="panel-actions">
+          <button id="panel-test" type="button" class="btn btn-secondary">Test</button>
+          <span class="spacer"></span>
+          <button id="panel-discard" type="button" class="btn btn-secondary">Discard changes</button>
+          <button id="panel-save" type="button" class="btn btn-primary">Save</button>
+        </div>
+        <p id="panel-test-hint" class="field-help"></p>
+        <button id="panel-check" type="button" class="btn btn-secondary check-btn" aria-expanded="false" aria-controls="panel-diag">Check a specific repository</button>
+        <div id="panel-result" class="tr-result" hidden></div>
+        <div id="panel-diag" class="diag-host" hidden></div>
+        <p id="panel-status" class="status" role="status"></p>
+        <button id="panel-remove" type="button" class="link-btn danger">Remove token</button>
+      </div>
+    </aside>
 
     <script type="module" src="options.js"></script>
   </body>
