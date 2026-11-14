@@ -598,3 +598,17 @@ test("pill and last test stay adjacent whatever the name does; the warning icon 
     expect(Math.abs(m.icon), `${width}px icon offset ${m.icon}`).toBeLessThanOrEqual(1.5);
   }
 });
+
+test("Used for sits directly under a one-line name and on the last-test line", async ({ context, page }) => {
+  for (const width of [1500, 1100]) {
+    await start(context, page, { tokens: TOKENS, size: { width, height: 900 } });
+    const m = await page.evaluate(() => [...document.querySelectorAll("#token-list .token-item")].map((li) => {
+      const r = (s) => li.querySelector(s).getBoundingClientRect();
+      return { gap: r(".tr-use").top - r(".tr-name").bottom, lastDelta: r(".tr-use").top - r(".tr-last").top, oneLine: r(".tr-name").height <= 21 };
+    }));
+    for (const x of m.filter((y) => y.oneLine)) {
+      expect(Math.abs(x.gap), `${width}px name→use ${JSON.stringify(m)}`).toBeLessThanOrEqual(1);
+      expect(Math.abs(x.lastDelta), `${width}px use↔last ${JSON.stringify(m)}`).toBeLessThanOrEqual(1);
+    }
+  }
+});
