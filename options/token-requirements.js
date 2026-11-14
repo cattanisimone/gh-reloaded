@@ -60,7 +60,6 @@ export function warningFor({ features, tokens, version }) {
   const denied = [];
   const unknown = [];
   const affected = new Map(); // feature id -> feature
-  const named = new Map(); // token id -> name
   for (const t of tokens) {
     if (!t.codes) continue; // never tested: nothing to say
     for (const f of features) {
@@ -70,31 +69,44 @@ export function warningFor({ features, tokens, version }) {
         if (!hit) continue;
         hit.push({ feature: f, type });
         affected.set(f.id, f);
-        named.set(t.id, t.name);
       }
     }
   }
   if (!affected.size) return null;
   const maybe = !denied.length;
-  const list = [...affected.values()];
+  const hits = maybe ? unknown : denied;
+  // Only what is proven (or, with nothing proven, what is unknown) is named:
+  // a token that was merely tested before a feature existed never turns a
+  // "may need" into a "need".
+  const shown = new Map();
+  const shownTokens = new Map();
+  for (const t of tokens) {
+    if (!t.codes) continue;
+    for (const { feature, type } of hits) {
+      const code = t.codes[type];
+      if (feature.types.includes(type) && (maybe ? code === undefined : code === "denied")) {
+        shown.set(feature.id, feature);
+        shownTokens.set(t.id, t.name);
+      }
+    }
+  }
+  const list = [...shown.values()];
   const first = list[0].name;
   const subject = list.length === 1 ? first : `${first} and ${list.length - 1} more`;
   const verb = list.length === 1 ? "needs" : "need";
   const title = maybe
     ? `${subject} may need a permission your token doesn't have`
     : `${subject} ${verb} a permission your token doesn't have`;
+  const perms = new Map();
   const seen = new Set();
-  const details = [];
-  for (const { feature, type } of maybe ? unknown : denied) {
+  for (const { feature, type } of hits) {
     const key = `${feature.id}:${type}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    details.push(`GH Reloaded ${version} uses ${typeName(type)} (Read-only) for ${feature.name}: ${feature.reason}.`);
-  }
-  const perms = new Map();
-  for (const { feature, type } of maybe ? unknown : denied) {
     if (!perms.has(type)) perms.set(type, { type, name: typeName(type), reasons: [] });
     perms.get(type).reasons.push(`${feature.name}: ${feature.reason}.`);
   }
-  return { title, tokens: [...named.values()], ids: [...named.keys()], details, perms: [...perms.values()], maybe };
+  // The per-permission reasons are listed once, in perms; details only names the version.
+  const details = [`GH Reloaded ${version} uses ${[...perms.values()].map((p) => p.name).join(", ")} (Read-only), as listed above.`];
+  return { title, tokens: [...shownTokens.values()], ids: [...shownTokens.keys()], details, perms: [...perms.values()], maybe };
 }

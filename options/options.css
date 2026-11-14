@@ -455,19 +455,18 @@ h1, .group h2 { scroll-margin-top: 12px; }
 .state-not-working { color: var(--bad); }
 .state-missing, .state-cant-verify { color: var(--warn); }
 .state-not-tested, .state-not-set, .state-testing { color: var(--muted); }
-.tr-note-line { grid-column: 2; grid-row: 2; color: var(--warn); font-size: 12px; line-height: 18px; }
+.tr-note-line { grid-column: 2; grid-row: 3; color: var(--warn); font-size: 12px; line-height: 18px; }
 .tr-use, .tr-last { color: var(--muted); font-size: 12px; line-height: 18px; }
 .tr-use { grid-column: 1; grid-row: 2; overflow-wrap: anywhere; }
 .tr-last { grid-column: 2; grid-row: 2; white-space: nowrap; }
-.has-note .tr-use, .has-note .tr-last { grid-row: 3; }
 .tr-actions { display: flex; grid-column: 3; grid-row: 1 / span 3; gap: 8px; align-self: center; justify-self: end; }
 @container (max-width: 559px) {
   .token-list { grid-template-columns: minmax(0, 1fr); }
   .tr-main, .tr-use, .state-pill, .tr-last, .tr-note-line, .tr-actions { grid-column: 1; }
   .tr-main { grid-row: 1; }
-  .tr-use, .has-note .tr-use { grid-row: 2; }
+  .tr-use { grid-row: 2; }
   .state-pill { grid-row: 3; margin-top: 8px; }
-  .tr-last, .has-note .tr-last { grid-row: 4; }
+  .tr-last { grid-row: 4; }
   .tr-note-line { grid-row: 5; }
   .tr-actions { grid-row: 6; margin-top: 8px; justify-self: start; }
 }
