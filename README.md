@@ -46,6 +46,7 @@ Go to [github.com/settings/personal-access-tokens/new](https://github.com/settin
 | Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues, confirming a Quick assignment (read-only), Notification reason tags (mentions) |
 | Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage, Linked PR status, Notification reason tags (review requests and mentions) |
 | Repository | **Contents** | **HTML preview** and **Image gallery** of files in private repos (public repos work without a token) |
+| Repository | **Actions** (optional) | **Open raw log** of the Actions log shortcuts; without it that button stays hidden and everything else works |
 | Repository | **Metadata** | added by GitHub automatically |
 | Organization | **Projects** | Projects v2 Status, Standup mode, My Issues project memberships |
 
@@ -243,6 +244,17 @@ On the inbox (`github.com/notifications`), every row gets a small tag on its own
 
 More features will land as their own entries here, each in its own folder under `features/` (and `background/` for anything they need server-side). See [Contributing](#contributing) for the shape a new one takes.
 
+### Actions log shortcuts — [features/actions-log-shortcuts](features/actions-log-shortcuts)
+
+Two shortcuts to the logs of a GitHub Actions run or job, above the page's content. The extension never reads log content, and it does not replace GitHub's log viewer.
+
+- **Copy gh command** (run and job pages) copies a ready command such as `gh run view --log-failed --job 132076068976 --repo OWNER/REPO` and announces "Copied" (or "Copy failed", leaving the command visible and selectable). It uses `--log-failed` only when the page shows its own run or job as failed, and `--log` otherwise (a successful, cancelled or timed-out run or job, or a job that did not fail inside a failed run); a job of an older attempt adds `--attempt <n>`. It is hidden while the run or job is in progress. It makes no request and never contains a token.
+- **Open raw log** (job pages only) opens the page's own "View raw logs" link in a new tab. It is shown only for a concluded job, when the page carries that link and your token can read that repository's Actions logs. The extension checks that with one read-only request per repository and token per minute (`GET /repos/OWNER/REPO/actions/jobs/ID/logs`, the redirect not followed and no log content read), and sends one more when you click.
+- Needs the optional **Actions: Read-only** permission on a fine-grained token (plus access to the repository); a classic token with `repo` usually already has it. Without it only **Open raw log** stays hidden. No message appears on Actions pages in any state; when the last check for an owner could not read Actions logs, **Settings → Features** and the token card used for that owner show a warning with the time of the check.
+- Switch it off under **Settings → Features**; the stored last outcome per owner is cleared then, and whenever you save or remove a token.
+
+![Actions log shortcuts mockup: a job page with Copy gh command and Open raw log above the job, fictional repository acme/web.](screenshots/actions-log-shortcuts.svg)
+
 ### Image gallery — [features/image-gallery](features/image-gallery)
 
 On a repository image file page (PNG, JPEG, WebP, GIF, and SVG in its Preview view), browse the other images of the same folder in a lightbox, without going back to the folder listing.
@@ -274,6 +286,7 @@ Needs no new permission: public repositories work without a token, and a private
 - **"Missing token" or empty data.** Add a token under **GitHub tokens** and run **Test**; private repositories and Projects need one.
 - **Data for one organization is missing.** Add an owner token for that owner, authorize it for SSO if required, then run **Verify access** on its card.
 - **No Status, Standup signals or project memberships.** The token lacks Projects access: use the organization **Projects** permission, or a classic token with `read:project` for personal-account Projects.
+- **Open raw log is missing.** It needs a concluded job, GitHub's own "View raw logs" link on the page (signed in) and a token that can read the repository's Actions logs: for a fine-grained token add **Actions: Read-only** and the repository, then save it (saving clears the old warning) and reload the job page. **Copy gh command** does not depend on any token. A job whose logs GitHub removed can still show the button; the click then says "Could not open log".
 - **A page GitHub redesigned.** The feature stays hidden rather than breaking the page; please open an issue with the page URL.
 
 ## Project layout

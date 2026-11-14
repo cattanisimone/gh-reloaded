@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" font-family="DejaVu Sans, sans-serif">
+<rect width="1200" height="520" fill="#fff"/>
+<text x="32" y="40" font-size="15" fill="#59636e">acme / web / Actions / <tspan font-weight="600" fill="#1f2328">CI #11</tspan> / test</text>
+<rect x="32" y="72" width="252" height="400" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<text x="48" y="104" font-size="13" fill="#1f2328">Summary</text>
+<text x="48" y="134" font-size="13" font-weight="600" fill="#1f2328">test</text>
+<rect x="316" y="72" width="852" height="28" fill="none"/>
+<rect x="878" y="72" width="134" height="28" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<rect x="877" y="71" width="136" height="30" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="7"/>
+<text x="945" y="91" font-size="12" font-weight="500" fill="#25292e" text-anchor="middle">Copy gh command</text>
+<rect x="1020" y="72" width="104" height="28" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<rect x="1019" y="71" width="106" height="30" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="7"/>
+<text x="1072" y="91" font-size="12" font-weight="500" fill="#25292e" text-anchor="middle">Open raw log</text>
+<rect x="316" y="116" width="808" height="64" fill="#fff" stroke="#d1d9e0" rx="6"/>
+<text x="334" y="142" font-size="14" font-weight="600" fill="#1f2328">Annotations</text>
+<text x="334" y="164" font-size="12" fill="#59636e">1 error and 1 notice</text>
+<rect x="316" y="196" width="808" height="276" fill="#fff" stroke="#d1d9e0" rx="6"/>
+<text x="334" y="226" font-size="14" font-weight="600" fill="#1f2328">test</text>
+<text x="334" y="246" font-size="12" fill="#59636e">failed in 47s</text>
+<text x="334" y="284" font-size="13" fill="#1f2328">✓ Set up job</text>
+<text x="334" y="314" font-size="13" fill="#d1242f">✕ Run unit + e2e tests</text>
+<text x="316" y="500" font-size="12" fill="#59636e">Dashed outlines mark what GH Reloaded adds. Open raw log shows only when your token can read Actions for the repository.</text>
+</svg>

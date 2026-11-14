@@ -294,3 +294,14 @@ test("site access is pinned too: content scripts and web-accessible resources st
   assert.equal(manifest.optional_permissions, undefined);
   assert.equal(manifest.optional_host_permissions, undefined);
 });
+
+test("Actions log shortcuts: permissions unchanged, files in the existing github.com entry", async () => {
+  const { readFileSync } = await import("node:fs");
+  const m = JSON.parse(readFileSync(new URL("../../manifest.json", import.meta.url), "utf8"));
+  assert.deepEqual(m.permissions, ["storage"]);
+  assert.deepEqual(m.host_permissions, ["https://api.github.com/*"]);
+  const entry = m.content_scripts.find((c) => c.js.includes("features/actions-log-shortcuts/content.js"));
+  assert.deepEqual(entry.matches, ["https://github.com/*"]);
+  assert.ok(entry.js.indexOf("features/actions-log-shortcuts/model.js") < entry.js.indexOf("features/actions-log-shortcuts/content.js"));
+  assert.ok(entry.css.includes("features/actions-log-shortcuts/content.css"));
+});
