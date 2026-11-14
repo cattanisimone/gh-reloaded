@@ -120,10 +120,9 @@ export function rowHtml(r) {
   return `<li class="token-item${r.editing ? " is-editing" : ""}${r.note ? " has-note" : ""}" data-id="${id}">
       <div class="token-row">
         <span class="tr-main"><span class="tr-name">${escapeHtml(r.name)}</span>${r.defaultTag ? '<span class="tag">default</span>' : ""}</span>
-        <span class="state-pill state-${r.state}">${escapeHtml(r.label)}</span>
+        <span class="tr-state"><span class="state-pill state-${r.state}">${escapeHtml(r.label)}</span><span class="tr-last">${escapeHtml(r.last)}</span></span>
         ${r.note ? `<span class="tr-note-line">${escapeHtml(r.note)}</span>` : ""}
         <span class="tr-use">${escapeHtml(r.use)}</span>
-        <span class="tr-last">${escapeHtml(r.last)}</span>
         <span class="tr-actions">${r.canTest ? testBtn("Test") : ""}<button type="button" class="btn btn-secondary" data-act="edit" data-id="${id}">Edit</button></span>
       </div>
       ${result}

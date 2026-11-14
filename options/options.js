@@ -213,8 +213,14 @@ function createDiag({ getToken, getOwner }) {
         const err = input.parentElement.querySelector(".field-error");
         err.textContent = parsed.errors[k] || "";
         err.hidden = !parsed.errors[k];
-        if (parsed.errors[k]) input.setAttribute("aria-invalid", "true");
-        else input.removeAttribute("aria-invalid");
+        if (parsed.errors[k]) {
+          input.setAttribute("aria-invalid", "true");
+          err.id = `diag-err-${k}`;
+          input.setAttribute("aria-describedby", err.id);
+        } else {
+          input.removeAttribute("aria-invalid");
+          input.removeAttribute("aria-describedby");
+        }
       }
       q(".diag-results").replaceChildren();
       q(".diag-meta").textContent = "";
@@ -354,6 +360,7 @@ function clearErrors() {
   for (const k of ["owner", "secret"]) {
     $p(`${k}-error`).hidden = true;
     $p(k).removeAttribute("aria-invalid");
+    $p(k).removeAttribute("aria-describedby");
   }
 }
 
@@ -362,6 +369,7 @@ function fieldError(k, msg) {
   el.textContent = msg;
   el.hidden = false;
   $p(k).setAttribute("aria-invalid", "true");
+  $p(k).setAttribute("aria-describedby", `panel-${k}-error`);
   $p(k).focus();
 }
 
@@ -494,6 +502,7 @@ panelEl.addEventListener("input", (e) => {
     panelEdited(e.target.id);
     $p(e.target.id === "panel-owner" ? "owner-error" : "secret-error").hidden = true;
     e.target.removeAttribute("aria-invalid");
+    e.target.removeAttribute("aria-describedby");
     render();
     return;
   }

@@ -79,7 +79,11 @@ test("owner is required, the error sits next to the field and the draft is kept"
   await page.locator("#panel-save").click();
   await expect(page.locator("#panel-owner-error")).toBeVisible();
   await expect(page.locator("#panel-owner")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.locator("#panel-owner")).toHaveAttribute("aria-describedby", "panel-owner-error");
   await expect(page.locator("#panel-owner")).toBeFocused();
+  await page.locator("#panel-owner").fill("acme");
+  await expect(page.locator("#panel-owner")).not.toHaveAttribute("aria-describedby", /.+/);
+  await page.locator("#panel-owner").fill("");
   await expect(page.locator("#panel-name")).toHaveValue("Work");
   expect((await storageOf(page, "local", "githubTokens")).githubTokens ?? []).toEqual([]);
 });

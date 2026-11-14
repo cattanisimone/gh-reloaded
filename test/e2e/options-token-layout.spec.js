@@ -149,7 +149,7 @@ function rowRules(p, layout, tag, fails) {
     if (Math.max(...lefts) - Math.min(...lefts) > 1) f("L6", `pill left edges ${lefts.map((x) => x.toFixed(1)).join(" / ")}`);
     for (const r of p.rows) {
       if (!near(r.name.cy, r.pill.cy, 1)) f("L7", `${r.id} name cy ${r.name.cy.toFixed(1)} vs pill cy ${r.pill.cy.toFixed(1)}`);
-      if (r.use && r.last && !near(r.use.cy, r.last.cy, 1)) f("L7", `${r.id} Used for cy ${r.use.cy.toFixed(1)} vs last test cy ${r.last.cy.toFixed(1)}`);
+      if (r.last && !near(r.last.t, r.pill.b, 1)) f("L7", `${r.id} last test top ${r.last.t.toFixed(1)} vs pill bottom ${r.pill.b.toFixed(1)}`);
       if (r.last.h > r.lastLine + 2) f("L8", `${r.id} last test ${r.last.h.toFixed(0)}px high (line ${r.lastLine})`);
       if (r.note && r.note.t < r.pill.b - 1) f("L9", `${r.id} note top ${r.note.t.toFixed(1)} above pill bottom ${r.pill.b.toFixed(1)}`);
       if (r.note && !near(r.note.l, r.pill.l, 1)) f("L9", `${r.id} note left ${r.note.l.toFixed(1)} vs pill left ${r.pill.l.toFixed(1)}`);
@@ -580,4 +580,21 @@ test("Add mode: one hint line under Test (L12)", async ({ context, page }) => {
   const f = [];
   panelRules(p, "[add]", f);
   expect(f.join("\n")).toBe("");
+});
+
+test("pill and last test stay adjacent whatever the name does; the warning icon sits on the title's first line", async ({ context, page }) => {
+  const long = { id: "x", name: "Team projects with a rather long descriptive name for stress", owner: "rossi-lab-engineering-organization", token: "ghp_LONG1234" };
+  for (const width of [1500, 1100, 800, 390]) {
+    await start(context, page, { tokens: [...TOKENS, long], size: { width, height: 900 } });
+    const m = await page.evaluate(() => {
+      const base = (el) => { const r = document.createRange(); r.selectNodeContents(el); const c = r.getClientRects(); return c[0].bottom; };
+      const rows = [...document.querySelectorAll("#token-list .token-item")].map((li) => base(li.querySelector(".tr-last")) - base(li.querySelector(".state-pill")));
+      const svg = document.querySelector("#token-warning .warning-head svg").getBoundingClientRect();
+      const t = document.querySelector("#warning-title"); const rg = document.createRange(); rg.selectNodeContents(t);
+      const f = rg.getClientRects()[0];
+      return { rows, icon: (svg.top + svg.bottom) / 2 - (f.top + f.bottom) / 2 };
+    });
+    for (const g of m.rows) expect(Math.abs(g - m.rows[0]), `${width}px gaps ${m.rows}`).toBeLessThanOrEqual(1);
+    expect(Math.abs(m.icon), `${width}px icon offset ${m.icon}`).toBeLessThanOrEqual(1.5);
+  }
 });
