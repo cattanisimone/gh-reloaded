@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { tokenView, rowHtml, resultHtml, resultView, warningDetailsHtml, stepsFor, warningStepsHtml, whichLines, testHint, displayName } from "../../options/token-view.js";
+import { tokenView, rowHtml, resultHtml, resultView, warningDetailsHtml, stepsFor, classicScopes, warningStepsHtml, whichLines, testHint, displayName } from "../../options/token-view.js";
 import { enabledFeatures, requiredTypes } from "../../options/token-requirements.js";
 import { runTokenTest } from "../../options/token-test.js";
 
@@ -128,4 +128,31 @@ test("steps: the opened steps never say scope(s) or scopes", () => {
     const s = stepsFor({ classic, names: "Projects", ids: ["a"] });
     assert.doesNotMatch([s.url, ...s.rest].join(" ").replace(/https?:\/\/\S+/g, ""), /scope/i);
   }
+});
+
+test("classic steps name the scopes that cover the missing types, not read:project for everything", () => {
+  const step = (types, names) => stepsFor({ classic: true, names, ids: ["a"], types }).rest[0];
+  assert.doesNotMatch(step(["pulls"], "Pull requests"), /read:project/);
+  assert.match(step(["pulls"], "Pull requests"), /\brepo\b/);
+  assert.match(step(["issues", "contents"], "Issues, Contents"), /repo \(or public_repo for public repositories only\)/);
+  assert.doesNotMatch(step(["issues", "contents"], "Issues, Contents"), /read:project/);
+  assert.match(step(["projects"], "Projects"), /\(read:project\)/);
+  assert.doesNotMatch(step(["projects"], "Projects"), /\brepo\b/);
+  assert.equal(classicScopes(["projects", "pulls"]), " (read:project, repo (or public_repo for public repositories only))");
+  assert.equal(classicScopes(["actions"]), " (repo)");
+  assert.equal(classicScopes(["actions", "pulls"]), " (repo)");
+  assert.doesNotMatch(step(["actions"], "Actions"), /public_repo/);
+  assert.equal(classicScopes([]), "");
+});
+
+test("the fine-grained steps keep their wording", () => {
+  assert.equal(stepsFor({ classic: false, names: "Pull requests", ids: ["a"], types: ["pulls"] }).rest[0], "Set Pull requests to Read-only.");
+});
+
+test("tokenView passes the missing types to the classic step", () => {
+  const entries = [{ id: "a", name: "Tok", isDefault: true, token: "ghp_abc" }];
+  const v = tokenView({ entries, tests: { a: { codes: { pulls: "denied" }, at: Date.now() } }, results: new Map(), runs: new Set(), required: new Set(["pulls"]), features: [{ id: "ghprt", name: "PR triage", types: ["pulls"], reason: "to read pull requests" }], version: "1.2.3", ui: { laterHidden: false, stepsKey: null, editingId: null, diags: new Set() } });
+  assert.ok(v.warning);
+  assert.doesNotMatch(v.warning.steps.rest[0], /read:project/);
+  assert.match(v.warning.steps.rest[0], /repo/);
 });

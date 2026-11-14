@@ -47,10 +47,23 @@ export function resultView(entry, r, { required, draft = false } = {}) {
   return { title, failed: "", lines: notWorking ? [] : lines, advice, summary, when: lastTestLabel(r.record), intro: notWorking ? "" : INTRO, canAdvise: true };
 }
 
-export function stepsFor({ classic, names, ids }) {
+// The classic-token scopes that cover the missing permission types. Projects is
+// read:project; Pull requests, Issues and Contents are repo (public_repo when
+// only public repositories matter); Actions logs need repo.
+export function classicScopes(types = []) {
+  const set = new Set(types);
+  const parts = [];
+  if (set.has("projects")) parts.push("read:project");
+  const repoPublic = ["pulls", "issues", "contents"].some((t) => set.has(t));
+  if (set.has("actions")) parts.push("repo");
+  else if (repoPublic) parts.push("repo (or public_repo for public repositories only)");
+  return parts.length ? ` (${parts.join(", ")})` : "";
+}
+
+export function stepsFor({ classic, names, ids, types = [] }) {
   const url = classic ? "https://github.com/settings/tokens" : "https://github.com/settings/personal-access-tokens";
   const rest = classic
-    ? [`Tick the permissions that cover ${names} (read:project, public_repo or repo).`, "If the organization requires approval or SSO, authorize the token or wait for an admin.", "Come back here and press Test again."]
+    ? [`Tick the permissions that cover ${names}${classicScopes(types)}.`, "If the organization requires approval or SSO, authorize the token or wait for an admin.", "Come back here and press Test again."]
     : [`Set ${names} to Read-only.`, "If the organization requires approval, wait for an admin to approve it.", "Come back here and press Test again."];
   return { key: `${classic}|${names}|${ids.join(",")}`, url, rest };
 }
@@ -86,7 +99,7 @@ export function tokenView({ entries, tests, results, runs, required, features, v
   if (w) {
     const names = w.perms.map((p) => p.name).join(", ");
     const classic = w.ids.map((id) => entries.find((e) => e.id === id)).some((e) => e && /^gh[pous]_/.test(e.token || ""));
-    const steps = stepsFor({ classic, names, ids: w.ids });
+    const steps = stepsFor({ classic, names, ids: w.ids, types: w.perms.map((p) => p.type) });
     warning = {
       ids: w.ids,
       title: w.title,
