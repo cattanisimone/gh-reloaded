@@ -493,10 +493,12 @@ h1, .group h2 { scroll-margin-top: 12px; }
 .warning-head { display: flex; align-items: center; gap: 8px; color: var(--warn); }
 .warning-body { margin: 0; color: var(--text); }
 .warning-details summary, .full-guide summary { color: var(--disclosure); font-weight: 600; cursor: pointer; }
-.warning-details ul { margin: 6px 0 0; padding: 0; list-style: none; color: var(--muted); }
-.warning-perm { display: grid; gap: 2px; padding: 6px 0; border-top: 1px solid var(--warn-line); }
-.wp-head { display: flex; align-items: center; gap: 8px; }
-.wp-tag { padding: 0 6px; border: 1px solid var(--warn-line); border-radius: 10px; font-size: 11px; }
+.warning-details ul { display: grid; gap: 6px; margin: 6px 0 0; padding: 0; list-style: none; color: var(--muted); }
+.warning-perm { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 8px 10px; border: 1px solid var(--warn-line); border-radius: 6px; background: var(--surface, #fff); }
+.wp-main { display: grid; gap: 2px; min-width: 0; }
+.wp-main strong { color: var(--text); }
+.wp-why { font-size: 12px; }
+.wp-tag { flex: none; padding: 0 6px; border: 1px solid var(--warn-line); border-radius: 10px; font-size: 11px; }
 .wp-uses { padding-top: 6px; font-size: 12px; }
 .wp-note { padding-top: 6px; font-size: 12px; }
 .warning-actions { display: flex; flex-wrap: wrap; gap: 8px; }

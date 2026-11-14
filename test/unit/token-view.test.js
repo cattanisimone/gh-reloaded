@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { tokenView, rowHtml, resultHtml, resultView, warningDetailsHtml, warningStepsHtml, whichLines, testHint, displayName } from "../../options/token-view.js";
+import { tokenView, rowHtml, resultHtml, resultView, warningDetailsHtml, stepsFor, warningStepsHtml, whichLines, testHint, displayName } from "../../options/token-view.js";
 import { enabledFeatures, requiredTypes } from "../../options/token-requirements.js";
 import { runTokenTest } from "../../options/token-test.js";
 
@@ -48,7 +48,7 @@ test("warning: per-permission rows, the version sentence and the read-only note 
   assert.deepEqual(w.perms.map((p) => p.name), ["Pull requests"]);
   assert.ok(w.uses.length >= 1 && w.uses.every((u) => u.startsWith("GH Reloaded 9.9.9 uses")));
   const html = warningDetailsHtml(w);
-  for (const p of w.perms) assert.ok(html.includes(p.name) && html.includes("Read-only") && html.includes(p.reasons.slice(0, 20)));
+  for (const p of w.perms) assert.ok(html.includes(p.name) && html.includes("Read-only") && p.reasons.every((r) => html.includes(r.slice(0, 20))));
   for (const u of w.uses) assert.ok(html.includes(u));
   assert.ok(html.includes("GH Reloaded never writes to GitHub."));
   assert.match(w.body, /«Work – acme-demo»/);
@@ -120,4 +120,11 @@ test("the token CSS block declares every selector once", () => {
   }
   const dups = [...seen].filter(([, n]) => n > 1).map(([s]) => s);
   assert.deepEqual(dups, []);
+});
+
+test("steps: the opened steps never say scope(s) or scopes", () => {
+  for (const classic of [true, false]) {
+    const s = stepsFor({ classic, names: "Projects", ids: ["a"] });
+    assert.doesNotMatch([s.url, ...s.rest].join(" ").replace(/https?:\/\/\S+/g, ""), /scope/i);
+  }
 });

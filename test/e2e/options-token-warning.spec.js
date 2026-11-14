@@ -28,6 +28,10 @@ test("appears from stored codes: names the feature and the token, details with t
   await expect(row).toHaveCount(1);
   await expect(row).toContainText("Pull requests");
   await expect(row.locator(".wp-tag")).toHaveText("Read-only");
+  const [rb, tb, nb] = await Promise.all([row.boundingBox(), row.locator(".wp-tag").boundingBox(), row.locator("strong").boundingBox()]);
+  expect(rb.x + rb.width - (tb.x + tb.width), `tag at the row's right edge: ${JSON.stringify({ rb, tb })}`).toBeLessThan(16);
+  expect(tb.x, `tag right of the name: ${JSON.stringify({ tb, nb })}`).toBeGreaterThan(nb.x + nb.width);
+  expect(await row.evaluate((e) => getComputedStyle(e).borderTopWidth)).toBe("1px");
   await expect(row).toContainText("Linked PR status: to show the status of linked pull requests.");
   await expect(page.locator("#warning-details")).toContainText("GH Reloaded never writes to GitHub.");
   await expect(warning(page).getByRole("button", { name: "How to add it" })).toBeVisible();

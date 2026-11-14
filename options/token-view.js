@@ -50,7 +50,7 @@ export function resultView(entry, r, { required, draft = false } = {}) {
 export function stepsFor({ classic, names, ids }) {
   const url = classic ? "https://github.com/settings/tokens" : "https://github.com/settings/personal-access-tokens";
   const rest = classic
-    ? [`Tick the scopes that cover ${names} (read:project, public_repo or repo).`, "If the organization requires approval or SSO, authorize the token or wait for an admin.", "Come back here and press Test again."]
+    ? [`Tick the permissions that cover ${names} (read:project, public_repo or repo).`, "If the organization requires approval or SSO, authorize the token or wait for an admin.", "Come back here and press Test again."]
     : [`Set ${names} to Read-only.`, "If the organization requires approval, wait for an admin to approve it.", "Come back here and press Test again."];
   return { key: `${classic}|${names}|${ids.join(",")}`, url, rest };
 }
@@ -91,7 +91,7 @@ export function tokenView({ entries, tests, results, runs, required, features, v
       ids: w.ids,
       title: w.title,
       body: `Tokens: ${w.tokens.map((n) => `«${n}»`).join(", ")}. Features you already use keep working.`,
-      perms: w.perms.map((p) => ({ name: p.name, tag: "Read-only", reasons: p.reasons.join(" ") })),
+      perms: w.perms.map((p) => ({ name: p.name, tag: "Read-only", reasons: p.reasons })),
       uses: w.details,
       readOnly: "Read-only: GH Reloaded never writes to GitHub.",
       steps: { ...steps, shown: ui.stepsKey === steps.key },
@@ -132,7 +132,7 @@ export function rowHtml(r) {
 }
 
 export function warningDetailsHtml(w) {
-  const perms = w.perms.map((p) => `<li class="warning-perm"><span class="wp-head"><strong>${escapeHtml(p.name)}</strong><span class="wp-tag">${escapeHtml(p.tag)}</span></span><span class="wp-why">${escapeHtml(p.reasons)}</span></li>`);
+  const perms = w.perms.map((p) => `<li class="warning-perm"><span class="wp-main"><strong>${escapeHtml(p.name)}</strong>${p.reasons.map((r) => `<span class="wp-why">${escapeHtml(r)}</span>`).join("")}</span><span class="wp-tag">${escapeHtml(p.tag)}</span></li>`);
   const uses = w.uses.map((u) => `<li class="wp-uses">${escapeHtml(u)}</li>`);
   return [...perms, ...uses, `<li class="wp-note">${escapeHtml(w.readOnly)}</li>`].join("");
 }

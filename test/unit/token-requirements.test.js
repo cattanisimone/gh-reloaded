@@ -33,7 +33,7 @@ test("warning names the feature, the tokens and the installed version", () => {
   assert.equal(w.title, "Linked PR status needs a permission your token doesn't have");
   assert.deepEqual(w.tokens, ["Work"]);
   assert.equal(w.maybe, false);
-  assert.deepEqual(w.details, ["GH Reloaded 1.7.0 uses Pull requests (Read-only), as listed above."]);
+  assert.deepEqual(w.details, ["GH Reloaded 1.7.0 uses Pull requests."]);
 });
 
 test("no denial: no warning; a type with no code in a tested record is 'may need'; untested tokens say nothing", () => {

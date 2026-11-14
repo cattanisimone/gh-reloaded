@@ -107,6 +107,6 @@ export function warningFor({ features, tokens, version }) {
     perms.get(type).reasons.push(`${feature.name}: ${feature.reason}.`);
   }
   // The per-permission reasons are listed once, in perms; details only names the version.
-  const details = [`GH Reloaded ${version} uses ${[...perms.values()].map((p) => p.name).join(", ")} (Read-only), as listed above.`];
+  const details = [`GH Reloaded ${version} uses ${[...perms.values()].map((p) => p.name).join(", ")}.`];
   return { title, tokens: [...shownTokens.values()], ids: [...shownTokens.keys()], details, perms: [...perms.values()], maybe };
 }
