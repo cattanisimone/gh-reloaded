@@ -124,9 +124,9 @@ test("draft model: unsaved tag, Discard, Remove then Discard, Remove then Save, 
   await rowEdit(page, 1).click();
   await expect(page.locator("#panel-changes")).toBeHidden();
   await page.locator("#panel-name").fill("Renamed");
-  await expect(page.locator("#panel-changes")).toHaveText("1 unsaved change: Name");
+  await expect(page.locator("#panel-changes .changes-tag")).toHaveText("1 unsaved change: Name");
   await page.locator("#panel-owner").fill("other-org");
-  await expect(page.locator("#panel-changes")).toHaveText("2 unsaved changes: Name, GitHub owner");
+  await expect(page.locator("#panel-changes .changes-tag")).toHaveText("2 unsaved changes: Name, GitHub owner");
   expect(await snapshot()).toEqual(before);
   await page.locator("#panel-discard").click();
   expect(await snapshot()).toEqual(before);
@@ -226,9 +226,9 @@ test("panel Test: a new token, a replaced token and a changed owner test the dra
   // new token
   await page.locator("#add-token").click();
   await expect(page.locator("#panel-test")).toBeDisabled();
-  await expect(page.locator("#panel-test-hint")).toHaveText("Enter a token to test it");
+  await expect(page.locator("#panel-test-hint")).toContainText("Enter a token to test it.");
   await page.locator("#panel-secret").fill("ghp_draftNEW1");
-  await expect(page.locator("#panel-test-hint")).toHaveText("Enter the GitHub owner to test it");
+  await expect(page.locator("#panel-test-hint")).toContainText("Enter the GitHub owner to test it.");
   await page.locator("#panel-owner").fill("new-org");
   await page.locator("#panel-test").click();
   await expect(page.locator("#panel-result")).toContainText("Result for the changes in this panel (not saved)");
