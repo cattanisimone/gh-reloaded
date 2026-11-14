@@ -121,7 +121,71 @@ function renderTokens(list, savedDefaultId) {
   defaultId = defaultRecord ? defaultRecord.id : genId();
   defaultSlot.innerHTML = defaultCardHtml(defaultRecord || { id: defaultId });
   ownerList.innerHTML = list.filter((t) => t !== defaultRecord).map(ownerCardHtml).join("");
+  renderGhalsWarnings();
 }
+
+// --- Actions log shortcuts: warnings from the last detection outcome ---
+// The background stores { "<owner>": { state: "ok" | "not-permitted", at } }; a
+// warning shows only for "not-permitted", while the feature is on, in the
+// Features row (all owners) and on the token card that serves each owner.
+let ghalsOutcomes = {};
+let ghalsOn = true;
+
+function ghalsWarningBox(owner, at, { onFeatures }) {
+  const box = document.createElement("div");
+  box.className = "callout warn ghals-warn";
+  const when = new Date(at).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const add = (tag, text, cls) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    e.textContent = text;
+    box.appendChild(e);
+    return e;
+  };
+  const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  icon.setAttribute("viewBox", "0 0 16 16");
+  icon.setAttribute("width", "16");
+  icon.setAttribute("height", "16");
+  icon.setAttribute("aria-hidden", "true");
+  icon.setAttribute("fill", "currentColor");
+  icon.innerHTML = '<path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm-.25-5.25a.75.75 0 0 0-1.5 0v2.5a.75.75 0 0 0 1.5 0Z"/>';
+  box.appendChild(icon);
+  if (onFeatures) {
+    add("strong", `Open raw log may be hidden for ${owner}`, "ghals-warn-title");
+    add("span", `The last check for ${owner} could not read Actions logs, so Open raw log may be hidden on its job pages. Copy gh command keeps working. To use it there: a fine-grained token with Actions: Read-only and access to the repository.`, "ghals-warn-body");
+    add("span", `Last check: ${when}`, "ghals-warn-when");
+    const a = add("a", "Open GitHub tokens", "ghals-warn-link");
+    a.href = "#tokens-section";
+  } else {
+    add("strong", `Actions logs not readable for ${owner}`, "ghals-warn-title");
+    add("span", `The last check for ${owner} could not read Actions logs. Open raw log may be hidden on ${owner}'s job pages; everything else keeps working. Optional: use a fine-grained token with Actions: Read-only and access to the repository.`, "ghals-warn-body");
+    add("span", `Last check: ${when}`, "ghals-warn-when");
+  }
+  return box;
+}
+
+function renderGhalsWarnings() {
+  for (const n of document.querySelectorAll(".ghals-warn")) n.remove();
+  if (!ghalsOn) return;
+  const features = document.getElementById("ghals-warnings");
+  const cards = [...document.querySelectorAll(".token-card")];
+  for (const [owner, o] of Object.entries(ghalsOutcomes || {})) {
+    if (!o || o.state !== "not-permitted") continue;
+    features.appendChild(ghalsWarningBox(owner, o.at, { onFeatures: true }));
+    const mine = cards.find((c) => (c.querySelector(".tok-owner")?.value || "").trim().toLowerCase() === owner.toLowerCase()) || cards.find((c) => c.classList.contains("is-default"));
+    if (mine) mine.appendChild(ghalsWarningBox(owner, o.at, { onFeatures: false }));
+  }
+}
+
+async function loadGhals() {
+  const o = await chrome.storage.local.get({ ghalsOutcomes: {}, ghalsEnabled: true });
+  ghalsOutcomes = o.ghalsOutcomes || {};
+  ghalsOn = o.ghalsEnabled !== false;
+  renderGhalsWarnings();
+}
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.ghalsOutcomes || changes.ghalsEnabled) loadGhals();
+});
 
 function readSecret(card) {
   return card.querySelector(".tok-secret").value.trim() || existingTokenById.get(card.dataset.id) || "";
@@ -536,6 +600,7 @@ const FEATURE_TOGGLES = [
   { key: "ghgsNotice", id: "feature-ghgs-notice", defaultOn: true },
   { key: "ghigEnabled", id: "feature-ghig", defaultOn: true },
   { key: "ghigAutoOpen", id: "feature-ghig-auto", defaultOn: true },
+  { key: "ghalsEnabled", id: "feature-ghals", defaultOn: true },
 ];
 
 async function loadFeatureToggles() {
@@ -564,6 +629,7 @@ chrome.storage.onChanged.addListener((changes) => {
 });
 
 loadFeatureToggles();
+loadGhals();
 
 // Notification reason tags live in the notifications engine's module map
 // (ghntModules: { id: boolean }), shared with later modules of that engine:
