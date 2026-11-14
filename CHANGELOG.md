@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.7.0...v1.8.0) (2026-11-14)
+
+
+### Features
+
+* add Copy gh command and an adaptive Open raw log shortcut on Actions run and job pages ([#133](https://github.com/cattanisimone/gh-reloaded/issues/133)) ([0ae5a58](https://github.com/cattanisimone/gh-reloaded/commit/0ae5a580a29e755d9fd8b942921a69e9db7aca01))
+* check notifications beyond the current page when a triage category is selected ([#127](https://github.com/cattanisimone/gh-reloaded/issues/127)) ([b1b5552](https://github.com/cattanisimone/gh-reloaded/commit/b1b5552f516f59f94a057b49d477c5734d72730c))
+
 ## [1.7.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.6.1...v1.7.0) (2026-11-07)
 
 
