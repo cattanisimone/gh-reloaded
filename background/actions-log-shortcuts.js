@@ -111,8 +111,9 @@ export const open = {
   async handleMessage(payload, sender) {
     const url = rawLogUrl(payload?.href, sender?.url);
     const route = jobRoute(sender?.url);
-    if (!url || !route) return { opened: false };
-    if ((await detectFor(route, { fresh: true })) !== "ok") return { opened: false };
+    if (!url || !route) return { opened: false, state: "unknown" };
+    const state = await detectFor(route, { fresh: true });
+    if (state !== "ok") return { opened: false, state };
     const opts = { url };
     if (sender?.tab?.id != null) {
       opts.openerTabId = sender.tab.id;
@@ -121,9 +122,9 @@ export const open = {
     try {
       await chrome.tabs.create(opts);
     } catch {
-      return { opened: false };
+      return { opened: false, state };
     }
-    return { opened: true };
+    return { opened: true, state };
   },
 };
 
