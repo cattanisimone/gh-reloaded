@@ -48,7 +48,7 @@ test("not-permitted warns in Features and on the owner's card; Open GitHub token
   await expect(f.locator(".ghals-warn-link")).toHaveAttribute("href", "#tokens-section");
   await expect(f.locator("svg[aria-hidden=true]")).toHaveCount(1);
   await page.goto(page.url().replace(/#.*$/, "") + "#tokens-section");
-  const card = page.locator("#tokens .token-card", { has: page.locator(".tok-owner[value=acme]") });
+  const card = page.locator("#tokens .token-item", { hasText: "Used for: acme" });
   await expect(card.locator(".ghals-warn")).toContainText("Actions logs not readable for acme");
   await expect(card.locator(".ghals-warn .ghals-warn-when")).toContainText("Last check:");
   await expect(page.locator("#tokens .ghals-warn")).toHaveCount(1);
@@ -57,7 +57,7 @@ test("not-permitted warns in Features and on the owner's card; Open GitHub token
 test("an owner without its own card warns on the default card", async ({ context, page }) => {
   await seed(context, { githubTokens: [{ id: "t1", name: "D", token: "x", owner: "" }], defaultTokenId: "t1" }, { ghalsOutcomes: NP });
   await openOptions(context, page, "#tokens-section");
-  await expect(page.locator("#tokens .token-card.is-default .ghals-warn")).toContainText("acme");
+  await expect(page.locator("#tokens .token-item:first-child .ghals-warn")).toContainText("acme");
 });
 
 test("switching the feature off hides the warning", async ({ context, page }) => {
