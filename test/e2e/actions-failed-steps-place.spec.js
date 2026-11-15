@@ -228,3 +228,16 @@ test("320 and 390: the open list fits the window with no horizontal scroll", asy
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   }
 });
+
+test("a relative time that grows inside its shadow root: the control refits and never meets GitHub's text", async ({ context, page }) => {
+  await open(context, page, 390, { name: LONG61 });
+  expect(await place(page)).toBe("subtitle-short");
+  await page.evaluate(() => {
+    class RT extends HTMLElement { constructor() { super(); this.attachShadow({ mode: "open" }).textContent = "now"; } }
+    customElements.define("relative-time", RT);
+  });
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => { document.querySelector("relative-time").shadowRoot.textContent = "12 minutes ago on a long queue"; });
+  await expect.poll(async () => (await place(page)) === "subtitle-short" ? await nearestText(page) : 99, { timeout: 8000 }).toBeGreaterThanOrEqual(7.5);
+  expect((await github(page)).height).toBe(80);
+});

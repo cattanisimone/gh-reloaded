@@ -472,6 +472,12 @@
     const items = c.list.querySelectorAll('[role="menuitem"]');
     (which === "last" ? items[items.length - 1] : items[0])?.focus();
     document.addEventListener("pointerdown", outsideClose, true);
+    window.addEventListener("scroll", followScroll, true);
+  }
+
+  // The list is fixed: it follows its button while the page scrolls.
+  function followScroll() {
+    if (fs && !fs.list.hidden) positionList(fs);
   }
 
   function closeList(c, refocus) {
@@ -479,6 +485,7 @@
     c.list.hidden = true;
     c.btn.setAttribute("aria-expanded", "false");
     document.removeEventListener("pointerdown", outsideClose, true);
+    window.removeEventListener("scroll", followScroll, true);
     if (refocus) c.btn.focus();
   }
 
@@ -550,6 +557,21 @@
   }
 
   function placeIn(c, parts) {
+    // Moving the control detaches it, which would drop keyboard focus to <body>.
+    const a = document.activeElement;
+    const focused = a && c.root.contains(a) ? (a === c.btn ? "btn" : a.dataset && a.dataset.number) : null;
+    placeNow(c, parts);
+    if (focused && c.root.isConnected && !c.root.contains(document.activeElement)) {
+      const target = focused === "btn" ? c.btn : c.list.querySelector(`[data-number="${focused}"]`) || c.list.querySelector('[role="menuitem"]') || c.btn;
+      try {
+        target.focus({ preventScroll: true });
+      } catch {
+        // focus is a convenience here
+      }
+    }
+  }
+
+  function placeNow(c, parts) {
     c.root.remove();
     const base = measure(parts, null);
     for (const p of M.PLACES) {
@@ -565,6 +587,7 @@
   function removeFs() {
     for (const n of document.querySelectorAll(".ghals-fs")) n.remove();
     document.removeEventListener("pointerdown", outsideClose, true);
+    window.removeEventListener("scroll", followScroll, true);
     if (resizeWatch && watched) resizeWatch.disconnect();
     watched = null;
     fs = null;
@@ -572,7 +595,22 @@
 
   function signature(c, parts, route) {
     const hr = parts.h.getBoundingClientRect();
-    return [route.path, document.documentElement.clientWidth, Math.round(hr.width), squash(parts.name.textContent), squash(parts.sub.textContent), parts.search ? Math.round(parts.search.getBoundingClientRect().width) : "x", c.key].join("|");
+    return [route.path, document.documentElement.clientWidth, Math.round(hr.width), squash(parts.name.textContent), squash(parts.sub.textContent), textWidth(parts.name), textWidth(parts.sub), parts.search ? Math.round(parts.search.getBoundingClientRect().width) : "x", c.key].join("|");
+  }
+
+  // The width GitHub's text takes. A <relative-time> draws its words in a shadow
+  // root: its textContent and no observer change, but its width does.
+  function textWidth(node) {
+    const r = document.createRange();
+    r.selectNodeContents(node);
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const q of r.getClientRects()) {
+      if (!q.width) continue;
+      lo = Math.min(lo, q.left);
+      hi = Math.max(hi, q.right);
+    }
+    return hi > lo ? Math.round(hi - lo) : 0;
   }
 
   const squash = (t) => String(t || "").replace(/\s+/g, " ").trim();
@@ -629,7 +667,7 @@
     if (c.sig === sig && c.root.isConnected && !changed) return;
     const was = c.place;
     placeIn(c, parts);
-    c.sig = sig;
+    c.sig = signature(c, parts, route);
     if (was !== c.place) closeList(c, false);
     positionList(c);
     observer && observer.takeRecords();
@@ -748,6 +786,10 @@
     observer = new MutationObserver(queue);
     observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["data-conclusion"] });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(queue);
+    // GitHub's own text can change without any DOM event (a relative time ticks in its shadow root): measure again now and then.
+    setInterval(() => {
+      if (fs && fs.place && fs.place !== "row" && !document.hidden) queue();
+    }, 1000);
     // A route change that swaps no DOM (history.pushState alone) fires no mutation: watch the path too.
     let lastPath = location.pathname;
     setInterval(() => {

@@ -210,3 +210,40 @@ test("native look of the control: 28px, 6px radius, no margin; focus ring 2px #0
   const o = await fsBtn(page).evaluate((e) => { const c = getComputedStyle(e); return { w: c.outlineWidth, c: c.outlineColor, off: c.outlineOffset }; });
   if (await fsBtn(page).evaluate((e) => e === document.activeElement)) expect(o).toEqual({ w: "2px", c: "rgb(9, 105, 218)", off: "-2px" });
 });
+
+test("a refit while the list is open keeps keyboard focus and Esc still closes it", async ({ context, page }) => {
+  await open(context, page, { page: { steps: two } });
+  await fsBtn(page).focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("ArrowDown");
+  await expect(fsList(page).getByRole("menuitem", { name: "Tests" })).toBeFocused();
+  // another step fails while the list is open
+  await page.evaluate(() => {
+    const s = document.querySelector("check-step[data-number='3']");
+    const c = s.cloneNode(true);
+    c.dataset.number = "9"; c.dataset.name = "Late"; c.dataset.conclusion = "failure";
+    c.querySelector("details").dataset.conclusion = "failure";
+    c.querySelector(".CheckStep-titleName").textContent = "Late";
+    s.parentElement.appendChild(c);
+  });
+  await expect(fsBtn(page)).toHaveText("Failed steps: 3");
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => !!document.activeElement.closest(".ghals-fs"))).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(fsList(page)).toBeHidden();
+  await expect(fsBtn(page)).toBeFocused();
+});
+
+test("the open list follows its button while the page scrolls", async ({ context, page }) => {
+  await open(context, page, { page: { steps: two } });
+  await fsBtn(page).click();
+  await expect(fsList(page)).toBeVisible();
+  await page.mouse.move(600, 500);
+  await page.mouse.wheel(0, 400);
+  await expect.poll(async () => {
+    const b = await rect(fsBtn(page));
+    const l = await rect(fsList(page));
+    return Math.round(l.top - b.bottom);
+  }).toBeLessThanOrEqual(6);
+  expect(Math.round((await rect(fsList(page))).top - (await rect(fsBtn(page))).bottom)).toBeGreaterThanOrEqual(2);
+});
