@@ -74,5 +74,80 @@
     return `gh run view ${route.run} ${flag}${att}${repo}`;
   }
 
-  globalThis.GHALS_MODEL = { parseRoute, readJobStatus, readRunStatus, flagFor, isConcluded, showCopy, readAttempt, buildCommand };
+  // --- Go to failed step / Failed steps: N (job pages) -------------------
+
+  // items: [{ number, name, conclusion }] read from the page's own step rows.
+  // Only steps the page shows as failed, one per step number, in execution
+  // order (the step number; the page order when a number cannot be read).
+  function failedSteps(items) {
+    const seen = new Set();
+    const out = [];
+    for (const it of items || []) {
+      if (!it || it.conclusion !== "failure") continue;
+      const number = String(it.number == null ? "" : it.number).trim();
+      if (number && seen.has(number)) continue;
+      if (number) seen.add(number);
+      out.push({ number, name: squash(it.name) || `Step ${number || out.length + 1}` });
+    }
+    const n = (s) => (/^\d+$/.test(s.number) ? Number(s.number) : null);
+    return out
+      .map((s, i) => ({ s, i }))
+      .sort((a, b) => {
+        const x = n(a.s);
+        const y = n(b.s);
+        return x != null && y != null && x !== y ? x - y : a.i - b.i;
+      })
+      .map((e) => e.s);
+  }
+
+  const fullLabel = (count) => (count === 1 ? "Go to failed step" : `Failed steps: ${count}`);
+  const labelFor = (count, short) => (count < 1 ? null : short ? (count === 1 ? "Go to failure" : `Failed: ${count}`) : fullLabel(count));
+  const stepKey = (steps) => steps.map((s) => `${s.number}\u0001${s.name}`).join("\u0002");
+
+  // The candidate places, in the order the control takes the first that fits.
+  const PLACES = [
+    { id: "name", short: false },
+    { id: "subtitle", short: false },
+    { id: "name", short: true },
+    { id: "subtitle", short: true },
+    { id: "edge", short: false },
+  ];
+
+  const MIN_GAP = 8;
+  const EPS = 0.5;
+
+  function rectDistance(a, b) {
+    const dx = Math.max(0, a.left - b.right, b.left - a.right);
+    const dy = Math.max(0, a.top - b.bottom, b.top - a.bottom);
+    return Math.hypot(dx, dy);
+  }
+
+  // base: GitHub's header as it is without the control; trial: the same
+  // measurements with the control in the place `id`. Every field is a number
+  // or a rect measured by content.js, so the rule is testable without a DOM.
+  //   header { top, bottom, height, covered }   lines [per text]   overflow [per clip box]
+  //   texts  [visible rects of GitHub's name and subtitle]   ctrl rect   win { w, h }
+  function fits(base, trial, id) {
+    const bad = (reason) => ({ ok: false, reason });
+    const c = trial.ctrl;
+    const w = trial.win;
+    if (!c) return bad("no control");
+    if (id === "edge") {
+      if (c.left < -EPS || c.top < -EPS || c.right > w.w + EPS || c.bottom > w.h + EPS) return bad("outside the window");
+      return { ok: true, reason: "" };
+    }
+    if (Math.abs(trial.header.height - base.header.height) > EPS) return bad("header height changed");
+    if (Math.abs(trial.header.covered - base.header.covered) > EPS) return bad("covered stack changed");
+    if (base.lines.length !== trial.lines.length || base.lines.some((n, i) => n !== trial.lines[i])) return bad("text lines changed");
+    if (base.overflow.length !== trial.overflow.length || base.overflow.some((n, i) => Math.abs(n - trial.overflow[i]) > EPS)) return bad("text overflow changed");
+    if (c.top < trial.header.top - EPS || c.bottom > trial.header.bottom + EPS) return bad("outside the header");
+    if (c.left < -EPS || c.right > w.w + EPS) return bad("outside the window");
+    for (const t of trial.texts) if (rectDistance(c, t) < MIN_GAP - 0.01) return bad("less than 8px from GitHub's text");
+    return { ok: true, reason: "" };
+  }
+
+  const landingDelta = (titleTop, covered) => titleTop - covered;
+  const needsScroll = (delta) => Math.abs(delta) > 1;
+
+  globalThis.GHALS_MODEL = { parseRoute, readJobStatus, readRunStatus, flagFor, isConcluded, showCopy, readAttempt, buildCommand, failedSteps, fullLabel, labelFor, stepKey, PLACES, fits, landingDelta, needsScroll };
 })();
