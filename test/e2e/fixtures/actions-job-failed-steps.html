@@ -5,9 +5,9 @@
 :root{--button-default-bgColor-rest:#f6f8fa;--button-default-bgColor-hover:#eff2f5;--button-default-bgColor-active:#e6eaef;--button-default-borderColor-rest:#d1d9e0;--button-default-fgColor-rest:#25292e;--bgColor-default:#fff;--bgColor-muted:#f6f8fa;--overlay-bgColor:#fff;--borderColor-default:#d1d9e0;--fgColor-default:#1f2328;--fgColor-muted:#59636e}
 html[data-color-mode=dark]{--button-default-bgColor-rest:#212830;--button-default-bgColor-hover:#262c36;--button-default-bgColor-active:#2a313c;--button-default-borderColor-rest:#3d444d;--button-default-fgColor-rest:#f0f6fc;--bgColor-default:#0d1117;--bgColor-muted:#151b23;--overlay-bgColor:#151b23;--borderColor-default:#3d444d;--fgColor-default:#f0f6fc;--fgColor-muted:#9198a1;color-scheme:dark}
 html[data-color-mode=dark] body{background:#0d1117;color:#f0f6fc}
-body{margin:0;font:14px/1.5 "Liberation Mono","DejaVu Sans Mono","Courier New",monospace;letter-spacing:-1.7px;color:#1f2328;background:#fff}
-button.ghals-btn{letter-spacing:-1.2px}
-.ghals-fs-list button{letter-spacing:-1.2px}
+body{margin:0;font:14px/1.5 "Liberation Mono","DejaVu Sans Mono","Courier New",monospace;letter-spacing:var(--ls-body,-1.7px);color:#1f2328;background:#fff}
+button.ghals-btn{letter-spacing:var(--ls-btn,-1.2px)}
+.ghals-fs-list button{letter-spacing:var(--ls-btn,-1.2px)}
 .PageLayout-columns{display:block;padding:24px 0}
 .pane{display:none}
 .PageLayout-content{margin-left:361px;margin-right:25px;min-width:0}
@@ -19,11 +19,11 @@ button.ghals-btn{letter-spacing:-1.2px}
 .color-fg-muted{color:#59636e}.text-bold{font-weight:600}.no-underline{text-decoration:none}a{color:inherit}
 .d-none{display:none}.d-md-block{display:block}.d-md-none{display:none}
 @media(max-width:767px){.d-md-block{display:none}.d-md-none{display:flex}.d-none.d-md-block{display:none}}
-.f4{font-size:16px;line-height:24px;letter-spacing:-2.45px}.f6{font-size:12px;line-height:18px;letter-spacing:-1.8px}
+.f4{font-size:16px;line-height:24px;letter-spacing:var(--ls-f4,-2.45px)}.f6{font-size:12px;line-height:18px;letter-spacing:var(--ls-f6,-1.8px)}
 .two-line-wrapping{display:inline}
 #check-step-header-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .css-truncate{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:top;white-space:nowrap}
-h4{margin:0;font-size:16px;font-weight:600;line-height:24px;letter-spacing:-2.45px}
+h4{margin:0;font-size:16px;font-weight:600;line-height:24px;letter-spacing:var(--ls-f4,-2.45px)}
 .CheckRun{background:#fff}
 [class*="CheckRun-header"]{position:sticky;top:0;z-index:2;box-sizing:border-box;height:80px;margin-bottom:8px;padding:0 16px 0 24px;display:flex;align-items:center;justify-content:space-between;background:#f6f8fa;border-bottom:1px solid #d1d9e0}
 html[data-color-mode=dark] [class*="CheckRun-header"]{background:#151b23;border-color:#3d444d}
@@ -49,7 +49,14 @@ html[data-color-mode=dark] .CheckStep-header{background:#0d1117}
 .ghals-row-spacer{height:0}
 .Box{border:1px solid #d1d9e0;padding:16px;border-radius:6px}
 .text-mono{font-family:inherit}.text-small{font-size:12px}.float-right{margin-left:auto}
-</style></head><body>
+</style>
+<script>
+// The text is monospace, but the face differs by machine (Liberation Mono 0.6em, DejaVu Sans Mono 0.602em): set the letter-spacing from the measured advance so every character is exactly as wide on every machine.
+(function(){var cv=document.createElement("canvas").getContext("2d"),fam='"Liberation Mono","DejaVu Sans Mono","Courier New",monospace';
+function ls(px,w,target){cv.font=w+" "+px+"px "+fam;return (target-cv.measureText("0".repeat(100)).width/100).toFixed(4)+"px"}
+var r=document.documentElement.style;r.setProperty("--ls-body",ls(14,400,6.7));r.setProperty("--ls-btn",ls(14,400,7.2));r.setProperty("--ls-f4",ls(16,400,7.15));r.setProperty("--ls-f6",ls(12,400,5.4))})();
+</script>
+</head><body>
 <div class="PageLayout-columns"><div class="pane"><nav aria-label="Workflow run"><ul><li><a data-test-selector="summary-link" href="/acme/web/actions/runs/11"><span>Summary</span></a></li><li><a href="/acme/web/actions/runs/11/job/22">test</a></li></ul></nav></div>
 <div class="PageLayout-region PageLayout-content"><div class="PageHeader-leadingVisual actions-workflow-runs-status"><svg aria-label="failed: " width="16" height="16"></svg></div>
 <section aria-label="Check run summary" data-hpc="" class="actions-fullwidth-module js-selected-check-run d-flex flex-auto min-width-0 tmp-mb-3 rounded-md-1 color-bg-subtle">

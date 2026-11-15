@@ -11,7 +11,7 @@ const two = [...one, { n: 3, name: "Lint", conclusion: "failure", log: 100 }];
 const SHORT = "test (race mode)";
 const LONG61 = "x".repeat(61);
 const LONG79 = "y".repeat(79);
-const LONGSUB = { name: "z".repeat(53), sub: "failed 2 days ago in 21m 8s on a runner with a very long description tail" };
+const LONGSUB = { name: "z".repeat(53), sub: "failed 12 days ago in 21m 18s on a runner with a very long description tail" };
 
 async function open(context, page, width, opts = {}, height = 900) {
   await page.setViewportSize({ width, height });
