@@ -81,6 +81,7 @@ test("isRoute: only the Conversation tab of a pull request", () => {
 
 test("boundMs: a positive integer override, otherwise the measured default", () => {
   assert.equal(M.BOUND_MS, 6000);
+  assert.equal(M.CONCURRENCY, 3);
   assert.equal(M.boundMs(undefined), 6000);
   assert.equal(M.boundMs("600"), 600);
   assert.equal(M.boundMs("0"), 6000);

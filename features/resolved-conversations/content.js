@@ -226,16 +226,21 @@
     scan();
     const ms = M.boundMs(document.documentElement.dataset.ghrcBoundMs);
     try {
-      // One at a time: GitHub's lazy load of each conversation is the heavy part.
-      for (const p of before.list) {
-        if (location.pathname !== path || !p.thread.isConnected || isOpen(p)) continue;
-        const settled = settle(p, ms);
-        // A conversation whose button already says open (its content still loading or failed)
-        // is only waited for: a click would close it.
-        if (p.button.getAttribute("aria-expanded") !== "true") p.button.click();
-        await settled;
-        await tick();
-      }
+      // A few at a time: GitHub's lazy load of each conversation is the heavy part.
+      let next = 0;
+      const worker = async () => {
+        while (next < before.list.length) {
+          const p = before.list[next++];
+          if (location.pathname !== path || !p.thread.isConnected || isOpen(p)) continue;
+          const settled = settle(p, ms);
+          // A conversation whose button already says open (its content still loading or failed)
+          // is only waited for: a click would close it.
+          if (p.button.getAttribute("aria-expanded") !== "true") p.button.click();
+          await settled;
+          await tick();
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(M.CONCURRENCY, before.list.length) }, worker));
     } finally {
       st.busy = false;
     }

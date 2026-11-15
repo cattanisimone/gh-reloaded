@@ -212,7 +212,7 @@ test.describe("Settings switch", () => {
 
 test.describe("Many conversations, slow and failing loads", () => {
   test("40 conversations: the status comes only after the last one is open, and the page stays responsive", async ({ context, page }) => {
-    await setup(context, { delay: 30 });
+    const { stats } = await setup(context, { delay: 30 });
     await page.goto(`${PR}?n=40`);
     await expect(label(page)).toHaveText("40 resolved conversations");
     await page.evaluate(() => {
@@ -226,6 +226,9 @@ test.describe("Many conversations, slow and failing loads", () => {
     await expect(label(page)).toHaveText("40 resolved conversations");
     await expect(status(page)).toHaveText("40 resolved conversations expanded", { timeout: 30000 });
     expect(await expanded(page).count()).toBe(40);
+    // A few at a time, never all at once.
+    expect(stats.maxInflight).toBeGreaterThan(1);
+    expect(stats.maxInflight).toBeLessThanOrEqual(3);
     expect(await page.evaluate(() => window.__long)).toBeLessThan(400);
     await expect(button(page)).not.toHaveAttribute("aria-disabled", "true");
   });

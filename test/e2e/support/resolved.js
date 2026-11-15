@@ -20,6 +20,7 @@ export async function setup(context, opts = {}) {
   if (storage) await seedStorage(context, storage);
   const html = fs.readFileSync(path.join(FIXTURES_DIR, "pr-conversation-resolved.html"), "utf8");
   const requests = [];
+  const stats = { inflight: 0, maxInflight: 0 };
   await context.route("https://github.com/**", async (route) => {
     const req = route.request();
     const url = new URL(req.url());
@@ -33,7 +34,9 @@ export async function setup(context, opts = {}) {
       const mode = fragment(Number(m[1]));
       if (mode === "hang") return; // never answered
       if (mode === "500") return route.fulfill({ status: 500, body: "error" });
+      stats.maxInflight = Math.max(stats.maxInflight, ++stats.inflight);
       await new Promise((r) => setTimeout(r, delay));
+      stats.inflight--;
       return route.fulfill({ status: 200, contentType: "text/html", body: `<div class="thread-content">Comment ${m[1]} (loaded)</div>` });
     }
     return route.abort();
@@ -43,7 +46,7 @@ export async function setup(context, opts = {}) {
     apiCalls.push(route.request().url());
     return route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
   });
-  return { requests, apiCalls };
+  return { requests, apiCalls, stats };
 }
 
 // Geometry of the bar against the first resolved thread, in CSS px.
