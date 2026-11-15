@@ -37,19 +37,48 @@ async function settle(page) {
 }
 const place = (page) => fsRoot(page).getAttribute("data-place");
 
-// GitHub's own header, as the reader sees it: its height, the covered stack, and each text's lines and visible rects.
-const github = (page) => page.evaluate(() => {
-  const h = document.querySelector('[class*="CheckRun-header"]');
-  const title = h.querySelector('[class*="CheckRun-log-title"]');
-  const vis = (list) => list.find((n) => n.getClientRects().length);
-  const name = vis([...title.querySelectorAll("#check-step-header-title, h4")]);
-  const sub = title.querySelector("span.js-updatable-content");
+// The visible boxes of the text under a node as the reader sees it: each text node's lines cut by every ancestor that clips them (the h4's css-truncate spans, the two-line clamp) and by the title block; <relative-time> by its own box. Installed in the page before each measurement.
+const VISIBLE_RECTS = (node, title) => {
   const clip = title.getBoundingClientRect();
-  const rects = (n) => { const r = document.createRange(); r.selectNodeContents(n); return [...r.getClientRects()].filter((q) => q.width && q.height && q.right > clip.left && q.left < clip.right).map((q) => ({ left: Math.max(q.left, clip.left), right: Math.min(q.right, clip.right), top: q.top, bottom: q.bottom })).map((q) => [Math.round(q.left), Math.round(q.top), Math.round(q.right), Math.round(q.bottom)]); };
-  const lines = (rs) => new Set(rs.map((q) => q[1])).size;
-  const nr = rects(name), sr = rects(sub);
-  return { height: h.getBoundingClientRect().height, covered: h.getBoundingClientRect().height + parseFloat(getComputedStyle(h).marginBottom), lines: [lines(nr), lines(sr)], name: JSON.stringify(nr), sub: JSON.stringify(sr), overflow: [name.scrollWidth - name.clientWidth, sub.scrollWidth - sub.clientWidth] };
-});
+  const out = [];
+  const add = (q, from) => {
+    if (!q.width || !q.height) return;
+    let l = Math.max(q.left, clip.left), r = Math.min(q.right, clip.right), t = q.top, b = q.bottom;
+    for (let a = from; a && a !== title; a = a.parentElement) {
+      const cs = getComputedStyle(a);
+      if (cs.overflowX === "visible" && cs.overflowY === "visible") continue;
+      const bb = a.getBoundingClientRect();
+      l = Math.max(l, bb.left); r = Math.min(r, bb.right); t = Math.max(t, bb.top); b = Math.min(b, bb.bottom);
+    }
+    if (r > l && b > t) out.push({ left: l, right: r, top: t, bottom: b });
+  };
+  const w = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+  for (let n = node; n; n = w.nextNode()) {
+    if (n.nodeType === 3) {
+      if (!n.nodeValue.trim()) continue;
+      const rg = document.createRange();
+      rg.selectNodeContents(n);
+      for (const q of rg.getClientRects()) add(q, n.parentElement);
+    } else if (n.shadowRoot) for (const q of n.getClientRects()) add(q, n);
+  }
+  return out;
+};
+const installRects = (page) => page.evaluate(`window.__visibleRects = ${VISIBLE_RECTS.toString()}`);
+
+// GitHub's own header, as the reader sees it: its height, the covered stack, and each text's lines and visible rects.
+const github = async (page) => {
+  await installRects(page);
+  return page.evaluate(() => {
+    const h = document.querySelector('[class*="CheckRun-header"]');
+    const title = h.querySelector('[class*="CheckRun-log-title"]');
+    const name = [...title.querySelectorAll("#check-step-header-title, h4")].find((n) => n.getClientRects().length);
+    const sub = title.querySelector("span.js-updatable-content");
+    const rects = (n) => window.__visibleRects(n, title).map((q) => [Math.round(q.left), Math.round(q.top), Math.round(q.right), Math.round(q.bottom)]);
+    const lines = (rs) => new Set(rs.map((q) => q[1])).size;
+    const nr = rects(name), sr = rects(sub);
+    return { height: h.getBoundingClientRect().height, covered: h.getBoundingClientRect().height + parseFloat(getComputedStyle(h).marginBottom), lines: [lines(nr), lines(sr)], name: JSON.stringify(nr), sub: JSON.stringify(sr) };
+  });
+};
 // The same measurements with the control taken out of the page.
 async function withoutControl(page) {
   const tag = await page.addStyleTag({ content: ".ghals-fs{display:none!important}" });
@@ -58,27 +87,23 @@ async function withoutControl(page) {
   return g;
 }
 // Clearance from the control to GitHub's visible name and subtitle text, on any line: the larger of the horizontal and the vertical gap between the control and each glyph box (the text rect inset by 3px above and below), the smallest over all texts (Infinity: none). Same measure as the model's.
-const nearestText = (page) => page.evaluate(() => {
-  const c = document.querySelector(".ghals-fs").getBoundingClientRect();
-  const title = document.querySelector('[class*="CheckRun-header"] [class*="CheckRun-log-title"]');
-  const clip = title.getBoundingClientRect();
-  let best = Infinity;
-  const names = [...title.querySelectorAll("#check-step-header-title, h4")].map((n) => n.querySelector("span") || n);
-  for (const n of [...names, title.querySelector("span.js-updatable-content")]) {
-    if (!n.getClientRects().length) continue;
-    const r = document.createRange();
-    r.selectNodeContents(n);
-    for (const q of r.getClientRects()) {
-      if (!q.width || !q.height) continue;
-      const l = Math.max(q.left, clip.left), rt = Math.min(q.right, clip.right);
-      if (rt <= l) continue;
-      const gx = Math.max(0, c.left - rt, l - c.right);
-      const gy = Math.max(0, c.top - (q.bottom - 3), q.top + 3 - c.bottom);
-      best = Math.min(best, Math.max(gx, gy));
+const nearestText = async (page) => {
+  await installRects(page);
+  return page.evaluate(() => {
+    const c = document.querySelector(".ghals-fs").getBoundingClientRect();
+    const title = document.querySelector('[class*="CheckRun-header"] [class*="CheckRun-log-title"]');
+    let best = Infinity;
+    const name = [...title.querySelectorAll("#check-step-header-title, h4")].find((n) => n.getClientRects().length);
+    for (const n of [name, title.querySelector("span.js-updatable-content")]) {
+      for (const q of window.__visibleRects(n, title)) {
+        const gx = Math.max(0, c.left - q.right, q.left - c.right);
+        const gy = Math.max(0, c.top - (q.bottom - 3), q.top + 3 - c.bottom);
+        best = Math.min(best, Math.max(gx, gy));
+      }
     }
-  }
-  return best;
-});
+    return best;
+  });
+};
 const box = (loc) => loc.evaluate((e) => { const r = e.getBoundingClientRect(); return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height }; });
 
 const CASES = [
@@ -247,4 +272,54 @@ test("a relative time that grows inside its shadow root: the control refits and 
   await page.evaluate(() => { document.querySelector("relative-time").shadowRoot.textContent = "12 minutes ago on a long queue"; });
   await expect.poll(async () => (await place(page)) === "subtitle-short" ? await nearestText(page) : 99, { timeout: 8000 }).toBeGreaterThanOrEqual(7.5);
   expect((await github(page)).height).toBe(80);
+});
+
+// GitHub below 768px draws the name as "workflow / job" in three clipped spans of one flex h4. The job part shrinks and ends in an ellipsis: the visible text is what the reader sees, and only that counts. A control placed on a line next to it, or in the title's row, must neither touch it nor cut a character of it (#134, review of 28bd2ce).
+const SPLIT_JOBS = {
+  clamped: "Sqlite tests: core / DB-core:Sqlite:3.11:Core...Serialization and a long tail of job parts",
+  medium: "Unit tests / linux node 20",
+  short: "CI / lint",
+};
+for (const [kind, name] of Object.entries(SPLIT_JOBS)) {
+  test(`clipped name (${kind}): at every width the control is 8px from the visible text and GitHub's text is untouched`, async ({ context, page }) => {
+    test.setTimeout(90_000);
+    await open(context, page, 1280, { name, split: true });
+    for (const width of [320, 390, 420, 450, 500, 600, 700, 767, 768, 900, 1000, 1024, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.waitForTimeout(250);
+      await settle(page);
+      const p = await place(page);
+      const base = await withoutControl(page);
+      const g = await github(page);
+      const where = `${kind} at ${width}: place ${p}`;
+      if (p !== "edge") {
+        expect(g.height, where).toBe(80);
+        expect(g, where).toEqual(base);
+        const gap = await nearestText(page);
+        expect(gap, `${where}, nearest text ${gap}px`).toBeGreaterThanOrEqual(7.5);
+      }
+    }
+  });
+}
+
+test("a clamped name wider than the title block never takes the subtitle line or the name line next to it", async ({ context, page }) => {
+  // 500: the h4 is one line, its job span fills the title block up to the ellipsis, so the subtitle slot sits right under it
+  await open(context, page, 500, { name: SPLIT_JOBS.clamped, split: true });
+  expect(await place(page)).toBe("edge");
+  await open(context, page, 450, { name: SPLIT_JOBS.clamped, split: true });
+  expect(await place(page)).toBe("edge");
+});
+
+test("1024: the open list ends at its button's right edge and keeps a name that fits on one line", async ({ context, page }) => {
+  const steps = [{ n: 1, name: "Print baseline diff on failure", conclusion: "failure", log: 100 }, { n: 2, name: "Tests", conclusion: "failure", log: 100 }];
+  await open(context, page, 1024, { ...LONGSUB, steps });
+  expect(await place(page)).toBe("edge");
+  await fsBtn(page).click();
+  await expect(fsList(page)).toBeVisible();
+  const b = await box(fsBtn(page));
+  const lr = await box(fsList(page));
+  expect(lr.right, `list ${JSON.stringify(lr)} button ${JSON.stringify(b)}`).toBeCloseTo(b.right, 0);
+  expect(lr.left).toBeGreaterThanOrEqual(8);
+  const item = await box(fsList(page).locator('[role="menuitem"]').first());
+  expect(item.height, "one line is 30px").toBeLessThan(40);
 });

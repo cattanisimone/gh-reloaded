@@ -50,9 +50,15 @@ function stepHtml({ n, name, conclusion = "failure", open = false, log = 0, attr
 // Builds the transform for routeGithub: the job name, the subtitle text, the
 // steps and a few markup variants, all on top of the live-shaped fixture.
 //   steps [{ n, name, conclusion, open, log }]   signedOut   noHeader   hashed
-export function jobPage({ name, sub, steps, signedOut = false, noHeader = false, hashed = false, dark = false, extra } = {}) {
+//   split: a name "Workflow / Job" is drawn as GitHub draws it below 768px, in three
+//   clipped spans of one flex h4 (the workflow part, the slash, the job part), not in one.
+export function jobPage({ name, sub, steps, signedOut = false, noHeader = false, hashed = false, dark = false, split = false, extra } = {}) {
   return (html) => {
     if (name != null) html = html.replaceAll("test (race mode)", name);
+    if (split && name != null && name.includes(" / ")) {
+      const [wf, job] = name.split(" / ");
+      html = html.replace(`<span class="css-truncate css-truncate-overflow" data-target="streaming-graph-job.name">${name}</span>`, `<span class="css-truncate css-truncate-overflow workflow-path-first-item" data-target="streaming-graph-job.name">${wf}&nbsp;</span><span>/</span><span class="css-truncate css-truncate-overflow min-width-0">&nbsp;${job}</span>`);
+    }
     if (sub != null) html = html.replace(SUB_DEFAULT, ` ${sub} `);
     if (steps) html = html.replace(/<!--steps:begin-->[\s\S]*<!--steps:end-->/, steps.map(stepHtml).join(""));
     if (signedOut) html = html.replace(/<div class="js-check-run-search[\s\S]*?<\/details><\/div><\/div>/, "</div>").replace(/ data-logged-in=""/g, "");

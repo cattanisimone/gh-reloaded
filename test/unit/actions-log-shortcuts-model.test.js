@@ -216,3 +216,18 @@ test("stepKey changes with the list, not with the order of reading", () => {
   assert.notEqual(M.stepKey(a), M.stepKey(b));
   assert.equal(M.stepKey(a), M.stepKey(M.failedSteps([{ number: "8", name: "A", conclusion: "failure" }])));
 });
+
+test("fits rejects a control that cut, moved or re-wrapped GitHub's visible text, whatever its overflow and line numbers say", () => {
+  // the name's clamped job part lost its tail: the visible box got narrower
+  const cut = trialOf({ texts: [{ left: 24, top: 22, right: 210, bottom: 40 }, { left: 24, top: 44, right: 200, bottom: 58 }] });
+  assert.match(M.fits(base(), cut, "name").reason, /cut/);
+  // a box moved down (the name re-wrapped) without a different line count
+  const moved = trialOf({ texts: [{ left: 24, top: 22, right: 300, bottom: 40 }, { left: 24, top: 47, right: 200, bottom: 61 }] });
+  assert.match(M.fits(base(), moved, "subtitle").reason, /cut/);
+  // a box appeared or vanished
+  assert.equal(M.fits(base(), trialOf({ texts: base().texts.slice(0, 1) }), "name").ok, false);
+  // the same boxes within half a pixel are the same text
+  assert.equal(M.fits(base(), trialOf({ texts: base().texts.map((t) => ({ ...t, right: t.right + 0.4 })) }), "name").ok, true);
+  // the bottom edge never depends on the text
+  assert.equal(M.fits(base(), trialOf({ texts: [] }), "edge").ok, true);
+});

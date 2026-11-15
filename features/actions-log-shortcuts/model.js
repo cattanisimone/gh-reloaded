@@ -132,6 +132,14 @@
     return Math.max(gx, gy);
   }
 
+  // The visible text boxes of GitHub's name and subtitle, with and without the
+  // control: any box that moved, shrank, appeared or vanished means the control
+  // changed what the reader sees (a clamped name that lost characters, a re-wrap).
+  function sameRects(a, b) {
+    if (a.length !== b.length) return false;
+    return a.every((q, i) => ["left", "top", "right", "bottom"].every((k) => Math.abs(q[k] - b[i][k]) <= EPS));
+  }
+
   // base: GitHub's header as it is without the control; trial: the same
   // measurements with the control in the place `id`. Every field is a number
   // or a rect measured by content.js, so the rule is testable without a DOM.
@@ -150,6 +158,7 @@
     if (Math.abs(trial.header.covered - base.header.covered) > EPS) return bad("covered stack changed");
     if (base.lines.length !== trial.lines.length || base.lines.some((n, i) => n !== trial.lines[i])) return bad("text lines changed");
     if (base.overflow.length !== trial.overflow.length || base.overflow.some((n, i) => Math.abs(n - trial.overflow[i]) > EPS)) return bad("text overflow changed");
+    if (!sameRects(base.texts, trial.texts)) return bad("GitHub's text moved, was cut or re-wrapped");
     if (c.top < trial.header.top - EPS || c.bottom > trial.header.bottom + EPS) return bad("outside the header");
     if (c.left < -EPS || c.right > w.w + EPS) return bad("outside the window");
     for (const t of trial.texts) if (textGap(c, t) < MIN_GAP - 0.01) return bad("less than 8px from GitHub's text");

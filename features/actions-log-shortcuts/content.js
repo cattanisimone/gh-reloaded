@@ -305,7 +305,8 @@
   function headerParts(h) {
     const title = h.querySelector('[class*="CheckRun-log-title"]');
     if (!title || title.parentElement !== h) return null;
-    const name = visibleOf([...title.querySelectorAll("#check-step-header-title, h4")].map((n) => n.querySelector("span") || n));
+    // The whole name element (the h4 holds the workflow, a slash and the job in separate clipped spans), never its first span.
+    const name = visibleOf([...title.querySelectorAll("#check-step-header-title, h4")]);
     const sub = title.querySelector("span.js-updatable-content") || title.querySelector("span.d-block.f6") || title.querySelector(".f6");
     if (!name || !sub) return null;
     // GitHub's search block follows the title; our own control may sit between them.
@@ -314,15 +315,49 @@
     return { h, title, name, sub, search };
   }
 
+  // The boxes inside `clip` that clip `n`'s content: every ancestor up to `top` that hides
+  // overflow (the h4's css-truncate spans, the two-line clamp), and `top` itself sideways.
+  function clipBoxes(n, top, clip) {
+    const out = [{ left: clip.left, right: clip.right, top: -Infinity, bottom: Infinity }];
+    for (let a = n; a && a !== top; a = a.parentElement) {
+      const cs = getComputedStyle(a);
+      if (cs.overflowX === "visible" && cs.overflowY === "visible") continue;
+      const b = a.getBoundingClientRect();
+      out.push({ left: b.left, right: b.right, top: b.top, bottom: b.bottom });
+    }
+    return out;
+  }
+
+  // The visible boxes of the text under `node`, one per text node line, cut by every
+  // box that clips it, so a name GitHub truncates with an ellipsis counts only as far as
+  // it is drawn. An element that draws its words in a shadow root (<relative-time>)
+  // counts by its own box.
   function textRects(node, clip) {
-    const r = document.createRange();
-    r.selectNodeContents(node);
     const out = [];
-    for (const q of r.getClientRects()) {
-      if (!q.width || !q.height) continue;
-      const left = Math.max(q.left, clip.left);
-      const right = Math.min(q.right, clip.right);
-      if (right > left) out.push({ left, right, top: q.top, bottom: q.bottom });
+    const add = (q, from) => {
+      if (!q.width || !q.height) return;
+      let left = q.left;
+      let right = q.right;
+      let top = q.top;
+      let bottom = q.bottom;
+      for (const b of clipBoxes(from, node.closest('[class*="CheckRun-log-title"]'), clip)) {
+        left = Math.max(left, b.left);
+        right = Math.min(right, b.right);
+        top = Math.max(top, b.top);
+        bottom = Math.min(bottom, b.bottom);
+      }
+      if (right > left && bottom > top) out.push({ left, right, top, bottom });
+    };
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    for (let n = node; n; n = walker.nextNode()) {
+      if (n.nodeType === 3) {
+        if (!n.nodeValue.trim()) continue;
+        const r = document.createRange();
+        r.selectNodeContents(n);
+        for (const q of r.getClientRects()) add(q, n.parentElement);
+      } else if (n.shadowRoot) {
+        for (const q of n.getClientRects()) add(q, n);
+      }
     }
     return out;
   }
@@ -446,10 +481,13 @@
     if (c.list.hidden) return;
     const b = c.btn.getBoundingClientRect();
     const w = document.documentElement.clientWidth;
-    c.list.style.maxWidth = `${Math.max(120, w - 16)}px`;
-    const lw = c.list.offsetWidth;
-    const left = Math.max(8, Math.min(b.right - lw, w - 8 - lw));
-    c.list.style.left = `${left}px`;
+    // The list ends at its button's right edge (never past the window's): anchored with
+    // `right`, so its width is what its text needs inside that edge, not what fitted
+    // at its previous position.
+    const edge = Math.max(168, Math.min(b.right, w - 8));
+    c.list.style.left = "auto";
+    c.list.style.right = `${w - edge}px`;
+    c.list.style.maxWidth = `${edge - 8}px`;
     if (c.place === "edge") {
       c.list.style.top = "auto";
       c.list.style.bottom = `${window.innerHeight - b.top + 4}px`;
