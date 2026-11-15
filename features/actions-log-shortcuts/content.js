@@ -308,7 +308,9 @@
     const name = visibleOf([...title.querySelectorAll("#check-step-header-title, h4")].map((n) => n.querySelector("span") || n));
     const sub = title.querySelector("span.js-updatable-content") || title.querySelector("span.d-block.f6") || title.querySelector(".f6");
     if (!name || !sub) return null;
-    const search = title.nextElementSibling && title.nextElementSibling !== h.querySelector(".ghals-fs") ? title.nextElementSibling : null;
+    // GitHub's search block follows the title; our own control may sit between them.
+    let search = title.nextElementSibling;
+    while (search && search.classList.contains("ghals-fs")) search = search.nextElementSibling;
     return { h, title, name, sub, search };
   }
 
