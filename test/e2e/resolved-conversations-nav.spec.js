@@ -89,3 +89,27 @@ test("leaving the Conversation tab while Expanding ends the run and leaves nothi
   await page.waitForTimeout(500);
   await expect(bar(page)).toHaveCount(0);
 });
+
+test("Expanding on one pull request does not leave the next pull request's bar stuck on Expanding…", async ({ context, page }) => {
+  await setup(context, { fragment: (id) => (id === 1 ? "hang" : "ok"), delay: 40 });
+  await page.goto(`${PR}?n=3`);
+  await page.evaluate(() => { document.documentElement.dataset.ghrcBoundMs = "3000"; });
+  await button(page).click();
+  await expect(button(page)).toHaveText("Expanding…");
+  const pageB = await page.evaluate(() => {
+    const d = document.createElement("div");
+    d.innerHTML = '<main class="page"><div class="js-discussion" id="discussion">' + [21, 22].map((i) => window.ghrcThread(i, true, false)).join("") + "</div></main>";
+    return d.innerHTML;
+  });
+  await visit(page, "/acme/web/pull/8", pageB);
+  // The new page's bar is idle at once: its own count, a working button.
+  await expect(label(page)).toHaveText("2 resolved conversations");
+  await expect(button(page)).toHaveText("Expand all resolved");
+  await expect(button(page)).not.toHaveAttribute("aria-disabled", "true");
+  await button(page).click();
+  await expect(label(page)).toHaveText("2 of 2 resolved conversations expanded");
+  // The first run ending later does not change it.
+  await page.waitForTimeout(3500);
+  await expect(label(page)).toHaveText("2 of 2 resolved conversations expanded");
+  await expect(button(page)).toHaveText("Collapse all resolved");
+});

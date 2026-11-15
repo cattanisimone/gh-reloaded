@@ -263,3 +263,15 @@ test.describe("Many conversations, slow and failing loads", () => {
     await expect(resolvedThreads(page).nth(1).locator("> div > button")).toHaveAttribute("aria-expanded", "true");
   });
 });
+
+test("switching the feature off while Expanding stops opening conversations", async ({ context, page }) => {
+  await setup(context, { delay: 300 });
+  await page.goto(`${PR}?n=12`);
+  await button(page).click();
+  await expect(button(page)).toHaveText("Expanding…");
+  const sw = await backgroundWorker(context);
+  await sw.evaluate(() => chrome.storage.local.set({ ghrcEnabled: false }));
+  await expect(bar(page)).toHaveCount(0);
+  await page.waitForTimeout(1500);
+  expect(await resolvedThreads(page).evaluateAll((l) => l.filter((t) => t.querySelector("button[aria-expanded]").getAttribute("aria-expanded") === "true").length)).toBeLessThan(12);
+});

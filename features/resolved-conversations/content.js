@@ -27,7 +27,7 @@
 
   // What the bar remembers between scans (one bar per page).
   const st = {
-    busy: false,
+    run: null, // the Expand in progress: { path }; it only counts on the page it started on
     frozenLabel: "", // the label while Expanding stays as it was
     result: null, // { k, sig }: the outcome of the last Expand when some conversations did not open
   };
@@ -143,17 +143,21 @@
     if (node.getAttribute(name) !== value) node.setAttribute(name, value);
   }
 
+  // Expanding belongs to the page it started on: after an in-page navigation the new page's bar is idle.
+  const isBusy = () => !!st.run && st.run.path === location.pathname;
+
   function render(bar, snap) {
-    if (!st.busy && st.result && !M.keepResult(st.result, snap.sig)) st.result = null;
+    const busy = isBusy();
+    if (!busy && st.result && !M.keepResult(st.result, snap.sig)) st.result = null;
     const all = M.allOpen(snap.n, snap.open);
-    const labelText = st.busy
+    const labelText = busy
       ? st.frozenLabel
       : M.label({ n: snap.n, open: snap.open, loadMore: snap.loadMore, result: st.result ? st.result.k : null });
     setText(bar.querySelector(".ghrc-label"), labelText);
     const button = bar.querySelector(".ghrc-btn");
-    setText(button.querySelector(".Button-label"), M.buttonText({ allOpen: all, loadMore: snap.loadMore, busy: st.busy }));
-    setAttr(button, "aria-expanded", String(all && !st.busy));
-    if (st.busy) setAttr(button, "aria-disabled", "true");
+    setText(button.querySelector(".Button-label"), M.buttonText({ allOpen: all, loadMore: snap.loadMore, busy }));
+    setAttr(button, "aria-expanded", String(all && !busy));
+    if (busy) setAttr(button, "aria-disabled", "true");
     else if (button.hasAttribute("aria-disabled")) button.removeAttribute("aria-disabled");
   }
 
@@ -219,7 +223,8 @@
 
   async function expand(path) {
     const before = snapshot();
-    st.busy = true;
+    const run = { path };
+    st.run = run;
     st.frozenLabel = M.label({ n: before.n, open: before.open, loadMore: before.loadMore, result: st.result ? st.result.k : null });
     st.result = null;
     announce("");
@@ -231,7 +236,7 @@
       const worker = async () => {
         while (next < before.list.length) {
           const p = before.list[next++];
-          if (location.pathname !== path || !p.thread.isConnected || isOpen(p)) continue;
+          if (st.run !== run || !enabled || location.pathname !== path || !p.thread.isConnected || isOpen(p)) continue;
           const settled = settle(p, ms);
           // A conversation whose button already says open (its content still loading or failed)
           // is only waited for: a click would close it.
@@ -242,9 +247,10 @@
       };
       await Promise.all(Array.from({ length: Math.min(M.CONCURRENCY, before.list.length) }, worker));
     } finally {
-      st.busy = false;
+      if (st.run === run) st.run = null;
+      scan(); // the page may have changed under the run: show whatever is true now
     }
-    if (location.pathname !== path) return;
+    if (location.pathname !== path || !enabled) return;
     const after = snapshot();
     st.result = after.open < after.n ? { k: after.open, sig: after.sig } : null;
     scan();
@@ -265,7 +271,7 @@
   }
 
   function onClick() {
-    if (st.busy) return; // aria-disabled: focus stays, activation is ignored
+    if (isBusy()) return; // aria-disabled: focus stays, activation is ignored
     const snap = snapshot();
     if (!snap.n) return;
     if (M.allOpen(snap.n, snap.open)) collapse();
