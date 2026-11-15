@@ -255,6 +255,18 @@ Two shortcuts to the logs of a GitHub Actions run or job, above the page's conte
 
 ![Actions log shortcuts mockup: a job page with Copy gh command and Open raw log above the job, fictional repository acme/web.](screenshots/actions-log-shortcuts.svg)
 
+### Resolved conversations — [features/resolved-conversations](features/resolved-conversations)
+
+GitHub used to open or close every resolved conversation of a pull request at once with Option/Alt-click; that stopped working when review threads became their own collapsible element. This adds one visible, keyboard-reachable command on the Conversation tab.
+
+- One compact bar sits directly above the first loaded resolved conversation, with the count on the left and **Expand all resolved** / **Collapse all resolved** on the right. It uses the thread rows' own look (muted background, 1px border, 6px radius) and a small secondary button, in light and dark, and stays on one row at 390px (only the count wraps).
+- **Expand** opens the loaded resolved conversations one after another while GitHub loads each one; the button reads "Expanding…" (`aria-disabled`, focus kept) and the bar then says "N of N resolved conversations expanded". If some did not open (a load error, or a bounded wait of a few seconds per conversation) it says "K of N …" and offers Expand again. **Collapse** closes the resolved ones. Unresolved conversations and every other timeline item are never touched.
+- When the page has GitHub's own "Load more…" blocks, the copy says "loaded" and "more may be hidden" and only the loaded conversations are touched: the extension never activates "Load more…" and makes no request of its own. After you load more, the count follows.
+- The count is the button's description and a polite status message announces the result at the end. A pull request with no resolved conversation, a page other than the Conversation tab, or markup the extension cannot recognise shows nothing and no error.
+- Needs no token and no permission: it only clicks each conversation's own chevron. On by default; switch it off under **Settings → Features**. The expanded state is never stored.
+
+![Resolved conversations mockup: the bar above the first resolved conversation on a pull request's Conversation tab, collapsed and expanded, fictional repository acme/web.](screenshots/resolved-conversations.svg)
+
 ### Image gallery — [features/image-gallery](features/image-gallery)
 
 On a repository image file page (PNG, JPEG, WebP, GIF, and SVG in its Preview view), browse the other images of the same folder in a lightbox, without going back to the folder listing.

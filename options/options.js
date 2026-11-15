@@ -599,6 +599,7 @@ const FEATURE_TOGGLES = [
   { key: "ghigEnabled", id: "feature-ghig", defaultOn: true },
   { key: "ghigAutoOpen", id: "feature-ghig-auto", defaultOn: true },
   { key: "ghalsEnabled", id: "feature-ghals", defaultOn: true },
+  { key: "ghrcEnabled", id: "feature-ghrc", defaultOn: true },
 ];
 
 async function loadFeatureToggles() {

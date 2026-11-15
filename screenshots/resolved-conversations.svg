@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" font-family="DejaVu Sans, sans-serif">
+<rect width="1200" height="560" fill="#fff"/>
+<text x="32" y="40" font-size="15" fill="#59636e">acme / web / Pull requests / <tspan font-weight="600" fill="#1f2328">Add retry to the API client #7</tspan> / Conversation</text>
+<text x="32" y="80" font-size="12" fill="#59636e">Collapsed</text>
+<rect x="32" y="92" width="552" height="46" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<rect x="31" y="91" width="554" height="48" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="7"/>
+<text x="48" y="120" font-size="12" fill="#59636e">3 resolved conversations</text>
+<rect x="436" y="102" width="136" height="28" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<text x="504" y="120" font-size="12" font-weight="500" fill="#25292e" text-anchor="middle">Expand all resolved</text>
+<rect x="32" y="154" width="552" height="46" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<text x="52" y="182" font-size="14" fill="#59636e">›</text>
+<text x="76" y="182" font-size="12" font-family="monospace" fill="#1f2328">src/api/client.go</text>
+<rect x="190" y="168" width="64" height="18" fill="none" stroke="#d1d9e0" rx="9"/><text x="222" y="181" font-size="11" fill="#59636e" text-anchor="middle">Resolved</text>
+<rect x="32" y="216" width="552" height="46" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<text x="52" y="244" font-size="14" fill="#59636e">›</text>
+<text x="76" y="244" font-size="12" font-family="monospace" fill="#1f2328">src/api/retry.go</text>
+<rect x="190" y="230" width="64" height="18" fill="none" stroke="#d1d9e0" rx="9"/><text x="222" y="243" font-size="11" fill="#59636e" text-anchor="middle">Resolved</text>
+<rect x="32" y="278" width="552" height="46" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<text x="52" y="306" font-size="14" fill="#59636e">›</text>
+<text x="76" y="306" font-size="12" font-family="monospace" fill="#1f2328">src/cmd/root.go</text>
+<rect x="190" y="292" width="64" height="18" fill="none" stroke="#d1d9e0" rx="9"/><text x="222" y="305" font-size="11" fill="#59636e" text-anchor="middle">Resolved</text>
+<rect x="616" y="60" width="552" height="440" fill="#0d1117"/>
+<text x="632" y="80" font-size="12" fill="#9198a1">Expanded (dark)</text>
+<rect x="632" y="92" width="520" height="46" fill="#151b23" stroke="#3d444d" rx="6"/>
+<rect x="631" y="91" width="522" height="48" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="7"/>
+<text x="648" y="120" font-size="12" fill="#9198a1">3 of 3 resolved conversations expanded</text>
+<rect x="988" y="102" width="152" height="28" fill="#212830" stroke="#3d444d" rx="6"/>
+<text x="1064" y="120" font-size="12" font-weight="500" fill="#f0f6fc" text-anchor="middle">Collapse all resolved</text>
+<rect x="632" y="154" width="520" height="150" fill="#0d1117" stroke="#3d444d" rx="6"/>
+<rect x="633" y="155" width="518" height="44" fill="#151b23"/>
+<text x="652" y="182" font-size="14" fill="#9198a1">⌄</text>
+<text x="676" y="182" font-size="12" font-family="monospace" fill="#f0f6fc">src/api/client.go</text>
+<rect x="790" y="168" width="64" height="18" fill="none" stroke="#3d444d" rx="9"/><text x="822" y="181" font-size="11" fill="#9198a1" text-anchor="middle">Resolved</text>
+<text x="652" y="226" font-size="12" fill="#f0f6fc">diff and comments, loaded by GitHub</text>
+<text x="652" y="248" font-size="12" fill="#9198a1">Only resolved conversations are opened; unresolved ones stay as they are.</text>
+<text x="32" y="400" font-size="12" fill="#59636e">With GitHub's "Load more…" on the page:</text>
+<rect x="32" y="412" width="552" height="46" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<rect x="31" y="411" width="554" height="48" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="7"/>
+<text x="48" y="440" font-size="12" fill="#59636e">66 loaded resolved conversations · more may be hidden</text>
+<rect x="420" y="422" width="152" height="28" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<text x="496" y="440" font-size="12" font-weight="500" fill="#25292e" text-anchor="middle">Expand loaded resolved</text>
+<text x="32" y="530" font-size="12" fill="#59636e">Dashed outlines mark what GH Reloaded adds. Fictional repository acme/web. Mockup, not a capture.</text>
+</svg>

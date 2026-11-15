@@ -26,6 +26,7 @@ These are the saved GitHub pages the end-to-end tests run against. Serving them 
 | `blob-image-signed.html` | The same page signed in: group class `BlobViewHeader-module_OdKveq_Box_3`, a `d-none` div, a 28px Copilot icon button with its tooltip span and an Edit button (Copilot markup from the plan review's measurements, not captured live) | image-gallery |
 | `blob-image-svg.html` | An **SVG blob page**, Preview selected: the `File view` segmented control (Preview / Code / Blame, Code adds `?short_path=`), the size text in a `Truncate` and the Raw / Copy / Download button group | image-gallery |
 | `blob-image-svg-signed.html` | The SVG page signed in, with Copilot and "Add to space" buttons before the actions block | image-gallery |
+| `pr-conversation-resolved.html` | The **Conversation tab of a pull request** with resolved review conversations, markup probed live on public cli/cli#14952 and #10513 on 2026-11-15 (`review-thread-collapsible`, `button.review-thread-chevron[aria-expanded]`, the `Resolved` label, an `include-fragment` body, `form.ajax-pagination-form` "Load more…"), fictional acme/web. An inline stub copies the element's toggle and lazy load. `?n=` count, `?loadmore`, `?none`, `?unresolved`, `?renamed`, `?dark` | resolved-conversations |
 
 ## Capture date and how these were produced
 

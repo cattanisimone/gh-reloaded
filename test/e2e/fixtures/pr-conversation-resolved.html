@@ -1,0 +1,166 @@
+<!doctype html>
+<!--
+  Fixture: the Conversation tab of a pull request (acme/web#7) with resolved review
+  conversations, as served by github.com (probed live on public cli/cli#14952 and
+  #10513 on 2026-11-15; paths, names and text are fictional).
+
+  Anchors the feature relies on and this fixture must keep:
+    - review-thread-collapsible (a tag name, not a CSS-module class): header row =
+      first child div, with button.review-thread-chevron[aria-expanded] and a
+      span.Label whose visible text is "Resolved"; body =
+      [data-target="review-thread-collapsible.body"] holding an include-fragment
+      until GitHub's lazy content arrives (data-deferred-content-url).
+    - each thread sits alone in a turbo-frame inside .TimelineItem-body.
+    - "Load more…": form.ajax-pagination-form with a button whose text is "Load more…".
+    - a decoy: a minimize form whose <option> reads "Resolved".
+
+  Query parameters:
+    ?n=7        number of resolved threads (default 7)
+    ?loadmore   one "Load more…" block after the first threads and one at the end
+    ?none       no review threads at all
+    ?unresolved only unresolved threads
+    ?renamed    the thread element has another tag name (the anchor is gone)
+    ?dark       dark colour mode
+
+  The inline stub below copies GitHub's element: a click on the chevron toggles
+  aria-expanded, the "open" class and the body's hidden attribute, and the first
+  open fetches data-deferred-content-url. A 200 swaps the body's content in; any
+  other answer fires "error" on the include-fragment and leaves it in place. The
+  tests route /threads/ requests (content, 500, or never answered).
+-->
+<html lang="en" data-color-mode="light" data-light-theme="light" data-dark-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add retry to the API client by mira-dev · Pull Request #7 · acme/web</title>
+<style>
+  :root { color-scheme: light; --bgColor-default:#fff; --bgColor-muted:#f6f8fa; --borderColor-default:#d1d9e0; --fgColor-default:#1f2328; --fgColor-muted:#59636e; --fgColor-accent:#0969da; --button-default-bgColor-rest:#f6f8fa; --button-default-bgColor-hover:#eff2f5; --button-default-borderColor-rest:#d1d9e0; --button-default-shadow-resting:0 1px 0 rgba(31,35,40,.04); --focus-outlineColor:#0969da; }
+  [data-color-mode="dark"] { color-scheme: dark; --bgColor-default:#0d1117; --bgColor-muted:#151b23; --borderColor-default:#3d444d; --fgColor-default:#f0f6fc; --fgColor-muted:#9198a1; --fgColor-accent:#4493f8; --button-default-bgColor-rest:#212830; --button-default-bgColor-hover:#262c36; --button-default-borderColor-rest:#3d444d; --button-default-shadow-resting:0 0 transparent; --focus-outlineColor:#1f6feb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bgColor-default); color: var(--fgColor-default); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  header.gh { height: 64px; border-bottom: 1px solid var(--borderColor-default); padding: 0 16px; display: flex; align-items: center; background: var(--bgColor-muted); }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 8px 16px; border-bottom: 1px solid var(--borderColor-default); }
+  .tabs a.selected { font-weight: 600; }
+  /* GitHub's column: 776px wide at 1280px, 318px at 390px. */
+  .page { max-width: 776px; margin: 24px auto; padding: 0 16px; }
+  @media (max-width: 768px) { .page { margin: 24px 0; padding: 0 16px 0 56px; } }
+  .d-flex { display: flex; } .flex-items-start { align-items: flex-start; } .flex-auto { flex: auto; } .flex-self-center { align-self: center; } .flex-wrap { flex-wrap: wrap; } .flex-items-center { align-items: center; } .flex-shrink-0 { flex-shrink: 0; }
+  .d-block { display: block; } .mr-2 { margin-right: 8px; } .p-2 { padding: 8px; } .tmp-mb-3 { margin-bottom: 16px; } .tmp-mt-4 { margin-top: 24px; } .tmp-mb-4 { margin-bottom: 24px; } .text-center { text-align: center; }
+  .border { border: 1px solid var(--borderColor-default); } .rounded-2 { border-radius: 6px; } .rounded-top-2 { border-top-left-radius: 6px; border-top-right-radius: 6px; }
+  .bgColor-muted { background: var(--bgColor-muted); }
+  .text-mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; } .text-small { font-size: 12px; } .wb-break-all { word-break: break-all; }
+  .Label { display: inline-block; padding: 0 7px; font-size: 12px; font-weight: 500; line-height: 18px; border: 1px solid var(--borderColor-default); border-radius: 2em; color: var(--fgColor-muted); white-space: nowrap; }
+  turbo-frame { display: block; }
+  /* Primer buttons, with the values measured on github.com. */
+  .Button { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 12px; font: inherit; font-size: 14px; font-weight: 500; line-height: 21px; border: 1px solid var(--button-default-borderColor-rest); border-radius: 6px; background: var(--button-default-bgColor-rest); color: var(--fgColor-default); box-shadow: var(--button-default-shadow-resting); cursor: pointer; transition: background-color 80ms cubic-bezier(.33,1,.68,1); white-space: nowrap; }
+  .Button:hover { background: var(--button-default-bgColor-hover); }
+  .Button:focus-visible { outline: 2px solid var(--focus-outlineColor); outline-offset: -2px; }
+  .Button--small { height: 28px; padding: 0 8px; font-size: 12px; line-height: 18px; }
+  .Button--invisible { background: transparent; border-color: transparent; box-shadow: none; }
+  .Button--iconOnly { width: 28px; padding: 0; }
+  .Button-content, .Button-label { display: inline-flex; align-items: center; }
+  .octicon { fill: currentColor; vertical-align: text-bottom; }
+  review-thread-collapsible .octicon-chevron-right { transition: transform 80ms; }
+  review-thread-collapsible.open .octicon-chevron-right { transform: rotate(90deg); }
+  .thread-content { padding: 12px 16px; border-top: 1px solid var(--borderColor-default); }
+  .ajax-pagination-form .Box { display: inline-flex; flex-direction: column; border: 1px solid var(--borderColor-default); border-radius: 6px; }
+  .ajax-pagination-form button { font: inherit; border: 0; background: var(--bgColor-default); color: var(--fgColor-muted); padding: 4px 16px; cursor: pointer; }
+  .TimelineItem-body { min-width: 0; }
+  .comment { border: 1px solid var(--borderColor-default); border-radius: 6px; padding: 8px 16px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<header class="gh"><strong>acme/web</strong></header>
+<nav class="tabs" aria-label="Pull request navigation">
+  <a href="/acme/web/pull/7" class="selected">Conversation</a>
+  <a href="/acme/web/pull/7/commits">Commits</a>
+  <a href="/acme/web/pull/7/checks">Checks</a>
+  <a href="/acme/web/pull/7/files">Files changed</a>
+</nav>
+<main class="page">
+  <div class="js-discussion ml-0 pl-0" id="discussion"></div>
+</main>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search);
+  if (q.has("dark")) document.documentElement.setAttribute("data-color-mode", "dark");
+  const TAG = q.has("renamed") ? "review-thread-box" : "review-thread-collapsible";
+
+  class Thread extends HTMLElement {
+    connectedCallback() {
+      if (this._ready) return;
+      this._ready = true;
+      const b = this.querySelector('[data-target="review-thread-collapsible.button"]');
+      if (b) b.addEventListener("click", () => this.toggle(b));
+    }
+    toggle(b) {
+      const body = this.querySelector('[data-target="review-thread-collapsible.body"]');
+      if (b.getAttribute("aria-expanded") === "true") {
+        b.setAttribute("aria-expanded", "false");
+        this.classList.remove("open");
+        if (body) body.hidden = true;
+        return;
+      }
+      b.setAttribute("aria-expanded", "true");
+      this.classList.add("open");
+      if (body) body.hidden = false;
+      const frag = body && body.querySelector(":scope > include-fragment");
+      if (!frag || this._asked) return;
+      this._asked = true;
+      fetch(this.dataset.deferredContentUrl)
+        .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.text(); })
+        .then((html) => { body.innerHTML = html; })
+        .catch(() => frag.dispatchEvent(new Event("error")));
+    }
+  }
+  customElements.define(TAG, Thread);
+
+  const chevron = '<svg aria-hidden="true" data-component="Octicon" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-chevron-right Button-visual"><path d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z"></path></svg>';
+  const spinner = '<span data-view-component="true"><svg aria-label="Loading" width="64" height="64" viewBox="0 0 16 16" fill="none" role="img" class="tmp-my-3 mx-auto d-block anim-rotate"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-opacity="0.25" stroke-width="2" fill="none"></circle></svg></span><div data-show-on-forbidden-error="" hidden=""><p class="color-fg-muted my-2 mb-2 ws-normal">There was an error while loading. <a class="Link--inTextBlock" data-turbo="false" href="" aria-label="Please reload this page">Please reload this page</a>.</p></div>';
+
+  let uid = 0;
+  window.ghrcThread = function (id, resolved, open) {
+    const n = ++uid;
+    const label = resolved ? '<span data-view-component="true" class="Label Label--secondary">\n              Resolved\n</span>' : '';
+    const resolveBtn = resolved ? "" : '<button type="submit" class="btn-link">Resolve conversation</button>';
+    const body = open
+      ? '<div data-target="review-thread-collapsible.body"><div class="thread-content">Comment on src/api/file' + id + '.go (loaded)</div></div>'
+      : '<div data-target="review-thread-collapsible.body" hidden=""><include-fragment data-nonce="v2:x" data-view-component="true">' + spinner + '</include-fragment></div>';
+    return '<turbo-frame id="review-thread-or-comment-id-' + id + '"><' + TAG + ' class="review-thread-component js-comment-container js-resolvable-timeline-thread-container border rounded-2 d-block tmp-mb-3' + (open ? " open" : "") + '" data-resolved="' + resolved + '" data-deferred-content-url="/acme/web/pull/7/threads/' + id + '?rendering_on_files_tab=false" data-catalyst="">' +
+      '<div class="d-flex flex-items-start p-2 rounded-top-2 bgColor-muted js-toggle-outdated-comments" data-action="mouseenter:review-thread-collapsible#preload">' +
+      '<button data-target="review-thread-collapsible.button" data-action="click:review-thread-collapsible#toggle" id="icon-button-' + n + '" aria-expanded="' + (open ? "true" : "false") + '" aria-labelledby="tooltip-' + n + '" type="button" data-view-component="true" class="Button Button--iconOnly Button--invisible Button--small flex-shrink-0 mr-2 review-thread-chevron">' + chevron + '</button>' +
+      '<tool-tip id="tooltip-' + n + '" for="icon-button-' + n + '" popover="manual" data-direction="s" data-type="label" data-view-component="true" class="sr-only position-absolute" aria-hidden="true" role="tooltip" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Comment thread</tool-tip>' +
+      '<span class="flex-auto flex-self-center d-flex flex-wrap flex-items-center"><a href="/acme/web/pull/7/files#diff-' + id + '" class="text-mono text-small Link--primary wb-break-all mr-2">src/api/file' + id + '.go</a>' + label + '</span>' + resolveBtn +
+      '</div>' + body + '</' + TAG + '></turbo-frame>';
+  };
+  const more = '<form class="js-review-hidden-comment-ids ajax-pagination-form js-ajax-pagination pagination-loader-container tmp-mt-4 tmp-mb-4 text-center" data-turbo="false" action="/acme/web/pull/7/reviews/1/more_threads?after=1&amp;before=2" accept-charset="UTF-8" method="get"><div class="Box d-inline-flex flex-column"><button type="submit" class="color-fg-muted pt-2 pb-0 tmp-px-4 color-bg-default border-0">3 hidden conversations</button><button type="submit" class="ajax-pagination-btn no-underline pb-1 pt-0 tmp-px-4 mt-0 mb-1 color-bg-default border-0" data-disable-with="Loading…">Load more…</button></div></form>';
+  window.__loadMoreSubmits = 0;
+  document.addEventListener("submit", (e) => { if (e.target.matches("form.ajax-pagination-form")) { window.__loadMoreSubmits++; e.preventDefault(); } });
+  window.ghrcMore = more;
+
+  const item = (inner, id) => '<div class="js-timeline-item"><div id="pullrequestreview-' + id + '" class="js-comment js-minimize-container"><div class="TimelineItem tmp-pl-4 py-0"><div class="TimelineItem-body my-0">' + inner + '</div></div></div></div>';
+
+  const d = document.getElementById("discussion");
+  const n = Math.max(0, parseInt(q.get("n") || "7", 10));
+  let html = '<div class="comment">mira-dev opened this pull request. <form class="js-comment-minimize"><label>Reason <select><option>Spam</option><option>Resolved</option><option>Outdated</option></select></label></form></div>';
+  let threads = "";
+  if (!q.has("none")) {
+    if (q.has("unresolved")) {
+      threads += window.ghrcThread(900, false, true) + window.ghrcThread(901, false, true);
+    } else {
+      const cut = q.has("loadmore") ? Math.ceil(n / 2) : n;
+      for (let i = 1; i <= n; i++) {
+        threads += window.ghrcThread(i, true, false);
+        if (q.has("loadmore") && i === cut) threads += more;
+      }
+      if (q.has("loadmore")) threads += more;
+      threads += window.ghrcThread(900, false, true) + window.ghrcThread(901, false, false);
+    }
+  }
+  html += item(threads, 1) + '<div class="comment">Merged into main later (a plain timeline item).</div>';
+  d.innerHTML = html;
+})();
+</script>
+</body>
+</html>
