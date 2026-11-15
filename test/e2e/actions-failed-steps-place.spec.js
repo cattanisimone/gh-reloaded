@@ -9,7 +9,10 @@ import { setup, jobPage, fsBtn, fsRoot, fsList, FS_FIXTURE, JOB_URL } from "./su
 const one = [{ n: 1, name: "Build", conclusion: "success" }, { n: 2, name: "Tests", conclusion: "failure", log: 800 }];
 const two = [...one, { n: 3, name: "Lint", conclusion: "failure", log: 100 }];
 const SHORT = "test (race mode)";
+const LONG55 = "x".repeat(55);
 const LONG61 = "x".repeat(61);
+const NAME24 = "x".repeat(24);
+const NAME30 = "x".repeat(30);
 const LONG79 = "y".repeat(79);
 const LONGSUB = { name: "z".repeat(53), sub: "failed 12 days ago in 21m 18s on a runner with a very long description tail" };
 
@@ -54,7 +57,7 @@ async function withoutControl(page) {
   await tag.evaluate((s) => s.remove());
   return g;
 }
-// Horizontal distance from the control to GitHub's name and subtitle text on its line (Infinity: none).
+// Clearance from the control to GitHub's visible name and subtitle text, on any line: the larger of the horizontal and the vertical gap between the control and each glyph box (the text rect inset by 3px above and below), the smallest over all texts (Infinity: none). Same measure as the model's.
 const nearestText = (page) => page.evaluate(() => {
   const c = document.querySelector(".ghals-fs").getBoundingClientRect();
   const title = document.querySelector('[class*="CheckRun-header"] [class*="CheckRun-log-title"]');
@@ -68,8 +71,10 @@ const nearestText = (page) => page.evaluate(() => {
     for (const q of r.getClientRects()) {
       if (!q.width || !q.height) continue;
       const l = Math.max(q.left, clip.left), rt = Math.min(q.right, clip.right);
-      if (rt <= l || Math.min(c.bottom, q.bottom - 3) - Math.max(c.top, q.top + 3) <= 0) continue;
-      best = Math.min(best, Math.max(c.left - rt, l - c.right));
+      if (rt <= l) continue;
+      const gx = Math.max(0, c.left - rt, l - c.right);
+      const gy = Math.max(0, c.top - (q.bottom - 3), q.top + 3 - c.bottom);
+      best = Math.min(best, Math.max(gx, gy));
     }
   }
   return best;
@@ -79,9 +84,11 @@ const box = (loc) => loc.evaluate((e) => { const r = e.getBoundingClientRect(); 
 const CASES = [
   // [title, width, options, expected place]
   ["short names at 1280 take the name line", 1280, { name: SHORT }, "name"],
-  ["a 61 character name at 1280 would re-wrap: the subtitle line", 1280, { name: LONG61 }, "subtitle"],
-  ["a 79 character name at 1280: the subtitle line", 1280, { name: LONG79, steps: two }, "subtitle"],
-  ["a long name at 390 takes the short label on the subtitle line", 390, { name: LONG61 }, "subtitle-short"],
+  ["a 55 character name at 1280 would overflow on its own line: the subtitle line, clear of the name's end", 1280, { name: LONG55 }, "subtitle"],
+  ["a 61 character name at 1280: the subtitle slot is under the name's tail, the control moves on to the edge", 1280, { name: LONG61 }, "edge"],
+  ["a 79 character name at 1280 (wrapped): the subtitle slot is under the second line, the bottom edge", 1280, { name: LONG79, steps: two }, "edge"],
+  ["a 24 character name at 390 takes the short label on the subtitle line", 390, { name: NAME24 }, "subtitle-short"],
+  ["a 30 character name at 390: the subtitle ends 5.6px left of the slot, the control moves on to the edge", 390, { name: NAME30 }, "edge"],
   ["short names at 390: subtitle line is too tight, the short label on the name line", 390, { name: SHORT }, "name-short"],
   ["a long subtitle at 1280: the short label on the name line", 1280, LONGSUB, "name-short"],
   ["short names at 500: the name line", 500, { name: SHORT }, "name"],
@@ -120,7 +127,7 @@ for (const [title, width, opts, expected] of CASES) {
     expect(r.top).toBeGreaterThanOrEqual(hb.top);
     expect(r.bottom).toBeLessThanOrEqual(hb.bottom);
     expect(r.right).toBeLessThanOrEqual(width);
-    // at least 8px from GitHub's text on the control's own line
+    // at least 8px from GitHub's text, on any line
     expect(await nearestText(page)).toBeGreaterThanOrEqual(7.5);
     // the label shown keeps its full accessible name
     const label = await fsBtn(page).textContent();
@@ -171,7 +178,7 @@ test("resize from 1280 to 390 on a short-name job: name line to the short label"
 
 test("the label changes: Go to failed step to Failed steps: 2 refits, never into GitHub's text", async ({ context, page }) => {
   // a job name that leaves just enough room for the short label's width on the subtitle line
-  await open(context, page, 390, { name: LONG61 });
+  await open(context, page, 390, { name: NAME24 });
   expect(await place(page)).toBe("subtitle-short");
   await expect(fsBtn(page)).toHaveText("Go to failure");
   await page.evaluate(() => {
@@ -200,9 +207,9 @@ test("GitHub's subtitle grows by one word: the control moves on and the text kee
 });
 
 test("light and dark give the same place", async ({ context, page }) => {
-  await open(context, page, 390, { name: LONG61 });
+  await open(context, page, 390, { name: NAME24 });
   const light = await place(page);
-  await open(context, page, 390, { name: LONG61, dark: true });
+  await open(context, page, 390, { name: NAME24, dark: true });
   expect(await place(page)).toBe(light);
 });
 
@@ -230,7 +237,7 @@ test("320 and 390: the open list fits the window with no horizontal scroll", asy
 });
 
 test("a relative time that grows inside its shadow root: the control refits and never meets GitHub's text", async ({ context, page }) => {
-  await open(context, page, 390, { name: LONG61 });
+  await open(context, page, 390, { name: NAME24 });
   expect(await place(page)).toBe("subtitle-short");
   await page.evaluate(() => {
     class RT extends HTMLElement { constructor() { super(); this.attachShadow({ mode: "open" }).textContent = "now"; } }

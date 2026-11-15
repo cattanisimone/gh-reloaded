@@ -164,12 +164,32 @@ test("fits rejects a re-wrap, an added ellipsis and a clipped line", () => {
 test("fits rejects overlap and less than 8px from any text", () => {
   assert.match(M.fits(base(), trialOf({ ctrl: { left: 250, top: 26, right: 371, bottom: 54 } }), "name").reason, /text/);
   assert.match(M.fits(base(), trialOf({ ctrl: { left: 307, top: 26, right: 428, bottom: 54 } }), "name").reason, /text/);
-  // text on another line is not "near": a control on the subtitle line may sit under the name text
-  const under = { left: 208, top: 38, right: 329, bottom: 66 };
-  assert.equal(M.fits(base(), trialOf({ ctrl: under }), "subtitle").reason.includes("text"), false);
-  // ...but it still must keep 8px from the subtitle on its own line
-  assert.match(M.fits(base(), trialOf({ ctrl: { left: 190, top: 38, right: 311, bottom: 66 } }), "subtitle").reason, /text/);
-  assert.equal(M.fits(base(), trialOf({ ctrl: { left: 208, top: 38, right: 329, bottom: 66 } }), "subtitle").reason.includes("text"), false);
+  // text on another line still counts, in 2D: a control on the subtitle line may sit under the name text only with 8px between the glyph boxes
+  assert.match(M.fits(base(), trialOf({ ctrl: { left: 208, top: 38, right: 329, bottom: 66 } }), "subtitle").reason, /text/);
+  const under = { left: 208, top: 45, right: 329, bottom: 73 };
+  assert.equal(M.fits(base(), trialOf({ ctrl: under }), "subtitle").ok, true);
+  // ...and it keeps 8px from the subtitle on its own line
+  assert.match(M.fits(base(), trialOf({ ctrl: { left: 190, top: 45, right: 311, bottom: 73 } }), "subtitle").reason, /text/);
+});
+
+test("fits rejects a control directly under a wrapped second name line", () => {
+  // the name wraps: line 2 (x 24-300, y 40-58) sits right above the subtitle line, the control is on the subtitle line
+  const wrapped = { ...base(), texts: [{ left: 24, top: 22, right: 300, bottom: 40 }, { left: 24, top: 40, right: 300, bottom: 58 }, { left: 24, top: 60, right: 200, bottom: 74 }], lines: [2, 1] };
+  const ctrl = { left: 279, top: 49, right: 400, bottom: 77 };
+  const bad = M.fits(wrapped, trialOf({ ...wrapped, ctrl }), "subtitle");
+  assert.equal(bad.ok, false);
+  assert.match(bad.reason, /text/);
+  // with 8px of glyph-box clearance below the wrapped line it passes
+  assert.equal(M.fits({ ...wrapped, header: { top: 0, bottom: 100, height: 100, covered: 108 } }, trialOf({ ...wrapped, header: { top: 0, bottom: 100, height: 100, covered: 108 }, ctrl: { left: 279, top: 66, right: 400, bottom: 94 } }), "subtitle").ok, true);
+});
+
+test("fits rejects a control diagonally next to the end of the subtitle", () => {
+  // a two-step job at 390: the control on the name line starts 6.8px right of the subtitle end, the subtitle line begins 2px below the control
+  const t = { ...base(), texts: [{ left: 24, top: 22, right: 120, bottom: 40 }, { left: 24, top: 55.5, right: 181, bottom: 70 }] };
+  const bad = M.fits(t, trialOf({ ...t, ctrl: { left: 187, top: 25.5, right: 276, bottom: 53.5 } }), "name");
+  assert.equal(bad.ok, false);
+  assert.match(bad.reason, /text/);
+  assert.equal(M.fits(t, trialOf({ ...t, ctrl: { left: 189.1, top: 25.5, right: 278, bottom: 53.5 } }), "name").ok, true);
 });
 
 test("fits needs the header places to stay inside the header and the window", () => {

@@ -116,18 +116,20 @@
   const MIN_GAP = 8;
   const EPS = 0.5;
 
-  // A text rect from Range#getClientRects is the font's content area, a few
-  // px taller than the glyphs. Text counts as being on the control's line only
-  // when it reaches more than SLACK px into the control's vertical span: the
-  // name line above a control sitting on the subtitle line is a different line.
-  const SLACK = 3;
+  // A text rect from Range#getClientRects is the font's content area, a few px
+  // taller than the glyphs: the glyph box is that rect inset by GLYPH_INSET px
+  // at the top and bottom.
+  const GLYPH_INSET = 3;
 
-  // Horizontal distance between the control and a text on its line; Infinity
-  // when the text is on another line.
-  function lineDistance(c, t) {
-    const overlap = Math.min(c.bottom, t.bottom - SLACK) - Math.max(c.top, t.top + SLACK);
-    if (overlap <= 0) return Infinity;
-    return Math.max(0, c.left - t.right, t.left - c.right);
+  // Clearance between the control and one visible text: the larger of the
+  // horizontal and the vertical gap between the two boxes (0 when they overlap
+  // or touch in an axis). Text on another line counts too: a control directly
+  // under a wrapped second name line, or diagonally next to the end of the
+  // subtitle, is measured in both axes, so it needs 8px in one of them.
+  function textGap(c, t) {
+    const gx = Math.max(0, c.left - t.right, t.left - c.right);
+    const gy = Math.max(0, c.top - (t.bottom - GLYPH_INSET), t.top + GLYPH_INSET - c.bottom);
+    return Math.max(gx, gy);
   }
 
   // base: GitHub's header as it is without the control; trial: the same
@@ -150,7 +152,7 @@
     if (base.overflow.length !== trial.overflow.length || base.overflow.some((n, i) => Math.abs(n - trial.overflow[i]) > EPS)) return bad("text overflow changed");
     if (c.top < trial.header.top - EPS || c.bottom > trial.header.bottom + EPS) return bad("outside the header");
     if (c.left < -EPS || c.right > w.w + EPS) return bad("outside the window");
-    for (const t of trial.texts) if (lineDistance(c, t) < MIN_GAP - 0.01) return bad("less than 8px from GitHub's text");
+    for (const t of trial.texts) if (textGap(c, t) < MIN_GAP - 0.01) return bad("less than 8px from GitHub's text");
     return { ok: true, reason: "" };
   }
 

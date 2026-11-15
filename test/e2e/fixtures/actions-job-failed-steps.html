@@ -51,10 +51,17 @@ html[data-color-mode=dark] .CheckStep-header{background:#0d1117}
 .text-mono{font-family:inherit}.text-small{font-size:12px}.float-right{margin-left:auto}
 </style>
 <script>
-// The text is monospace, but the face differs by machine (Liberation Mono 0.6em, DejaVu Sans Mono 0.602em): set the letter-spacing from the measured advance so every character is exactly as wide on every machine.
-(function(){var cv=document.createElement("canvas").getContext("2d"),fam='"Liberation Mono","DejaVu Sans Mono","Courier New",monospace';
-function ls(px,w,target){cv.font=w+" "+px+"px "+fam;return (target-cv.measureText("0".repeat(100)).width/100).toFixed(4)+"px"}
-var r=document.documentElement.style;r.setProperty("--ls-body",ls(14,400,6.7));r.setProperty("--ls-btn",ls(14,400,7.2));r.setProperty("--ls-f4",ls(16,400,7.15));r.setProperty("--ls-f6",ls(12,400,5.4))})();
+// The text is monospace, but the face differs by machine (Liberation Mono 0.6em, DejaVu Sans Mono 0.602em, Menlo, Courier New...). Every element that carries text gets an inline letter-spacing computed from the advance of its own computed font (size, weight, family; the control's buttons are 12px / 500), so each character is exactly the same width on every machine, GitHub's text and the extension's alike.
+(function(){var cv=document.createElement("canvas").getContext("2d");
+function advance(cs){cv.font=cs.fontStyle+" "+cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;return cv.measureText("0".repeat(100)).width/100}
+// target character width as a share of the font size: the live proportions this fixture stands in for
+function ratio(e){if(e.closest(".ghals-fs"))return .5;if(e.closest("h4,.f4"))return .447;if(e.closest(".f6"))return .45;return 6.7/14}
+function fit(e){var cs=getComputedStyle(e),px=parseFloat(cs.fontSize);e.style.letterSpacing=(ratio(e)*px-advance(cs)).toFixed(4)+"px"}
+function hasText(e){if(e.shadowRoot)return true;for(var n=e.firstChild;n;n=n.nextSibling)if(n.nodeType===3&&n.nodeValue.trim())return true;return false}
+function walk(root){if(root.nodeType!==1)return;if(hasText(root))fit(root);for(var c=root.firstElementChild;c;c=c.nextElementSibling)walk(c)}
+function all(){walk(document.documentElement)}
+document.addEventListener("DOMContentLoaded",function(){all();new MutationObserver(function(ms){for(var m of ms){if(m.type==="characterData"){if(m.target.parentElement)fit(m.target.parentElement)}else for(var n of m.addedNodes){if(n.nodeType===1)walk(n);else if(n.nodeType===3&&n.parentElement)fit(n.parentElement)}}}).observe(document.documentElement,{childList:true,subtree:true,characterData:true})});
+})();
 </script>
 </head><body>
 <div class="PageLayout-columns"><div class="pane"><nav aria-label="Workflow run"><ul><li><a data-test-selector="summary-link" href="/acme/web/actions/runs/11"><span>Summary</span></a></li><li><a href="/acme/web/actions/runs/11/job/22">test</a></li></ul></nav></div>
