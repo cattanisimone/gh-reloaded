@@ -164,8 +164,12 @@ test("fits rejects a re-wrap, an added ellipsis and a clipped line", () => {
 test("fits rejects overlap and less than 8px from any text", () => {
   assert.match(M.fits(base(), trialOf({ ctrl: { left: 250, top: 26, right: 371, bottom: 54 } }), "name").reason, /text/);
   assert.match(M.fits(base(), trialOf({ ctrl: { left: 307, top: 26, right: 428, bottom: 54 } }), "name").reason, /text/);
-  // diagonal distance counts: 6px right and 6px below is 8.48px away
-  assert.equal(M.fits(base(), trialOf({ ctrl: { left: 306, top: 64, right: 427, bottom: 92 } }), "name").reason.includes("text"), false);
+  // text on another line is not "near": a control on the subtitle line may sit under the name text
+  const under = { left: 208, top: 38, right: 329, bottom: 66 };
+  assert.equal(M.fits(base(), trialOf({ ctrl: under }), "subtitle").reason.includes("text"), false);
+  // ...but it still must keep 8px from the subtitle on its own line
+  assert.match(M.fits(base(), trialOf({ ctrl: { left: 190, top: 38, right: 311, bottom: 66 } }), "subtitle").reason, /text/);
+  assert.equal(M.fits(base(), trialOf({ ctrl: { left: 208, top: 38, right: 329, bottom: 66 } }), "subtitle").reason.includes("text"), false);
 });
 
 test("fits needs the header places to stay inside the header and the window", () => {

@@ -1,0 +1,72 @@
+<!doctype html>
+<!-- Actions job page, signed in, as probed live on 2026-11-15 (public job microsoft/TypeScript 130894256393, factory account, read only): #logs.CheckRun.js-check-steps holds the sticky header div.uxr_CheckRun-header.CheckRun-header (80px high, top 0, z-index 2, 8px margin below; span.CheckRun-log-title.flex-auto.overflow-hidden with .f4 name (d-none d-md-block link above 768px, d-md-none h4 css-truncate below) and span.f6.js-updatable-content subtitle; div.CheckRun-search with a 16px left margin, the 256px search form (d-none d-md-block) and the gear details), then check-step[data-name][data-number][data-conclusion] > details > summary.CheckStep-header (sticky, inline top: 88px, 36px high). Dummy owner acme/web. Layout CSS mirrors the measured header: 894px wide at 1280, 654px at 1024, 510px at 768, the window below 768. Text is set in a monospace face with negative letter-spacing so one character is about 7.15px (name) and 5.4px (subtitle) wide on every machine; the tests choose text lengths with that in mind. Tests replace the regions between the steps and name/subtitle markers (see test/e2e/support/actions-logs.js). -->
+<html lang="en" data-color-mode="light" data-light-theme="light" data-dark-theme="dark"><head><meta charset="utf-8"><title>Actions job</title>
+<style>
+:root{--button-default-bgColor-rest:#f6f8fa;--button-default-bgColor-hover:#eff2f5;--button-default-bgColor-active:#e6eaef;--button-default-borderColor-rest:#d1d9e0;--button-default-fgColor-rest:#25292e;--bgColor-default:#fff;--bgColor-muted:#f6f8fa;--overlay-bgColor:#fff;--borderColor-default:#d1d9e0;--fgColor-default:#1f2328;--fgColor-muted:#59636e}
+html[data-color-mode=dark]{--button-default-bgColor-rest:#212830;--button-default-bgColor-hover:#262c36;--button-default-bgColor-active:#2a313c;--button-default-borderColor-rest:#3d444d;--button-default-fgColor-rest:#f0f6fc;--bgColor-default:#0d1117;--bgColor-muted:#151b23;--overlay-bgColor:#151b23;--borderColor-default:#3d444d;--fgColor-default:#f0f6fc;--fgColor-muted:#9198a1;color-scheme:dark}
+html[data-color-mode=dark] body{background:#0d1117;color:#f0f6fc}
+body{margin:0;font:14px/1.5 "Liberation Mono","DejaVu Sans Mono","Courier New",monospace;letter-spacing:-1.7px;color:#1f2328;background:#fff}
+button.ghals-btn{letter-spacing:-1.2px}
+.ghals-fs-list button{letter-spacing:-1.2px}
+.PageLayout-columns{display:block;padding:24px 0}
+.pane{display:none}
+.PageLayout-content{margin-left:361px;margin-right:25px;min-width:0}
+@media(max-width:1279px){.PageLayout-content{margin-left:345px}}
+@media(max-width:1011px){.PageLayout-content{margin-left:257px;margin-right:1px}}
+@media(max-width:767px){.PageLayout-columns{padding:0}.PageLayout-content{margin:0}}
+.flex-auto{flex:1 1 auto}.min-width-0{min-width:0}.d-flex{display:flex}.d-block{display:block}.overflow-hidden{overflow:hidden}.flex-items-center{align-items:center}.flex-justify-between{justify-content:space-between}
+.border,.border-md{border:1px solid #d1d9e0}.rounded,.rounded-md-1{border-radius:6px}
+.color-fg-muted{color:#59636e}.text-bold{font-weight:600}.no-underline{text-decoration:none}a{color:inherit}
+.d-none{display:none}.d-md-block{display:block}.d-md-none{display:none}
+@media(max-width:767px){.d-md-block{display:none}.d-md-none{display:flex}.d-none.d-md-block{display:none}}
+.f4{font-size:16px;line-height:24px;letter-spacing:-2.45px}.f6{font-size:12px;line-height:18px;letter-spacing:-1.8px}
+.two-line-wrapping{display:inline}
+#check-step-header-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.css-truncate{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:top;white-space:nowrap}
+h4{margin:0;font-size:16px;font-weight:600;line-height:24px;letter-spacing:-2.45px}
+.CheckRun{background:#fff}
+[class*="CheckRun-header"]{position:sticky;top:0;z-index:2;box-sizing:border-box;height:80px;margin-bottom:8px;padding:0 16px 0 24px;display:flex;align-items:center;justify-content:space-between;background:#f6f8fa;border-bottom:1px solid #d1d9e0}
+html[data-color-mode=dark] [class*="CheckRun-header"]{background:#151b23;border-color:#3d444d}
+@media(max-width:767px){[class*="CheckRun-header"]{padding-left:16px}}
+[class*="CheckRun-log-title"]{display:block;min-width:0}
+[class*="CheckRun-log-title"] .f4>.d-flex{margin-top:4px}
+div[class*="CheckRun-search"]{margin-left:16px;flex:none;align-items:center}
+div[class*="CheckRun-search"] form{position:relative;display:block}
+div[class*="CheckRun-search"] input{box-sizing:border-box;width:256px;height:32px;padding:0 8px 0 32px;border:1px solid #d1d9e0;border-radius:6px;font:inherit;font-size:14px}
+div[class*="CheckRun-search"] details{margin-left:8px}
+div[class*="CheckRun-search"] summary{display:flex;align-items:center;justify-content:center;width:34px;height:32px;list-style:none;cursor:pointer;border-radius:6px}
+div[class*="CheckRun-search"] summary::-webkit-details-marker{display:none}
+div[class*="CheckRun-search"] details-menu{display:none}
+.CheckStep-header{position:sticky;top:88px;z-index:1;box-sizing:border-box;height:36px;margin:0 8px 4px;padding:8px;border-radius:6px;background:#fff;list-style:none;cursor:pointer}
+.CheckStep-header::-webkit-details-marker{display:none}
+.CheckStep-header:hover{background:#f6f8fa}
+html[data-color-mode=dark] .CheckStep-header{background:#0d1117}
+.CheckStep-header .d-flex{align-items:center;height:20px}
+.CheckStep-title{flex:1;min-width:0}
+.CheckStep-chevron{margin-right:8px;flex:none}
+.octicon{flex:none}
+.CheckStep-header svg{margin-right:8px}
+.ghals-row-spacer{height:0}
+.Box{border:1px solid #d1d9e0;padding:16px;border-radius:6px}
+.text-mono{font-family:inherit}.text-small{font-size:12px}.float-right{margin-left:auto}
+</style></head><body>
+<div class="PageLayout-columns"><div class="pane"><nav aria-label="Workflow run"><ul><li><a data-test-selector="summary-link" href="/acme/web/actions/runs/11"><span>Summary</span></a></li><li><a href="/acme/web/actions/runs/11/job/22">test</a></li></ul></nav></div>
+<div class="PageLayout-region PageLayout-content"><div class="PageHeader-leadingVisual actions-workflow-runs-status"><svg aria-label="failed: " width="16" height="16"></svg></div>
+<section aria-label="Check run summary" data-hpc="" class="actions-fullwidth-module js-selected-check-run d-flex flex-auto min-width-0 tmp-mb-3 rounded-md-1 color-bg-subtle">
+<div class="flex-auto min-width-0">
+<div style="height:120px"><div role="region" aria-label="Annotations" class="js-updatable-content js-socket-channel"><div class="Box"><h2 class="text-bold h4">Annotations</h2><div class="color-fg-muted text-small">1 error</div></div></div></div>
+<div id="logs" class="CheckRun js-check-steps js-check-steps-search rounded-0 rounded-md-1 border-md tmp-pb-3">
+<div class="uxr_CheckRun-header CheckRun-header mb-2 d-flex flex-justify-between flex-items-center mb-1 tmp-py-3 tmp-pr-3 js-checks-log-toolbar rounded-top-0 rounded-md-top-1 tmp-pl-3 tmp-pl-md-4">
+<span class="CheckRun-log-title color-fg-default flex-auto mt-2 mt-md-0 overflow-hidden"><div class="f4"><div class="mr-2 pr-2 mr-sm-0 pr-sm-0 mx-sm-2 px-sm-2 py-1 rounded mt-1 d-flex flex-items-center d-md-none"><div class="d-block d-md-none tmp-ml-n3 tmp-mr-n3 mt-n1 overflow-hidden"><div class="d-flex flex-items-center tmp-mx-3"><div class="d-flex mr-2 overflow-hidden"><h4 data-view-component="true" class="min-width-0 flex-justify-start flex-nowrap css-truncate-overflow d-flex"><span class="css-truncate css-truncate-overflow" data-target="streaming-graph-job.name">test (race mode)</span></h4></div></div></div></div><div class="d-none d-md-block"><a href="#logs" class="text-bold no-underline Link--inTextBlock" id="check-step-header-title"><span class="two-line-wrapping">test (race mode)</span></a></div></div>
+<span class="d-block f6 js-socket-channel js-updatable-content color-fg-muted" data-url="/acme/web/runs/22/header"> failed
+    <relative-time datetime="2026-11-12T01:21:27Z" class="no-wrap" title="Nov 12, 2026, 1:21 AM UTC">Nov 12, 2026</relative-time> in 21m 2s
+</span></span>
+<div class="js-check-run-search CheckRun-search color-fg-muted d-flex text-right uxr_CheckRun-search tmp-ml-3"><form class="js-checks-log-search position-relative d-none d-md-block" data-turbo="false" action="/acme/web/actions/runs/11/job/22" accept-charset="UTF-8" method="get"><input type="text" id="name" class="CheckRun-search-input f5 tmp-pl-5 form-control js-checks-log-search-input" style="width:256px; height:32px;" aria-label="Search" placeholder="Search logs" autocomplete="off"></form><details class="details-overlay details-reset position-relative d-inline-block ml-2"><summary class="Button Button--iconOnly Button--invisible Button--medium" aria-haspopup="menu" role="button"><svg aria-label="Show options" role="img" height="16" viewBox="0 0 16 16" width="16" class="octicon octicon-gear"></svg></summary><details-menu class="dropdown-menu" role="menu"><a class="js-steps-dropdown-raw-logs dropdown-item" href="/acme/web/commit/1b9e4c0a7d3f5e6a8b2c4d6e8f0a1b3c5d7e9f02/checks/22/logs">View raw logs</a></details-menu></details></div></div>
+<div class="position-relative js-full-logs-container">
+<!--steps:begin-->
+<check-step data-name="Set up job" data-number="1" data-conclusion="success" data-expand="" data-job-completed="" data-logged-in="" data-use-actions-ux="" data-step-type="" data-catalyst=""><details class="Details-element CheckStep rounded-2 details-reset js-checks-log-details px-2" id="check-step-1" data-step-number="1" data-conclusion="success" data-expand=""><summary class="CheckStep-header p-2 mb-1 rounded-2 js-check-step-summary uxr_CheckStep-header mx-2" style="top: 88px" data-retain-focus="" data-target="check-step.header" data-step-pending="false"><div class="d-flex flex-items-center"><svg class="octicon octicon-chevron-right js-check-step-chevron mr-2 flex-shrink-0 CheckStep-chevron" viewBox="0 0 16 16" width="16" height="16" aria-hidden="false"></svg><svg data-component="Octicon" class="octicon octicon-check-circle-fill color-fg-success mr-3 flex-shrink-0 ml-1" title="This step succeeded" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"></svg><span class="CheckStep-title flex-1 ml-n1 mr-1"><span class="CheckStep-titleName css-truncate css-truncate-overflow user-select-none">Set up job</span></span><div class="text-mono text-normal text-small float-right">2s</div></div></summary><div class="js-checks-log-display"><div class="text-mono text-small py-1 my-2 js-checks-log-display-container mx-2"></div></div></details></check-step>
+<check-step data-name="Tests" data-number="2" data-conclusion="failure" data-expand="" data-job-completed="" data-logged-in="" data-use-actions-ux="" data-step-type="" data-catalyst=""><details class="Details-element CheckStep rounded-2 details-reset js-checks-log-details px-2" id="check-step-2" data-step-number="2" data-conclusion="failure" data-expand="" open=""><summary class="CheckStep-header p-2 mb-1 rounded-2 js-check-step-summary uxr_CheckStep-header mx-2" style="top: 88px" data-retain-focus="" data-target="check-step.header" data-step-pending="false"><div class="d-flex flex-items-center"><svg class="octicon octicon-chevron-right js-check-step-chevron mr-2 flex-shrink-0 CheckStep-chevron" viewBox="0 0 16 16" width="16" height="16" aria-hidden="false"></svg><svg data-component="Octicon" class="octicon octicon-x-circle-fill color-fg-danger mr-3 flex-shrink-0 ml-1" title="This step failed" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"></svg><span class="CheckStep-title flex-1 ml-n1 mr-1"><span class="CheckStep-titleName css-truncate css-truncate-overflow user-select-none">Tests</span></span><div class="text-mono text-normal text-small float-right">20m 25s</div></div></summary><div class="js-checks-log-display"><div class="text-mono text-small py-1 my-2 js-checks-log-display-container mx-2"><div style="height:1400px">log</div></div></div></details></check-step>
+<!--steps:end-->
+</div>
+<div style="height:1400px"></div>
+</div></div></section></div></div></body></html>

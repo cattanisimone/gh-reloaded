@@ -7,6 +7,12 @@
 //    link in a new tab, shown only when the background says the user's token
 //    can read that repository's Actions logs.
 //
+//  - "Go to failed step" / "Failed steps: N" (job pages only): brings a failed
+//    step's title into view. It reads only the step rows already on the page
+//    (no request, no token, nothing stored) and lives in GitHub's sticky job
+//    header when it fits there without changing GitHub's text, otherwise at the
+//    bottom right edge of the window.
+//
 // The extension never reads log content. Pure rules live in model.js
 // (globalThis.GHALS_MODEL). A missing anchor means no row: the next scan
 // retries, there is no fallback container.
@@ -23,7 +29,11 @@
   let enabled = true;
   let scanTimer = null;
   const known = new Map(); // owner/repo -> { state, at }: what detection last said, for the first paint
-  const live = new WeakSet(); // rows this script built: a Turbo snapshot clone has the markup but no listeners
+  const live = new WeakSet(); // rows and failed-step controls this script built: a Turbo snapshot clone has the markup but no listeners
+  let observer = null;
+  let resizeWatch = null;
+  let watched = null;
+  let fs = null; // the failed-step control: { root, btn, list, status, path, key, steps, sig, place, count }
   const asked = new Set(); // `${path}|${owner/repo}` already asked on this page view
 
   function extensionAlive() {
@@ -215,14 +225,15 @@
   function paint(row, route, withOpen) {
     row.dataset.painted = "yes";
     row.querySelector(".ghals-copy, .ghals-open")?.remove();
-    for (const b of row.querySelectorAll(".ghals-btn")) b.remove();
+    for (const b of row.querySelectorAll(":scope > .ghals-btn")) b.remove();
     const copyBtn = button("Copy gh command", async () => {
       const cmd = commandNow(route);
       if (await copy(cmd)) say(row, "Copied", "ok");
       else say(row, "Copy failed", "err", cmd);
     });
     copyBtn.classList.add("ghals-copy");
-    row.insertBefore(copyBtn, row.firstChild);
+    const own = row.querySelector(":scope > .ghals-fs");
+    row.insertBefore(copyBtn, own ? own.nextSibling : row.firstChild);
     if (withOpen) {
       const openBtn = button("Open raw log", async () => {
         const link = rawLink(route);
@@ -237,8 +248,397 @@
   }
 
   function clearButtons(row) {
-    for (const b of row.querySelectorAll(".ghals-btn")) b.remove();
+    for (const b of row.querySelectorAll(":scope > .ghals-btn")) b.remove();
     row.dataset.painted = "no";
+  }
+
+
+  // --- Go to failed step / Failed steps: N ----------------------------------
+
+  const logsRoot = () => document.getElementById("logs");
+  const titleOf = (step) => step.querySelector(":scope > details > summary");
+
+  function stepName(step, summary) {
+    const named = step.getAttribute("data-name");
+    if (named && named.trim()) return named;
+    const t = summary && summary.querySelector('[class*="CheckStep-titleName"]');
+    return t ? t.textContent : "";
+  }
+
+  // Steps the page shows as failed whose own title control can be found.
+  function readFailed() {
+    const root = logsRoot();
+    if (!root) return [];
+    const items = [];
+    for (const step of root.querySelectorAll('check-step[data-conclusion="failure"]')) {
+      const summary = titleOf(step);
+      if (!summary) continue;
+      items.push({ number: step.getAttribute("data-number") || "", name: stepName(step, summary), conclusion: "failure" });
+    }
+    return M.failedSteps(items);
+  }
+
+  function stepByNumber(number) {
+    const root = logsRoot();
+    if (!root) return null;
+    for (const step of root.querySelectorAll('check-step[data-conclusion="failure"]')) {
+      if ((step.getAttribute("data-number") || "") === number) return step;
+    }
+    return null;
+  }
+
+  // GitHub's sticky job header and its parts, found by the stable middle of
+  // the class names (a hashed `Name__x` suffix or a `uxr_` prefix both match).
+  function findHeader() {
+    const root = logsRoot();
+    const h = root && root.querySelector('[class*="CheckRun-header"]');
+    if (!h) return null;
+    const pos = getComputedStyle(h).position;
+    return pos === "sticky" || pos === "fixed" ? h : null;
+  }
+
+  function visibleOf(list) {
+    for (const n of list) if (n && n.getClientRects().length) return n;
+    return null;
+  }
+
+  function headerParts(h) {
+    const title = h.querySelector('[class*="CheckRun-log-title"]');
+    if (!title || title.parentElement !== h) return null;
+    const name = visibleOf([...title.querySelectorAll("#check-step-header-title, h4")].map((n) => n.querySelector("span") || n));
+    const sub = title.querySelector("span.js-updatable-content") || title.querySelector("span.d-block.f6") || title.querySelector(".f6");
+    if (!name || !sub) return null;
+    const search = title.nextElementSibling && title.nextElementSibling !== h.querySelector(".ghals-fs") ? title.nextElementSibling : null;
+    return { h, title, name, sub, search };
+  }
+
+  function textRects(node, clip) {
+    const r = document.createRange();
+    r.selectNodeContents(node);
+    const out = [];
+    for (const q of r.getClientRects()) {
+      if (!q.width || !q.height) continue;
+      const left = Math.max(q.left, clip.left);
+      const right = Math.min(q.right, clip.right);
+      if (right > left) out.push({ left, right, top: q.top, bottom: q.bottom });
+    }
+    return out;
+  }
+
+  const lineCount = (rects) => {
+    const tops = [];
+    for (const q of rects) if (!tops.some((t) => Math.abs(t - q.top) < 2)) tops.push(q.top);
+    return tops.length;
+  };
+
+  const overflowOf = (from, to) => {
+    const out = [];
+    for (let n = from; n; n = n.parentElement) {
+      out.push(n.scrollWidth - n.clientWidth, n.scrollHeight - n.clientHeight);
+      if (n === to) break;
+    }
+    return out;
+  };
+
+  // Everything the fit test compares, read from the page as it is now.
+  function measure(parts, ctrl) {
+    const hr = parts.h.getBoundingClientRect();
+    const tr = parts.title.getBoundingClientRect();
+    const nameRects = textRects(parts.name, tr);
+    const subRects = textRects(parts.sub, tr);
+    const c = ctrl && ctrl.getBoundingClientRect();
+    return {
+      header: { top: hr.top, bottom: hr.bottom, height: hr.height, covered: hr.height + (parseFloat(getComputedStyle(parts.h).marginBottom) || 0) },
+      lines: [lineCount(nameRects), lineCount(subRects)],
+      overflow: [...overflowOf(parts.name, parts.title), ...overflowOf(parts.sub, parts.title)],
+      texts: [...nameRects, ...subRects],
+      subRects,
+      ctrl: c ? { left: c.left, top: c.top, right: c.right, bottom: c.bottom } : null,
+      win: { w: document.documentElement.clientWidth, h: window.innerHeight },
+    };
+  }
+
+  function buildFs(route) {
+    const root = el("div", "ghals-fs");
+    const btn = el("button", "ghals-btn ghals-fs-btn");
+    btn.type = "button";
+    const list = el("div", "ghals-fs-list");
+    list.setAttribute("role", "menu");
+    list.hidden = true;
+    const status = el("span", "ghals-fs-status");
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+    root.append(btn, list, status);
+    live.add(root);
+    const c = { root, btn, list, status, path: route.path, key: "", steps: [], sig: "", place: "", count: 0 };
+    btn.addEventListener("click", () => {
+      if (c.steps.length === 1) return land(c, c.steps[0]);
+      if (c.list.hidden) openList(c, "first");
+      else closeList(c, true);
+    });
+    btn.addEventListener("keydown", (e) => {
+      if (c.steps.length > 1 && e.key === "ArrowDown") {
+        e.preventDefault();
+        openList(c, "first");
+      } else if (c.steps.length > 1 && e.key === "ArrowUp") {
+        e.preventDefault();
+        openList(c, "last");
+      }
+    });
+    list.addEventListener("keydown", (e) => {
+      const items = [...list.querySelectorAll('[role="menuitem"]')];
+      const at = items.indexOf(document.activeElement);
+      const go = (i) => {
+        e.preventDefault();
+        e.stopPropagation();
+        items[(i + items.length) % items.length]?.focus();
+      };
+      if (e.key === "ArrowDown") go(at + 1);
+      else if (e.key === "ArrowUp") go(at - 1);
+      else if (e.key === "Home") go(0);
+      else if (e.key === "End") go(items.length - 1);
+      else if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        closeList(c, true);
+      } else if (e.key === "Tab") closeList(c, false);
+    });
+    return c;
+  }
+
+  function setLabel(c, short) {
+    const n = c.steps.length;
+    const text = M.labelFor(n, short);
+    if (c.btn.textContent !== text) c.btn.textContent = text;
+    c.btn.setAttribute("aria-label", M.fullLabel(n));
+    if (n > 1) {
+      c.btn.setAttribute("aria-haspopup", "menu");
+      c.btn.setAttribute("aria-expanded", c.list.hidden ? "false" : "true");
+      c.btn.classList.add("ghals-fs-menu");
+    } else {
+      c.btn.removeAttribute("aria-haspopup");
+      c.btn.removeAttribute("aria-expanded");
+      c.btn.classList.remove("ghals-fs-menu");
+    }
+  }
+
+  function fillList(c) {
+    const hadFocus = c.list.contains(document.activeElement);
+    c.list.textContent = "";
+    for (const st of c.steps) {
+      const item = el("button", "ghals-fs-item", st.name);
+      item.type = "button";
+      item.setAttribute("role", "menuitem");
+      item.dataset.number = st.number;
+      item.tabIndex = -1;
+      item.addEventListener("click", () => {
+        closeList(c, false);
+        land(c, st);
+      });
+      c.list.appendChild(item);
+    }
+    if (hadFocus) c.list.querySelector('[role="menuitem"]')?.focus();
+  }
+
+  function positionList(c) {
+    if (c.list.hidden) return;
+    const b = c.btn.getBoundingClientRect();
+    const w = document.documentElement.clientWidth;
+    c.list.style.maxWidth = `${Math.max(120, w - 16)}px`;
+    const lw = c.list.offsetWidth;
+    const left = Math.max(8, Math.min(b.right - lw, w - 8 - lw));
+    c.list.style.left = `${left}px`;
+    if (c.place === "edge") {
+      c.list.style.top = "auto";
+      c.list.style.bottom = `${window.innerHeight - b.top + 4}px`;
+      c.list.style.maxHeight = `${Math.max(80, b.top - 12)}px`;
+    } else {
+      c.list.style.bottom = "auto";
+      c.list.style.top = `${b.bottom + 4}px`;
+      c.list.style.maxHeight = `${Math.max(80, window.innerHeight - b.bottom - 12)}px`;
+    }
+  }
+
+  function outsideClose(e) {
+    if (fs && !fs.list.hidden && !fs.root.contains(e.target)) closeList(fs, false);
+  }
+
+  function openList(c, which) {
+    c.list.hidden = false;
+    c.btn.setAttribute("aria-expanded", "true");
+    positionList(c);
+    const items = c.list.querySelectorAll('[role="menuitem"]');
+    (which === "last" ? items[items.length - 1] : items[0])?.focus();
+    document.addEventListener("pointerdown", outsideClose, true);
+  }
+
+  function closeList(c, refocus) {
+    if (c.list.hidden) return;
+    c.list.hidden = true;
+    c.btn.setAttribute("aria-expanded", "false");
+    document.removeEventListener("pointerdown", outsideClose, true);
+    if (refocus) c.btn.focus();
+  }
+
+  // Brings a failed step's title below GitHub's sticky bars. The target is the
+  // element (found again by its number), never a stored position, because the
+  // layout moves while a long log renders; a few frames correct the drift.
+  function covered(summary) {
+    const cs = getComputedStyle(summary);
+    const top = parseFloat(cs.top);
+    if (cs.position === "sticky" && Number.isFinite(top)) return top;
+    const h = findHeader();
+    return h ? h.getBoundingClientRect().height + (parseFloat(getComputedStyle(h).marginBottom) || 0) : 0;
+  }
+
+  function land(c, st) {
+    const first = stepByNumber(st.number);
+    const summary = first && titleOf(first);
+    if (!summary) return;
+    let frames = 0;
+    const adjust = () => {
+      const now = stepByNumber(st.number);
+      const sum = now && titleOf(now);
+      if (!sum) return;
+      const d = M.landingDelta(sum.getBoundingClientRect().top, covered(sum));
+      if (M.needsScroll(d)) window.scrollBy({ top: d, left: 0, behavior: "instant" });
+      if (++frames < 4) requestAnimationFrame(adjust);
+    };
+    adjust();
+    try {
+      summary.focus({ preventScroll: true });
+    } catch {
+      // handled below
+    }
+    if (document.activeElement !== summary) {
+      c.status.textContent = "";
+      setTimeout(() => (c.status.textContent = `Moved to failed step: ${st.name}`), 0);
+    }
+  }
+
+  function detach(c) {
+    closeList(c, false);
+    c.root.remove();
+  }
+
+  // Put the control in a place and report whether GitHub's header survived it.
+  function tryPlace(c, parts, base, p) {
+    setLabel(c, p.short);
+    c.root.className = `ghals-fs ghals-fs-${p.id}`;
+    c.root.style.cssText = "";
+    if (p.id === "name") {
+      parts.h.insertBefore(c.root, parts.search);
+    } else if (p.id === "subtitle") {
+      parts.h.appendChild(c.root);
+      const hr = parts.h.getBoundingClientRect();
+      const cs = getComputedStyle(parts.h);
+      const subRects = textRects(parts.sub, parts.title.getBoundingClientRect());
+      const line = subRects[subRects.length - 1];
+      if (!line) return false;
+      const edge = parts.search ? parts.search.getBoundingClientRect().left : hr.right - (parseFloat(cs.paddingRight) || 0);
+      const right = parts.search ? edge - 8 : edge;
+      const w = c.root.getBoundingClientRect().width;
+      const h = c.root.getBoundingClientRect().height;
+      c.root.style.left = `${right - w - hr.left - (parseFloat(cs.borderLeftWidth) || 0)}px`;
+      c.root.style.top = `${(line.top + line.bottom) / 2 - h / 2 - hr.top - (parseFloat(cs.borderTopWidth) || 0)}px`;
+    } else {
+      document.body.appendChild(c.root);
+    }
+    return M.fits(base, measure(parts, c.root), p.id).ok;
+  }
+
+  function placeIn(c, parts) {
+    c.root.remove();
+    const base = measure(parts, null);
+    for (const p of M.PLACES) {
+      if (tryPlace(c, parts, base, p)) {
+        c.place = p.id === "edge" ? "edge" : p.short ? `${p.id}-short` : p.id;
+        c.root.dataset.place = c.place;
+        return;
+      }
+      c.root.remove();
+    }
+  }
+
+  function removeFs() {
+    for (const n of document.querySelectorAll(".ghals-fs")) n.remove();
+    document.removeEventListener("pointerdown", outsideClose, true);
+    if (resizeWatch && watched) resizeWatch.disconnect();
+    watched = null;
+    fs = null;
+  }
+
+  function signature(c, parts, route) {
+    const hr = parts.h.getBoundingClientRect();
+    return [route.path, document.documentElement.clientWidth, Math.round(hr.width), squash(parts.name.textContent), squash(parts.sub.textContent), parts.search ? Math.round(parts.search.getBoundingClientRect().width) : "x", c.key].join("|");
+  }
+
+  const squash = (t) => String(t || "").replace(/\s+/g, " ").trim();
+
+  function scanFailed(route, row) {
+    if (route.kind !== "job") return removeFs();
+    const steps = readFailed();
+    if (!steps.length) return removeFs();
+    for (const n of document.querySelectorAll(".ghals-fs")) if (!fs || n !== fs.root || !live.has(n)) n.remove();
+    if (fs && (fs.path !== route.path || !live.has(fs.root))) removeFs();
+    if (!fs) fs = buildFs(route);
+    const c = fs;
+    const key = M.stepKey(steps);
+    const changed = key !== c.key;
+    if (changed) {
+      c.key = key;
+      c.steps = steps;
+      fillList(c);
+      if (steps.length < 2) closeList(c, false);
+    }
+    const header = findHeader();
+    const parts = header && headerParts(header);
+    if (!header) {
+      // The sticky header is not there: the start of the shortcut row, in flow.
+      if (!row) return removeFs();
+      if (c.place !== "row" || c.root.parentElement !== row) {
+        closeList(c, false);
+        setLabel(c, false);
+        c.root.className = "ghals-fs ghals-fs-row";
+        c.root.style.cssText = "";
+        row.insertBefore(c.root, row.firstChild);
+        c.place = "row";
+        c.root.dataset.place = "row";
+        c.sig = "";
+      } else if (changed) setLabel(c, false);
+      observer && observer.takeRecords();
+      return;
+    }
+    if (!parts) {
+      // Header found but unreadable: the bottom edge never depends on it.
+      if (c.place !== "edge" || !c.root.isConnected || changed) {
+        setLabel(c, false);
+        c.root.className = "ghals-fs ghals-fs-edge";
+        c.root.style.cssText = "";
+        document.body.appendChild(c.root);
+        c.place = "edge";
+        c.root.dataset.place = "edge";
+      }
+      observer && observer.takeRecords();
+      return;
+    }
+    watch(header);
+    const sig = signature(c, parts, route);
+    if (c.sig === sig && c.root.isConnected && !changed) return;
+    const was = c.place;
+    placeIn(c, parts);
+    c.sig = sig;
+    if (was !== c.place) closeList(c, false);
+    positionList(c);
+    observer && observer.takeRecords();
+  }
+
+  function watch(header) {
+    if (watched === header || typeof ResizeObserver === "undefined") return;
+    if (!resizeWatch) resizeWatch = new ResizeObserver(queue);
+    resizeWatch.disconnect();
+    resizeWatch.observe(header);
+    watched = header;
   }
 
   // --- scanning ---------------------------------------------------------
@@ -248,9 +648,17 @@
     const path = location.pathname;
     const route = enabled ? M.parseRoute(path) : null;
     if (route) route.path = path;
-    if (!route) return removeRow();
+    if (!route) {
+      removeRow();
+      removeFs();
+      return;
+    }
     const anchor = anchorFor(route);
-    if (!anchor) return removeRow();
+    if (!anchor) {
+      removeRow();
+      scanFailed(route, null);
+      return;
+    }
 
     let row = currentRow();
     if (row && (row.dataset.path !== path || row.parentElement !== anchor.parent || !live.has(row))) {
@@ -259,6 +667,7 @@
     }
     if (!row) row = newRow(route, path, anchor);
     fitRun(row);
+    scanFailed(route, row);
 
     const status = route.kind === "job" ? jobStatus() : runStatus();
     if (!M.showCopy(status)) {
@@ -334,7 +743,9 @@
     for (const ev of ["turbo:render", "turbo:load", "pjax:end", "popstate"]) document.addEventListener(ev, queue);
     window.addEventListener("popstate", queue);
     window.addEventListener("resize", queue);
-    new MutationObserver(queue).observe(document.documentElement, { childList: true, subtree: true });
+    observer = new MutationObserver(queue);
+    observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["data-conclusion"] });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(queue);
     // A route change that swaps no DOM (history.pushState alone) fires no mutation: watch the path too.
     let lastPath = location.pathname;
     setInterval(() => {
