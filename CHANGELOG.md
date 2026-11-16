@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.8.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.7.0...v1.8.0) (2026-11-16)
+
+
+### Features
+
+* add Copy gh command and an adaptive Open raw log shortcut on Actions run and job pages ([#133](https://github.com/cattanisimone/gh-reloaded/issues/133)) ([0ae5a58](https://github.com/cattanisimone/gh-reloaded/commit/0ae5a580a29e755d9fd8b942921a69e9db7aca01))
+* add Expand all resolved / Collapse all resolved to the pull request Conversation tab ([#137](https://github.com/cattanisimone/gh-reloaded/issues/137)) ([75a5d30](https://github.com/cattanisimone/gh-reloaded/commit/75a5d30ce7fd8f5382fd4dde0a5244b570d7ad9d))
+* add Go to failed step and Failed steps: N to Actions job pages ([#135](https://github.com/cattanisimone/gh-reloaded/issues/135)) ([ef154a4](https://github.com/cattanisimone/gh-reloaded/commit/ef154a4b6c111c06ad6a482e7a8c4550f7fdc0c8))
+* check notifications beyond the current page when a triage category is selected ([#127](https://github.com/cattanisimone/gh-reloaded/issues/127)) ([b1b5552](https://github.com/cattanisimone/gh-reloaded/commit/b1b5552f516f59f94a057b49d477c5734d72730c))
+* make the GitHub tokens settings clear with a token list, one-click Test and missing-permission warning ([#130](https://github.com/cattanisimone/gh-reloaded/issues/130)) ([7e212a3](https://github.com/cattanisimone/gh-reloaded/commit/7e212a3aae0790a12608ee3adada74558312ed15))
+
 ## [1.7.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.6.1...v1.7.0) (2026-11-07)
 
 
