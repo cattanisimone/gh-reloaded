@@ -2,7 +2,7 @@ import { getTokenRecords, getDefaultTokenId } from "../lib/github-api.js";
 import { parseTargets, runDiagnostics, summarize, STATUS, STATUS_LABEL } from "./token-diagnostics.js";
 import { runTokenTest, readTests, writeTest } from "./token-test.js";
 import { requiredTypes, enabledFeatures, SWITCH_KEYS } from "./token-requirements.js";
-import { tokenView, rowHtml, resultView, resultHtml, warningDetailsHtml, warningStepsHtml, whichLines, testHint, displayName, escapeHtml } from "./token-view.js";
+import { tokenView, notificationsView, notificationsHtml, rowHtml, resultView, resultHtml, warningDetailsHtml, warningStepsHtml, whichLines, testHint, displayName, escapeHtml } from "./token-view.js";
 
 const { version } = chrome.runtime.getManifest();
 document.querySelectorAll("[data-version]").forEach((el) => {
@@ -31,6 +31,8 @@ function genId() {
 }
 
 const tokensRoot = document.getElementById("tokens");
+const nbRoot = document.getElementById("tokens-more");
+const nbBody = document.getElementById("tokens-more-body");
 const tokenListEl = document.getElementById("token-list");
 const tokensStatus = document.getElementById("tokens-status");
 const shell = document.querySelector(".shell");
@@ -119,6 +121,17 @@ function normalizeOwner(value) {
   return value.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/^@/, "").split("/")[0];
 }
 
+// The link that opened Settings may name an owner GitHub could not read:
+// options.html?owner=<login>&state=<state>#tokens-more. Both are validated and
+// otherwise ignored; nothing of it is stored.
+const URL_STATES = ["no-token", "denied", "unavailable"];
+const urlOwner = (() => {
+  const q = new URLSearchParams(location.search);
+  const owner = q.get("owner") || "";
+  return /^[A-Za-z0-9-]{1,39}$/.test(owner) ? { owner, state: URL_STATES.includes(q.get("state")) ? q.get("state") : "no-token" } : null;
+})();
+const nbOpen = {}; // the user's own open/closed choice of each <details>, by data-nb
+
 function entries() {
   const def = records.find((t) => t.id === defaultId);
   const owners = records.filter((t) => t.id !== defaultId);
@@ -165,6 +178,7 @@ function render() {
     }
   }
   renderWarning(view.warning);
+  renderNotifications();
   if (!guideSet) {
     document.getElementById("full-guide").open = !records.some((t) => t.token);
     guideSet = true;
@@ -172,6 +186,43 @@ function render() {
   if (panel) updatePanel();
   renderGhalsWarnings();
 }
+
+function renderNotifications() {
+  const active = document.activeElement;
+  const inside = active && nbBody.contains(active);
+  const key = inside ? (active.dataset.act ? `[data-act="${active.dataset.act}"][data-owner="${CSS.escape(active.dataset.owner || "")}"]` : active.localName === "summary" && active.parentElement.dataset.nb ? `[data-nb="${active.parentElement.dataset.nb}"] > summary` : null) : null;
+  const view = notificationsView({ entries: entries(), tests, results, runs: new Set(runs.keys()), required: required(), urlOwner, ui: { howOpen: !!nbOpen.how } });
+  const html = notificationsHtml(view, { open: nbOpen });
+  if (nbBody.dataset.html === html) return;
+  nbBody.dataset.html = html;
+  nbBody.innerHTML = html;
+  if (key) nbBody.querySelector(key)?.focus();
+}
+
+function openHowTo() {
+  nbOpen.how = true;
+  renderNotifications();
+  const summary = nbBody.querySelector('[data-nb="how"] > summary');
+  summary?.scrollIntoView({ block: "nearest" });
+  summary?.focus();
+}
+
+// A <details> toggled by the user keeps its state across re-renders.
+nbBody.addEventListener("toggle", (e) => {
+  const k = e.target.dataset?.nb;
+  if (k) {
+    nbOpen[k] = e.target.open;
+    delete nbBody.dataset.html; // the DOM now differs from the last html: the next render must rebuild
+  }
+}, true);
+nbBody.addEventListener("click", (e) => {
+  const btn = e.target.closest('[data-act="add-owner"]');
+  if (!btn) return;
+  openPanel(null);
+  const input = $p("owner");
+  input.value = btn.dataset.owner;
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+});
 
 function renderWarning(w) {
   warningView = w;
@@ -200,7 +251,7 @@ async function testRow(id) {
   runs.set(id, ctl);
   render();
   try {
-    const res = await runTokenTest({ token: e.token, owner: e.owner }, { signal: ctl.signal });
+    const res = await runTokenTest({ token: e.token, owner: e.owner }, { signal: ctl.signal, notifications: e.isDefault });
     if (ctl.signal.aborted) return;
     results.set(id, res);
     if (res.record && entryById(id)?.token === e.token && entryById(id)?.owner === e.owner) {
@@ -495,7 +546,7 @@ async function panelTest() {
   panel.draftResult = null;
   updatePanel();
   try {
-    const res = await runTokenTest({ token, owner }, { signal: ctl.signal });
+    const res = await runTokenTest({ token, owner }, { signal: ctl.signal, notifications: panel.isDefault });
     if (ctl.signal.aborted || !panel) return;
     panel.draftResult = { ...res, token, owner };
   } catch (err) {
@@ -619,6 +670,10 @@ tokensRoot.addEventListener("click", (e) => {
 document.getElementById("add-token").addEventListener("click", () => openPanel(null));
 document.getElementById("warning-how").addEventListener("click", () => {
   if (!warningView) return;
+  if (warningView.notifications) {
+    openHowTo();
+    if (warningView.perms.length === 1) return;
+  }
   ui.stepsKey = warningView.steps.key;
   render();
   document.getElementById("warning-steps").focus();
@@ -634,6 +689,8 @@ async function loadTokens() {
   switches = await chrome.storage.local.get(SWITCH_KEYS);
   render();
   tokensRoot.dataset.loaded = "true";
+  // The list above the block has just grown: bring the block back into view.
+  if (location.hash === "#tokens-more" && !nbRoot.closest(".panel-view").hidden) nbRoot.scrollIntoView({ block: "start" });
 }
 
 chrome.storage.onChanged.addListener((changes, area) => {

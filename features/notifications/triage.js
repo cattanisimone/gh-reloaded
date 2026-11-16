@@ -270,10 +270,16 @@
     if (status.childNodes.length) kids.push(status);
     for (const line of v.lines) kids.push(lineNode(line, v));
     if (v.coverage) kids.push(el("p", { class: "ghnt-coverage", "data-ghnt-triage": "coverage" }, v.coverage, ...(v.next ? [" ", nextLink(v)] : [])));
+    // At most one line, last in the block: why Unverifiable rows cannot be told apart (#131).
+    if (v.limit) {
+      const link = el("button", { type: "button", class: "ghnt-linkbtn", "data-ghnt-limit": "link", text: v.limit.link });
+      link.addEventListener("click", () => host.panel?.openAt("coverage"));
+      kids.push(el("p", { class: "ghnt-sline ghnt-sline-limit", "data-ghnt-line": "limit" }, `${v.limit.text} `, link));
+    }
     return kids;
   }
 
-  const focusKey = (node) => (node?.getAttribute?.("data-ghnt-cat") ? `[data-ghnt-cat="${node.getAttribute("data-ghnt-cat")}"]` : node?.classList?.contains("ghnt-clear") ? ".ghnt-clear" : node?.classList?.contains("ghnt-fill-btn") ? ".ghnt-fill-btn" : null);
+  const focusKey = (node) => (node?.getAttribute?.("data-ghnt-cat") ? `[data-ghnt-cat="${node.getAttribute("data-ghnt-cat")}"]` : node?.classList?.contains("ghnt-clear") ? ".ghnt-clear" : node?.getAttribute?.("data-ghnt-limit") ? '[data-ghnt-limit="link"]' : node?.classList?.contains("ghnt-fill-btn") ? ".ghnt-fill-btn" : null);
 
   // Replaces the sidebar group in place, keeping focus on the same category.
   function sync(kind, build, place) {
@@ -880,6 +886,9 @@
       }
       const narrow = { review: Q.narrowHref(location.href, "review-requested"), mention: Q.narrowHref(location.href, "mention") };
       const v = M.view(c, { layout: want, selected, collapsed, nextHref: nextHref(), fill: snap, now: Date.now(), narrow });
+      // The inbox line is the model's (coverage-model.js); the coverage line that already says "no token" suppresses its first text.
+      const noTokenLine = v.lines.some((l) => l.segs.some((g) => g.t === "text" && g.v === M.NO_TOKEN));
+      v.limit = globalThis.GHNT_COVERAGE ? globalThis.GHNT_COVERAGE.inboxLine({ items: state.items || [], caps: state.capabilities || {}, noTokenLine }) : null;
       if (want === "grouped") {
         selected = null;
         removeChrome();

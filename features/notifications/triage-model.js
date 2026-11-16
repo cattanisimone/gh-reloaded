@@ -330,5 +330,5 @@
     return index;
   }
 
-  global.GHNT_TRIAGE_MODEL = { OUTSIDE_FIRST, GROUPED_FIRST, reasonLabel, ago, listView, stateLines, partialOf, CATEGORIES, IDS, counts, categoryOf, keeps, labelOf, countText, ariaLabel, statusLine, coverageText, emptyText, NEXT_LABEL, sectionNote, pendingText, isPending, view, moveFocus };
+  global.GHNT_TRIAGE_MODEL = { NO_TOKEN, OUTSIDE_FIRST, GROUPED_FIRST, reasonLabel, ago, listView, stateLines, partialOf, CATEGORIES, IDS, counts, categoryOf, keeps, labelOf, countText, ariaLabel, statusLine, coverageText, emptyText, NEXT_LABEL, sectionNote, pendingText, isPending, view, moveFocus };
 })(typeof window !== "undefined" ? window : globalThis);

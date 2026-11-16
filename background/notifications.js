@@ -270,12 +270,31 @@ function apiRows(items) {
     .map((x) => ({ ...x.k, reason: x.i.reason || "unknown", inPage: false }));
 }
 
-// The panel's "Settings → GitHub tokens" link: a content script cannot open
-// the options page at a section itself.
+// The "Settings → GitHub tokens" links of the panel and the inbox: a content
+// script cannot open the options page itself. With no payload the tokens
+// section opens (Tags uses this). With { section: "tokens-more" } the page
+// opens on the Notifications block, optionally naming one owner and what was
+// seen about it, so Settings can offer "Add token for {owner}". The owner is a
+// GitHub login and the state one of a fixed list; anything else is ignored.
+// Nothing here is stored and no token is ever part of the URL.
+const OWNER_LOGIN = /^[A-Za-z0-9-]{1,39}$/;
+const OWNER_STATES = ["no-token", "denied", "unavailable"];
+
+export function settingsPath({ section, owner, ownerState } = {}) {
+  if (section !== "tokens-more") return "options/options.html#tokens-section";
+  const query = new URLSearchParams();
+  if (typeof owner === "string" && OWNER_LOGIN.test(owner)) {
+    query.set("owner", owner);
+    if (OWNER_STATES.includes(ownerState)) query.set("state", ownerState);
+  }
+  const q = query.toString();
+  return `options/options.html${q ? `?${q}` : ""}#tokens-more`;
+}
+
 export const settings = {
   MESSAGE_TYPE: "GHNT_OPEN_SETTINGS",
-  handleMessage: async () => {
-    await chrome.tabs.create({ url: chrome.runtime.getURL("options/options.html#tokens-section") });
+  handleMessage: async (payload) => {
+    await chrome.tabs.create({ url: chrome.runtime.getURL(settingsPath(payload && typeof payload === "object" ? payload : {})) });
     return {};
   },
 };

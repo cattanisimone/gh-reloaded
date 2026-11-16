@@ -30,7 +30,7 @@ test("nothing is requested on load; one Test is one request per type, GET plus o
   await testBtn(page, 0).click();
   await expect(row(page, 0)).toContainText("Works");
   await expect(row(page, 0)).toContainText("5 of 5 OK");
-  expect(calls.length).toBeLessThanOrEqual(7);
+  expect(calls.length).toBeLessThanOrEqual(8); // seven reads plus the notifications list (default token only)
   expect(calls.every((c) => c.url.startsWith("https://api.github.com/"))).toBe(true);
   expect(calls.every((c) => c.auth === `Bearer ${CLASSIC}`)).toBe(true);
   expect(calls.every((c) => c.method === "GET" || (c.url.endsWith("/graphql") && !/mutation/.test(c.body)))).toBe(true);
@@ -168,7 +168,8 @@ test("storage footprint: only codes in the session, local keys untouched, no ans
   expect(await storageOf(page, "local", ["githubTokens", "defaultTokenId"])).toEqual(before);
   const session = (await storageOf(page, "session", "ghrTokenTests")).ghrTokenTests;
   expect(Object.keys(session)).toEqual(["d"]);
-  expect(Object.keys(session.d).sort()).toEqual(["at", "codes"]);
+  expect(Object.keys(session.d).sort()).toEqual(["at", "codes", "detail"]); // detail: the notifications check's code word, e.g. {notifications: "ambiguous"}
+  expect(session.d.detail).toEqual({ notifications: "ambiguous" });
   expect(JSON.stringify(session)).not.toMatch(/ghp_|acme|sam/);
   await page.evaluate(() => chrome.storage.session.clear());
   await page.reload();

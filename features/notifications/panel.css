@@ -47,7 +47,7 @@
 .ghnt-switch[aria-checked="true"] { background: var(--bgColor-accent-emphasis, #0969da); border-color: var(--bgColor-accent-emphasis, #0969da); }
 .ghnt-switch[aria-checked="true"]::after { transform: translateX(16px); background: var(--fgColor-onEmphasis, #fff); }
 .ghnt-switch:disabled { opacity: 0.5; cursor: not-allowed; }
-.ghnt-switch:focus-visible, .ghnt-link:focus-visible { outline: 2px solid #0969da; outline-offset: 2px; }
+.ghnt-switch:focus-visible, .ghnt-link:focus-visible { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: 2px; border-radius: 2px; }
 
 /* Layout cards. Base = one row per card (thumbnail left, text right); from a panel
    content width of 380px the cards are three fixed-row columns. Every text element
@@ -86,3 +86,17 @@
 
 .ghnt-link { padding: 0; border: 0; background: none; color: var(--fgColor-accent, #0969da); font: inherit; cursor: pointer; text-decoration: underline; }
 .ghnt-foot { display: flex; justify-content: flex-end; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--borderColor-default, #d1d9e0); }
+
+/* Coverage and permissions (#131): one status per feature, notes, and one action line at the foot.
+   Rows copy the switch rows above (flex, 12px gap, label on the right edge); the label hugs its text. */
+.ghnt-section h3[tabindex="-1"]:focus { outline: none; }
+.ghnt-section h3[tabindex="-1"]:focus-visible { outline: 2px solid var(--focus-outlineColor, #0969da); outline-offset: 2px; border-radius: 2px; }
+.ghnt-cov-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 6px 0; }
+.ghnt-cov-row .ghnt-row-text { min-width: 0; overflow-wrap: anywhere; }
+.ghnt-cov-status { flex: none; box-sizing: border-box; max-width: 50%; padding: 0 8px; border: 1px solid var(--borderColor-default, #d1d9e0); border-radius: 2em; font-size: 12px; font-weight: 500; line-height: 20px; white-space: nowrap; color: var(--fgColor-muted, #59636e); background: var(--bgColor-muted, #f6f8fa); }
+.ghnt-cov-status-ok { color: var(--fgColor-success, #1a7f37); border-color: var(--borderColor-success-emphasis, #1a7f37); background: var(--bgColor-success-muted, #dafbe1); }
+.ghnt-cov-status-warn { color: var(--fgColor-attention, #9a6700); border-color: var(--borderColor-attention-emphasis, #9a6700); background: var(--bgColor-attention-muted, #fff8c5); }
+.ghnt-cov-note { margin-top: 6px; overflow-wrap: anywhere; }
+.ghnt-cov-more { margin-top: 4px; }
+.ghnt-warn { overflow-wrap: anywhere; }
+.ghnt-cov-action { margin-top: 8px; font-size: 12px; line-height: 18px; color: var(--fgColor-default, #1f2328); overflow-wrap: anywhere; }

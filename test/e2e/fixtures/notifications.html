@@ -28,7 +28,7 @@
   - the filter row spans the full width above the sidebar and the list (the sidebar's own placement is measured, the filter row's is kept as the #105 fixture had it).
   - below 768px the filter controls are inset from the column the list uses: at x=8 to w-8 under 544px (no page padding) and 8px inside a 16px page padding from 544px; Primer's base hr (1px muted bottom border, 15px margins) separates the sidebar groups.
   - the filter row lives INSIDE div.js-check-all-container, followed (live order) by div.js-bulk-action-toasts.tmp-mb-3 (0px high, 16px margin-bottom at every width), div.js-notifications-banners-target (0px), two absolute 1px div.sr-only (one on #done), then the list Box (on #done the .js-notifications-list blank state, 24px below the banners target). The row has margin-bottom 0 below 1012px and 16px from it; padding 0 8px below 544px.
-  - variants by hash: #reason = Done/reason filter row (4 children, Sort by only, 4 rows: first four of the page), #done = the same row and 0 rows with the blank state, #many = 32 rows, #repo = Group by Repository (a Box per repository), #relative, #empty.
+  - variants by hash: #reason = Done/reason filter row (4 children, Sort by only, 4 rows: first four of the page), #done = the same row and 0 rows with the blank state, #many = 32 rows, #quiet = 2 rows that need no lookup (subscribed, commented), #repo = Group by Repository (a Box per repository), #relative, #empty.
 
   One page, three routes (the tests serve it for every github.com navigation):
     /notifications …… the inbox (page 1; ?after=p2 is page 2; #relative = relative hrefs; #empty = no rows)
@@ -160,6 +160,12 @@
       return [
         row(7, href('/acme/web/pull/300', 7), 'Rework the cache', 'acme/web #300', 'review requested', true),
         row(8, href('/acme/web/issues/299', 8), 'Crash on empty list', 'acme/web #299', 'mentioned', true),
+      ];
+    }
+    if (location.hash === '#quiet') {
+      return [
+        row(3, href('/acme/web/issues/401', 3), 'Docs typo', 'acme/web #401', 'commented', false),
+        row(5, href('/acme/web/pull/390', 5), 'Bump the toolchain', 'acme/web #390', 'subscribed', false),
       ];
     }
     const first = location.hash === '#reason' ? 4 : 6;

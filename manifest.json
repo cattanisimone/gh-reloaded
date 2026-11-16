@@ -148,6 +148,7 @@
         "features/notifications/query.js",
         "features/notifications/fill.js",
         "features/notifications/engine.js",
+        "features/notifications/coverage-model.js",
         "features/notifications/panel.js",
         "features/notifications/content.js",
         "features/notifications/triage-model.js",

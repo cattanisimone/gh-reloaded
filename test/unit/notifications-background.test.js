@@ -289,6 +289,22 @@ test("the panel's Settings link opens the tokens section of the options page", a
   assert.deepEqual(created, ["chrome-extension://abc/options/options.html#tokens-section"]);
 });
 
+test("the Settings link: no payload keeps the tokens section; a section opens the Notifications block; owner and state are validated", async () => {
+  const { settings, settingsPath } = await import("../../background/notifications.js");
+  assert.equal(settingsPath(), "options/options.html#tokens-section");
+  assert.equal(settingsPath({ section: "nope", owner: "acme" }), "options/options.html#tokens-section");
+  assert.equal(settingsPath({ section: "tokens-more" }), "options/options.html#tokens-more");
+  assert.equal(settingsPath({ section: "tokens-more", owner: "acme", ownerState: "no-token" }), "options/options.html?owner=acme&state=no-token#tokens-more");
+  assert.equal(settingsPath({ section: "tokens-more", owner: "acme", ownerState: "weird" }), "options/options.html?owner=acme#tokens-more");
+  for (const bad of ["bad/name", "a b", "", "x".repeat(40), "acme#evil", "../x", 5, null, { a: 1 }]) assert.equal(settingsPath({ section: "tokens-more", owner: bad, ownerState: "denied" }), "options/options.html#tokens-more", String(bad));
+  assert.equal(settingsPath({ section: "tokens-more", ownerState: "denied" }), "options/options.html#tokens-more");
+  const created = [];
+  globalThis.chrome.tabs = { create: async (o) => created.push(o.url) };
+  globalThis.chrome.runtime = { ...globalThis.chrome.runtime, getURL: (p) => `chrome-extension://abc/${p}` };
+  await settings.handleMessage({ section: "tokens-more", owner: "acme", ownerState: "denied" });
+  assert.deepEqual(created, ["chrome-extension://abc/options/options.html?owner=acme&state=denied#tokens-more"]);
+});
+
 test("api: the baseline read sends all=true, is_done=false, per_page=50 and the native participating / unread parameters", async () => {
   mockFetch(() => reply(200, [apiItem("1", "subscribed", "https://api.github.com/repos/acme/web/issues/1")], { "x-oauth-scopes": "notifications", "last-modified": "LM" }));
   const res = await handleMessage({ rows: [], api: true });

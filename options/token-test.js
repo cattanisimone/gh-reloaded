@@ -5,9 +5,11 @@
 // is kept as codes only: no GitHub answer text, no token, no repository name.
 
 import { classify, send, tokenType, scrub, STATUS, TIMEOUT_MS } from "./token-diagnostics.js";
-import { TYPES, TYPE_IDS } from "./token-requirements.js";
+import { TYPES, TYPE_IDS, NOTIF_ID } from "./token-requirements.js";
 
 export const MAX_TEST_REQUESTS = 7;
+// The default token also reads the notifications list once (never on page open).
+export const MAX_TEST_REQUESTS_DEFAULT = MAX_TEST_REQUESTS + 1;
 export const SESSION_KEY = "ghrTokenTests";
 
 const API = "https://api.github.com";
@@ -61,18 +63,42 @@ function fromClassify(cls) {
   return { code: "unverified", line: line(STATUS.NOT_VERIFIED, "GitHub answered without a reason that proves what is missing.", NO_PRIVATE) };
 }
 
+const scopeList = (v) => String(v || "").split(",").map((x) => x.trim()).filter(Boolean);
+
+// The outcome of the one read of the notifications list, from codes only.
+// res: what send() returned; kind: tokenKind(). Resolves to
+//   {code: "available"}                           the scope header proves it
+//   {code: "denied"}                              the headers prove notifications and repo absent
+//   {code: "unverified", detail}                  detail: fine-grained | sso | ambiguous
+//   {temporary: cls}                              rate limit, 5xx, network: nothing is concluded
+export function notificationsOutcome(res, { token = "", kind = "classic" } = {}) {
+  if (kind === "fine-grained") return { code: "unverified", detail: "fine-grained" };
+  const cls = classify(res || {}, { kind: "repo", token });
+  if (cls.status === STATUS.TEMPORARY) return { temporary: cls };
+  if (cls.cause === "sso" || cls.cause === "policy") return { code: "unverified", detail: "sso" };
+  const headers = res.headers || {};
+  const granted = headers["x-oauth-scopes"] === undefined ? null : scopeList(headers["x-oauth-scopes"]);
+  const accepted = scopeList(headers["x-accepted-oauth-scopes"]);
+  const has = !!granted && (granted.includes("notifications") || granted.includes("repo"));
+  if (res.status >= 200 && res.status < 300 && has) return { code: "available" };
+  if ((res.status === 403 || res.status === 404) && granted && !has && accepted.includes("notifications")) return { code: "denied" };
+  return { code: "unverified", detail: "ambiguous" };
+}
+
 // Runs the plan. Resolves to {outcome, record, lines, message}:
 //   done          every request answered; record = {at, codes, sso}
 //   not-working   GET /user answered 401; record has identity "denied"
 //   temporary     network, timeout, 5xx or rate limit: nothing is concluded,
 //                 `record` is null and the caller keeps its previous result
 // Rejects with AbortError when the signal fires.
-export async function runTokenTest(rec, { signal, fetch = globalThis.fetch, timeoutMs = TIMEOUT_MS, now = Date.now } = {}) {
+// {notifications: true} (the default token only) adds the notifications check.
+export async function runTokenTest(rec, { signal, fetch = globalThis.fetch, timeoutMs = TIMEOUT_MS, now = Date.now, notifications = false } = {}) {
   const token = rec.token;
   const opts = { signal, fetch, timeoutMs };
+  const budget = notifications ? MAX_TEST_REQUESTS_DEFAULT : MAX_TEST_REQUESTS;
   let requests = 0;
   const get = (check) => {
-    if (++requests > MAX_TEST_REQUESTS) throw new Error("Test request budget exceeded");
+    if (++requests > budget) throw new Error("Test request budget exceeded");
     return send(check, token, opts);
   };
   const temporary = (cls) => ({ outcome: "temporary", record: null, lines: null, message: scrub(cls.reason, token) });
@@ -84,7 +110,8 @@ export async function runTokenTest(rec, { signal, fetch = globalThis.fetch, time
     lines[id] = { ...r.line, reason: scrub(r.line.reason, token), hint: scrub(r.line.hint, token) };
     if (r.sso) sso = true;
   };
-  const finish = (outcome) => ({ outcome, record: { at: now(), codes, ...(sso ? { sso: true } : {}) }, lines, message: "" });
+  let detail = null;
+  const finish = (outcome) => ({ outcome, record: { at: now(), codes, ...(sso ? { sso: true } : {}), ...(detail ? { detail } : {}) }, lines, message: "" });
 
   // 1. identity
   const idRes = await get({ kind: "auth", request: { url: `${API}/user` } });
@@ -170,6 +197,19 @@ export async function runTokenTest(rec, { signal, fetch = globalThis.fetch, time
     const failed = await runRepoCheck("actions", "repo", `${API}/repos/${slug}/actions/runs?per_page=1`);
     if (failed) return temporary(failed);
   }
+
+  // 8. The notifications list, default token only: one read, outcome as a code.
+  if (notifications) {
+    let out;
+    if (kind === "fine-grained") out = notificationsOutcome(null, { token, kind });
+    else {
+      const res = await get({ kind: "notifications", request: { url: `${API}/notifications?per_page=1` } });
+      out = notificationsOutcome(res, { token, kind });
+    }
+    if (out.temporary) return temporary(out.temporary);
+    codes[NOTIF_ID] = out.code;
+    if (out.detail) detail = { [NOTIF_ID]: out.detail };
+  }
   return finish("done");
 }
 
@@ -185,7 +225,7 @@ export function tokenState({ hasToken, rec, required }) {
   const req = TYPE_IDS.filter((id) => required.has(id));
   const unverified = TYPE_IDS.filter((id) => code(id) === "unverified").length;
   const note = unverified ? `${unverified} check${unverified === 1 ? "" : "s"} couldn't be verified` : "";
-  if (req.some((id) => code(id) === "denied")) return { state: "missing", note };
+  if (req.some((id) => code(id) === "denied") || (required.has(NOTIF_ID) && codes[NOTIF_ID] === "denied")) return { state: "missing", note };
   const pool = req.length ? req : TYPE_IDS;
   if (pool.some((id) => code(id) === "available")) return { state: "works", note };
   const allSso = req.length > 0 && !!rec.sso && req.every((id) => code(id) === "unverified");
@@ -201,11 +241,14 @@ export const STATE_LABEL = {
   "cant-verify": "Can't verify",
 };
 
-// Count = available / types tested (optional ones included).
+// Count = available / checks tested (optional ones included; the notifications
+// check only when proven).
 export function countOk(rec) {
   if (rec?.codes?.identity === "denied") return { ok: 0, total: TYPE_IDS.length };
   const tested = TYPE_IDS.filter((id) => rec?.codes?.[id] && rec.codes[id] !== "unchecked");
-  return { ok: tested.filter((id) => rec.codes[id] === "available").length, total: tested.length };
+  // The notifications check joins the count only when proven.
+  const proven = ["available", "denied"].includes(rec?.codes?.[NOTIF_ID]) ? [NOTIF_ID] : [];
+  return { ok: [...tested, ...proven].filter((id) => rec.codes[id] === "available").length, total: tested.length + proven.length };
 }
 
 const pad = (n) => String(n).padStart(2, "0");
