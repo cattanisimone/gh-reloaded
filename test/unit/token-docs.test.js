@@ -58,3 +58,14 @@ test("Settings has the list, the panel, the Full guide and no Verify access butt
   assert.doesNotMatch(html + js, /Verify access/);
   assert.doesNotMatch(html + js, /notifications-permission-slot/, "one id for the Notifications block");
 });
+
+test("README and PRIVACY name the optional notifications permission and a release; the stale sentence is gone", () => {
+  for (const [name, text] of [["README", readme], ["PRIVACY", privacy]]) {
+    assert.match(text, /notifications/i, name);
+    assert.match(text, /optional[^.]{0,200}notifications permission|notifications permission[^.]{0,200}optional/i, `${name} says the notifications permission is optional`);
+    assert.match(text, /\b\d+\.\d+\.\d+\b/, `${name} names a release`);
+  }
+  assert.doesNotMatch(readme, /no dedicated Notifications permissions page/i);
+  assert.match(readme, /^#### Optional: the notifications permission \(classic token\)/m, "the heading the in-product README link points at");
+  assert.match(readme, /at most 8 requests in all|at most 8 requests/, "the default token's Test budget");
+});
