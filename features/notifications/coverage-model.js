@@ -61,10 +61,13 @@
     const hint = { lead: "Tokens and permissions: ", link: SETTINGS };
     if (!o.active) return { active: false, hint, rows: [], notes: [], actions: [] };
     const caps = o.caps || {};
+    // The engine reads nothing on a page with no rows, so the key is then absent:
+    // that is "unknown", never "no default token" (nobody was asked).
+    const known = API_KEY in caps;
     const api = normalizeApi(caps[API_KEY]);
     const owner = owners(caps);
     const rate = !!o.rateLimited || api === "rate-limited" || owner.some((x) => x.state === "rate-limited");
-    const hasDefault = api !== "not-tried";
+    const hasDefault = known && api !== "not-tried";
     const triageOn = o.triageOn !== false;
     const tagsOn = o.tagsOn !== false;
     const ready = o.phase === "ready";
@@ -84,7 +87,7 @@
     const when = rate && o.retryAt != null && o.fmtTime ? ` at ${o.fmtTime(o.retryAt)}` : rate ? " when it resets" : "";
     if (rate) notes.push({ n: 1, box: "warning", text: `GitHub's rate limit was reached: classifications update${when}.` });
 
-    const noToken = ready && api === "not-tried" && owner.length > 0 && owner.every((x) => x.state === "no-token");
+    const noToken = known && api === "not-tried" && owner.length > 0 && owner.every((x) => x.state === "no-token");
     if (noToken) notes.push({ n: 2, box: "warning", text: `No default GitHub token is set, so some notifications can't be told apart and show as ${UNVERIFIABLE}.` });
 
     const ownerNotes = (n, list, text, action) => {
@@ -109,7 +112,7 @@
       (x) => ({ owner: x.owner, ownerState: x.state, segs: [T(`${x.owner}: couldn't be read. `), L("settings", "Test in Settings ›", { owner: x.owner, ownerState: x.state })] })
     );
 
-    if (ready && api === "not-tried" && !noToken) {
+    if (ready && known && api === "not-tried" && !noToken) {
       const some = owner.some((x) => x.state === "ok");
       notes.push({ n: 5, box: "neutral", text: `No default GitHub token is set, so only the loaded notifications are covered.${some ? " Owners with their own token are read normally." : ""}` });
     }

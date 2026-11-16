@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runTokenTest, notificationsOutcome, tokenState, countOk, MAX_TEST_REQUESTS, MAX_TEST_REQUESTS_DEFAULT } from "../../options/token-test.js";
 import { FEATURES, NOTIF_ID, TYPES, enabledFeatures, isFeatureOn, requiredTypes, warningFor, releaseSentence } from "../../options/token-requirements.js";
-import { tokenView, notificationsView, notificationsHtml, escapeHtml } from "../../options/token-view.js";
+import { tokenView, notificationsView, notificationsHtml, escapeHtml, resultView } from "../../options/token-view.js";
 
 const FINE = "github_pat_AAAA1111";
 const CLASSIC = "ghp_BBBB2222";
@@ -336,4 +336,17 @@ test("tokenView: the default row reads Missing permissions with 5 of 6 OK; the w
   const q = tokenView({ entries, tests, results: new Map(), runs: new Set(), required: requiredTypes(quiet), features: quiet, version: "7.7.7", ui: { laterHidden: false, stepsKey: null, editingId: null, diags: new Set() } });
   assert.equal(q.rows[0].label, "Works");
   assert.equal(q.warning, null);
+});
+
+test("a Test result names a proven notifications denial in its summary and advice, so the row's Missing permissions is explained", () => {
+  const codes = { identity: "available", contents: "available", pulls: "available", issues: "available", projects: "available", actions: "available", notifications: "denied" };
+  const line = (status) => ({ status, reason: "", hint: "" });
+  const lines = Object.fromEntries(Object.keys(codes).map((k) => [k, line(k === "notifications" ? "denied" : "available")]));
+  const r = { outcome: "done", record: { at: Date.now(), codes }, lines, message: "" };
+  const on = resultView({ name: "d", isDefault: true }, r, { required: new Set(["pulls", "issues", NOTIF_ID]) });
+  assert.match(on.summary, /Missing permissions: Notifications\./);
+  assert.ok(on.advice.some((a) => a.lead === "Notifications:"));
+  const off = resultView({ name: "d", isDefault: true }, r, { required: new Set(["pulls", "issues"]) });
+  assert.doesNotMatch(off.summary, /Missing permissions/);
+  assert.equal(off.advice.length, 0);
 });

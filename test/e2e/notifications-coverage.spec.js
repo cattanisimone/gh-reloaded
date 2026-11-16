@@ -60,7 +60,7 @@ const NO_NOTIF_SCOPE = { status: 403, headers: { "x-oauth-scopes": "read:user", 
 const LIST_OK = { status: 200, headers: { "x-oauth-scopes": "notifications" }, body: [LIST_ITEM] };
 
 test("no token and no owner recorded: Full, Not in use, note 5 only, no action line, and no request from opening the panel", async ({ context, page }) => {
-  const { world, requests } = await boot(context, page, { url: `${INBOX}#empty` });
+  const { world, requests } = await boot(context, page, { url: `${INBOX}#quiet` });
   await ready(world);
   await open(page);
   await expect(rowOf(page, "triage-tags")).toContainText("Full");
@@ -72,6 +72,14 @@ test("no token and no owner recorded: Full, Not in use, note 5 only, no action l
   await expect(cov(page)).not.toContainText("Reload this page");
   await expect(cov(page).locator("[data-ghnt-action]")).toHaveCount(0);
   expect(requests).toEqual([]);
+});
+
+test("a token and a page with no rows: the panel never claims there is no default token", async ({ context, page }) => {
+  const { world } = await boot(context, page, { storage: DEFAULT, url: `${INBOX}#empty`, list: () => LIST_OK });
+  await ready(world);
+  await open(page);
+  await expect(cov(page)).not.toContainText("No default GitHub token");
+  expect(await noteNums(page)).toEqual([]);
 });
 
 test("no token, rows that need facts: note 2 replaces 3 and 5, one Settings action, and the inbox line follows the coverage line", async ({ context, page }) => {
@@ -229,14 +237,14 @@ test("token added, then a reload: the first completed scan removes the notes, th
 });
 
 test("default token added, then a reload: Beyond this page becomes Full and note 5 is gone", async ({ context, page }) => {
-  const { world } = await boot(context, page, { url: `${INBOX}#empty`, list: () => LIST_OK });
+  const { world } = await boot(context, page, { url: `${INBOX}#quiet`, list: () => LIST_OK });
   await ready(world);
   await open(page);
   await expect(rowOf(page, "beyond")).toContainText("Not in use");
   expect(await noteNums(page)).toEqual(["5"]);
   await seedStorage(context, DEFAULT);
   const started = Date.now();
-  await page.goto(INBOX);
+  await page.reload();
   const world2 = await isolatedWorld(context, page);
   await world2.ready();
   await open(page);

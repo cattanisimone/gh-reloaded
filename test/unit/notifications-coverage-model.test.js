@@ -63,6 +63,22 @@ test("status matrix: no token and no owner recorded is Full / Not in use with no
   assert.deepEqual(r.actions, []);
 });
 
+test("a page with no rows leaves the list unread: unknown, never 'no default token'", () => {
+  const r = plain(C.describe({ ...base, caps: {} }));
+  assert.deepEqual(r.rows.map((x) => [x.id, x.status]), [["triage-tags", "Full"], ["beyond", "Not in use"]]);
+  assert.deepEqual(r.notes, []);
+  assert.deepEqual(r.actions, []);
+});
+
+test("note 2 versus note 3 does not depend on the scan phase", () => {
+  const caps = { "api:notifications": "not-tried", "pr:acme": "no-token" };
+  for (const phase of ["loading", "ready"]) {
+    const r = run(caps, { phase });
+    assert.deepEqual(ids(r), [2, 8], phase);
+    assert.equal(r.actions[0].segs[0].label, "Add a token in Settings → GitHub tokens ›", phase);
+  }
+});
+
 test("rows: descriptions and merged versus split rows", () => {
   const ok = run({ "api:notifications": "ok" });
   assert.deepEqual(ok.rows.map((x) => [x.id, x.label, x.status]), [["triage-tags", "Triage and Tags", "Full"], ["beyond", "Beyond this page", "Full"]]);

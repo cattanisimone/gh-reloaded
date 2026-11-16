@@ -5,7 +5,7 @@
 // that is shown. No DOM and no chrome.* here: unit tests import it directly.
 import { STATUS, STATUS_LABEL } from "./token-diagnostics.js";
 import { tokenState, STATE_LABEL, countOk, lastTestLabel, TYPES } from "./token-test.js";
-import { warningFor, NOTIF_ID } from "./token-requirements.js";
+import { warningFor, NOTIF_ID, NOTIF } from "./token-requirements.js";
 
 export const escapeHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -32,7 +32,7 @@ export function resultView(entry, r, { required, draft = false, inPanel = false,
     return { type: t.id, label: t.label, optional, reason, status: l.status, pill: STATUS_LABEL[l.status] };
   });
   const { ok, total } = countOk(r.record);
-  const missing = TYPES.filter((t) => required.has(t.id) && r.record.codes[t.id] === "denied").map((t) => t.name);
+  const missing = [...TYPES, NOTIF].filter((t) => required.has(t.id) && r.record.codes[t.id] === "denied").map((t) => t.name);
   const notWorking = r.outcome === "not-working";
   const summary = notWorking ? "GitHub rejected this token: it is invalid, expired or revoked." : `${ok} of ${total} OK.${missing.length ? ` Missing permissions: ${missing.join(", ")}.` : ""}`;
   const owner = entry.isDefault ? "the owner" : entry.owner || "the owner";
@@ -44,6 +44,8 @@ export function resultView(entry, r, { required, draft = false, inPanel = false,
       if (l.status === STATUS.NOT_VERIFIED) return [{ lead: `${t.name}:`, body: `we can't tell why. If ${owner} requires approval or SSO, see the SSO note below, then press Test again.` }];
       return [];
     });
+  // The optional notifications permission has no line here (the Notifications block shows it), but its proven denial is named.
+  if (!notWorking && missing.includes(NOTIF.name)) advice.push({ lead: `${NOTIF.name}:`, body: "see the Notifications block below for the optional permission and how to add it, then press Test again." });
   return { title, failed: "", lines: notWorking ? [] : lines, advice, summary, when: lastTestLabel(r.record), intro: notWorking ? "" : INTRO, canAdvise: true };
 }
 
