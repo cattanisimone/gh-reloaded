@@ -251,11 +251,12 @@ test("native inbox on: engine stopped, button still present and opens, switches 
   await expect.poll(() => world.evaluate("__log.join()")).toBe("+triage,+reasonWhy");
 });
 
-test("engine idle: no coverage, permission or token note and no api.github.com request when opening", async ({ context, page }) => {
+test("engine idle: Coverage shows only the Settings hint (no status, no note) and no api.github.com request when opening", async ({ context, page }) => {
   // Tags and Triage are on by default and would start the engine on load: switch them off so the engine stays idle.
   const { requests } = await boot(context, page, { storage: { ...TOKENS, ghntModules: { reasonTags: false, triage: false } } });
   await open(page);
-  await expect(panel(page)).not.toContainText(/Coverage|permission|scope|token/i);
+  await expect(panel(page).locator("[data-ghnt-coverage]")).toContainText("Tokens and permissions: Settings → GitHub tokens");
+  await expect(panel(page).locator("[data-ghnt-cov], [data-ghnt-note], .ghnt-warn, [data-ghnt-action]")).toHaveCount(0);
   expect(await panel(page).innerText()).not.toContain("ghp_secret123");
   await sw(page, "Show native inbox").click();
   await page.getByRole("button", { name: "Restore defaults" }).click();
@@ -328,7 +329,7 @@ test("native inbox on stops everything and changes only its own key; Restore def
   expect(requests).toEqual([]);
 });
 
-test("a missing-scope capability shows its reason and a Settings link that opens the tokens section", async ({ context, page }) => {
+test("a missing-scope capability shows its reason; with an unreadable owner the owner action wins and opens the Notifications block on that owner", async ({ context, page }) => {
   const { world } = await boot(context, page, {
     modules: "all",
     storage: TOKENS,
@@ -338,10 +339,10 @@ test("a missing-scope capability shows its reason and a Settings link that opens
   });
   await expect.poll(() => world.evaluate("GHNotifications.engine.getState().capabilities['api:notifications']")).toBe("missing-scope");
   await open(page);
-  await expect(panel(page)).toContainText("needs the notifications scope");
+  await expect(panel(page)).toContainText("Your token doesn't have the notifications permission, so only the loaded notifications are covered. This is optional.");
   expect(await panel(page).innerText()).not.toContain("ghp_secret123");
-  const [tab] = await Promise.all([context.waitForEvent("page"), panel(page).getByRole("button", { name: /GitHub tokens/ }).click()]);
-  expect(tab.url()).toMatch(/options\/options\.html#tokens-section$/);
+  const [tab] = await Promise.all([context.waitForEvent("page"), panel(page).getByRole("button", { name: "Add or replace token ›" }).click()]);
+  expect(tab.url()).toMatch(/options\/options\.html\?owner=acme&state=denied#tokens-more$/);
 });
 
 test("soft navigation inbox -> subscriptions -> inbox and back/forward: one button, preferences kept", async ({ context, page }) => {
@@ -536,10 +537,10 @@ test("a registered module without defaultOn is shown off, like the registry runs
   await expect(sw(page, "Tags")).toHaveAttribute("aria-checked", "false");
 });
 
-test("engine running with no token: a note and the Settings link, not a clean look", async ({ context, page }) => {
+test("engine running with no token: note 5 or note 2 and the Settings link, not a clean look", async ({ context, page }) => {
   const { world } = await boot(context, page, { modules: "all" });
   await expect.poll(() => world.evaluate("GHNotifications.engine.getState().phase")).toBe("ready");
   await open(page);
-  await expect(panel(page)).toContainText("No GitHub token is configured");
+  await expect(panel(page)).toContainText("No default GitHub token is set, so");
   await expect(panel(page).getByRole("button", { name: /GitHub tokens/ })).toBeVisible();
 });
