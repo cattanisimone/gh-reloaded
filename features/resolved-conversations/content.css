@@ -1,0 +1,46 @@
+/* Resolved conversations: the bar above the first resolved conversation. The
+   look is the thread row's own (muted background, 1px border, 6px radius, the
+   thread's 16px bottom gap) through GitHub's Primer variables, with light
+   fallbacks; the button keeps Primer's Button--secondary Button--small. */
+.ghrc-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  margin: 0 0 16px;
+  padding: 8px;
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border-radius: 6px;
+  background: var(--bgColor-muted, #f6f8fa);
+  color: var(--fgColor-muted, #59636e);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* Only the count wraps; the button label stays on one line inside its border. */
+.ghrc-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ghrc-btn {
+  flex: none;
+  white-space: nowrap;
+}
+
+.ghrc-btn[aria-disabled="true"] {
+  cursor: progress;
+}
+
+.ghrc-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
