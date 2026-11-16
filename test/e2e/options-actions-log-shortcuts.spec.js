@@ -3,7 +3,7 @@ import { test, expect, seedStorage } from "./support/extension.js";
 import { openOptions } from "./support/options.js";
 
 const NOTE = "Open raw log appears only when your token can read Actions for that repository. Fine-grained tokens need the optional Actions: Read-only permission and access to the repository; a classic token with repo usually already has it.";
-const DESC = "On GitHub Actions run and job pages: Copy gh command. On job pages also Open raw log, where your token can read Actions.";
+const DESC = "On GitHub Actions run and job pages: Copy gh command. On job pages also Go to failed step (Failed steps: N when several failed), and Open raw log where your token can read Actions.";
 const TOKENS = {
   githubTokens: [
     { id: "t1", name: "Default", token: "ghp_a", owner: "" },
@@ -44,7 +44,7 @@ test("not-permitted warns in Features and on the owner's card; Open GitHub token
   const f = row(page).locator(".ghals-warn");
   await expect(f).toHaveCount(1);
   await expect(f.locator(".ghals-warn-title, .ghals-warn-when")).toHaveCount(0);
-  await expect(f.locator(".ghals-warn-body")).toHaveText(/^The last check for acme could not read Actions logs \([^)]+\), so Open raw log may be hidden on its job pages\. Copy gh command keeps working\. To use it there: a fine-grained token with Actions: Read-only and access to the repository\.$/);
+  await expect(f.locator(".ghals-warn-body")).toHaveText(/^The last check for acme could not read Actions logs \([^)]+\), so Open raw log may be hidden on its job pages\. The other shortcuts keep working\. To use it there: a fine-grained token with Actions: Read-only and access to the repository\.$/);
   await expect(f.locator(".ghals-warn-link")).toHaveAttribute("href", "#tokens-section");
   await expect(f.locator("svg[aria-hidden=true]")).toHaveCount(1);
   await page.goto(page.url().replace(/#.*$/, "") + "#tokens-section");

@@ -80,3 +80,93 @@
   border: 1px solid var(--borderColor-default, #d1d9e0);
   border-radius: 6px;
 }
+
+/* Go to failed step / Failed steps: N. The button is the row's own .ghals-btn
+   look; the wrapper only decides where it sits. Header places add no margin:
+   the header's own spacing is measured by the script. */
+.ghals-fs {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  box-sizing: border-box;
+}
+.ghals-fs-subtitle {
+  position: absolute;
+  z-index: 1;
+}
+.ghals-fs-edge {
+  position: fixed;
+  right: 16px;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  z-index: 10;
+}
+.ghals-fs-edge .ghals-fs-btn {
+  box-shadow: 0 1px 3px rgba(31, 35, 40, 0.16), 0 1px 0 rgba(31, 35, 40, 0.04);
+}
+.ghals-fs-row {
+  order: -2;
+}
+@media (max-width: 768px) {
+  .ghals-row .ghals-fs-row { order: 0; }
+}
+.ghals-fs-menu::after {
+  content: "";
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: 2px;
+  border: 4px solid transparent;
+  border-top-color: currentColor;
+  border-bottom-width: 0;
+}
+.ghals-fs-menu[aria-expanded="true"]::after {
+  transform: rotate(180deg);
+}
+.ghals-fs-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.ghals-fs-list {
+  position: fixed;
+  z-index: 11;
+  box-sizing: border-box;
+  min-width: 160px;
+  overflow: auto;
+  padding: 4px;
+  background: var(--overlay-bgColor, #fff);
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(31, 35, 40, 0.16), 0 1px 0 rgba(31, 35, 40, 0.04);
+}
+.ghals-fs-list[hidden] {
+  display: none;
+}
+.ghals-fs-item {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  font: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: left;
+  color: var(--fgColor-default, #1f2328);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.ghals-fs-item:hover {
+  background: var(--control-transparent-bgColor-hover, rgba(208, 215, 222, 0.32));
+}
+.ghals-fs-item:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: -2px;
+}

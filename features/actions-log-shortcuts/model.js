@@ -74,5 +74,99 @@
     return `gh run view ${route.run} ${flag}${att}${repo}`;
   }
 
-  globalThis.GHALS_MODEL = { parseRoute, readJobStatus, readRunStatus, flagFor, isConcluded, showCopy, readAttempt, buildCommand };
+  // --- Go to failed step / Failed steps: N (job pages) -------------------
+
+  // items: [{ number, name, conclusion }] read from the page's own step rows.
+  // Only steps the page shows as failed, one per step number, in execution
+  // order (the step number; the page order when a number cannot be read).
+  function failedSteps(items) {
+    const seen = new Set();
+    const out = [];
+    for (const it of items || []) {
+      if (!it || it.conclusion !== "failure") continue;
+      const number = String(it.number == null ? "" : it.number).trim();
+      if (number && seen.has(number)) continue;
+      if (number) seen.add(number);
+      out.push({ number, name: squash(it.name) || `Step ${number || out.length + 1}` });
+    }
+    const n = (s) => (/^\d+$/.test(s.number) ? Number(s.number) : null);
+    return out
+      .map((s, i) => ({ s, i }))
+      .sort((a, b) => {
+        const x = n(a.s);
+        const y = n(b.s);
+        return x != null && y != null && x !== y ? x - y : a.i - b.i;
+      })
+      .map((e) => e.s);
+  }
+
+  const fullLabel = (count) => (count === 1 ? "Go to failed step" : `Failed steps: ${count}`);
+  const labelFor = (count, short) => (count < 1 ? null : short ? (count === 1 ? "Go to failure" : `Failed: ${count}`) : fullLabel(count));
+  const stepKey = (steps) => steps.map((s) => `${s.number}\u0001${s.name}`).join("\u0002");
+
+  // The candidate places, in the order the control takes the first that fits.
+  const PLACES = [
+    { id: "name", short: false },
+    { id: "subtitle", short: false },
+    { id: "name", short: true },
+    { id: "subtitle", short: true },
+    { id: "edge", short: false },
+  ];
+
+  const MIN_GAP = 8;
+  const EPS = 0.5;
+
+  // A text rect from Range#getClientRects is the font's content area, a few px
+  // taller than the glyphs: the glyph box is that rect inset by GLYPH_INSET px
+  // at the top and bottom.
+  const GLYPH_INSET = 3;
+
+  // Clearance between the control and one visible text: the larger of the
+  // horizontal and the vertical gap between the two boxes (0 when they overlap
+  // or touch in an axis). Text on another line counts too: a control directly
+  // under a wrapped second name line, or diagonally next to the end of the
+  // subtitle, is measured in both axes, so it needs 8px in one of them.
+  function textGap(c, t) {
+    const gx = Math.max(0, c.left - t.right, t.left - c.right);
+    const gy = Math.max(0, c.top - (t.bottom - GLYPH_INSET), t.top + GLYPH_INSET - c.bottom);
+    return Math.max(gx, gy);
+  }
+
+  // The visible text boxes of GitHub's name and subtitle, with and without the
+  // control: any box that moved, shrank, appeared or vanished means the control
+  // changed what the reader sees (a clamped name that lost characters, a re-wrap).
+  function sameRects(a, b) {
+    if (a.length !== b.length) return false;
+    return a.every((q, i) => ["left", "top", "right", "bottom"].every((k) => Math.abs(q[k] - b[i][k]) <= EPS));
+  }
+
+  // base: GitHub's header as it is without the control; trial: the same
+  // measurements with the control in the place `id`. Every field is a number
+  // or a rect measured by content.js, so the rule is testable without a DOM.
+  //   header { top, bottom, height, covered }   lines [per text]   overflow [per clip box]
+  //   texts  [visible rects of GitHub's name and subtitle]   ctrl rect   win { w, h }
+  function fits(base, trial, id) {
+    const bad = (reason) => ({ ok: false, reason });
+    const c = trial.ctrl;
+    const w = trial.win;
+    if (!c) return bad("no control");
+    if (id === "edge") {
+      if (c.left < -EPS || c.top < -EPS || c.right > w.w + EPS || c.bottom > w.h + EPS) return bad("outside the window");
+      return { ok: true, reason: "" };
+    }
+    if (Math.abs(trial.header.height - base.header.height) > EPS) return bad("header height changed");
+    if (Math.abs(trial.header.covered - base.header.covered) > EPS) return bad("covered stack changed");
+    if (base.lines.length !== trial.lines.length || base.lines.some((n, i) => n !== trial.lines[i])) return bad("text lines changed");
+    if (base.overflow.length !== trial.overflow.length || base.overflow.some((n, i) => Math.abs(n - trial.overflow[i]) > EPS)) return bad("text overflow changed");
+    if (!sameRects(base.texts, trial.texts)) return bad("GitHub's text moved, was cut or re-wrapped");
+    if (c.top < trial.header.top - EPS || c.bottom > trial.header.bottom + EPS) return bad("outside the header");
+    if (c.left < -EPS || c.right > w.w + EPS) return bad("outside the window");
+    for (const t of trial.texts) if (textGap(c, t) < MIN_GAP - 0.01) return bad("less than 8px from GitHub's text");
+    return { ok: true, reason: "" };
+  }
+
+  const landingDelta = (titleTop, covered) => titleTop - covered;
+  const needsScroll = (delta) => Math.abs(delta) > 1;
+
+  globalThis.GHALS_MODEL = { parseRoute, readJobStatus, readRunStatus, flagFor, isConcluded, showCopy, readAttempt, buildCommand, failedSteps, fullLabel, labelFor, stepKey, PLACES, fits, landingDelta, needsScroll };
 })();
