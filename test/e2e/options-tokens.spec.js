@@ -50,6 +50,8 @@ test("technical words only inside the Full guide", async ({ context, page }) => 
   const outside = await page.locator("#tokens-section").evaluate((section) => {
     const clone = section.cloneNode(true);
     clone.querySelector("#full-guide").remove();
+    // The Notifications block has its own copy rules (#131): restricted words only where the issue allows them, checked in token-notifications.test.js.
+    clone.querySelector("#tokens-more").remove();
     clone.querySelectorAll("[hidden]").forEach((el) => el.remove());
     return clone.innerText;
   });

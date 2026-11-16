@@ -7,7 +7,7 @@ test("feature table is pinned", () => {
   const table = Object.fromEntries(FEATURES.map((f) => [f.id, f.types.join("+")]));
   assert.deepEqual(table, {
     ghdg: "issues+projects", ghbd: "issues", ghsm: "issues+projects", ghhp: "contents", ghig: "contents",
-    ghmi: "issues+projects", ghprt: "pulls", ghqa: "issues", ghlps: "pulls+issues", "ghnt-reason-tags": "pulls+issues",
+    ghmi: "issues+projects", ghprt: "pulls", ghqa: "issues", ghlps: "pulls+issues", "ghnt-reason-tags": "pulls+issues", "ghnt-beyond": "notifications",
   });
   assert.deepEqual(TYPES.map((t) => t.id), ["contents", "pulls", "issues", "projects", "actions"]);
 });
@@ -22,12 +22,12 @@ test("switch defaults: Board arrows and Quick assignment are opt-in, reason tags
 });
 
 test("required types come from the features that are on; actions is never required", () => {
-  assert.deepEqual([...requiredTypes(enabledFeatures({}))].sort(), ["contents", "issues", "projects", "pulls"]);
+  assert.deepEqual([...requiredTypes(enabledFeatures({}))].sort(), ["contents", "issues", "notifications", "projects", "pulls"]);
   assert.deepEqual([...requiredTypes([])], []);
 });
 
 test("warning names the feature, the tokens and the installed version", () => {
-  const features = enabledFeatures({ ghdgEnabled: false, ghsmEnabled: false, ghmiEnabled: false, ghhpEnabled: false, ghigEnabled: false, ghprtEnabled: false, ghntModules: { reasonTags: false } });
+  const features = enabledFeatures({ ghdgEnabled: false, ghsmEnabled: false, ghmiEnabled: false, ghhpEnabled: false, ghigEnabled: false, ghprtEnabled: false, ghntModules: { reasonTags: false, triage: false } });
   assert.deepEqual(features.map((f) => f.id), ["ghlps"]);
   const w = warningFor({ features, version: "1.7.0", tokens: [{ id: "a", name: "Work", codes: { pulls: "denied", issues: "available" } }, { id: "b", name: "Personal", codes: { pulls: "available", issues: "available" } }] });
   assert.equal(w.title, "Linked PR status needs a permission your token doesn't have");

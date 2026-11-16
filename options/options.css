@@ -504,6 +504,34 @@ h1, .group h2 { scroll-margin-top: 12px; }
 .warning-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .warning-steps { margin: 0; padding-left: 20px; color: var(--text); }
 
+/* Notifications block (#tokens-more): one bordered card, as wide as the token list */
+.notif-block { container-type: inline-size; margin: 0 0 12px; scroll-margin-top: 12px; }
+.notif-block > h2.list-head { margin: 14px 0 8px; padding: 0; box-shadow: none; }
+.nb-card { overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.nb-check { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 12px 14px; }
+.nb-main { display: grid; gap: 4px; min-width: 0; }
+.nb-name { line-height: 20px; overflow-wrap: anywhere; }
+.nb-name .opt { color: var(--muted); font-size: 11px; font-weight: 400; }
+.nb-text, .nb-age { margin: 0; overflow-wrap: anywhere; }
+.nb-text { color: var(--text); }
+.nb-age { color: var(--muted); font-size: 12px; line-height: 18px; }
+.nb-check .diag-pill { padding: 0 8px; font-size: 12px; line-height: 18px; }
+.nb-details { padding: 10px 14px; border-top: 1px solid var(--line); }
+.nb-details .nb-details { padding: 6px 0 0; border-top: 0; }
+.nb-details > summary { color: var(--disclosure); font-weight: 600; cursor: pointer; }
+.nb-owners, .nb-needs { display: grid; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+.nb-owner { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; min-width: 0; }
+.nb-owner-line { min-width: 0; overflow-wrap: anywhere; }
+.nb-needs li { overflow-wrap: anywhere; }
+.nb-steps { display: grid; gap: 4px; margin: 8px 0 0; padding-left: 20px; }
+.nb-readme { justify-self: start; margin: 0; }
+button.inline-link { margin: 0; padding: 0; border: 0; background: none; color: var(--link); font: inherit; font-weight: 600; cursor: pointer; }
+button.inline-link:hover { text-decoration: underline; }
+@container (max-width: 479px) {
+  .nb-check { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .nb-owner { flex-direction: column; gap: 4px; }
+}
+
 /* Guide */
 .guide { display: grid; gap: 8px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .guide-title { margin: 0; font-size: 13px; }

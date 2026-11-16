@@ -15,8 +15,18 @@ export const TYPES = [
 
 export const TYPE_IDS = TYPES.map((t) => t.id);
 
+// The notifications check is not a sixth permission type: it reads one list
+// with the default token only and counts only when proven (see token-test.js).
+export const NOTIF_ID = "notifications";
+export const NOTIF = { id: NOTIF_ID, name: "Notifications", label: "Read your full notifications list", how: "notifications scope (classic token)" };
+
+// The sentence of the missing-permission warning. The release is the installed
+// version, read from the manifest by the caller: never written here.
+export const releaseSentence = (version) => `Available from release ${version}: reading beyond the loaded page requires a classic token with the notifications permission. Everything else keeps working.`;
+
 // switch: where the on/off state is stored. {key} is a plain flag in
-// chrome.storage.local; {module} is a key of the `ghntModules` map.
+// chrome.storage.local; {module} is a key of the `ghntModules` map; {anyOf} is
+// on while any of those modules is on (each defaults on).
 // defaultOn applies while the flag was never saved.
 export const FEATURES = [
   { id: "ghdg", name: "Dependency graph", switch: { key: "ghdgEnabled" }, defaultOn: true, types: ["issues", "projects"], reason: "to read issue relationships and project fields for the graph" },
@@ -29,6 +39,7 @@ export const FEATURES = [
   { id: "ghqa", name: "Quick assignment", switch: { key: "ghqaEnabled" }, defaultOn: false, types: ["issues"], reason: "to read an issue before assigning it" },
   { id: "ghlps", name: "Linked PR status", switch: { key: "ghlpsEnabled" }, defaultOn: true, types: ["pulls", "issues"], reason: "to show the status of linked pull requests" },
   { id: "ghnt-reason-tags", name: "Notification reason tags", switch: { module: "reasonTags" }, defaultOn: true, types: ["pulls", "issues"], reason: "to tell why a notification reached you" },
+  { id: "ghnt-beyond", name: "Beyond this page", switch: { anyOf: ["triage", "reasonTags"] }, defaultOn: true, types: [NOTIF_ID], reason: "to count notifications outside the loaded page" },
 ];
 
 // The chrome.storage.local keys the feature switches live in.
@@ -36,6 +47,10 @@ export const SWITCH_KEYS = [...new Set(FEATURES.map((f) => f.switch.key || "ghnt
 
 export function isFeatureOn(feature, stored = {}) {
   const sw = feature.switch;
+  if (sw.anyOf) {
+    const mods = stored.ghntModules && typeof stored.ghntModules === "object" ? stored.ghntModules : {};
+    return sw.anyOf.some((m) => (mods[m] === undefined ? feature.defaultOn : !!mods[m]));
+  }
   const value = sw.module ? (stored.ghntModules && typeof stored.ghntModules === "object" ? stored.ghntModules[sw.module] : undefined) : stored[sw.key];
   return value === undefined ? feature.defaultOn : !!value;
 }
@@ -49,9 +64,9 @@ export function requiredTypes(features) {
   return new Set(features.flatMap((f) => f.types));
 }
 
-const typeName = (id) => TYPES.find((t) => t.id === id)?.name || id;
+const typeName = (id) => (id === NOTIF_ID ? NOTIF.name : TYPES.find((t) => t.id === id)?.name || id);
 
-// tokens: [{id, name, codes}] where codes is the stored outcome of the last
+// tokens: [{id, name, codes, isDefault}] where codes is the stored outcome of the last
 // test (codes[type] is available | denied | unverified | unchecked, or absent).
 // Returns null when nothing is missing and nothing is unknown, else
 // {title, tokens, details, maybe}. A denied type is a proven absence; a type
@@ -65,6 +80,9 @@ export function warningFor({ features, tokens, version }) {
     for (const f of features) {
       for (const type of f.types) {
         const code = t.codes[type];
+        // The notifications list is read with the default token only, and only
+        // a proven denial speaks: it is never a "may need".
+        if (type === NOTIF_ID && (!t.isDefault || code !== "denied")) continue;
         const hit = code === "denied" ? denied : code === undefined ? unknown : null;
         if (!hit) continue;
         hit.push({ feature: f, type });
@@ -84,6 +102,7 @@ export function warningFor({ features, tokens, version }) {
     if (!t.codes) continue;
     for (const { feature, type } of hits) {
       const code = t.codes[type];
+      if (type === NOTIF_ID && !t.isDefault) continue;
       if (feature.types.includes(type) && (maybe ? code === undefined : code === "denied")) {
         shown.set(feature.id, feature);
         shownTokens.set(t.id, t.name);
@@ -108,5 +127,6 @@ export function warningFor({ features, tokens, version }) {
   }
   // The per-permission reasons are listed once, in perms; details only names the version.
   const details = [`GH Reloaded ${version} uses ${[...perms.values()].map((p) => p.name).join(", ")}.`];
-  return { title, tokens: [...shownTokens.values()], ids: [...shownTokens.keys()], details, perms: [...perms.values()], maybe };
+  const release = perms.has(NOTIF_ID) ? releaseSentence(version) : "";
+  return { title, tokens: [...shownTokens.values()], ids: [...shownTokens.keys()], details, perms: [...perms.values()], maybe, release };
 }

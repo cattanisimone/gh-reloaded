@@ -207,7 +207,10 @@
             <span class="spacer"></span>
             <p id="tokens-status" class="status" role="status"></p>
           </div>
-          <div id="notifications-permission-slot"></div>
+          <section id="tokens-more" class="notif-block" aria-labelledby="tokens-more-title">
+            <h2 id="tokens-more-title" class="list-head" tabindex="-1">Notifications</h2>
+            <div id="tokens-more-body"></div>
+          </section>
           <div id="token-guide" class="guide">
             <h3 class="guide-title">New token? Three steps</h3>
             <ol class="guide-steps"><li>Create a token on GitHub.</li><li>Paste it with <strong>Add token</strong>.</li><li>Press <strong>Test</strong>.</li></ol>
@@ -226,6 +229,7 @@
             <div class="permission-head">Classic token <small>Projects owned by a personal account</small></div>
             <div class="permission-row"><span><code>read:project</code></span><strong>Scope</strong></div>
             <div class="permission-row"><span><code>public_repo</code> <small>public repositories; broad: GitHub grants read and write access to every public repository you can reach, although the extension only reads</small></span><strong>Scope</strong></div>
+            <div class="permission-row"><span><code>notifications</code> <small>optional, only for Beyond this page (Triage counts outside the loaded page): the default token must be classic. Do not add repo for it</small></span><strong>Scope</strong></div>
             <div class="permission-row"><span><code>repo</code> <small>optional, replaces public_repo, private repositories only; broad: also grants write access to every repository you can reach</small></span><strong>Scope</strong></div>
           </div>
           <a class="inline-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Create a fine-grained token ↗</a>

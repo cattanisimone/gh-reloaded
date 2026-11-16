@@ -54,6 +54,7 @@ test("README and PRIVACY document Test, the session-only codes and Check a speci
 });
 
 test("Settings has the list, the panel, the Full guide and no Verify access button", () => {
-  for (const id of ['id="token-list"', 'id="token-panel"', 'id="full-guide"', 'id="token-warning"', 'id="notifications-permission-slot"']) assert.ok(html.includes(id), id);
+  for (const id of ['id="token-list"', 'id="token-panel"', 'id="full-guide"', 'id="token-warning"', 'id="tokens-more"']) assert.ok(html.includes(id), id);
   assert.doesNotMatch(html + js, /Verify access/);
+  assert.doesNotMatch(html + js, /notifications-permission-slot/, "one id for the Notifications block");
 });
