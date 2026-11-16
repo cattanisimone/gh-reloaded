@@ -93,8 +93,8 @@
     prefs: globalThis.GHNT_PREFS,
     route: globalThis.GHNT_ROUTE,
     storage: chrome.storage.local,
-    openSettings: () => {
-      if (extensionAlive()) chrome.runtime.sendMessage({ type: "GHNT_OPEN_SETTINGS" });
+    openSettings: (target) => {
+      if (extensionAlive()) chrome.runtime.sendMessage({ type: "GHNT_OPEN_SETTINGS", ...(target && typeof target === "object" ? { payload: target } : {}) });
     },
   });
 
@@ -132,7 +132,7 @@
 
   registry.onChange(sync);
 
-  globalThis.GHNotifications = { registry, engine, fill };
+  globalThis.GHNotifications = { registry, engine, fill, panel };
   // Counters of the last fills, for a development build (an unpacked install has
   // no update_url) in DevTools only: nothing is shown or stored.
   try {

@@ -72,21 +72,16 @@
     return el("span", { class: `ghnt-thumb ghnt-thumb-${id}`, "aria-hidden": "true" }, parts);
   }
 
-  // Notes about missing data, from the capability states the engine reports.
-  function capabilityNotes(state) {
-    const caps = state.capabilities || {};
-    const notes = [];
-    const api = caps["api:notifications"];
-    if (api === "not-tried" && state.phase === "ready") notes.push("No GitHub token is configured: reasons that need GitHub data are shown as \u201cUnverifiable\u201d.");
-    else if (api === "missing-scope") notes.push("The Notifications API needs the notifications scope of a classic token: some reasons are shown as “Unverifiable”.");
-    else if (api === "unavailable") notes.push("The Notifications API could not be read with your token: some reasons are shown as “Unverifiable”.");
-    else if (api === "rate-limited") notes.push("GitHub's rate limit was reached: classifications update when it resets.");
-    const owners = Object.entries(caps).filter(([k, v]) => k.startsWith("pr:") && (v === "no-token" || v === "denied")).map(([k]) => k.slice(3));
-    if (owners.length) notes.push(`No token that can read ${owners.join(", ")}: its notifications are shown as “Unverifiable”.`);
-    return notes;
-  }
+  const README_PERMISSIONS = "https://github.com/cattanisimone/gh-reloaded#optional-the-notifications-permission-classic-token";
+  const HINT = "Counts cover this page, and outside it when the default token is classic (notifications scope). Missing data: \u201cUnverifiable\u201d.";
 
-  function create({ registry, engine, prefs, route, storage, openSettings, getHref = () => location.href }) {
+  // Time of a rate limit's end, as the panel says it ("14:05").
+  const fmtTime = (ms) => {
+    const d = new Date(ms);
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  };
+
+  function create({ registry, engine, prefs, route, storage, openSettings, coverage = global.GHNT_COVERAGE, reload = () => location.reload(), getHref = () => location.href }) {
     let current = prefs.normalize({});
     let wrap = null;
     let button = null;
@@ -186,23 +181,58 @@
       }
       body.push(layoutSection);
 
-      // Only while the engine runs: it is the only source of these states.
-      if (engine.isActive()) {
-        const notes = capabilityNotes(engine.getState());
-        const cov = el("section", { class: "ghnt-section" }, el("h3", { text: "Coverage and permissions" }), el("p", { class: "ghnt-hint", text: "Counts cover this page, and outside it when the default token is classic (notifications scope). Missing data: “Unverifiable”." }));
-        for (const n of notes) cov.append(el("p", { class: "ghnt-warn", text: n }));
-        if (notes.length) {
-          const link = el("button", { type: "button", class: "ghnt-link", text: "Settings → GitHub tokens", "data-ghnt-focus": "settings" });
-          link.addEventListener("click", openSettings);
-          cov.append(el("p", { class: "ghnt-hint" }, "A dedicated Notifications permissions page is not part of this version. Check your token in ", link, "."));
-        }
-        body.push(cov);
-      }
+      body.push(buildCoverage());
 
       const reset = el("button", { type: "button", class: "Button Button--secondary Button--medium ghnt-reset", text: "Restore defaults", "data-ghnt-focus": "reset" });
       reset.addEventListener("click", restore);
       body.push(el("div", { class: "ghnt-foot" }, reset));
       return body;
+    }
+
+    // ---- Coverage and permissions (all wording from GHNT_COVERAGE) -----------
+    function settingsLink(label, args) {
+      const b = el("button", { type: "button", class: "ghnt-link", text: label, "data-ghnt-focus": `act-${args.owner || "settings"}-${label}` });
+      b.addEventListener("click", () => openSettings({ section: "tokens-more", ...(args.owner ? { owner: args.owner, ownerState: args.ownerState } : {}) }));
+      return b;
+    }
+
+    function segNode(seg, action) {
+      if (seg.t === "text") return document.createTextNode(seg.v);
+      if (seg.kind === "readme") return el("a", { class: "ghnt-link", href: README_PERMISSIONS, target: "_blank", rel: "noopener", text: seg.label, "data-ghnt-focus": "readme" });
+      return settingsLink(seg.label, { owner: seg.owner, ownerState: seg.ownerState });
+    }
+
+    function buildCoverage() {
+      const model = coverage.describe({
+        active: engine.isActive(),
+        phase: engine.getState().phase,
+        caps: engine.getState().capabilities,
+        rateLimited: engine.getState().rateLimited,
+        retryAt: engine.getState().retryAt,
+        triageOn: prefs.moduleOn(current.modules, "triage"),
+        tagsOn: prefs.moduleOn(current.modules, "reasonTags"),
+        fmtTime,
+      });
+      const sec = el("section", { class: "ghnt-section ghnt-coverage-section", "data-ghnt-coverage": "" }, el("h3", { id: "ghnt-coverage-h", tabindex: "-1", text: "Coverage and permissions" }));
+      if (!model.active) {
+        sec.append(el("p", { class: "ghnt-hint", "data-ghnt-hint": "" }, model.hint.lead, settingsLink(model.hint.link, {})));
+        return sec;
+      }
+      sec.append(el("p", { class: "ghnt-hint", text: HINT, "data-ghnt-hint": "" }));
+      for (const r of model.rows) {
+        const tone = r.status === "Full" ? "ok" : r.status === "Limited" ? "warn" : "mute";
+        sec.append(el("div", { class: "ghnt-cov-row", "data-ghnt-cov": r.id }, el("div", { class: "ghnt-row-text" }, el("div", { class: "ghnt-row-title", text: r.label }), r.desc ? el("div", { class: "ghnt-hint", text: r.desc }) : null), el("span", { class: `ghnt-cov-status ghnt-cov-status-${tone}`, text: r.status })));
+      }
+      for (const n of model.notes) {
+        if (n.reload) {
+          const b = el("button", { type: "button", class: "ghnt-link", text: "Reload this page", "data-ghnt-focus": "reload" });
+          b.addEventListener("click", () => reload());
+          sec.append(el("p", { class: "ghnt-hint ghnt-cov-note", "data-ghnt-note": n.n }, "Changed a token? ", b, "."));
+        } else if (n.more) sec.append(el("p", { class: "ghnt-hint ghnt-cov-more", text: n.text }));
+        else sec.append(el("p", { class: n.box === "warning" ? "ghnt-warn" : "ghnt-hint ghnt-cov-note", "data-ghnt-note": n.n, text: n.text }));
+      }
+      for (const a of model.actions) sec.append(el("p", { class: "ghnt-cov-action", "data-ghnt-action": "" }, a.segs.map((seg) => segNode(seg, a))));
+      return sec;
     }
 
     function render() {
@@ -287,8 +317,21 @@
         render();
       },
       isOpen: isOpenOnInbox,
+      // The inbox line's link: opens the panel with the Coverage heading at its top.
+      openAt(section) {
+        if (!button || !button.isConnected) return false;
+        if (!open) openPanel();
+        if (section === "coverage") {
+          const h = panel?.querySelector("#ghnt-coverage-h");
+          if (h) {
+            panel.scrollTop = Math.max(0, h.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop - 8);
+            h.focus({ preventScroll: true });
+          }
+        }
+        return true;
+      },
     };
   }
 
-  global.GHNT_PANEL = { create, findAnchor, capabilityNotes };
+  global.GHNT_PANEL = { create, findAnchor };
 })(typeof window !== "undefined" ? window : globalThis);

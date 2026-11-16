@@ -67,6 +67,7 @@ ul.ghnt-grouped { overflow-anchor: none; }
 .ghnt-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .ghnt-sline { margin: 0 0 8px; font-size: 14px; line-height: 21px; color: var(--fgColor-default, #1f2328); overflow-wrap: anywhere; }
 .ghnt-sline-partial, .ghnt-sline-unverified, .ghnt-sline-checked, .ghnt-sline-sso, .ghnt-sline-complete, .ghnt-sline-grouped-start { color: var(--fgColor-muted, #59636e); font-size: 12px; line-height: 18px; }
+.ghnt-sline-limit { margin: 0; font-size: 12px; line-height: 18px; color: var(--fgColor-default, #1f2328); }
 .ghnt-sline-state, .ghnt-sline-error, .ghnt-sline-rate, .ghnt-sline-ceiling { color: var(--fgColor-default, #1f2328); }
 .ghnt-slink, .ghnt-linkbtn { color: var(--fgColor-accent, #0969da); }
 .ghnt-linkbtn { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
