@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.1](https://github.com/cattanisimone/gh-reloaded/compare/v1.8.0...v1.8.1) (2026-11-17)
+
+
+### Features
+
+* explain why notifications are limited and that the classic notifications permission is optional ([#138](https://github.com/cattanisimone/gh-reloaded/issues/138)) ([54021a8](https://github.com/cattanisimone/gh-reloaded/commit/54021a8cef190feeba6e5922c15440da830b7844))
+
+
+### Miscellaneous
+
+* release 1.8.1 ([a8509c9](https://github.com/cattanisimone/gh-reloaded/commit/a8509c9c8fbe8baed7b4f90c723123e54863905d))
+
 ## [1.8.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.7.0...v1.8.0) (2026-11-16)
 
 
