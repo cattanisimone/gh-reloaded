@@ -51,8 +51,7 @@ test.describe("content by width", () => {
       await openPanel(context, page, "https://github.com/acme/web");
       await expect(rows(page).first()).toBeVisible();
       await page.keyboard.press("Tab");
-      await expect(page.locator(".ghqj-seg-btn.ghqj-on")).toBeVisible();
-      await page.keyboard.press("Tab");
+      await expect(page.locator(".ghqj-seg-btn.ghqj-on")).toHaveText("Everywhere", { useInnerText: true });
       const narrow = (await rect(page, ".ghqj-panel")).w < 544;
       // scope control: label stays, never shrinks or wraps, "This repo" below 544
       const seg = await rect(page, ".ghqj-seg");
@@ -98,10 +97,11 @@ test.describe("content by width", () => {
     await page.setViewportSize({ width: 320, height: 900 });
     await setup(context, { pages: { "*": { title: "acme/web", repoHeader: true } }, data });
     await openPanel(context, page, "https://github.com/acme/web");
+    await expect(rows(page).first()).toBeVisible();
     const row = rows(page).filter({ hasText: "Retry the upload" }).first();
     await expect(row).toBeVisible();
-    const segs = await row.locator(".ghqj-seg-text").evaluateAll((els) => els.map((e) => { const r = document.createRange(); r.selectNodeContents(e); return { n: r.getClientRects().length, text: e.textContent }; }));
-    for (const s of segs) expect(s.n, s.text).toBeLessThanOrEqual(1);
+    const segs = await row.locator(".ghqj-seg-text").evaluateAll((els) => els.map((e) => ({ h: e.getBoundingClientRect().height, text: e.textContent })));
+    for (const s of segs) expect(s.h, `${s.text} stays on one line`).toBeLessThanOrEqual(19);
   });
 });
 
@@ -181,6 +181,7 @@ for (const dark of [false, true]) {
       await expect(row).toHaveCSS("background-color", C.hover);
       await page.mouse.down();
       await expect(row).toHaveCSS("background-color", C.press);
+      await page.mouse.move(600, 880); // released away from the row, so the press is not a click
       await page.mouse.up();
       const selRow = rows(page).first();
       await expect(selRow).toHaveClass(/ghqj-sel/);
