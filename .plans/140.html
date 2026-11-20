@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #140 Quick jump</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--warn:#9a6700;--done:#8250df;--bg:#fff;--soft:#f6f8fa}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px} h3{font-size:15px;margin:16px 0 6px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:13px;overflow-wrap:anywhere} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto} .muted{color:var(--muted)} .small{font-size:13px}
+  .tag{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:0 8px;border:1px solid var(--line);background:var(--soft)}
+  .stop{border-left:4px solid var(--bad);background:#ffebe9;padding:8px 12px;border-radius:6px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
+  .cap{font-size:12px;color:var(--muted);margin:6px 0 0}
+  /* mockup: GitHub quick-search-like panel */
+  .qj{--b:#fff;--f:#1f2328;--m:#59636e;--l:#d1d9e0;--sel:#818b981a;--k:#f6f8fa;font:14px/20px -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--b);color:var(--f);border-radius:12px;box-shadow:0 0 0 1px #d1d9e040,0 6px 12px -3px #25292e0a,0 6px 18px 0 #25292e1f;overflow:hidden;min-width:300px}
+  .qj.dark{--b:#010409;--f:#f0f6fc;--m:#9198a1;--l:#3d444d;--sel:#656c7633;--k:#151b23;box-shadow:0 0 0 1px #3d444d,0 6px 12px -3px #01040966}
+  .qj .in{margin:12px;height:32px;border:1px solid var(--l);border-radius:6px;display:flex;align-items:center;gap:8px;padding:0 10px;color:var(--m);box-shadow:inset 0 1px 0 #1f23280a}
+  .qj .in.focus{border-color:#0969da;outline:1px solid #0969da}
+  .qj .in b{color:var(--f);font-weight:400}
+  .qj .scope{display:flex;align-items:center;gap:8px;padding:0 12px 8px;font-size:12px;color:var(--m);flex-wrap:wrap}
+  .qj .seg{display:inline-flex;background:var(--k);border:1px solid var(--l);border-radius:6px;padding:2px}
+  .qj .seg span{padding:1px 10px;border-radius:4px;color:var(--f)} .qj .seg .on{background:var(--b);box-shadow:0 0 0 1px var(--l);font-weight:600}
+  .qj .kbd{display:inline-block;border:1px solid var(--l);border-radius:4px;padding:0 4px;font:11px/16px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--m);background:var(--k)}
+  .qj .sec{border-top:1px solid var(--l);padding:6px 0}
+  .qj .h{font-size:12px;font-weight:600;color:var(--m);padding:4px 16px;display:flex;justify-content:space-between}
+  .qj .row{display:flex;gap:8px;align-items:flex-start;margin:0 8px;padding:6px 8px;border-radius:6px;position:relative}
+  .qj .row.sel{background:var(--sel)} .qj .row.sel::before{content:"";position:absolute;left:-8px;top:6px;bottom:6px;width:4px;border-radius:6px;background:#0969da}
+  .qj .ic{width:16px;flex:none;margin-top:2px;text-align:center;font-size:13px;line-height:16px}
+  .qj .t{flex:1;min-width:0} .qj .t .c{font-size:12px;line-height:18px;color:var(--m)} .qj .ty{font-size:12px;color:var(--m);white-space:nowrap}
+  .qj .o{color:#1a7f37;font-weight:600} .dark .o{color:#3fb950} .qj .pr{color:#1a7f37} .dark .pr{color:#3fb950} .qj .rp{color:var(--m)}
+  .qj .line{padding:2px 16px 6px;font-size:12px;color:var(--m)} .qj .link{color:#0969da} .dark .link{color:#4493f8}
+  .qj .status{margin:6px 12px;padding:6px 10px;border-radius:6px;background:#fff8c5;border:1px solid #d4a72c66;font-size:12px;color:#1f2328}
+  .qj .sk{height:10px;border-radius:4px;background:var(--k);margin:6px 0;width:70%} .qj .sk.s{width:40%}
+  .qj .ft{border-top:1px solid var(--l);display:flex;justify-content:space-between;gap:8px;padding:8px 12px;font-size:12px;color:var(--m);flex-wrap:wrap}
+  .qj mark{background:#fff8c5;color:inherit;font-weight:600;border-radius:2px} .dark mark{background:#bb800926}
+  .qj.narrow{width:320px;border-radius:0 0 12px 12px}
+  /* mockup: settings row */
+  .set{background:#fff;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  .set .r{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-top:1px solid var(--line)} .set .r:first-child{border-top:0}
+  .set .rt{flex:1;min-width:0} .set .ti{font-weight:600;display:block} .set .ds{color:var(--muted);font-size:13px;display:block}
+  .set a{color:var(--accent)} .sw{width:36px;height:20px;border-radius:999px;background:#bc4c00;flex:none;position:relative;margin-top:2px} .sw::after{content:"";position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#fff}
+  .sw.off{background:#d1d9e0} .sw.off::after{left:3px;right:auto} .sw.dis{opacity:.55}
+  .sel-ui{display:inline-flex;justify-content:space-between;min-width:210px;border:1px solid var(--line);border-radius:6px;padding:4px 10px;background:var(--soft);font-size:13px;margin:6px 8px 4px 0}
+  .flow text{font:12px -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;fill:#1f2328} .flow .s{fill:#59636e;font-size:11px}
+</style></head><body><main>
+
+<h1>#140 · Quick jump: your work from any GitHub page</h1>
+<p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/140">cattanisimone/gh-reloaded#140</a> · Size: <b>normal</b> · Type: <code>feat</code> (minor) · Goal: one shortcut opens a read-only panel listing your assigned issues, review requests, recent items and active repositories, filterable by typing.</p>
+
+<h2>What changes for users</h2>
+<ul>
+  <li>A <b>Quick jump</b> panel opens with a browser shortcut on any <code>github.com</code> page (outside text fields): <b>Your work</b>, <b>Recent</b>, <b>Active repositories</b>, scoped to <i>This repository</i>, <i>This owner</i> or <i>Everywhere</i> (<kbd>Tab</kbd> switches).</li>
+  <li>Typing filters everything already fetched and stored, locally; the last row hands the text to GitHub's search.</li>
+  <li>A new <b>Quick jump</b> row in Settings → Features, with a <b>Shortcut</b> selector (browser shortcut, or <code>⌘K</code>/<code>Ctrl+K</code> by explicit choice) and <b>Clear recent items</b>.</li>
+  <li>New local data: up to 50 recently opened issues, pull requests and repositories, in this browser only. Nothing is written to GitHub, no new permission.</li>
+  <li>With no GitHub token saved, the feature does not appear.</li>
+</ul>
+
+<h2>Order of work: gates first</h2>
+<p class="stop small"><b>Stop condition from the issue.</b> Before any feature code, the implementation runs <b>Gate A</b> (native command palette opened empty, on a test account with the preview on: repository page, dashboard, <code>/notifications</code>) and <b>Gate B</b> (GitHub changelog since 2025-07-16: navigation, search, palette, jump, dashboards). If either shows GitHub already lists assigned issues or review requests on open, or a personal keyboard jump list ships, the implementation stops and reports back on the PR. Nothing else is built.</p>
+<p class="small muted">Planning-time evidence (not a substitute for the gates): on 2026-11-20 the signed-in header search is now GitHub's <i>quick search dialog</i> (button <code>aria-label="Open quick search dialog, type / to search"</code>). Opened empty on a repository page it lists only <code>repo:…</code>, <code>owner:…</code> and "Chat with Copilot". <code>Ctrl+K</code> on the page body opened nothing on a test account without the palette preview.</p>
+
+<h2>Mockup</h2>
+<p class="small muted">Fictional data. Dashed outline = new. The panel copies the native quick search box: same edges, radius, backdrop and Primer colours.</p>
+<div class="grid">
+  <div class="scroll"><div class="qj new">
+    <div class="in focus"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5"/></svg><span>Filter your work, or search GitHub…</span></div>
+    <div class="scope">Scope <span class="seg"><span class="on">This repository</span><span>Everywhere</span></span><span style="margin-left:auto"><span class="kbd">Tab</span> switch scope</span></div>
+    <div class="sec"><div class="h">Your work</div>
+      <div class="row sel"><span class="ic pr">⇄</span><span class="t">Retry the upload when the worker times out<div class="c">acme/web #61 · <span class="o">Open</span> · Review requested · 4 days ago</div></span><span class="ty">Pull request ↵</span></div>
+      <div class="row"><span class="ic pr">◎</span><span class="t">Sort by oldest ignores saved items<div class="c">acme/web #54 · <span class="o">Open</span> · Assigned to you · 4 days ago</div></span><span class="ty">Issue</span></div>
+      <div class="row"><span class="ic rp">↗</span><span class="t">All assigned issues on GitHub</span></div>
+      <div class="row"><span class="ic rp">↗</span><span class="t">All review requests on GitHub</span></div>
+    </div>
+    <div class="sec"><div class="h">Recent</div>
+      <div class="row"><span class="ic rp">◎</span><span class="t">Localize the relative dates in the inbox<div class="c">acme/web #52 · Visited 12 minutes ago</div></span><span class="ty">Issue</span></div>
+      <div class="row"><span class="ic rp">⇄</span><span class="t">Acme fraud check: add rules<div class="c">acme/web #16 · Visited yesterday</div></span><span class="ty">Pull request</span></div>
+    </div>
+    <div class="ft"><span><span class="kbd">↑</span><span class="kbd">↓</span> move · <span class="kbd">↵</span> open · <span class="kbd">Esc</span> close</span><span>Shortcut <span class="kbd">Alt+Shift+K</span> · <span class="link">Change</span></span></div>
+  </div><p class="cap">(a) First open, "This repository", light, 1280px. Recent rows carry no state (see Assumptions A5).</p></div>
+
+  <div class="scroll"><div class="qj dark new">
+    <div class="in focus"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5"/></svg><span>Filter your work, or search GitHub…</span></div>
+    <div class="scope">Scope <span class="seg"><span>This repository</span><span class="on">Everywhere</span></span></div>
+    <div class="sec"><div class="h">Your work</div>
+      <div class="row sel"><span class="ic pr">⇄</span><span class="t">Fix rounding in invoice totals<div class="c">acme/billing-api #412 · <span class="o">Open</span> · Review requested · 2 days ago</div></span><span class="ty">Pull request</span></div>
+      <div class="row"><span class="ic rp">↗</span><span class="t">All assigned issues on GitHub</span></div>
+      <div class="row"><span class="ic rp">↗</span><span class="t">All review requests on GitHub</span></div>
+      <div class="line">Listed with your default GitHub token. Work in acme-labs shows when you open this view on their pages.</div>
+    </div>
+    <div class="status">GitHub is limiting requests right now, so active repositories are not shown. Recent items stay available; they refresh in about a minute.</div>
+    <div class="sec"><div class="h">Recent</div>
+      <div class="row"><span class="ic rp">▣</span><span class="t"><b>acme/design-tokens</b><div class="c">Repository · Visited yesterday</div></span><span class="ty">Repository</span></div>
+    </div>
+    <div class="ft"><span><span class="kbd">↑</span><span class="kbd">↓</span> move · <span class="kbd">↵</span> open · <span class="kbd">Esc</span> close</span><span>Shortcut <span class="kbd">⌘K</span> · <span class="link">Change</span></span></div>
+  </div><p class="cap">(b) "Everywhere", dark, a mapped owner token (owner line) and one list rate-limited (status line); the other lists stay.</p></div>
+
+  <div class="scroll"><div class="qj narrow new">
+    <div class="in focus"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5"/></svg><b>upload</b></div>
+    <div class="scope">Scope <span class="seg"><span class="on">This repo</span><span>Everywhere</span></span></div>
+    <div class="sec"><div class="h">Matches in your work and recent items</div>
+      <div class="row sel"><span class="ic pr">⇄</span><span class="t">Retry the <mark>upload</mark> when the worker times out<div class="c">acme/web #61 · <span class="o">Open</span> · Review requested · 4 days ago</div></span></div>
+      <div class="row"><span class="ic rp"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5"/></svg></span><span class="t">Search GitHub for “upload”<div class="c">repo:acme/web upload</div></span></div>
+    </div>
+    <div class="ft"><span><span class="kbd">↑</span><span class="kbd">↓</span> <span class="kbd">↵</span> <span class="kbd">Esc</span></span><span><span class="kbd">⌃⇧K</span> · <span class="link">Change</span></span></div>
+  </div><p class="cap">(c) Typing at 320px: icon-only type, "This repo", context wraps, footer keeps keys only. No match → "No matches in your work or recent items." / "Search GitHub to look beyond them." with the search row selected.</p></div>
+
+  <div class="scroll"><div class="qj new">
+    <div class="in focus"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5"/></svg><span>Filter your work, or search GitHub…</span></div>
+    <div class="scope">Scope <span class="seg"><span class="on">This owner</span><span>Everywhere</span></span></div>
+    <div class="sec"><div class="h">Your work</div>
+      <div class="row"><span class="ic"><span class="sk" style="width:16px"></span></span><span class="t"><div class="sk"></div><div class="sk s"></div></span></div>
+      <div class="row"><span class="ic"><span class="sk" style="width:16px"></span></span><span class="t"><div class="sk"></div><div class="sk s"></div></span></div>
+    </div>
+    <div class="sec"><div class="h">Recent</div><div class="line">Issues, pull requests and repositories you open on GitHub will appear here.</div></div>
+  </div><p class="cap">(d) Loading with no cache: skeletons only in Your work; Recent renders at once (here: first use).</p></div>
+</div>
+
+<h3>Settings → Features: the Quick jump row</h3>
+<div class="grid">
+  <div class="scroll"><div class="set">
+    <div class="r new"><span class="rt"><span class="ti">Quick jump</span><span class="ds">Needs a GitHub token. Add one in <a href="#">GitHub tokens</a>.</span></span><span class="sw off dis" title="aria-disabled"></span></div>
+  </div><p class="cap">No token: off, cannot be switched on (<code>aria-disabled</code>, described), no selector, no links; <code>⌘K</code> stays GitHub's.</p></div>
+  <div class="scroll"><div class="set">
+    <div class="r new"><span class="rt"><span class="ti">Quick jump</span><span class="ds">Remembers the issues, pull requests and repositories you open on GitHub, in this browser only. <a href="#">Clear recent items</a></span>
+      <label class="small" style="display:block;margin-top:8px;font-weight:600">Shortcut</label><span class="sel-ui">Alt+Shift+K <span>▾</span></span><a href="#" class="small">Change shortcut</a>
+      <span class="ds">Works on every GitHub page, outside text fields. Ctrl+K stays GitHub's.</span></span><span class="sw"></span></div>
+  </div><p class="cap">Token saved, browser shortcut. Second value: "Ctrl+K — replaces GitHub's command palette" (Mac: "⌘K — …"); the line below changes with it and is announced. Shortcut unassigned by Chrome: first value reads "Browser shortcut (not set)" plus a notice linking <code>chrome://extensions/shortcuts</code>.</p></div>
+</div>
+
+<h2>Visual contract</h2>
+<table id="visual-contract">
+<tr><th>Reference</th><td>GitHub's native quick search dialog (the panel opened by the header button <code>aria-label="Open quick search dialog, type / to search"</code>, a Primer <code>Dialog</code>), measured live signed-in; row anatomy and sections from the issue's mockup image 1 (maintainer's approved mockup). Where text and mockup differ the issue text wins.</td></tr>
+<tr><th>Anchor</th><td>The border box of the native quick search panel: our panel's left and right border edges align to it. Inside, our input box sits at the same 12px inset and its placeholder's first glyph aligns to the visible text start of the native input (45px from the panel's left edge at 1280px).</td></tr>
+<tr><th>Width</th><td>Matches the native quick search panel width, not a self-chosen cap: from 1012px it spans left 91px to right 340px of the viewport (live: 849px at 1280, 1069px at 1500, 669px at 1100, 1489px at 1920); below 1012px it fills the viewport width (share 1.0), as the native one does.</td></tr>
+<tr><th>Responsive</th><td>1920 / 1500 / 1100 / 1012: left 91px, right 340px, radius 12px. 800 / 544: full width at the top, radius 0 0 12px 12px. 390 / 320: full width plus the issue's narrow rules (context line wraps, type as icon only, "This repo", footer keeps keys without labels). List scrolls inside the panel; never a horizontal scroll, never a clipped control.</td></tr>
+<tr><th>Native controls</th><td>GitHub's header, quick search button and dialog are untouched and keep their space: the panel is a fixed overlay with its own backdrop, never inserted into GitHub's layout. With the default shortcut <code>⌘K</code>/<code>Ctrl+K</code> stays GitHub's; no native control is hidden, moved or crushed.</td></tr>
+<tr><th>Evidence</th><td>Live signed-in github.com with the test account on public pages (<code>cattanisimone/gh-reloaded</code> root, an issue, a pull request, <code>/notifications</code>): before = the native quick search panel's geometry, after = Quick jump's, at the same page, same viewport (1500, 1280, 1100, 1012, 800, 390, 320) and same theme (light, dark). Fixture e2e tests (<code>quick-jump-layout.spec.js</code>) assert the same numbers separately; they are tests, not the live check.</td></tr>
+<tr><th>Expected</th><td>Panel left and right edges equal the native panel's ±2px at 1500/1280/1100/1012; widthShare of the viewport 1.0 ±0.01 at 800/390/320; top within 4px of the native panel's top; radius 12px (0 0 12px 12px when full width); input box height 32px ±1px at a 12px ±1px inset; placeholder text start dx 0 ±2px from the native input text; document <code>scrollWidth</code> ≤ <code>clientWidth</code> at 320px.</td></tr>
+</table>
+
+<h2>Pages and states</h2>
+<table>
+<tr><th>Page</th><th>Scope values</th><th>Recorded in Recent?</th></tr>
+<tr><td><code>/o/r/issues/7</code> (any sub-path, query, anchor)</td><td>This repository · Everywhere</td><td>Issue <code>o/r#7</code>, title from the page title</td></tr>
+<tr><td><code>/o/r/pull/7</code>, <code>/changes</code>, <code>/files</code>, <code>/commits</code>, <code>/checks</code></td><td>This repository · Everywhere</td><td>Pull request <code>o/r#7</code></td></tr>
+<tr><td><code>/o/r/issues/7</code> redirected to <code>/pull/7</code></td><td>as above</td><td>The pull request (recorded at the final page)</td></tr>
+<tr><td>Other repository pages (root, code, issue and PR lists, Actions…)</td><td>This repository · Everywhere</td><td>Repository <code>o/r</code></td></tr>
+<tr><td><code>/o</code> (user or organization), <code>/orgs/o/…</code>, user Projects pages (<code>users/o/projects/…</code>)</td><td>This owner · Everywhere</td><td>No</td></tr>
+<tr><td><code>/notifications</code>, <code>/pulls</code>, <code>/issues</code>, <code>/search</code>, Settings, dashboard</td><td>Everywhere only</td><td>No</td></tr>
+<tr><td>"Page not found", sign-in page</td><td>Everywhere only</td><td>No</td></tr>
+</table>
+<p class="small">Navigation A → B → A, back/forward and reload each count as a visit of the page shown. An open panel closes on navigation, so its scope never belongs to a page that is gone.</p>
+
+<h2>How it works</h2>
+<div class="scroll"><svg class="flow" viewBox="0 0 860 320" width="100%" style="min-width:640px" role="img" aria-label="Data flow: shortcut to background to content script to panel; lists through the background with the serving token; visits recorded through the background">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+  <g fill="#f6f8fa" stroke="#d1d9e0">
+    <rect x="10" y="20" width="150" height="56" rx="6"/><rect x="215" y="20" width="200" height="56" rx="6"/><rect x="470" y="20" width="170" height="56" rx="6"/><rect x="690" y="20" width="160" height="56" rx="6"/>
+    <rect x="10" y="130" width="150" height="56" rx="6"/><rect x="215" y="120" width="200" height="160" rx="6"/><rect x="470" y="120" width="170" height="70" rx="6"/><rect x="690" y="120" width="160" height="70" rx="6"/>
+    <rect x="470" y="210" width="170" height="70" rx="6"/><rect x="690" y="210" width="160" height="70" rx="6"/>
+  </g>
+  <text x="20" y="42">Browser shortcut</text><text class="s" x="20" y="60">chrome.commands</text>
+  <text x="225" y="42">background/quick-jump.js</text><text class="s" x="225" y="60">on + token? → tabs.sendMessage</text>
+  <text x="480" y="42">content.js (github.com)</text><text class="s" x="480" y="60">editable focus? → do nothing</text>
+  <text x="700" y="42">Panel (panel.js)</text><text class="s" x="700" y="60">dialog + listbox</text>
+  <text x="20" y="152">⌘K / Ctrl+K</text><text class="s" x="20" y="170">key listener, only if chosen</text>
+  <text x="225" y="142">GHQJ_LISTS {owner, phase}</text><text class="s" x="225" y="160">resolveTokenRecord(owner|"")</text><text class="s" x="225" y="178">none → no request at all</text><text class="s" x="225" y="196">cache fresh (&lt;60s) → no request</text><text class="s" x="225" y="214">honour retryAt per list</text><text class="s" x="225" y="232">GHQJ_VISIT → ghqjRecent</text><text class="s" x="225" y="250">(dedupe, 50 items, 30 days)</text>
+  <text x="480" y="142">api.github.com</text><text class="s" x="480" y="160">3 GETs, serving token only</text><text class="s" x="480" y="178">ghFetchRaw(requireToken)</text>
+  <text x="700" y="142">storage.session</text><text class="s" x="700" y="160">ghqjLists:&lt;tokenId&gt;</text><text class="s" x="700" y="178">memory only</text>
+  <text x="480" y="232">Recorder (content.js)</text><text class="s" x="480" y="250">title names the URL's item</text><text class="s" x="480" y="268">→ GHQJ_VISIT</text>
+  <text x="700" y="232">storage.local</text><text class="s" x="700" y="250">ghqjRecent · ghqjEnabled</text><text class="s" x="700" y="268">ghqjShortcut</text>
+  <g stroke="#59636e" fill="none" marker-end="url(#a)"><path d="M160 48H213"/><path d="M415 48H468"/><path d="M640 48H688"/><path d="M160 150L480 78" stroke-dasharray="4 3"/><path d="M415 150H468"/><path d="M640 165H688"/><path d="M470 245H417"/><path d="M415 268V300H770V282"/><path d="M700 76L417 128"/></g>
+</svg></div>
+<ul class="small">
+  <li><b>Two-phase open.</b> The panel asks the background for cached lists (renders at once, with Recent), then for a refresh. One open sends at most the three GETs for the scope's token; <kbd>Tab</kbd> to a scope served by another token record sends at most three more. A list waits at least 60s and at least <code>retry-after</code>/<code>x-ratelimit-reset</code>; while the panel stays open the affected lists are asked once more when the wait ends.</li>
+  <li><b>Token rule.</b> This repository / This owner use <code>resolveTokenRecord(owner)</code> (mapped, else default); Everywhere uses the default only. No retry with another token, no anonymous request.</li>
+  <li><b>Classification</b> (pure, in <code>model.js</code>): 401/404/422/non-limit 403 → "cannot read"; <code>rateInfo()</code> limited → "limited"; 5xx/network → "error". Truncation: <code>Link rel="next"</code> (issues, repos), <code>total_count</code> &gt; items (search).</li>
+  <li><b>Recorder anchors</b> (live, 2026-11-20): repository pages carry <code>meta[name="octolytics-dimension-repository_nwo"]</code> (also after in-page navigation; absent on 404, profile, <code>/notifications</code>, <code>/search</code>) and a header link to <code>/o/r</code>; titles read <code>&lt;title&gt; · Issue #n · o/r</code> and <code>&lt;title&gt; by &lt;login&gt; · Pull Request #n · o/r</code>. A visit is recorded when the URL and title agree (debounced title observer + <code>popstate</code>/<code>turbo:load</code>/<code>pageshow</code>), so redirects and in-page navigation record the final page. No CSS-module class is used anywhere.</li>
+</ul>
+
+<h2>Changes by file</h2>
+<table>
+<tr><th>File</th><th>Change</th><th>Why</th></tr>
+<tr><td><code>manifest.json</code> <span class="tag">shared</span></td><td><code>commands.open-quick-jump</code> (suggested key, see A1); one <code>content_scripts</code> entry for <code>https://github.com/*</code>. No new permission.</td><td>The command and the page side</td></tr>
+<tr><td><code>background.js</code> <span class="tag">shared</span></td><td>Import and add the module's message types to <code>FEATURES</code></td><td>Generic router</td></tr>
+<tr><td><code>background/quick-jump.js</code></td><td>New: <code>GHQJ_LISTS</code>, <code>GHQJ_VISIT</code>, <code>GHQJ_STATE</code> (on, token, choice, shortcut label, platform), <code>GHQJ_OPEN_SETTINGS</code>; <code>commands.onCommand</code>; session cache; clears <code>ghqjRecent</code> when switched off or the last token is removed</td><td>All GitHub reads and all writes of recent items in one place</td></tr>
+<tr><td><code>lib/github-api.js</code> <span class="tag">shared</span></td><td><code>ghFetchRaw</code> returns <code>tokenId</code> and accepts <code>requireToken</code> (no request without a token). Additive; existing callers unchanged.</td><td>"No request, not even anonymous"; cache per token record</td></tr>
+<tr><td><code>features/quick-jump/model.js</code></td><td>Pure rules: page context, visit key and URL, recent list update, merge/dedupe/limits, filter and highlight ranges, search and fixed-row URLs, status-line grouping and copy, empty-state copy, relative time</td><td>Unit-tested without a browser</td></tr>
+<tr><td><code>features/quick-jump/panel.js</code>, <code>content.js</code>, <code>content.css</code></td><td>Dialog render and keyboard; command and <code>⌘K</code> handling; recorder; Primer variables for light/dark</td><td>Page side</td></tr>
+<tr><td><code>options/options.html</code>, <code>options.js</code>, <code>options.css</code> <span class="tag">shared</span></td><td>Quick jump row (<code>#quick-jump</code>), disabled state without token, Shortcut select + describing line, Change shortcut, unassigned notice, Clear recent items</td><td>Settings contract</td></tr>
+<tr><td><code>README.md</code>, <code>PRIVACY.md</code>, <code>screenshots/quick-jump.svg</code></td><td>Feature entry and data handling; new mockup</td><td>Docs in sync</td></tr>
+<tr><td><code>test/…</code></td><td>Unit + e2e specs and fixtures listed below</td><td>Tests first</td></tr>
+</table>
+
+<h2>Data, permissions, privacy</h2>
+<table>
+<tr><th>What</th><th>Where</th><th>Lifetime</th></tr>
+<tr><td><code>ghqjRecent</code>: URL, kind, owner/repo, number, title, visit time</td><td><code>chrome.storage.local</code>, this profile only, never synced or sent</td><td>50 distinct items, 30 days; deleted by Clear, by switching off, by removing the last token</td></tr>
+<tr><td><code>ghqjEnabled</code> (default on), <code>ghqjShortcut</code> (<code>browser</code> | <code>cmdk</code>)</td><td><code>chrome.storage.local</code></td><td>Kept when tokens are removed, so the last choice returns</td></tr>
+<tr><td>Fetched lists (trimmed fields)</td><td><code>chrome.storage.session</code>: memory only, never on disk</td><td>Browser session; per token record; purged when its secret changes or it is removed</td></tr>
+</table>
+<p class="small"><b>Token permissions: none new.</b> Requests: only <code>GET /issues?filter=assigned…</code>, <code>GET /search/issues?q=is:pr+is:open+user-review-requested:@me…</code>, <code>GET /user/repos?sort=pushed…</code> to <code>api.github.com</code> with the serving token. No write, no other host, no new permission or host permission (<code>commands</code> is not a permission). No token value in the DOM, URLs, logs or storage additions; the panel shows only the token's user-given name. <code>PRIVACY.md</code> gains the Recent items paragraph.</p>
+
+<h2>Test plan</h2>
+<p class="small">Unit = <code>node --test</code>. E2E = Playwright on fixtures with <code>api.github.com</code> mocked; the browser command is exercised by sending the background's toggle message to the tab (Playwright cannot press browser accelerators), and <code>handleCommand</code> is unit-tested with the chrome stub.</p>
+<div class="scroll"><table>
+<tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
+<tr><td>One command, suggested key, never <code>⌘K</code>/<code>Ctrl+K</code>; no new permission</td><td>unit</td><td><code>manifest.test.js</code> › quick jump command</td></tr>
+<tr><td>Opens with focus in input; again/<code>Esc</code> closes and restores focus; inside the input the shortcut closes</td><td>e2e</td><td><code>quick-jump-open.spec.js</code></td></tr>
+<tr><td>Editable focus (header search, textarea, contenteditable, Markdown editor): no open, field unchanged; non-github tab: nothing</td><td>e2e + unit</td><td><code>quick-jump-open.spec.js</code> › editable; <code>quick-jump-background.test.js</code> › command on other tab</td></tr>
+<tr><td>Unassigned shortcut notice and "Browser shortcut (not set)"; footer shortcut + Change → <code>#quick-jump</code></td><td>e2e</td><td><code>options-quick-jump.spec.js</code>; <code>quick-jump-open.spec.js</code> › footer</td></tr>
+<tr><td>Row on by default with a token; off stops recording and deletes items; selector/links hidden when off or no token</td><td>e2e</td><td><code>options-quick-jump.spec.js</code></td></tr>
+<tr><td>Selector: two values, Mac and Windows/Linux labels, describing line changes and is announced</td><td>e2e + unit</td><td><code>options-quick-jump.spec.js</code>; <code>quick-jump-model.test.js</code> › shortcut copy</td></tr>
+<tr><td><code>⌘K</code> chosen: opens/closes outside fields, page's own <code>⌘K</code> handler does not run; in fields untouched; browser shortcut still works; switching back frees <code>⌘K</code> without reload</td><td>e2e</td><td><code>quick-jump-cmdk.spec.js</code> (fixture listener stands in for GitHub's handler)</td></tr>
+<tr><td>No token: no panel, no message, no request, no recording, key reaches the page (<code>⌘K</code> mode); row disabled with text; removing last token deletes items; re-adding restores last choice</td><td>e2e + unit</td><td><code>quick-jump-no-token.spec.js</code>; <code>quick-jump-background.test.js</code></td></tr>
+<tr><td>Scope values by page, <kbd>Tab</kbd> switches and is announced</td><td>unit + e2e</td><td><code>quick-jump-model.test.js</code> › context; <code>quick-jump-panel.spec.js</code></td></tr>
+<tr><td>Your work / Recent / Active repositories: limits, order, scope, once-per-panel, never repositories in This repository</td><td>unit + e2e</td><td><code>quick-jump-model.test.js</code> › sections; <code>quick-jump-panel.spec.js</code></td></tr>
+<tr><td>Keyboard: first row selected, ↑/↓, Enter same tab, Ctrl/⌘+Enter new tab</td><td>e2e</td><td><code>quick-jump-panel.spec.js</code> › keyboard</td></tr>
+<tr><td>Two fixed rows always; "See all" / "Your repositories" only when more or truncated</td><td>unit</td><td><code>quick-jump-model.test.js</code> › trailing rows</td></tr>
+<tr><td>Empty-state lines (with token name; truncated variant); all-empty selects first fixed row</td><td>unit + e2e</td><td><code>quick-jump-model.test.js</code> › empty; <code>quick-jump-states.spec.js</code></td></tr>
+<tr><td>Typing: all fetched + stored items, no request per key, grouped, ≤10, highlighted, once; search row with scope qualifier; no-match message</td><td>unit + e2e</td><td><code>quick-jump-model.test.js</code> › filter; <code>quick-jump-panel.spec.js</code> › typing (request count asserted)</td></tr>
+<tr><td>Cannot-read list → fixed row + line, other list stays, repos hidden, no other token tried</td><td>unit + e2e</td><td><code>quick-jump-background.test.js</code>; <code>quick-jump-states.spec.js</code></td></tr>
+<tr><td>Rate limit / error lines: names, grouping order, cached rows kept, wait ≥60s and ≥ GitHub's, minutes wording over 90s, retry while open</td><td>unit + e2e</td><td><code>quick-jump-model.test.js</code> › status lines; <code>quick-jump-background.test.js</code> › waits; <code>quick-jump-states.spec.js</code></td></tr>
+<tr><td>Loading skeletons only in Your work; cached rows at once</td><td>e2e</td><td><code>quick-jump-states.spec.js</code></td></tr>
+<tr><td>Cache per token record, session only, purged on secret change/removal; ≤3 GETs per open</td><td>unit</td><td><code>quick-jump-background.test.js</code> › cache</td></tr>
+<tr><td>Token per scope; Everywhere default only + owner line; none serving → no request, three fixed rows + line</td><td>unit + e2e</td><td><code>quick-jump-background.test.js</code> › tokens; <code>quick-jump-states.spec.js</code></td></tr>
+<tr><td>Recording: kinds, sub-paths, redirect, not-recorded pages, case-insensitive key, 50/30-day limits, revisit moves to top</td><td>unit + e2e</td><td><code>quick-jump-model.test.js</code> › visits; <code>quick-jump-record.spec.js</code> (A→B→A, back/forward, reload)</td></tr>
+<tr><td>Accessibility: dialog, labelled input, listbox + <code>aria-activedescendant</code>, live lines, disabled row, labelled select</td><td>e2e</td><td><code>quick-jump-panel.spec.js</code> › a11y; <code>options-quick-jump.spec.js</code> › a11y</td></tr>
+<tr><td>Look: geometry of the visual contract, light/dark, 1280/390/320, no horizontal scroll</td><td>e2e</td><td><code>quick-jump-layout.spec.js</code></td></tr>
+<tr><td>Network: only the three GETs, only <code>api.github.com</code>, no write</td><td>e2e</td><td>every quick-jump spec asserts the recorded calls</td></tr>
+<tr><td>Anchors: recorder on real markup, meta variant and header-link-only variant; no CSS-module class in the feature</td><td>e2e + unit</td><td><code>quick-jump-record.spec.js</code>; <code>module-classes.test.js</code></td></tr>
+</table></div>
+<p class="small"><b>Fixtures</b> (sanitized from live markup, fictional names): <code>quick-jump-repo.html</code>, <code>quick-jump-issue.html</code>, <code>quick-jump-pull.html</code>, <code>quick-jump-owner.html</code>, <code>quick-jump-notifications.html</code>, <code>quick-jump-not-found.html</code>; header with the real quick search button for the layout spec. <b>Live check:</b> probed signed-in on 2026-11-20 (native quick search geometry at 1920–320px, light/dark; page identity on repository root, tree, issue, pull request, <code>/changes</code>, 404, profile, <code>/notifications</code>, <code>/search</code>); repeated after the change for the contract's Observed line.</p>
+
+<h3>Issue checks: who runs what</h3>
+<table>
+<tr><th>Check</th><th>Agent (test account, this container)</th><th>Maintainer (named in the PR under "Not verified")</th></tr>
+<tr><td>Gate A</td><td>Turn on the palette preview on the test account if the account allows it; record what it lists empty on a repo page, dashboard, <code>/notifications</code></td><td>Only if the preview cannot be enabled there</td></tr>
+<tr><td>Gate B</td><td>Read GitHub's changelog since 2025-07-16</td><td>—</td></tr>
+<tr><td>1, 5</td><td>Typed queries and every target URL, signed in</td><td>Org-vs-owned repository targets (needs an org the test account is in)</td></tr>
+<tr><td>3</td><td>—</td><td>Token reach matrix (needs creating tokens)</td></tr>
+<tr><td>4</td><td>Editable detection on live pages (Linux, synthetic keys)</td><td>Real macOS/Windows keyboards, US and Italian layouts</td></tr>
+<tr><td>7</td><td><code>Ctrl+K</code> with the choice on, palette on/off, on the test account</td><td><code>⌘K</code> on macOS, <code>Ctrl+K</code> on Windows</td></tr>
+</table>
+
+<h2>Assumptions</h2>
+<ol class="small">
+  <li><b>A1 Default shortcut:</b> <code>Alt+Shift+K</code> on Windows/Linux; on Mac the issue's Check 4 fallback <code>MacCtrl+Shift+K</code> (⌃⇧K) — rejected: ⌥⇧K, because on the US Mac layout ⌥⇧K types a character and a registered Chrome command consumes the keystroke, which is Check 4's loss condition. Labels come from <code>chrome.commands.getAll()</code>, so a Check 4 result changes one manifest line.</li>
+  <li><b>A2 Command keystroke:</b> Chrome consumes a registered command's keys before the page sees them; the extension cannot hand them back. So "the keystroke reaches the page" holds fully for <code>⌘K</code>/<code>Ctrl+K</code> (no listener without a token or with the browser value); for the browser shortcut it means the extension does nothing. Recorded in the PR and README.</li>
+  <li><b>A3 Panel geometry:</b> CSS copies the native quick search box (from 1012px left 91px / right 340px; below, full width) — rejected: measuring GitHub's button on each open, because the panel is a fixed overlay with no container that can break, and fixed numbers are simpler to test; the live check catches a header redesign.</li>
+  <li><b>A4 Narrow rules</b> apply below 544px viewport width (Primer's small breakpoint), covering 390 and 320.</li>
+  <li><b>A5 Recent rows</b> show <code>o/r #n · Visited &lt;time&gt;</code> without state — rejected: the mockup's Open/Merged, because state is not among the fields the issue allows storing.</li>
+  <li><b>A6 Titles and visits</b> come from <code>document.title</code>'s fixed format and are recorded only when it names the URL's item — rejected: h1 classes (CSS-module churn).</li>
+  <li><b>A7 Owner pages:</b> <code>/&lt;login&gt;</code> (not a reserved GitHub path, not "Page not found"), <code>/orgs/&lt;login&gt;/…</code>, user Projects pages (<code>users/&lt;login&gt;/projects/…</code>).</li>
+  <li><b>A8 Filter:</b> whitespace-separated words, all must match, case-insensitive, in title, owner/repo or number (<code>61</code> or <code>#61</code>).</li>
+  <li><b>A9 Search hand-off</b> puts the qualifier first (<code>repo:o/r text</code>), as GitHub's own quick search does.</li>
+  <li><b>A10 Placement:</b> "Clear recent items" ends the description (mockup), "Change shortcut" sits beside the selector.</li>
+  <li><b>A11 Cache</b> in <code>chrome.storage.session</code> — rejected: the shared 60s in-memory map, because cached rows must outlive a minute for the limited state and survive a service-worker restart, while never touching disk.</li>
+  <li><b>A12 Scope keys:</b> <kbd>Shift+Tab</kbd> also switches (two values); focus stays in the input; scope buttons are clickable; clicking the backdrop closes.</li>
+  <li><b>A13 Token requirements list:</b> Quick jump is not added to Settings' "required permissions" table until Check 3 shows what the reads need; the missing-permission experience stays as today.</li>
+</ol>
+
+<h2>Risks and open questions</h2>
+<ul class="small">
+  <li><b>A gate stops the work.</b> Default: stop, report on the PR, build nothing.</li>
+  <li><b>GitHub's palette still fires with <code>⌘K</code> chosen</b> (its listener runs before ours). Default: per Check 7, ship without the <code>⌘K</code> value and say so in the PR.</li>
+  <li><b>Header redesign moves the native quick search box.</b> Default: the panel still opens (fixed overlay); the layout spec documents the numbers and the live check is repeated.</li>
+  <li><b>Search API deprecations</b> (<code>/search/issues</code>). Default: the list follows the degraded state ("cannot read" or "error") and the fixed row still opens GitHub's page.</li>
+  <li><b>Scope of the PR is large</b> (~a dozen files). Default: commits per slice (model → background → recorder → panel → settings → docs), pushed as each group goes green.</li>
+</ul>
+
+<h2>Out of scope</h2>
+<ul class="small"><li>Commands that change issues or pull requests, AI, own indexing, code or Projects search, our own remote search beyond the hand-off row, favourites, syncing history, taking <code>⌘K</code> by default, any new permission or token type.</li></ul>
+
+</main></body></html>
