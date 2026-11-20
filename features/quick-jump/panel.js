@@ -64,6 +64,7 @@
     let data = null; // the last answer of the background for the scope: { lists, recent, ... }
     let view = null; // { groups, statusLines, none }
     let selected = 0;
+    let moved = false; // the user moved the selection: a refresh keeps it on the same row
     let rows = [];
     let retryTimer = 0;
     let seq = 0;
@@ -243,7 +244,10 @@
       enter.setAttribute("aria-hidden", "true");
       a.appendChild(enter);
       a.addEventListener("mousemove", () => {
-        if (rows[selected] !== a) select(rows.indexOf(a), false);
+        if (rows[selected] !== a) {
+          moved = true;
+          select(rows.indexOf(a), false);
+        }
       });
       a.addEventListener("click", (e) => {
         if (e.button !== 0) return;
@@ -310,7 +314,7 @@
         }
       }
       if (!statusShown && view.statusLines?.length) list.appendChild(statusNode());
-      let idx = keepId ? rows.findIndex((r) => r.getAttribute("data-row") === keepId) : -1;
+      let idx = keepId && moved ? rows.findIndex((r) => r.getAttribute("data-row") === keepId) : -1;
       if (idx < 0) idx = view.none ? rows.length - 1 : 0;
       select(idx, false);
     }
@@ -384,6 +388,7 @@
       scope = s;
       data = null;
       selected = 0;
+      moved = false;
       render();
       say(`Scope: ${m.scopeLabel(s)}`);
       load("cached");
@@ -421,9 +426,9 @@
         return;
       }
       if (!root.contains(e.target)) return;
-      if (e.key === "ArrowDown") { e.preventDefault(); select(selected + 1); }
-      else if (e.key === "ArrowUp") { e.preventDefault(); select(selected - 1); }
-      else if (e.key === "Home" && e.target !== input) { e.preventDefault(); select(0); }
+      if (e.key === "ArrowDown") { e.preventDefault(); moved = true; select(selected + 1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); moved = true; select(selected - 1); }
+      else if (e.key === "Home" && e.target !== input) { e.preventDefault(); moved = true; select(0); }
       else if (e.key === "Enter") {
         e.preventDefault();
         e.stopPropagation();
@@ -446,6 +451,7 @@
     input.addEventListener("input", () => {
       query = input.value;
       selected = 0;
+      moved = false;
       render();
       if (view?.none) say("No matches in your work or recent items.");
     });
