@@ -145,8 +145,11 @@ test.describe("long text in lines", () => {
   test("the owner line keeps at most three logins and 'and 2 more' together", async ({ context, page }) => {
     await page.setViewportSize({ width: 320, height: 900 });
     const owners = ["acme-labs", "octo-fixture-industries", "a-very-long-organization-login-of-39-ch", "fourth-org", "fifth-org"];
-    await setup(context, { storage: { githubTokens: [{ id: "d", name: "Main", token: "x", owner: "" }, ...owners.map((o, i) => ({ id: `o${i}`, name: o, token: "y", owner: o }))], defaultTokenId: "d" }, pages: { "*": { title: "Notifications", nwo: "" } } });
+    const { reqs } = await setup(context, { storage: { githubTokens: [{ id: "d", name: "Main", token: "x", owner: "" }, ...owners.map((o, i) => ({ id: `o${i}`, name: o, token: "y", owner: o }))], defaultTokenId: "d" }, pages: { "*": { title: "Notifications", nwo: "" } } });
     await openPanel(context, page, "https://github.com/notifications");
+    await expect(rows(page).first()).toContainText("Issues assigned to you").catch(() => {});
+    await expect.poll(() => reqs.length).toBe(3); // the refresh has re-rendered the panel
+    await page.waitForTimeout(300);
     const line = page.locator('[data-line="owner-line"]');
     await expect(line).toContainText("and 2 more");
     const t = await line.textContent();

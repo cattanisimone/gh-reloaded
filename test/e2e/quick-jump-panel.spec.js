@@ -54,7 +54,7 @@ test("an owner page offers This owner and Everywhere", async ({ context, page })
 test("keyboard: arrows move, Enter opens in the same tab, Ctrl+Enter in a new tab", async ({ context, page }) => {
   await setup(context, { pages: REPO_PAGES });
   await openPanel(context, page, "https://github.com/acme/web/issues/9");
-  await expect(rows(page).first()).toBeVisible();
+  await expect(rows(page).first()).toContainText("Retry the upload"); // the lists have arrived
   await page.keyboard.press("ArrowDown");
   await expect(rows(page).nth(1)).toHaveClass(/ghqj-sel/);
   await expect(input(page)).toHaveAttribute("aria-activedescendant", (await rows(page).nth(1).getAttribute("id")));
