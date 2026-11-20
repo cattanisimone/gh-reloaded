@@ -34,9 +34,17 @@ export function apiHandlers(data = {}, log = []) {
   ];
 }
 
+// The signed-out header as github.com renders it (class names with their hash kept): a fixed-width search
+// button in the searchSlot, then "Sign in", "Sign up" and the menu button, all pushed to the right edge.
+function liveSignedOut(signInWidth) {
+  return `<style>@media (max-width:1011px){.ctaContainer__XiXTge{display:none!important}}</style><header class="Header" style="display:flex;align-items:center;height:64px;padding:0 16px;box-sizing:border-box"><a class="logo__bX9RKh" href="/" aria-label="Homepage" style="width:32px"><svg class="octicon octicon-mark-github" width="32" height="32"></svg></a><div class="ctaContainer__XiXTge" style="margin-left:auto;display:flex;align-items:center"><div class="searchSlot__PLyIP2" style="width:200px"><button type="button" class="Primer_Brand__Button-module__Button___scH9Z" style="width:200px;height:32px;display:flex;justify-content:space-between;box-sizing:border-box"><span class="label__Axw9pp">Search</span><span>/</span></button></div><div class="signInWrap___-hg2x" style="width:${signInWidth}px"><a href="/login" style="display:block;margin-left:8px">Sign in</a></div><a href="/signup" style="display:block;width:80.2px;margin-left:8px">Sign up</a><button type="button" aria-label="Menu" style="width:32px;height:32px;margin-left:8px"></button></div></header>`;
+}
+
 const HEADERS = {
   "signed-in": `<header class="AppHeader"><div class="AppHeader-globalBar"><a href="/" aria-label="Homepage"><svg class="octicon octicon-mark-github" width="32" height="32"></svg></a><div class="AppHeader-search"><button type="button" aria-label="Open quick search dialog, type / to search" class="search-button"><span>Type / to search</span></button></div></div></header>`,
-  "signed-out": `<header class="Header"><div class="Header-globalBar"><a href="/" aria-label="Homepage"><svg class="octicon octicon-mark-github" width="32" height="32"></svg></a><div class="Header-search"><button type="button" aria-label="Open quick search dialog, type / to search" class="search-button"><span>Type / to search</span></button></div></div></header>`,
+  "signed-out": liveSignedOut(83.3),
+  "signed-out-narrow": liveSignedOut(77.05), // a font or locale that makes "Sign in" 6.25px narrower: the search button follows
+  "signed-out-legacy": `<header class="Header"><div class="Header-globalBar"><a href="/" aria-label="Homepage"><svg class="octicon octicon-mark-github" width="32" height="32"></svg></a><div class="Header-search"><button type="button" aria-label="Open quick search dialog, type / to search" class="search-button"><span>Type / to search</span></button></div></div></header>`,
 };
 
 // A github.com-shaped page. `nwo` null leaves the repository meta out (the header-link-only variant).
@@ -44,8 +52,8 @@ export function page({ title = "acme/web", nwo = "acme/web", variant = "signed-i
   const meta = [userMeta ? `<meta name="user-login" content="${variant === "signed-in" ? "mira" : ""}">` : "", nwo ? `<meta name="octolytics-dimension-repository_nwo" content="${nwo}">` : ""].join("");
   const vars = primer
     ? dark
-      ? `html{--bgColor-default:#0d1117;--fgColor-default:#f0f6fc;--fgColor-muted:#9198a1;--borderColor-default:#3d444d}`
-      : `html{--bgColor-default:#ffffff;--fgColor-default:#1f2328;--fgColor-muted:#59636e;--borderColor-default:#d1d9e0}`
+      ? `html{--bgColor-default:#0d1117;--fgColor-default:#f0f6fc;--fgColor-muted:#9198a1;--borderColor-default:#3d444d;--bgColor-inset:#010409}`
+      : `html{--bgColor-default:#ffffff;--fgColor-default:#1f2328;--fgColor-muted:#59636e;--borderColor-default:#d1d9e0;--bgColor-inset:#f6f8fa}`
     : "";
   const repo = repoHeader && nwo ? `<div id="repository-container-header"><a href="/${nwo}">${nwo.split("/")[1]}</a></div>` : "";
   return `<!doctype html><html lang="en" data-color-mode="${dark ? "dark" : "light"}" data-light-theme="light" data-dark-theme="dark"><head><meta charset="utf-8">${meta}<title>${title}</title><style>body{margin:0;font:14px/1.5 -apple-system,"Segoe UI",sans-serif;color:${dark ? "#f0f6fc" : "#1f2328"};background:${dark ? "#0d1117" : "#fff"}}${vars}</style>${head}</head><body>${HEADERS[variant]}${repo}<main id="main"><h1>${title}</h1><a id="plain" href="/acme/web/issues/9">issue nine</a><p>content</p>${body}</main></body></html>`;

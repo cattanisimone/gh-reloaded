@@ -83,6 +83,17 @@ test.describe("content by width", () => {
       await expect(page.locator(".ghqj-key").first().locator(".ghqj-kbd")).toBeVisible();
       if (narrow) await expect(page.locator(".ghqj-keylabel").first()).toBeHidden();
       else await expect(page.locator(".ghqj-keylabel").first()).toBeVisible();
+      // "open" stays at every width; "move" and "close" are the ones dropped
+      await expect(page.locator(".ghqj-key").nth(1).locator(".ghqj-keylabel")).toBeVisible();
+      await expect(page.locator(".ghqj-key").nth(1).locator(".ghqj-keylabel")).toHaveText("open", { useInnerText: true });
+      await expect(page.locator(".ghqj-key").nth(2).locator(".ghqj-keylabel")).toBeVisible({ visible: !narrow });
+      // Scope label, group titles and footer chips start at one x
+      const edges = await page.evaluate(() => {
+        const glyph = (el) => { const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.textContent.trim() ? 1 : 3) }); const t = w.nextNode(); const r = document.createRange(); r.setStart(t, t.textContent.search(/\S/)); r.setEnd(t, t.textContent.search(/\S/) + 1); return r.getBoundingClientRect().left; };
+        return { scope: glyph(document.querySelector(".ghqj-scope-label")), title: glyph(document.querySelector(".ghqj-gtitle span")), foot: document.querySelector(".ghqj-keys .ghqj-kbd").getBoundingClientRect().left };
+      });
+      expect(Math.abs(edges.title - edges.scope), `group title x ${edges.title} vs scope label x ${edges.scope}`).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(edges.foot - edges.scope), `footer chip x ${edges.foot} vs scope label x ${edges.scope}`).toBeLessThanOrEqual(0.5);
       await expect(page.locator(".ghqj-change")).toBeVisible();
       expect(await noHScroll(page)).toEqual({ doc: 0, panel: 0, list: 0 });
     });
@@ -241,4 +252,61 @@ test("the panel takes GitHub's own Primer variables when the page defines them",
   await openPanel(context, page, "https://github.com/acme/web");
   await expect(panel(page)).toHaveCSS("background-color", "rgb(250, 251, 252)");
   void input;
+});
+
+test.describe("signed-out panel position", () => {
+  const WIDTHS_SO = [1920, 1500, 1300, 1100, 1012];
+  for (const [variant, signIn] of [["signed-out", 83.3], ["signed-out-narrow", 77.05]]) {
+    for (const w of WIDTHS_SO) {
+      test(`${variant} at ${w}px: the right edge is 15px right of the search button`, async ({ context, page }) => {
+        await page.setViewportSize({ width: w, height: 800 });
+        await setup(context, { pages: { "*": { title: "Notifications", nwo: "", variant } } });
+        await openPanel(context, page, "https://github.com/notifications");
+        await expect(rows(page).first()).toBeVisible();
+        const p = await rect(page, ".ghqj-panel");
+        const btn = await rect(page, "[class*='searchSlot'] button");
+        expect(Math.abs(p.r - (btn.r + 15)), `panel right ${p.r}, button right ${btn.r}`).toBeLessThanOrEqual(0.5);
+        expect(Math.round(p.w)).toBe(480);
+        expect(Math.abs(w - p.r - (variant === "signed-out" ? 212.5 : 206.25))).toBeLessThanOrEqual(0.5);
+      });
+    }
+  }
+
+  test("without the search button the stylesheet's right edge (212px) stands", async ({ context, page }) => {
+    await page.setViewportSize({ width: 1500, height: 800 });
+    await setup(context, { pages: { "*": { title: "Notifications", nwo: "", variant: "signed-out-legacy" } } });
+    await openPanel(context, page, "https://github.com/notifications");
+    await expect(rows(page).first()).toBeVisible();
+    expect(Math.round((await rect(page, ".ghqj-panel")).r)).toBe(1500 - 212);
+  });
+});
+
+test.describe("dark surface and the divider", () => {
+  test("the dark panel takes the inset colour of the page, near-black", async ({ context, page }) => {
+    await setup(context, { pages: { "*": { title: "acme/web", repoHeader: true, dark: true, primer: true } } });
+    await openPanel(context, page, "https://github.com/acme/web");
+    await expect(rows(page).first()).toBeVisible();
+    expect(await panel(page).evaluate((n) => getComputedStyle(n).backgroundColor)).toBe("rgb(1, 4, 9)");
+  });
+
+  test("the dark panel is near-black without the page variables too", async ({ context, page }) => {
+    await setup(context, { pages: { "*": { title: "acme/web", repoHeader: true, dark: true } } });
+    await openPanel(context, page, "https://github.com/acme/web");
+    await expect(rows(page).first()).toBeVisible();
+    expect(await panel(page).evaluate((n) => getComputedStyle(n).backgroundColor)).toBe("rgb(1, 4, 9)");
+  });
+
+  test("a thin line sits above the row that searches GitHub, and not in the empty state", async ({ context, page }) => {
+    await setup(context, { pages: { "*": { title: "acme/web", repoHeader: true } } });
+    await openPanel(context, page, "https://github.com/acme/web");
+    await expect(rows(page).first()).toBeVisible();
+    await expect(page.locator(".ghqj-group-search")).toHaveCount(0);
+    await input(page).fill("zzzz-no-match");
+    const g = page.locator(".ghqj-group-search");
+    await expect(g).toHaveCount(1);
+    const st = await g.evaluate((n) => { const s = getComputedStyle(n); return { w: s.borderTopWidth, style: s.borderTopStyle, color: s.borderTopColor }; });
+    expect(st.w).toBe("1px");
+    expect(st.style).toBe("solid");
+    expect(st.color).not.toBe("rgba(0, 0, 0, 0)");
+  });
 });

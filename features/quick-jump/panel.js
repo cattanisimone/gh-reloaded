@@ -138,9 +138,9 @@
       el("span", "ghqj-key"), el("span", "ghqj-key"), el("span", "ghqj-key")
     );
     const k = keys.children;
-    k[0].append(el("kbd", "ghqj-kbd", "↑↓"), el("span", "ghqj-keylabel", " move"));
+    k[0].append(el("kbd", "ghqj-kbd", "↑↓"), el("span", "ghqj-keylabel ghqj-keylabel-more", " move"));
     k[1].append(el("kbd", "ghqj-kbd", "↵"), el("span", "ghqj-keylabel", " open"));
-    k[2].append(el("kbd", "ghqj-kbd", "Esc"), el("span", "ghqj-keylabel", " close"));
+    k[2].append(el("kbd", "ghqj-kbd", "Esc"), el("span", "ghqj-keylabel ghqj-keylabel-more", " close"));
     const sc = el("span", "ghqj-shortcut");
     const scLabel = el("span", "ghqj-sc-label", "Shortcut ");
     const scKeys = el("kbd", "ghqj-kbd ghqj-sc-keys");
@@ -163,6 +163,24 @@
       }
     });
     document.body.appendChild(root);
+    placeSignedOut();
+    window.addEventListener("resize", placeSignedOut);
+
+    // The native quick search of the signed-out header sits 15px right of its search button, whose position
+    // follows the header's content (fonts, a classic scrollbar), so the right edge is derived from the button
+    // when it is found. Without it the stylesheet's constant stands: never a guess from another element.
+    function placeSignedOut() {
+      panel.style.right = "";
+      if (!root.classList.contains("ghqj-signed-out") || window.innerWidth < 1012) return;
+      const btn = [...document.querySelectorAll("header button, [class*='searchSlot'] button")].find((b) => {
+        if (b.closest(".ghqj-root") || !/^Search\b/i.test((b.textContent || "").trim())) return false;
+        const r = b.getBoundingClientRect();
+        return r.width > 0 && r.top < 80;
+      });
+      if (!btn) return;
+      const right = document.documentElement.clientWidth - btn.getBoundingClientRect().right - 15;
+      if (right > 0 && right < window.innerWidth) panel.style.right = `${Math.round(right * 100) / 100}px`;
+    }
 
     function say(text) {
       live.textContent = "";
@@ -279,7 +297,7 @@
       }
       let statusShown = false;
       for (const g of view.groups) {
-        const sec = el("div", "ghqj-group");
+        const sec = el("div", g.id === "search" ? "ghqj-group ghqj-group-search" : "ghqj-group");
         sec.setAttribute("role", "group");
         if (g.title) {
           const h = el("div", "ghqj-gtitle");
@@ -397,6 +415,7 @@
       closed = true;
       clearTimeout(retryTimer);
       document.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("resize", placeSignedOut);
       window.removeEventListener("popstate", onNav);
       document.removeEventListener("turbo:load", onNav);
       window.removeEventListener("pagehide", onNav);

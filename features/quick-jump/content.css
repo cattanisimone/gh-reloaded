@@ -33,7 +33,7 @@
 
 @media (prefers-color-scheme: dark) {
   html:not([data-color-mode="light"]) .ghqj-root {
-    --ghqj-bg: var(--bgColor-default, #010409);
+    --ghqj-bg: var(--bgColor-inset, #010409);
     --ghqj-fg: var(--fgColor-default, #f0f6fc);
     --ghqj-muted: var(--fgColor-muted, #9198a1);
     --ghqj-line: var(--borderColor-default, #3d444d);
@@ -54,7 +54,7 @@
 }
 
 html[data-color-mode="dark"] .ghqj-root {
-  --ghqj-bg: var(--bgColor-default, #010409);
+  --ghqj-bg: var(--bgColor-inset, #010409);
   --ghqj-fg: var(--fgColor-default, #f0f6fc);
   --ghqj-muted: var(--fgColor-muted, #9198a1);
   --ghqj-line: var(--borderColor-default, #3d444d);
@@ -271,12 +271,19 @@ html[data-color-mode="dark"] .ghqj-root {
   padding-top: 4px;
 }
 
+/* the row that searches GitHub closes the matches under a thin line */
+.ghqj-group.ghqj-group-search {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--ghqj-line);
+}
+
 .ghqj-gtitle {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px 8px 4px;
+  padding: 8px 4px 4px;
   font-size: 12px;
   line-height: 18px;
   font-weight: 600;
@@ -546,7 +553,7 @@ html[data-color-mode="dark"] .ghqj-root {
   .ghqj-enter,
   .ghqj-row.ghqj-sel .ghqj-enter,
   .ghqj-tabhint,
-  .ghqj-keylabel,
+  .ghqj-keylabel-more,
   .ghqj-sc-label {
     display: none;
   }
