@@ -1,0 +1,566 @@
+/* features/quick-jump/content.css — the Quick jump dialog. It copies GitHub's native quick search box:
+   the same edges per header variant, radius, backdrop and Primer colours. The panel takes GitHub's own
+   Primer variables when the page defines them; the values after the comma are the ones measured on
+   github.com, so a page without the variables looks the same. A fixed overlay, never part of the page. */
+
+.ghqj-root {
+  --ghqj-bg: var(--bgColor-default, #ffffff);
+  --ghqj-fg: var(--fgColor-default, #1f2328);
+  --ghqj-muted: var(--fgColor-muted, #59636e);
+  --ghqj-line: var(--borderColor-default, #d1d9e0);
+  --ghqj-hover: var(--control-transparent-bgColor-hover, rgba(129, 139, 152, 0.1));
+  --ghqj-pressed: var(--control-transparent-bgColor-active, rgba(129, 139, 152, 0.15));
+  --ghqj-selected: rgba(129, 139, 152, 0.15);
+  --ghqj-bar: #0969da;
+  --ghqj-link: var(--fgColor-accent, #0969da);
+  --ghqj-focus: #0969da;
+  --ghqj-track: #e6eaef;
+  --ghqj-thumb: #ffffff;
+  --ghqj-seg-hover: #e0e6eb;
+  --ghqj-seg-press: #dae0e7;
+  --ghqj-shadow: 0 0 0 1px rgba(209, 217, 224, 0.25), 0 6px 12px -3px rgba(37, 41, 46, 0.04), 0 6px 18px 0 rgba(37, 41, 46, 0.12);
+  --ghqj-backdrop: var(--overlay-backdrop-bgColor, rgba(140, 149, 159, 0.2));
+  --ghqj-skel: rgba(129, 139, 152, 0.14);
+  --ghqj-mark: var(--fgColor-default, #1f2328);
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: var(--ghqj-backdrop);
+  color: var(--ghqj-fg);
+  font: 14px/20px -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  text-align: left;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-color-mode="light"]) .ghqj-root {
+    --ghqj-bg: var(--bgColor-default, #010409);
+    --ghqj-fg: var(--fgColor-default, #f0f6fc);
+    --ghqj-muted: var(--fgColor-muted, #9198a1);
+    --ghqj-line: var(--borderColor-default, #3d444d);
+    --ghqj-hover: var(--control-transparent-bgColor-hover, rgba(101, 108, 118, 0.2));
+    --ghqj-pressed: var(--control-transparent-bgColor-active, rgba(101, 108, 118, 0.25));
+    --ghqj-selected: rgba(101, 108, 118, 0.2);
+    --ghqj-bar: #1f6feb;
+    --ghqj-link: var(--fgColor-accent, #4493f8);
+    --ghqj-focus: #4493f8;
+    --ghqj-track: #010409;
+    --ghqj-thumb: #262c36;
+    --ghqj-seg-hover: #2a313c;
+    --ghqj-seg-press: #2f3742;
+    --ghqj-shadow: 0 0 0 1px #3d444d, 0 6px 12px -3px rgba(1, 4, 9, 0.4), 0 6px 18px 0 rgba(1, 4, 9, 0.4);
+    --ghqj-backdrop: var(--overlay-backdrop-bgColor, rgba(1, 4, 9, 0.8));
+    --ghqj-skel: rgba(101, 108, 118, 0.25);
+  }
+}
+
+html[data-color-mode="dark"] .ghqj-root {
+  --ghqj-bg: var(--bgColor-default, #010409);
+  --ghqj-fg: var(--fgColor-default, #f0f6fc);
+  --ghqj-muted: var(--fgColor-muted, #9198a1);
+  --ghqj-line: var(--borderColor-default, #3d444d);
+  --ghqj-hover: var(--control-transparent-bgColor-hover, rgba(101, 108, 118, 0.2));
+  --ghqj-pressed: var(--control-transparent-bgColor-active, rgba(101, 108, 118, 0.25));
+  --ghqj-selected: rgba(101, 108, 118, 0.2);
+  --ghqj-bar: #1f6feb;
+  --ghqj-link: var(--fgColor-accent, #4493f8);
+  --ghqj-focus: #4493f8;
+  --ghqj-track: #010409;
+  --ghqj-thumb: #262c36;
+  --ghqj-seg-hover: #2a313c;
+  --ghqj-seg-press: #2f3742;
+  --ghqj-shadow: 0 0 0 1px #3d444d, 0 6px 12px -3px rgba(1, 4, 9, 0.4), 0 6px 18px 0 rgba(1, 4, 9, 0.4);
+  --ghqj-backdrop: var(--overlay-backdrop-bgColor, rgba(1, 4, 9, 0.8));
+  --ghqj-skel: rgba(101, 108, 118, 0.25);
+}
+
+.ghqj-root *,
+.ghqj-root *::before,
+.ghqj-root *::after {
+  box-sizing: border-box;
+}
+
+/* ---- the panel: edges of the native quick search per header variant ---- */
+
+.ghqj-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: min(640px, calc(100vh - 16px));
+  background: var(--ghqj-bg);
+  box-shadow: var(--ghqj-shadow);
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+  container-type: inline-size;
+  container-name: ghqj;
+  color: var(--ghqj-fg);
+}
+
+@media (min-width: 1012px) {
+  .ghqj-signed-in .ghqj-panel {
+    top: 3px;
+    left: 91px;
+    right: 340px;
+    border-radius: 12px;
+  }
+  .ghqj-signed-out .ghqj-panel {
+    top: 5px;
+    left: auto;
+    right: 212px;
+    width: 480px;
+    border-radius: 12px;
+  }
+}
+
+/* ---- input ---- */
+
+.ghqj-head {
+  padding: 12px 12px 8px;
+  flex: none;
+}
+
+.ghqj-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--ghqj-line);
+  border-radius: 6px;
+  background: var(--ghqj-bg);
+}
+
+.ghqj-box:focus-within {
+  border-color: var(--ghqj-focus);
+  box-shadow: inset 0 0 0 1px var(--ghqj-focus);
+}
+
+.ghqj-svg {
+  flex: none;
+  fill: var(--ghqj-muted);
+}
+
+.ghqj-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ghqj-fg);
+  font: inherit;
+}
+
+.ghqj-input::placeholder {
+  color: var(--ghqj-muted);
+  opacity: 1;
+}
+
+/* ---- scope ---- */
+
+.ghqj-scope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  padding: 0 12px 8px;
+}
+
+.ghqj-scope-label {
+  flex: none;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ghqj-muted);
+}
+
+.ghqj-seg {
+  display: inline-flex;
+  flex: none;
+  height: 28px;
+  padding: 1px;
+  border: 1px solid var(--ghqj-line);
+  border-radius: 6px;
+  background: var(--ghqj-track);
+}
+
+.ghqj-seg-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ghqj-fg);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ghqj-seg-btn > span {
+  display: block;
+  height: 20px;
+  padding: 0 8px;
+  line-height: 20px;
+  border-radius: 4px;
+  margin: 0 2px;
+}
+
+.ghqj-seg-btn:hover:not(.ghqj-on) > span {
+  background: var(--ghqj-seg-hover);
+}
+
+.ghqj-seg-btn:active:not(.ghqj-on) > span {
+  background: var(--ghqj-seg-press);
+}
+
+.ghqj-seg-btn.ghqj-on {
+  background: var(--ghqj-thumb);
+  box-shadow: 0 0 0 1px var(--ghqj-line);
+  font-weight: 600;
+}
+
+.ghqj-seg-btn:focus-visible {
+  outline: 2px solid var(--ghqj-focus);
+  outline-offset: -1px;
+}
+
+.ghqj-seg-short {
+  display: none !important;
+}
+
+.ghqj-tabhint {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ghqj-muted);
+  white-space: nowrap;
+}
+
+.ghqj-kbd {
+  display: inline-block;
+  padding: 0 4px;
+  border: 1px solid var(--ghqj-line);
+  border-radius: 4px;
+  font: 11px/16px ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--ghqj-muted);
+}
+
+/* ---- list ---- */
+
+.ghqj-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 8px 8px;
+  border-top: 1px solid var(--ghqj-line);
+}
+
+.ghqj-group {
+  padding-top: 4px;
+}
+
+.ghqj-gtitle {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 8px 4px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+  color: var(--ghqj-muted);
+}
+
+.ghqj-glabel {
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.ghqj-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--ghqj-fg);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ghqj-row:hover {
+  background: var(--ghqj-hover);
+  color: var(--ghqj-fg);
+  text-decoration: none;
+}
+
+.ghqj-row:active {
+  background: var(--ghqj-pressed);
+}
+
+.ghqj-row.ghqj-sel {
+  background: var(--ghqj-selected);
+}
+
+.ghqj-row.ghqj-sel::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 6px;
+  background: var(--ghqj-bar);
+}
+
+.ghqj-ico {
+  flex: none;
+  display: inline-flex;
+  margin-top: 2px;
+  height: 16px;
+}
+
+.ghqj-row[data-type="issue"] .ghqj-svg {
+  fill: var(--fgColor-open, #1a7f37);
+}
+
+.ghqj-row[data-type="pull"] .ghqj-svg {
+  fill: var(--fgColor-open, #1a7f37);
+}
+
+.ghqj-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ghqj-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 400;
+}
+
+.ghqj-bold {
+  font-weight: 600;
+}
+
+.ghqj-hl {
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+}
+
+.ghqj-ctx {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ghqj-muted);
+}
+
+.ghqj-seg-text {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.ghqj-seg-text.ghqj-first {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.ghqj-repo {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ghqj-num {
+  flex: none;
+}
+
+.ghqj-sep {
+  margin: 0 0 0 4px;
+}
+
+.ghqj-type {
+  flex: none;
+  align-self: center;
+  margin-left: auto;
+  padding-left: 8px;
+  font-size: 12px;
+  color: var(--ghqj-muted);
+  white-space: nowrap;
+}
+
+.ghqj-enter {
+  flex: none;
+  align-self: center;
+  display: none;
+  color: var(--ghqj-muted);
+  font-size: 12px;
+}
+
+.ghqj-row.ghqj-sel .ghqj-enter {
+  display: inline;
+}
+
+/* ---- lines and states ---- */
+
+.ghqj-line {
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ghqj-muted);
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.ghqj-line-strong {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ghqj-fg);
+  padding-top: 12px;
+}
+
+.ghqj-none {
+  padding: 4px 0 0;
+}
+
+.ghqj-status {
+  padding: 4px 0 0;
+}
+
+.ghqj-statusline {
+  color: var(--ghqj-fg);
+}
+
+.ghqj-inline,
+.ghqj-change {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ghqj-link);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.ghqj-inline {
+  white-space: nowrap;
+}
+
+.ghqj-inline:hover,
+.ghqj-change:hover,
+.ghqj-inline:active,
+.ghqj-change:active {
+  text-decoration: underline;
+}
+
+.ghqj-inline:focus-visible,
+.ghqj-change:focus-visible {
+  outline: 2px solid var(--ghqj-focus);
+  outline-offset: -2px;
+  border-radius: 2px;
+}
+
+.ghqj-skeletons {
+  padding: 0 8px;
+}
+
+.ghqj-skel {
+  height: 33px;
+  margin: 2px 0;
+  border-radius: 6px;
+  background: var(--ghqj-skel);
+}
+
+/* ---- footer ---- */
+
+.ghqj-foot {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--ghqj-line);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--ghqj-muted);
+}
+
+.ghqj-keys {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+}
+
+.ghqj-key {
+  white-space: nowrap;
+}
+
+.ghqj-shortcut {
+  white-space: nowrap;
+}
+
+.ghqj-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- narrow: a panel narrower than 544px (every phone width and the 480px signed-out panel) ---- */
+
+@container ghqj (max-width: 543px) {
+  .ghqj-type,
+  .ghqj-enter,
+  .ghqj-row.ghqj-sel .ghqj-enter,
+  .ghqj-tabhint,
+  .ghqj-keylabel,
+  .ghqj-sc-label {
+    display: none;
+  }
+  .ghqj-seg-full {
+    display: none !important;
+  }
+  .ghqj-seg-short {
+    display: block !important;
+  }
+  .ghqj-keys {
+    gap: 0 8px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ghqj-seg-btn > span,
+  .ghqj-row {
+    transition: background-color 80ms;
+  }
+}
