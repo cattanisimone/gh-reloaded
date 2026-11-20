@@ -369,7 +369,7 @@
       for (const it of (lists.repos?.items || []).filter((i) => inScope(i, scope, ctx)).slice().sort((a, b) => Date.parse(b.pushedAt) - Date.parse(a.pushedAt))) push(it, repoRow(it, now));
     }
     const search = link("search", `Search GitHub for “${squash(query)}”`, searchUrl(query, scope, ctx));
-    search.hint = [qualifier(scope, ctx), squash(query)].filter(Boolean).join(" ");
+    search.scopeNote = scope === "repo" ? "in this repository" : scope === "owner" ? `in ${ctx.owner}` : "everywhere";
     search.type = "search";
     const groups = [];
     if (rows.length) groups.push({ id: "matches", title: "Matches in your work and recent items", rows, lines: [] });

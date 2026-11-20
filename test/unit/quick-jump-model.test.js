@@ -198,6 +198,12 @@ test("typing: all fetched and stored items, grouped, once, capped at 10, highlig
   eq(rows[0].ranges.title, [[10, 16]]);
   assert.equal(v.groups.at(-1).rows[0].title, "Search GitHub for “Upload”");
   assert.equal(v.groups.at(-1).rows[0].href, "https://github.com/search?q=Upload");
+  assert.equal(v.groups.at(-1).rows[0].scopeNote, "everywhere");
+  assert.equal(v.groups.at(-1).rows[0].hint, undefined);
+  const inRepo = M.buildMatches({ query: "Upload", scope: "repo", ctx: M.pageContext("/acme/web/issues/9"), lists, recent, now: NOW });
+  assert.equal(inRepo.groups.at(-1).rows[0].scopeNote, "in this repository");
+  const inOwner = M.buildMatches({ query: "Upload", scope: "owner", ctx: M.pageContext("/acme/web/issues/9"), lists, recent, now: NOW });
+  assert.equal(inOwner.groups.at(-1).rows[0].scopeNote, "in acme");
   const all = M.buildMatches({ query: "upload", scope: "everywhere", ctx: M.pageContext("/pulls"), lists: { assigned: ok([]), review: ok(), repos: ok([repoItem("acme/uploader", 5)]) }, recent: [], now: NOW });
   assert.equal(all.groups[0].rows[0].type, "repo");
   eq(all.groups[0].rows[0].ranges.repo, [[5, 11]]);

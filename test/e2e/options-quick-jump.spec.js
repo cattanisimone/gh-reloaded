@@ -57,6 +57,16 @@ test("with a token the row is on by default, described, with the Shortcut select
   await expect(clear(page)).toBeVisible();
   // The description ends with the link (A10), "Change shortcut" sits beside the select.
   expect(await page.evaluate(() => document.querySelector("#qj-desc").lastElementChild.textContent)).toBe("Clear recent items");
+  // Same rhythm as the sibling rows: the description follows the title directly, the switch is centred on both.
+  const geo = await page.evaluate(() => {
+    const r = (s) => document.querySelector(s).getBoundingClientRect();
+    const t = r("#quick-jump .row-title"), d = r("#qj-desc"), s = r("#feature-ghqj");
+    const sib = document.querySelector("#feature-ghrc").closest(".row");
+    const st = sib.querySelector(".row-title").getBoundingClientRect(), sd = sib.querySelector(".row-desc").getBoundingClientRect(), ss = sib.querySelector(".switch").getBoundingClientRect();
+    return { gap: d.top - t.bottom, sibGap: sd.top - st.bottom, off: (s.top + s.height / 2) - (t.top + d.bottom) / 2 , sibOff: (ss.top + ss.height / 2) - (st.top + sd.bottom) / 2 };
+  });
+  expect(Math.abs(geo.gap - geo.sibGap), JSON.stringify(geo)).toBeLessThanOrEqual(1);
+  expect(Math.abs(geo.off), JSON.stringify(geo)).toBeLessThanOrEqual(1);
   await expect(page.locator("#qj-notice")).toBeHidden();
   await expect(page.locator("#qj-fallback")).toBeHidden();
 });
@@ -342,6 +352,7 @@ for (const scheme of ["light", "dark"]) {
             clearLines: clearL && clearL.getClientRects().length,
             addrBreaks,
             title: box(q("#quick-jump .row-title")),
+            descBox: box(q("#qj-desc")),
             colours: { title: colour(q("#quick-jump .row-title")), desc: colour(q("#qj-desc")), line: colour(q("#qj-line")), link: change && colour(change), select: colour(sel), border: cs.borderTopColor, bg: cs.backgroundColor },
             options: [...sel.options].map((o) => o.textContent),
           };
@@ -375,8 +386,9 @@ for (const scheme of ["light", "dark"]) {
         let m = await measure();
         check(m, "browser");
         expect(m.options).toEqual(["Alt+Shift+K", fullFits ? FULL_CMDK.win : "Ctrl+K"]);
-        // Layout: switch on the right, top-aligned with the title; at <=720 the title and the switch share the first line.
-        expect(Math.abs(m.sw.y + m.sw.h / 2 - (m.title.y + m.title.h / 2)), `switch aligned with the title, ${widthNote}`).toBeLessThanOrEqual(3);
+        // Layout: switch on the right, centred on the title and the description like the sibling rows; at <=720 the title and the switch share the first line.
+        const mid = width <= 720 ? m.title.y + m.title.h / 2 : (m.title.y + m.descBox.y + m.descBox.h) / 2;
+        expect(Math.abs(m.sw.y + m.sw.h / 2 - mid), `switch centred with the title${width <= 720 ? "" : " and description"}, ${widthNote}`).toBeLessThanOrEqual(3);
         expect(m.sw.r, `switch at the right edge, ${widthNote}`).toBeGreaterThan(m.rowBox.r - 20);
         if (width <= 720) expect(m.select.w, `controls use the row width, ${widthNote}`).toBeLessThanOrEqual(m.rowBox.w);
         else expect(m.select.r, `select stays left of the switch, ${widthNote}`).toBeLessThanOrEqual(m.sw.x);

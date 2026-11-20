@@ -79,6 +79,9 @@ test("typing filters everything fetched locally with no request per keystroke; t
   expect(await titles(page)).toEqual(["Retry the upload when the worker times out", "Search GitHub for “upload”"]);
   await expect(rows(page).first().locator("mark")).toHaveText("upload");
   const last = rows(page).last();
+  // one line: the title, the scope on the right; no second line with the query
+  await expect(last.locator(".ghqj-ctx")).toHaveCount(0);
+  await expect(last.locator(".ghqj-type")).toHaveText("in this repository");
   await expect(last).toHaveAttribute("href", "https://github.com/search?q=repo%3Aacme%2Fweb+upload");
   expect(reqs.length).toBe(before);
   await input(page).fill("zzz");

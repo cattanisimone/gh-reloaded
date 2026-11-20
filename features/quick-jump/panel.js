@@ -143,7 +143,7 @@
     k[2].append(el("kbd", "ghqj-kbd", "Esc"), el("span", "ghqj-keylabel", " close"));
     const sc = el("span", "ghqj-shortcut");
     const scLabel = el("span", "ghqj-sc-label", "Shortcut ");
-    const scKeys = el("span", "ghqj-sc-keys");
+    const scKeys = el("kbd", "ghqj-kbd ghqj-sc-keys");
     const change = el("button", "ghqj-change", "Change");
     change.type = "button";
     change.addEventListener("click", () => env.openSettings("quick-jump"));
@@ -215,8 +215,7 @@
       const title = r.ranges ? highlighted(r.title, r.ranges.title, "ghqj-title") : el("span", "ghqj-title", r.title);
       if (r.bold) title.classList.add("ghqj-bold");
       main.appendChild(title);
-      if (r.hint) main.appendChild(el("span", "ghqj-ctx ghqj-hint", r.hint));
-      else if (r.ctx) {
+      if (r.ctx) {
         const c = el("span", "ghqj-ctx");
         r.ctx.forEach((segText, i) => {
           if (i) c.append(" ");
@@ -235,8 +234,8 @@
         main.appendChild(c);
       }
       a.appendChild(main);
-      if (r.typeLabel) {
-        const t = el("span", "ghqj-type", r.typeLabel);
+      if (r.typeLabel || r.scopeNote) {
+        const t = el("span", "ghqj-type", r.typeLabel || r.scopeNote);
         t.setAttribute("aria-hidden", "true");
         a.appendChild(t);
       }

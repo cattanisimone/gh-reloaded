@@ -596,16 +596,20 @@ input[aria-invalid="true"] { border-color: var(--bad); }
 .token-item > .ghals-warn { grid-column: 1 / -1; margin: 0 14px 12px; }
 
 /* --- Quick jump row ---
-   Title and switch on the first line, everything else in the body under the
-   title (desktop) or at the full row width (720px and below). */
-.row-qj { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: start; }
+   Title and description stacked like the sibling rows (no row gap: .row's gap
+   would double it), the switch centred on them; the controls and the status
+   lines run under, in the same column (desktop) or at the full row width
+   (720px and below). */
+.row-qj { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 0; align-items: start; }
 .row-qj > .row-title { grid-column: 1; grid-row: 1; min-width: 0; }
-.row-qj > .switch { grid-column: 2; grid-row: 1 / span 2; margin-top: 0.5px; }
-.qj-body { grid-column: 1; grid-row: 2; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.qj-body p { margin: 0; }
+.row-qj > .switch { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.qj-body { display: contents; }
+.qj-body > p { margin: 0; min-width: 0; }
+.qj-body > .qj-desc { grid-column: 1; grid-row: 2; }
+.qj-body > .qj-controls, .qj-body > #qj-cleared { grid-column: 1; min-width: 0; margin-top: 8px; }
 .row-title[data-route-focus]:focus { outline: none; }
 .row-title[data-route-focus]:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: 4px; }
-.qj-controls { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+.qj-controls { display: flex; flex-direction: column; gap: 8px; }
 .qj-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
 .qj-label { font-weight: 600; }
 .qj-select { position: relative; display: inline-flex; flex: 0 1 auto; min-width: 0; max-width: 100%; }
@@ -655,5 +659,5 @@ code.qj-addr { user-select: all; overflow-wrap: normal; }
 .qj-cleared:empty, #qj-cleared:empty { display: none; }
 @media (max-width: 720px) {
   .row-qj > .switch { grid-row: 1; }
-  .qj-body { grid-column: 1 / -1; }
+  .qj-body > .qj-desc, .qj-body > .qj-controls, .qj-body > #qj-cleared { grid-column: 1 / -1; }
 }

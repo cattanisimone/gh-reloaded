@@ -72,12 +72,10 @@ test("README and PRIVACY name the optional notifications permission and a releas
 
 test("quick jump: README lists it on the Issues, Pull requests and Metadata rows, with the 'Already have a token?' sentence", () => {
   const row = (perm) => readme.split("\n").find((l) => l.startsWith("| Repository | **" + perm + "**"));
-  for (const perm of ["Issues", "Pull requests", "Metadata"]) {
-    assert.match(row(perm) || "", /Quick jump \([^)]*unconfirmed until Check 3\)/, `${perm} row lists Quick jump`);
-  }
-  assert.match(row("Issues"), /Quick jump \(your assigned issues/);
-  assert.match(row("Pull requests"), /Quick jump \(review requests/);
-  assert.match(row("Metadata"), /Quick jump \(active repositories/);
+  assert.match(row("Issues") || "", /Quick jump \(lists the issues assigned to you\)/, "Issues row lists Quick jump");
+  assert.match(row("Pull requests") || "", /Quick jump \(lists the pull requests that ask for your review\)/, "Pull requests row lists Quick jump");
+  assert.match(row("Metadata") || "", /Quick jump \(lists your most recently active repositories\)/, "Metadata row lists Quick jump");
+  for (const perm of ["Issues", "Pull requests", "Metadata"]) assert.doesNotMatch(row(perm), /Check 3/, `${perm} row names no internal check`);
   assert.ok(readme.includes("Already have a token? Quick jump needs no new permission: it reads with Issues, Pull requests and Metadata. A token limited to selected repositories shows only the assigned issues, review requests and repositories it can reach; the two \"All … on GitHub\" rows open GitHub's complete lists."));
   assert.ok(readme.includes("screenshots/quick-jump.svg"));
   assert.match(privacy, /Recent items/);

@@ -395,6 +395,7 @@ html[data-color-mode="dark"] .ghqj-root {
 
 .ghqj-num {
   flex: none;
+  margin-left: 0.25em;
 }
 
 .ghqj-sep {

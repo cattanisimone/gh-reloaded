@@ -72,6 +72,11 @@ test.describe("content by width", () => {
       expect(lh).toBeLessThanOrEqual(42.5);
       const ctx = await longRow.locator(".ghqj-first").evaluate((n) => ({ num: n.querySelector(".ghqj-num").getBoundingClientRect().right <= n.getBoundingClientRect().right + 0.5, vis: n.querySelector(".ghqj-num").getBoundingClientRect().width > 0 }));
       expect(ctx).toEqual({ num: true, vis: true });
+      // "owner/repo #n": a visible gap between the repository and the number (the leading space is dropped in the flex row)
+      const gap = await longRow.locator(".ghqj-first").evaluate((n) => n.querySelector(".ghqj-num").getBoundingClientRect().left - n.querySelector(".ghqj-repo").getBoundingClientRect().right);
+      expect(gap, `gap between .ghqj-repo and .ghqj-num at panel ${Math.round((await rect(page, ".ghqj-panel")).w)}px`).toBeGreaterThanOrEqual(2.5);
+      // footer shortcut is a key chip like the other footer keys
+      await expect(page.locator(".ghqj-shortcut kbd.ghqj-kbd")).toBeVisible();
       const noWrapBreak = await longRow.locator(".ghqj-repo").evaluate((n) => getComputedStyle(n).textOverflow === "ellipsis" && getComputedStyle(n).whiteSpace === "nowrap");
       expect(noWrapBreak).toBe(true);
       // footer: keys always there; labels dropped when narrow

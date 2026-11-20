@@ -43,11 +43,11 @@ Go to [github.com/settings/personal-access-tokens/new](https://github.com/settin
 
 | Scope | Permission | Used for |
 | --- | --- | --- |
-| Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues, confirming a Quick assignment (read-only), Notification reason tags (mentions), Quick jump (your assigned issues, unconfirmed until Check 3) |
-| Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage, Linked PR status, Notification reason tags (review requests and mentions), Quick jump (review requests, unconfirmed until Check 3) |
+| Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues, confirming a Quick assignment (read-only), Notification reason tags (mentions), Quick jump (lists the issues assigned to you) |
+| Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage, Linked PR status, Notification reason tags (review requests and mentions), Quick jump (lists the pull requests that ask for your review) |
 | Repository | **Contents** | **HTML preview** and **Image gallery** of files in private repos (public repos work without a token) |
 | Repository | **Actions** (optional) | **Open raw log** of the Actions log shortcuts; without it that button stays hidden and everything else works |
-| Repository | **Metadata** | added by GitHub automatically; Quick jump (active repositories, unconfirmed until Check 3) |
+| Repository | **Metadata** | added by GitHub automatically; Quick jump (lists your most recently active repositories) |
 | Organization | **Projects** | Projects v2 Status, Standup mode, My Issues project memberships |
 
 Click **Generate token** and copy it immediately — GitHub shows it exactly once.
