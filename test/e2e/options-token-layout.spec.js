@@ -487,7 +487,7 @@ test("S4/S5: the warning details name the installed version; steps follow the bu
   await expect(page.locator("#warning-steps li")).toHaveCount(4);
   const ys = await page.evaluate(() => [document.querySelector(".warning-actions").getBoundingClientRect().bottom, document.querySelector("#warning-steps").getBoundingClientRect().top]);
   expect(ys[1]).toBeGreaterThanOrEqual(ys[0]);
-  await page.evaluate(() => chrome.storage.local.set({ ghdgEnabled: false, ghsmEnabled: false, ghmiEnabled: false, ghlpsEnabled: false, ghprtEnabled: false, ghhpEnabled: false, ghigEnabled: false, ghntModules: { reasonTags: false } }));
+  await page.evaluate(() => chrome.storage.local.set({ ghdgEnabled: false, ghsmEnabled: false, ghmiEnabled: false, ghlpsEnabled: false, ghprtEnabled: false, ghqjEnabled: false, ghhpEnabled: false, ghigEnabled: false, ghntModules: { reasonTags: false } }));
   await expect(page.locator("#token-warning")).toBeHidden();
   await page.evaluate(() => chrome.storage.local.set({ ghprtEnabled: true }));
   await expect(page.locator("#token-warning")).toBeVisible();

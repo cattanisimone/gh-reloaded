@@ -4,7 +4,7 @@ import { test, expect, seedStorage } from "./support/extension.js";
 import { openOptions } from "./support/options.js";
 import { mockApi, allGood, CLASSIC } from "./support/tokens.js";
 
-const OFF = { ghdgEnabled: false, ghsmEnabled: false, ghmiEnabled: false, ghhpEnabled: false, ghigEnabled: false, ghprtEnabled: false, ghlpsEnabled: false, ghntModules: { reasonTags: false } };
+const OFF = { ghdgEnabled: false, ghsmEnabled: false, ghmiEnabled: false, ghhpEnabled: false, ghigEnabled: false, ghprtEnabled: false, ghlpsEnabled: false, ghqjEnabled: false, ghntModules: { reasonTags: false } };
 const base = { githubTokens: [{ id: "d", name: "Work – acme-demo", owner: "", token: CLASSIC }], defaultTokenId: "d" };
 const codes = (over) => ({ at: Date.now(), codes: { identity: "available", contents: "available", pulls: "available", issues: "available", projects: "available", actions: "unchecked", ...over } });
 const warning = (page) => page.locator("#token-warning");
@@ -84,4 +84,21 @@ test("Later hides it for this page; How to add it shows the steps in the warning
 test("an untested token raises no warning", async ({ context, page }) => {
   await start(context, page, { features: { ...OFF, ghlpsEnabled: true }, session: {} });
   await expect(warning(page)).toBeHidden();
+});
+
+test("quick jump: the warning names it when Issues or Pull requests are denied; nothing changes while it is off", async ({ context, page }) => {
+  await start(context, page, { features: { ...OFF, ghqjEnabled: true }, session: { d: codes({ issues: "denied" }) } });
+  await expect(warning(page)).toBeVisible();
+  await expect(page.locator("#warning-title")).toHaveText("Quick jump needs a permission your token doesn't have");
+  await page.locator(".warning-details summary").click();
+  const row = page.locator("#warning-details .warning-perm");
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText("Issues");
+  await expect(row).toContainText("Quick jump: to list your assigned issues and review requests.");
+  await expect(page.locator("#token-list .token-item").first().locator(".state-pill")).toHaveText("Missing permissions");
+  await page.evaluate(() => chrome.storage.local.set({ ghqjEnabled: false }));
+  await expect(warning(page)).toBeHidden();
+  await expect(page.locator("#token-list .token-item").first().locator(".state-pill")).not.toHaveText("Missing permissions");
+  await page.evaluate(() => chrome.storage.local.set({ ghqjEnabled: true }));
+  await expect(warning(page)).toBeVisible();
 });
