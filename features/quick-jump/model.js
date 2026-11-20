@@ -15,7 +15,7 @@
 
   // Top-level paths that are not an owner login.
   const RESERVED = new Set(
-    ("about apps account blog codespaces collections contact copilot customer-stories dashboard discussions enterprise events explore features gist gists home issues join login logout marketplace new notifications organizations orgs pricing pulls readme resources search security sessions settings signup site sponsors stars topics trending users watching ").trim().split(/\s+/)
+    ("about advisories apps account blog codespaces collections contact copilot customer-stories dashboard discussions enterprise enterprises events explore features gist gists git-guides home issues join login logout marketplace mobile new notifications organizations orgs premium-support pricing pulls readme repos resources search security sessions settings signup site sitemap solutions sponsors stars support team topics trending users watching ").trim().split(/\s+/)
   );
 
   const low = (s) => String(s || "").toLowerCase();
@@ -25,7 +25,9 @@
 
   // The scope values a page offers, in order, with the context owner and repo.
   // `notFound`: the page is GitHub's "Page not found" (no context at all).
-  function pageContext(pathname, { notFound = false } = {}) {
+  // `nwo`: the repository the page declares ("owner/repo" or ""), when the caller can read it. A path of two
+  // segments is a repository only if the page says so (an advisory or an enterprise page is not one).
+  function pageContext(pathname, { notFound = false, nwo } = {}) {
     const none = { kind: "global", owner: "", repo: "", scopes: ["everywhere"] };
     if (notFound) return none;
     const parts = String(pathname || "").split("/").filter(Boolean).map((p) => { try { return decodeURIComponent(p); } catch { return p; } });
@@ -37,6 +39,7 @@
     }
     if (RESERVED.has(first)) return none;
     if (parts.length === 1) return { kind: "owner", owner: parts[0], repo: "", scopes: ["owner", "everywhere"] };
+    if (nwo !== undefined && low(nwo) !== low(`${parts[0]}/${parts[1]}`)) return none;
     return { kind: "repo", owner: parts[0], repo: parts[1], scopes: ["repo", "everywhere"] };
   }
 
@@ -65,8 +68,9 @@
       const kind = issue ? "issue" : "pull";
       const number = Number((issue || pull)[1]);
       const label = issue ? "Issue" : "Pull Request";
-      const re = new RegExp(`^(.*?)(?: by [^·]+?)? · ${label} #${number} · ${escapeRe(owner)}/${escapeRe(repo)}$`, "i");
-      const tm = re.exec(t);
+      // "<title> · Issue #n · o/r" and "<title> by <login> · Pull Request #n · o/r", with " · GitHub" added when signed out
+      const tail = ` · ${label} #${number} · ${escapeRe(owner)}/${escapeRe(repo)}(?: · GitHub)?$`;
+      const tm = (issue ? null : new RegExp(`^(.*) by [^\\s·]+${tail}`, "i").exec(t)) || new RegExp(`^(.*)${tail}`, "i").exec(t);
       if (!tm) return null;
       return { kind, owner, repo: `${owner}/${repo}`, number, title: tm[1].trim() || `${owner}/${repo}#${number}`, url: `${repoUrl}/${issue ? "issues" : "pull"}/${number}`, key: `${low(owner)}/${low(repo)}#${number}` };
     }
@@ -242,8 +246,11 @@
     return { text: `GH Reloaded's GitHub token “${tokenName}” sees nothing assigned to you or waiting for your review ${ph}.`, id: "empty-work" };
   }
 
-  function emptyRecentLine(scope, anyStored) {
+  // anyStored: items are stored at all; anyInScope: some of them are in the scope (the once-per-panel
+  // rule may still have moved them to Your work, which says nothing about Recent being empty).
+  function emptyRecentLine(scope, anyStored, anyInScope) {
     if (!anyStored) return { text: "Issues, pull requests and repositories you open on GitHub will appear here.", id: "empty-recent" };
+    if (anyInScope || scope === "everywhere") return null;
     return { text: `Nothing you opened recently ${scope === "repo" ? "in this repository" : "for this owner"}.`, id: "empty-recent" };
   }
 
@@ -317,8 +324,11 @@
     const storedAll = Array.isArray(recent) ? recent : [];
     const recentScoped = storedAll.filter((i) => inScope(i, scope, ctx) && !shownKeys.has(itemKey(i))).slice(0, RECENT_LIMIT);
     const rec = { id: "recent", title: "Recent", rows: recentScoped.map((i) => recentRow(i, now)), lines: [] };
-    if (!rec.rows.length) rec.lines.push(emptyRecentLine(scope, storedAll.length > 0));
-    groups.push(rec);
+    if (!rec.rows.length) {
+      const ln = emptyRecentLine(scope, storedAll.length > 0, storedAll.some((i) => inScope(i, scope, ctx)));
+      if (ln) rec.lines.push(ln);
+    }
+    if (rec.rows.length || rec.lines.length) groups.push(rec);
 
     // -- Active repositories
     const recentRepoKeys = new Set(rec.rows.filter((r) => r.type === "repo").map((r) => low(r.repo)));

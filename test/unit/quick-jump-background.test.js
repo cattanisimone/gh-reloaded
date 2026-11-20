@@ -288,3 +288,36 @@ test("settings link: only known anchors, only from a github.com page", async () 
   await bg.openSettings.handleMessage({ hash: "quick-jump" }, { url: "https://evil.example/" });
   assert.deepEqual(sent.map((s) => s[1].url), ["chrome-extension://x/options/options.html#tokens-section", "chrome-extension://x/options/options.html#quick-jump"]);
 });
+
+// Regressions found by the adversarial review.
+test("a second open or a Tab to a scope served by the same record awaits the read in flight: at most three GETs", async () => {
+  const prev = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => {
+    await new Promise((r) => setTimeout(r, 40));
+    return prev(url, opts);
+  };
+  await Promise.all([refresh("repo", "someone"), refresh("everywhere", ""), refresh("repo", "someone")]);
+  assert.equal(calls.length, 3);
+  assert.deepEqual([...new Set(calls.map((c) => c.auth))], ["Bearer SECRET_D"]);
+});
+
+test("a read that was running when the token's secret changed is not cached under the new secret", async () => {
+  const prev = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => {
+    await new Promise((r) => setTimeout(r, 40));
+    return prev(url, opts);
+  };
+  const running = refresh("everywhere", "");
+  await new Promise((r) => setTimeout(r, 10));
+  await chromeStub.storage.local.set({ githubTokens: [{ id: "d", name: "Personal", token: "ROTATED", owner: "" }, TOKENS.githubTokens[1]] });
+  await running;
+  assert.equal(session.ghqjCache?.d, undefined);
+});
+
+test("a visit accepted just before the feature is switched off never puts the list back", async () => {
+  const pending = bg.visit.handleMessage({ kind: "repo", repo: "acme/web", title: "x" }, GH);
+  await chromeStub.storage.local.set({ ghqjEnabled: false });
+  await pending;
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal((await chromeStub.storage.local.get("ghqjRecent")).ghqjRecent, undefined);
+});

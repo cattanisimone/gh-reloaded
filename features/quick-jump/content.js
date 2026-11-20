@@ -54,6 +54,7 @@
   const env = {
     state: () => state,
     pathname: () => location.pathname,
+    nwo: () => declaredRepo(),
     notFound: () => /^page not found/i.test(document.title) || !!document.querySelector('img[alt*="404"], [data-testid="404"]'),
     request: (payload) => send("GHQJ_LISTS", payload).then((r) => (r && r.ok ? r : null)),
     goto: (url, newTab) => {

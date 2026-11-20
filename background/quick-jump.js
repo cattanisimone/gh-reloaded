@@ -133,6 +133,11 @@ function githubSender(sender) {
   }
 }
 
+// Every write to the recent list and its clean-up run one after the other, so a visit that was accepted
+// just before the feature was switched off cannot put the list back.
+let writes = Promise.resolve();
+const serial = (fn) => (writes = writes.then(fn, fn));
+
 export const visit = {
   MESSAGE_TYPE: "GHQJ_VISIT",
   async handleMessage(payload, sender) {
@@ -140,9 +145,12 @@ export const visit = {
     if (!(await isActive())) return { recorded: false };
     const clean = cleanVisit(payload);
     if (!clean) return { recorded: false };
-    const cur = await chrome.storage.local.get(KEY_RECENT);
-    await chrome.storage.local.set({ [KEY_RECENT]: recordVisit(cur[KEY_RECENT], clean, Date.now()) });
-    return { recorded: true };
+    return serial(async () => {
+      if (!(await isActive())) return { recorded: false };
+      const cur = await chrome.storage.local.get(KEY_RECENT);
+      await chrome.storage.local.set({ [KEY_RECENT]: recordVisit(cur[KEY_RECENT], clean, Date.now()) });
+      return { recorded: true };
+    });
   },
 };
 
@@ -219,6 +227,15 @@ function present(entry, now) {
   return { status: entry.status, items: entry.items || [], truncated: !!entry.truncated, waitMs };
 }
 
+// One read per token record and list at a time: a second open, a Tab to another scope served by the same
+// record, or a second tab awaits the read already in flight instead of sending the same GET again.
+const inflight = new Map();
+function readShared(recordId, name, owner) {
+  const key = `${recordId}:${name}`;
+  if (!inflight.has(key)) inflight.set(key, readOne(name, owner).finally(() => inflight.delete(key)));
+  return inflight.get(key);
+}
+
 async function readOne(name, owner) {
   const now = Date.now();
   try {
@@ -255,15 +272,20 @@ export async function handleMessage(payload) {
   const entry = cache[record.id] || {};
   if (phase === "refresh") {
     const todo = NAMES.filter((n) => due(entry[n], now));
-    const results = await Promise.all(todo.map((n) => readOne(n, owner)));
+    const results = await Promise.all(todo.map((n) => readShared(record.id, n, owner)));
     todo.forEach((n, i) => {
       const r = results[i];
       // A failed read keeps the rows of the last good one (shown as possibly out of date).
       entry[n] = r.failed ? { ...r, items: entry[n]?.items || [], truncated: !!entry[n]?.truncated } : r;
     });
-    if (todo.length) {
-      cache[record.id] = entry;
-      await writeCache(cache);
+    // The secret may have changed while the reads ran: what the old credential saw is never cached.
+    const now2 = todo.length ? await resolveTokenRecord(owner) : null;
+    if (todo.length && now2?.id === record.id && now2.token === record.token) {
+      const fresh = await readCache();
+      fresh[record.id] = entry;
+      await writeCache(fresh);
+    } else if (todo.length) {
+      return { ...out, active: true, lists: Object.fromEntries(NAMES.map((n) => [n, present(undefined, now)])) };
     }
   }
   out.lists = Object.fromEntries(NAMES.map((n) => [n, present(entry[n], now)]));
@@ -287,11 +309,11 @@ async function purgeSessionFor(ids) {
 
 chrome.storage?.onChanged?.addListener((changes, area) => {
   if (area && area !== "local") return;
-  if (changes[KEY_ENABLED] && changes[KEY_ENABLED].newValue === false) chrome.storage.local.remove(KEY_RECENT);
+  if (changes[KEY_ENABLED] && changes[KEY_ENABLED].newValue === false) serial(() => chrome.storage.local.remove(KEY_RECENT));
   if (changes.githubTokens) {
     const oldList = changes.githubTokens.oldValue || [];
     const newList = changes.githubTokens.newValue || [];
-    if (!newList.some((r) => r.token)) chrome.storage.local.remove(KEY_RECENT);
+    if (!newList.some((r) => r.token)) serial(() => chrome.storage.local.remove(KEY_RECENT));
     const newById = new Map(newList.map((r) => [r.id, r.token]));
     purgeSessionFor(oldList.filter((r) => newById.get(r.id) !== r.token).map((r) => r.id));
   }

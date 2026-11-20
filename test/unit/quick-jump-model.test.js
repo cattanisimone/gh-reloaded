@@ -237,3 +237,35 @@ test("shortcut copy: platform wording and the cmdk keys", () => {
   assert.equal(M.isCmdK({ key: "k", ctrlKey: true, altKey: true }, false), false, "Ctrl+Alt+K stays GitHub's");
   assert.equal(M.isCmdK({ key: "k", metaKey: true, altKey: true }, true), false);
 });
+
+// Regressions found by the adversarial review.
+test("visit titles that contain ' by ' keep their full text; the signed-out ' · GitHub' suffix is accepted", () => {
+  const v = (p, t) => M.parseVisit(p, t, "acme/web");
+  assert.equal(v("/acme/web/issues/7", "Sort results by date · Issue #7 · acme/web").title, "Sort results by date");
+  assert.equal(v("/acme/web/pull/8", "Group rows by owner by octo · Pull Request #8 · acme/web").title, "Group rows by owner");
+  assert.equal(v("/acme/web/pull/8", "Plain title · Pull Request #8 · acme/web").title, "Plain title");
+  assert.equal(v("/acme/web/issues/7", "Sort · Issue #7 · acme/web · GitHub").key, "acme/web#7");
+  assert.equal(v("/acme/web/pull/8", "Fix by octo · Pull Request #8 · acme/web · GitHub").title, "Fix");
+});
+
+test("context: a two-segment path is a repository only when the page declares it", () => {
+  eq(M.pageContext("/advisories/GHSA-x", { nwo: "" }).scopes.slice(), ["everywhere"]);
+  eq(M.pageContext("/enterprises/acme", { nwo: "" }).scopes.slice(), ["everywhere"]);
+  eq(M.pageContext("/advisories/GHSA-x").scopes.slice(), ["everywhere"], "reserved first segments are never owners");
+  eq(M.pageContext("/solutions").scopes.slice(), ["everywhere"]);
+  eq(M.pageContext("/team").scopes.slice(), ["everywhere"]);
+  eq(M.pageContext("/acme/web/issues/1", { nwo: "Acme/Web" }).scopes.slice(), ["repo", "everywhere"]);
+});
+
+test("Recent: an item moved to Your work does not make Recent say nothing was opened; Everywhere never names an owner", () => {
+  const recent = [{ key: "acme/web#7", url: "u", kind: "issue", repo: "acme/web", number: 7, title: "t", at: NOW }];
+  const lists = { assigned: ok([work("acme/web", 7, "issue", "assigned", 1)]), review: ok(), repos: ok() };
+  for (const [scope, ctx] of [["everywhere", M.pageContext("/notifications")], ["repo", ctxRepo]]) {
+    const v = M.buildSections(base({ scope, ctx, lists, recent }));
+    assert.equal(group(v, "recent"), undefined, scope);
+  }
+  const outside = M.buildSections(base({ scope: "repo", ctx: ctxRepo, recent: [{ ...recent[0], key: "o/x#1", repo: "o/x", number: 1 }] }));
+  assert.equal(group(outside, "recent").lines[0].text, "Nothing you opened recently in this repository.");
+  const every = M.buildSections(base({ recent: [{ ...recent[0], key: "o/x#1", repo: "o/x", number: 1 }] }));
+  assert.equal(group(every, "recent").rows.length, 1);
+});

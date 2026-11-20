@@ -61,8 +61,10 @@ test("keyboard: arrows move, Enter opens in the same tab, Ctrl+Enter in a new ta
   await page.keyboard.press("ArrowUp");
   await expect(rows(page).first()).toHaveClass(/ghqj-sel/);
   const [tab] = await Promise.all([context.waitForEvent("page"), page.keyboard.press("Control+Enter")]);
-  expect(tab.url()).toBe("https://github.com/acme/web/pull/61");
+  await tab.waitForURL("https://github.com/acme/web/pull/61");
+  await page.bringToFront(); // the new tab took the focus; the panel stays open in this one
   await expect(panel(page)).toBeVisible();
+  await expect(input(page)).toBeFocused();
   await page.keyboard.press("Enter");
   await page.waitForURL("https://github.com/acme/web/pull/61");
 });

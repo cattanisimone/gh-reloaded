@@ -56,7 +56,7 @@
 
   function open(env) {
     const m = M();
-    const ctx = m.pageContext(env.pathname(), { notFound: env.notFound() });
+    const ctx = m.pageContext(env.pathname(), { notFound: env.notFound(), nwo: env.nwo() });
     const startHref = location.href;
     const opener = document.activeElement;
     let scope = ctx.scopes[0];
@@ -401,7 +401,8 @@
       window.removeEventListener("popstate", onNav);
       document.removeEventListener("turbo:load", onNav);
       window.removeEventListener("pagehide", onNav);
-      navApi?.removeEventListener("navigate", onNav);
+      navApi?.removeEventListener?.("navigate", onNav);
+      navApi?.removeEventListener?.("navigatesuccess", onNav);
       root.remove();
       if (restore && opener && opener.isConnected && typeof opener.focus === "function") opener.focus({ preventScroll: true });
       env.closed(handle);
