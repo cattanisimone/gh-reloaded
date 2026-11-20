@@ -10,8 +10,6 @@
   const RECENT_LIMIT = 10;
   const REPO_LIMIT = 5;
   const MATCH_LIMIT = 10;
-  const RECENT_MAX = 50;
-  const RECENT_DAYS = 30;
   const MIN_WAIT_MS = 60_000;
   const DAY = 86_400_000;
 
@@ -78,20 +76,6 @@
 
   function escapeRe(s) {
     return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
-  // Drops items older than 30 days and what is beyond 50 (the list is newest first).
-  function pruneRecent(list, now) {
-    const keep = (Array.isArray(list) ? list : []).filter((i) => i && i.key && Number.isFinite(i.at) && now - i.at <= RECENT_DAYS * DAY);
-    return keep.sort((a, b) => b.at - a.at).slice(0, RECENT_MAX);
-  }
-
-  // Revisit moves the item to the top and refreshes its time and title; only the fields the
-  // issue allows are stored.
-  function recordVisit(list, visit, now) {
-    const item = { key: visit.key, url: visit.url, kind: visit.kind, repo: visit.repo, number: visit.number || 0, title: visit.title, at: now };
-    const rest = (Array.isArray(list) ? list : []).filter((i) => i && i.key !== item.key);
-    return pruneRecent([item, ...rest], now);
   }
 
   // ---- time ----------------------------------------------------------------
@@ -410,8 +394,8 @@
   }
 
   const api = {
-    WORK_LIMIT, RECENT_LIMIT, REPO_LIMIT, MATCH_LIMIT, RECENT_MAX, RECENT_DAYS, MIN_WAIT_MS,
-    pageContext, scopeLabel, parseVisit, pruneRecent, recordVisit, relativeTime, inScope, itemKey,
+    WORK_LIMIT, RECENT_LIMIT, REPO_LIMIT, MATCH_LIMIT, MIN_WAIT_MS,
+    pageContext, scopeLabel, parseVisit, relativeTime, inScope, itemKey,
     matchRanges, searchUrl, fixedUrls, statusLines, waitFor, cannotLine, noServingLine, ownerLine,
     emptyWorkLine, emptyRecentLine, buildSections, buildMatches, shortcutText, footerShortcut, isCmdK, joinNames,
   };

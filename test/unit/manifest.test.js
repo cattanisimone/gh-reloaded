@@ -305,3 +305,15 @@ test("Actions log shortcuts: permissions unchanged, files in the existing github
   assert.ok(entry.js.indexOf("features/actions-log-shortcuts/model.js") < entry.js.indexOf("features/actions-log-shortcuts/content.js"));
   assert.ok(entry.css.includes("features/actions-log-shortcuts/content.css"));
 });
+
+// Quick jump: one browser command with a suggested shortcut, never ⌘K/Ctrl+K, and no permission added for it.
+test("quick jump command", () => {
+  const names = Object.keys(manifest.commands || {});
+  assert.deepEqual(names, ["open-quick-jump"]);
+  const keys = manifest.commands["open-quick-jump"].suggested_key;
+  assert.equal(keys.default, "Alt+Shift+K");
+  assert.ok(keys.mac === "MacCtrl+Shift+K" || keys.mac === "Alt+Shift+K");
+  for (const k of Object.values(keys)) assert.doesNotMatch(k, /^(Ctrl|Command|MacCtrl)\+K$/i, "never ⌘K or Ctrl+K");
+  assert.deepEqual(manifest.permissions, ["storage"]);
+  assert.deepEqual(manifest.host_permissions, ["https://api.github.com/*"]);
+});

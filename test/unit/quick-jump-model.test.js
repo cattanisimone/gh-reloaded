@@ -1,4 +1,4 @@
-// Unit tests for features/quick-jump/model.js: page context, visits and the recent list,
+// Unit tests for features/quick-jump/model.js: page context, visits,
 // sections (limits, scope, once-per-panel), typing, trailing rows, copy and shortcut wording.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -44,22 +44,6 @@ test("visits: kinds, sub-paths, title must name the item, pages not recorded", (
   assert.equal(v("/acme/web/issues/7", "Retry upload · Issue #7 · acme/web", "other/repo"), null);
   for (const p of ["/notifications", "/pulls", "/search", "/settings/profile", "/acme", "/orgs/acme/people", "/users/octo/projects/1"]) assert.equal(M.parseVisit(p, "Whatever · acme/web", "acme/web"), null, p);
   assert.equal(v("/Acme/Web/issues/7", "T · Issue #7 · Acme/Web", "acme/web").key, "acme/web#7", "case-insensitive key");
-});
-
-test("recent list: one entry per item, revisit moves to the top, 50 items, 30 days", () => {
-  let list = [];
-  const visit = (n) => ({ key: `acme/web#${n}`, url: `u${n}`, kind: "issue", repo: "acme/web", number: n, title: `t${n}` });
-  for (let i = 1; i <= 55; i++) list = M.recordVisit(list, visit(i), NOW + i * 1000);
-  assert.equal(list.length, 50);
-  assert.equal(list[0].number, 55);
-  assert.equal(list.at(-1).number, 6);
-  list = M.recordVisit(list, { ...visit(10), title: "renamed" }, NOW + 99_000);
-  assert.equal(list.length, 50);
-  eq([list[0].number, list[0].title], [10, "renamed"]);
-  assert.equal(list.filter((i) => i.key === "acme/web#10").length, 1);
-  const old = [{ ...list[0], at: NOW - 31 * DAY * 60_000 }, { ...list[1], at: NOW - 29 * DAY * 60_000 }];
-  assert.equal(M.pruneRecent(old, NOW).length, 1);
-  eq(Object.keys(list[0]).sort(), ["at", "key", "kind", "number", "repo", "title", "url"]);
 });
 
 test("sections: Your work merges, limits to 10, orders by update, ends with the two fixed rows", () => {

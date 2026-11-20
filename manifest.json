@@ -27,6 +27,15 @@
       "128": "icons/icon128.png"
     }
   },
+  "commands": {
+    "open-quick-jump": {
+      "suggested_key": {
+        "default": "Alt+Shift+K",
+        "mac": "MacCtrl+Shift+K"
+      },
+      "description": "Open Quick jump on a GitHub page"
+    }
+  },
   "options_ui": {
     "page": "options/options.html",
     "open_in_tab": true
@@ -101,10 +110,14 @@
         "https://github.com/*"
       ],
       "js": [
-        "features/html-preview/content.js"
+        "features/html-preview/content.js",
+        "features/quick-jump/model.js",
+        "features/quick-jump/panel.js",
+        "features/quick-jump/content.js"
       ],
       "css": [
-        "features/html-preview/content.css"
+        "features/html-preview/content.css",
+        "features/quick-jump/content.css"
       ],
       "run_at": "document_idle"
     },
