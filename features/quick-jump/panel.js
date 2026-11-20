@@ -243,12 +243,6 @@
       const enter = el("span", "ghqj-enter", "↵");
       enter.setAttribute("aria-hidden", "true");
       a.appendChild(enter);
-      a.addEventListener("mousemove", () => {
-        if (rows[selected] !== a) {
-          moved = true;
-          select(rows.indexOf(a), false);
-        }
-      });
       a.addEventListener("click", (e) => {
         if (e.button !== 0) return;
         e.preventDefault();
