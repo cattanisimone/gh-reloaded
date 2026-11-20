@@ -41,6 +41,8 @@
   .set .r{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-top:1px solid var(--line)} .set .r:first-child{border-top:0}
   .set .rt{flex:1;min-width:0} .set .ti{font-weight:600;display:block} .set .ds{color:var(--muted);font-size:13px;display:block}
   .set a{color:var(--accent)} .sw{width:36px;height:20px;border-radius:999px;background:#bc4c00;flex:none;position:relative;margin-top:2px} .sw::after{content:"";position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#fff}
+  .set.dark{background:#151b23;border-color:#2f3742;color:#e6edf3} .set.dark .ds{color:#9198a1} .set.dark a{color:#58a6ff} .set.dark .sel-ui{background:#0d1117;border-color:#2f3742} .set.dark .sw{background:#f0883e}
+  .set.n390{max-width:366px} .set.n320{max-width:266px} .set .r.w{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px} .set .r.w .full{grid-column:1/-1;min-width:0} .set .r.w .sel-ui{margin-right:12px} .set .r.w .full .ds{margin-top:4px}
   .sw.off{background:#d1d9e0} .sw.off::after{left:3px;right:auto} .sw.dis{opacity:.55}
   .sel-ui{display:inline-flex;justify-content:space-between;min-width:210px;border:1px solid var(--line);border-radius:6px;padding:4px 10px;background:var(--soft);font-size:13px;margin:6px 8px 4px 0}
   .vs td,.vs th{font-size:13px} .ok{color:var(--ok);font-weight:600}
@@ -136,10 +138,12 @@
       <div class="row"><span class="ic rp">▣</span><span class="t"><b>acme/web</b><div class="c">Repository · Pushed 2 hours ago</div></span><span class="ty">Repository</span></div>
       <div class="row"><span class="ic rp">▣</span><span class="t"><b>acme/billing-api</b><div class="c">Repository · Pushed yesterday</div></span><span class="ty">Repository</span></div>
       <div class="row"><span class="ic rp">▣</span><span class="t"><b>octo-fixture/dotfiles</b><div class="c">Repository · Pushed 3 days ago</div></span><span class="ty">Repository</span></div>
+      <div class="row"><span class="ic rp">▣</span><span class="t"><b>acme/infra</b><div class="c">Repository · Pushed 4 days ago</div></span><span class="ty">Repository</span></div>
+      <div class="row"><span class="ic rp">▣</span><span class="t"><b>acme/mobile-app</b><div class="c">Repository · Pushed last week</div></span><span class="ty">Repository</span></div>
       <div class="row"><span class="ic rp">↗</span><span class="t">Your repositories on GitHub</span></div>
     </div>
     <div class="ft"><span><span class="kbd">↑</span><span class="kbd">↓</span> move · <span class="kbd">↵</span> open · <span class="kbd">Esc</span> close</span><span>Shortcut <span class="kbd">Alt+Shift+K</span> · <span class="link">Change</span></span></div>
-  </div><p class="cap">(e) "Everywhere", light, 1280px: all three sections. Active repositories: bold <code>owner/repo</code>, "Repository · Pushed &lt;time&gt;", header label "Recent pushes", at most 5 rows. Its last row is "Your repositories on GitHub" in "Everywhere" (issue text: never "See all" here), shown only when more than 5 are in scope or the list was cut. <code>acme/design-tokens</code> is in Recent, so Active repositories skips it (once-per-panel rule).</p></div>
+  </div><p class="cap">(e) "Everywhere", light, 1280px: all three sections. Active repositories: bold <code>owner/repo</code>, "Repository · Pushed &lt;time&gt;", header label "Recent pushes", at most 5 rows. Data drawn: 7 repositories in scope and the list not cut; <code>acme/design-tokens</code> is in Recent, so Active repositories skips it (once-per-panel rule), shows the next 5 and one more remains, so its last row "Your repositories on GitHub" appears. That row appears only when more than 5 are in scope or the list was cut, and in "Everywhere" it is never called "See all" (issue text). With 5 or fewer in scope and no cut, the section ends at its last repository.</p></div>
 
   <div class="scroll"><div class="qj dark new">
     <div class="in focus"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5"/></svg><span>Filter your work, or search GitHub…</span></div>
@@ -159,10 +163,12 @@
       <div class="row"><span class="ic rp">▣</span><span class="t"><b>acme/web</b><div class="c">Repository · Pushed 2 hours ago</div></span><span class="ty">Repository</span></div>
       <div class="row"><span class="ic rp">▣</span><span class="t"><b>acme/billing-api</b><div class="c">Repository · Pushed yesterday</div></span><span class="ty">Repository</span></div>
       <div class="row"><span class="ic rp">▣</span><span class="t"><b>octo-fixture/dotfiles</b><div class="c">Repository · Pushed 3 days ago</div></span><span class="ty">Repository</span></div>
+      <div class="row"><span class="ic rp">▣</span><span class="t"><b>acme/infra</b><div class="c">Repository · Pushed 4 days ago</div></span><span class="ty">Repository</span></div>
+      <div class="row"><span class="ic rp">▣</span><span class="t"><b>acme/mobile-app</b><div class="c">Repository · Pushed last week</div></span><span class="ty">Repository</span></div>
       <div class="row"><span class="ic rp">↗</span><span class="t">Your repositories on GitHub</span></div>
     </div>
     <div class="ft"><span><span class="kbd">↑</span><span class="kbd">↓</span> move · <span class="kbd">↵</span> open · <span class="kbd">Esc</span> close</span><span>Shortcut <span class="kbd">Alt+Shift+K</span> · <span class="link">Change</span></span></div>
-  </div><p class="cap">(f) The same "Everywhere" state in dark (same data, same order as (e)).</p></div>
+  </div><p class="cap">(f) The same "Everywhere" state in dark: same data (7 repositories in scope, 5 shown, one more), same order and same last row as (e).</p></div>
 
   <div class="scroll"><div class="qj new">
     <div class="in focus"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex:none"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5"/></svg><span>Filter your work, or search GitHub…</span></div>
@@ -172,7 +178,7 @@
       <div class="row"><span class="ic rp">▣</span><span class="t"><b>acme/billing-api</b><div class="c">Repository · Pushed yesterday</div></span><span class="ty">Repository</span></div>
       <div class="row"><span class="ic rp">↗</span><span class="t">See all on GitHub</span></div>
     </div>
-  </div><p class="cap">(g) "This owner" on <code>acme</code> (Your work and Recent above it, not repeated): the Active repositories section limited to the owner, ending with "See all on GitHub" (owner's repositories) when more than 5 are in scope or the list was cut.</p></div>
+  </div><p class="cap">(g) "This owner" on <code>acme</code> (Your work and Recent above it, not repeated): the Active repositories section limited to the owner, ending with "See all on GitHub" (owner's repositories). Data drawn: only 2 of <code>acme</code>'s repositories are among the fetched 100, and the fetched list was cut at 100 items, so the row shows (issue: a truncated list shows it in every scope where the section appears). Not cut and 5 or fewer in scope: no last row.</p></div>
 </div>
 
 <h3>Settings → Features: the Quick jump row</h3>
@@ -185,6 +191,19 @@
       <label class="small" style="display:block;margin-top:8px;font-weight:600">Shortcut</label><span class="sel-ui">Alt+Shift+K <span>▾</span></span><a href="#" class="small">Change shortcut</a>
       <span class="ds">Works on every GitHub page, outside text fields. Ctrl+K stays GitHub's.</span></span><span class="sw"></span></div>
   </div><p class="cap">Token saved, browser shortcut. Second value: "Ctrl+K — replaces GitHub's command palette" (Mac: "⌘K — …"); the line below changes with it and is announced. Shortcut unassigned by Chrome: first value reads "Browser shortcut (not set)" plus a notice linking <code>chrome://extensions/shortcuts</code>.</p></div>
+  <div class="scroll"><div class="set n390">
+    <div class="r new w"><span class="ti">Quick jump</span><span class="sw"></span>
+      <span class="full"><span class="ds">Remembers the issues, pull requests and repositories you open on GitHub, in this browser only. <a href="#" style="white-space:nowrap">Clear recent items</a></span>
+      <label class="small" style="display:block;margin-top:8px;font-weight:600">Shortcut</label><span class="sel-ui" style="min-width:0">Ctrl+K <span>▾</span></span><a href="#" class="small" style="white-space:nowrap">Change shortcut</a>
+      <span class="ds">Outside text fields, Ctrl+K opens Quick jump instead of GitHub's command palette, which still opens with Ctrl+Alt+K. In comment boxes and editors Ctrl+K stays GitHub's: it inserts a link. Alt+Shift+K keeps working too.</span></span></div>
+  </div><p class="cap">390px, light, <code>Ctrl+K</code> chosen: below 720px the title and switch share the first line and the description, select and links use the full row width. The full label "Ctrl+K — replaces GitHub's command palette" does not fit the select here, so it shows its short form "Ctrl+K"; the line under it says what the value does (A17).</p></div>
+  <div class="scroll"><div class="set dark n320">
+    <div class="r new w"><span class="ti">Quick jump</span><span class="sw"></span>
+      <span class="full"><span class="ds">Remembers the issues, pull requests and repositories you open on GitHub, in this browser only. <a href="#" style="white-space:nowrap">Clear recent items</a></span>
+      <label class="small" style="display:block;margin-top:8px;font-weight:600">Shortcut</label><span class="sel-ui" style="min-width:0">Browser shortcut (not set) <span>▾</span></span><a href="#" class="small" style="white-space:nowrap">Change shortcut</a>
+      <span class="ds">Chrome left the shortcut unassigned. Set it on chrome://<wbr>extensions/<wbr>shortcuts.</span>
+      <span class="ds">Works on every GitHub page, outside text fields. Ctrl+K stays GitHub's.</span></span></div>
+  </div><p class="cap">320px, dark, shortcut unassigned: "Browser shortcut (not set)" fits in full (226px of 266px); the notice's address wraps only after a <code>/</code>; "Change shortcut" wraps under the select instead of overlapping it.</p></div>
 </div>
 
 <h2>Visual contract</h2>
@@ -218,8 +237,26 @@
 <tr><td>Tab hint</td><td><kbd>Tab</kbd> switch scope, right-aligned</td><td>same</td><td>dropped (the scope control announces "Tab switches scope")</td><td>pushing the scope control to a second line</td></tr>
 <tr><td>Type label</td><td>text on the right ("Pull request", "Issue", "Repository"), ↵ on the selected row</td><td>same</td><td>icon only (icon has the type as accessible text), ↵ dropped</td><td>overlapping the title</td></tr>
 <tr><td>Section header label ("Recent pushes")</td><td>right of "Active repositories"</td><td>same</td><td>same (short)</td><td>wrapping the section title</td></tr>
+<tr><td>Long token name (“&lt;name&gt;”) in the empty-state, "can't read" and no-serving-token lines</td><td>the line wraps at spaces (<code>overflow-wrap: break-word</code>, <code>word-break: normal</code>, no ellipsis, no line clamp); the name in quotes stays whole and moves to the next line when it does not fit; the "GH Reloaded settings" link keeps its words together</td><td>same</td><td>same; a name that is one word wider than the whole line (no spaces, about 40+ characters at 320px) is the only text broken, at the line edge, as the last resort</td><td>a word cut while it fits on its own line; ellipsis or a hidden part of the name; the line clipped or scrolling; the link overlapping text</td></tr>
+<tr><td>Owner line ("Work in &lt;owner&gt;, &lt;owner&gt;, &lt;owner&gt; and &lt;n&gt; more shows …")</td><td>at most three logins, then "and&nbsp;&lt;n&gt;&nbsp;more" with non-breaking spaces; wraps after a comma or at spaces</td><td>same</td><td>same; a login (≤ 39 characters, GitHub's limit, about 270px) always fits a 320px panel's line, so it never breaks</td><td>a login cut mid-word; "and &lt;n&gt; more" split over two lines; a fourth login shown</td></tr>
 <tr><td>Footer</td><td>↑↓ move · ↵ open · Esc close | Shortcut <kbd>X</kbd> · Change</td><td>same; wraps to two lines before anything is cut</td><td>keys without labels | <kbd>X</kbd> · Change</td><td>"Change" or a key hidden; clipped text</td></tr>
 </table></div>
+
+<p class="small">The long-text cases use fictional values: a token named “Personal work laptop token for acme and octo-fixture projects” (spaces) and “acme-ci-readonly-token-for-quick-jump-tests-2026” (one 47-character word), and the owner line with <code>acme-labs</code>, <code>octo-fixture-industries</code>, <code>a-very-long-organization-login-of-39-ch</code> plus "and 2 more".</p>
+
+<h3>Settings row by width (light and dark)</h3>
+<p class="small">Settings is its own app shell (A15): content column at most 860px (804px inside its padding), sidebar 220px, which becomes tabs at 720px and below. Available width for the row's controls, measured from <code>options.css</code>: 726px at 1500 and 1100, 446px at 800, 646px at 700, 336px at 390, 266px at 320. The longest closed select label, "Ctrl+K — replaces GitHub's command palette", measures 363px including padding and arrow (Chromium, the container's system font; about 300px with the macOS system font); "Browser shortcut (not set)" measures 226px. Both themes use the same layout; only colours change (the Settings tokens <code>--surface</code>, <code>--text</code>, <code>--muted</code>, <code>--line</code>, <code>--link</code>, <code>--focus</code> of each scheme).</p>
+<div class="scroll"><table class="vs">
+<tr><th>Part</th><th>1500 · 1100</th><th>800</th><th>≤ 720 (700) — sidebar as tabs</th><th>390 · 320</th><th>Never</th></tr>
+<tr><td>Row layout</td><td>title, description and controls in the text column; switch on the right, top-aligned with the title</td><td>same</td><td>title and switch on the first line; description, select, links, describing line and notice below at the full row width</td><td>same as ≤ 720</td><td>the switch shrinking (36×20px) or leaving the row</td></tr>
+<tr><td>Description + "Clear recent items"</td><td>one or two lines; the link ends it</td><td>wraps at spaces</td><td>wraps at spaces</td><td>wraps; the link stays one unit (<code>white-space: nowrap</code>) and moves to the next line whole</td><td>the link split over two lines or clipped</td></tr>
+<tr><td>Shortcut select</td><td>hugs its full label (363px), "Change shortcut" on the same line, 12px gap</td><td>full label (363 of 446px); "Change shortcut" wraps under the select (row of controls is <code>flex-wrap: wrap</code>, gap 4px 12px)</td><td>full label, "Change shortcut" on the same line</td><td>full label when it fits, else the short form ("Ctrl+K" / "⌘K", and "Not set" for "Browser shortcut (not set)" only when even that does not fit); <code>max-width: 100%</code></td><td>the selected label clipped or cut by the select's edge; the select wider than the row</td></tr>
+<tr><td>"Change shortcut" link</td><td>beside the select</td><td>next line, left-aligned with the select</td><td>beside the select</td><td>beside it when both fit, else on the next line; one unit, never split</td><td>overlapping the select; split over two lines</td></tr>
+<tr><td>Describing line under the select (the longer ⌘K text)</td><td>wraps at spaces, 13px muted</td><td>same</td><td>same</td><td>same, up to five lines at 320px</td><td>truncated, clamped or hidden; overlapping the next row</td></tr>
+<tr><td>Unassigned-shortcut notice with <code>chrome://extensions/shortcuts</code></td><td>one line</td><td>wraps at spaces</td><td>wraps at spaces</td><td>wraps; the address breaks only after a <code>/</code> (<code>&lt;wbr&gt;</code>)</td><td>the address cut mid-word or overflowing</td></tr>
+<tr><td>Page</td><td colspan="4">document <code>scrollWidth</code> ≤ <code>clientWidth</code>; the row's <code>scrollWidth</code> ≤ <code>clientWidth</code></td><td>horizontal scroll at any width</td></tr>
+</table></div>
+<p class="small"><code>options-quick-jump.spec.js › width</code> runs at 1500, 1100, 800, 700, 390 and 320px, light and dark (<code>page.emulateMedia({ colorScheme })</code>), with both select values and the unassigned notice, and asserts: no horizontal scroll; the switch stays 36×20px; the select's closed label fits (its text width, measured with the select's computed font, plus padding and arrow ≤ the select's <code>clientWidth</code>), and the full label is used at 1500/1100/800/700; the bounding boxes of the select, "Change shortcut" and "Clear recent items" do not intersect; each link has one line box; the notice address breaks only after <code>/</code>; text colours equal the scheme's Settings tokens.</p>
 
 <h3>Native look states (measured live, 2026-11-20)</h3>
 <div class="scroll"><table class="vs">
@@ -338,7 +375,8 @@
 <tr><td>Recording: kinds, sub-paths, redirect, not-recorded pages, case-insensitive key, 50/30-day limits, revisit moves to top</td><td>unit + e2e</td><td><code>quick-jump-model.test.js</code> › visits; <code>quick-jump-record.spec.js</code> (A→B→A, back/forward, reload)</td></tr>
 <tr><td>Accessibility: dialog, labelled input, listbox + <code>aria-activedescendant</code>, live lines, disabled row, labelled select</td><td>e2e</td><td><code>quick-jump-panel.spec.js</code> › a11y; <code>options-quick-jump.spec.js</code> › a11y</td></tr>
 <tr><td>Look: geometry of the visual contract in both header variants (fixture with and without <code>meta[name="user-login"]</code>), light/dark, 1920/1500/1100/1012/800/544/390/320, no horizontal scroll</td><td>e2e</td><td><code>quick-jump-layout.spec.js</code> › geometry</td></tr>
-<tr><td>Content by width: every cell of the table (title clamp, <code>owner/repo</code> ellipsis with <code>#n</code> kept, context wraps at separators, scope label then "This repo", Tab hint, type label, footer), long fictional titles and owners</td><td>e2e</td><td><code>quick-jump-layout.spec.js</code> › content by width</td></tr>
+<tr><td>Content by width: every cell of the table (title clamp, <code>owner/repo</code> ellipsis with <code>#n</code> kept, context wraps at separators, scope label then "This repo", Tab hint, type label, footer), long fictional titles and owners; long token name in the empty-state, "can't read" and no-serving-token lines and the owner line with three logins plus "and 2 more": every word that fits a line has one line box (a <code>Range</code> per word returns one client rect), no ellipsis, "and&nbsp;2&nbsp;more" on one line, only the 47-character one-word name may break</td><td>e2e</td><td><code>quick-jump-layout.spec.js</code> › content by width</td></tr>
+<tr><td>Settings row by width, light and dark: every cell of the "Settings row by width" table at 1500/1100/800/700/390/320 (layout, select label fits, full vs short label, links never overlap the select, no horizontal scroll, scheme colours)</td><td>e2e</td><td><code>options-quick-jump.spec.js</code> › width</td></tr>
 <tr><td>Native states: rows (rest, hover, pressed, selected bar), scope control (selected, hover, pressed, focus ring), footer link (hover underline, focus ring), light and dark</td><td>e2e</td><td><code>quick-jump-layout.spec.js</code> › states</td></tr>
 <tr><td>Settings link and select states (inline link hover/focus, select size and focus) equal the existing Settings controls</td><td>e2e</td><td><code>options-quick-jump.spec.js</code> › look</td></tr>
 <tr><td>Token permissions: Quick jump requires Issues and Pull requests while on; warning names Quick jump when one is denied; nothing changes while it is off</td><td>unit + e2e</td><td><code>token-requirements.test.js</code> › quick jump; <code>options-token-warning.spec.js</code> › quick jump</td></tr>
@@ -378,6 +416,8 @@
   <li><b>A14 Panel top:</b> 3px from 1012px, 0 below — rejected: −3px on two-row headers like the native panel, because it puts the panel's top border and radius off-screen; the difference is at most 6px.</li>
   <li><b>A15 Settings controls</b> (select, links) copy the Settings page's own controls, not GitHub's, because AGENTS.md defines Settings as its own app shell.</li>
   <li><b>A16 Active repositories header</b> carries the label "Recent pushes" (approved mockup); the "Everywhere" last row is "Your repositories on GitHub" and "See all on GitHub" only in "This owner" (issue text, which wins over the mockup).</li>
+  <li><b>A17 Narrow select label:</b> each Shortcut option has the issue's full label and a short form ("⌘K"/"Ctrl+K"; "Not set"); the select shows the short form only when the full label does not fit its available width (measured with the select's computed font on load and on resize), and the describing line under it, linked by <code>aria-describedby</code>, carries the meaning — rejected: a custom listbox (loses the native labelled select the issue's accessibility criterion names) and letting the label clip (the contract's "never").</li>
+  <li><b>A18 Narrow Settings row:</b> at 720px and below the Quick jump row puts title and switch on the first line and the rest at the full row width, so the select has 266px at 320 instead of 218px — rejected: keeping the controls beside the switch, because "Browser shortcut (not set)" (226px) would not fit at 320.</li>
 </ol>
 
 <h2>Risks and open questions</h2>
