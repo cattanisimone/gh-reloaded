@@ -38,6 +38,7 @@ export const FEATURES = [
   { id: "ghprt", name: "PR triage", switch: { key: "ghprtEnabled" }, defaultOn: true, types: ["pulls"], reason: "to read review and check state of pull requests" },
   { id: "ghqa", name: "Quick assignment", switch: { key: "ghqaEnabled" }, defaultOn: false, types: ["issues"], reason: "to read an issue before assigning it" },
   { id: "ghlps", name: "Linked PR status", switch: { key: "ghlpsEnabled" }, defaultOn: true, types: ["pulls", "issues"], reason: "to show the status of linked pull requests" },
+  { id: "ghqj", name: "Quick jump", switch: { key: "ghqjEnabled" }, defaultOn: true, types: ["issues", "pulls"], reason: "to list your assigned issues and review requests" },
   { id: "ghnt-reason-tags", name: "Notification reason tags", switch: { module: "reasonTags" }, defaultOn: true, types: ["pulls", "issues"], reason: "to tell why a notification reached you" },
   { id: "ghnt-beyond", name: "Beyond this page", switch: { anyOf: ["triage", "reasonTags"] }, defaultOn: true, types: [NOTIF_ID], reason: "to count notifications outside the loaded page" },
 ];

@@ -164,7 +164,7 @@ test("feature table: Beyond this page needs notifications while Triage or Tags i
 });
 
 test("warning: only a proven denial on the default token; release sentence from the version argument; steps name the notifications scope, never repo", () => {
-  const features = enabledFeatures({ ghdgEnabled: false, ghsmEnabled: false, ghmiEnabled: false, ghhpEnabled: false, ghigEnabled: false, ghprtEnabled: false, ghlpsEnabled: false, ghntModules: { reasonTags: false } });
+  const features = enabledFeatures({ ghdgEnabled: false, ghsmEnabled: false, ghmiEnabled: false, ghhpEnabled: false, ghigEnabled: false, ghprtEnabled: false, ghlpsEnabled: false, ghqjEnabled: false, ghntModules: { reasonTags: false } });
   assert.deepEqual(features.map((x) => x.id), ["ghnt-beyond"]);
   const codes = (n) => ({ identity: "available", notifications: n });
   const w = warningFor({ features, version: "4.5.6", tokens: [{ id: "d", name: "Mine", isDefault: true, codes: codes("denied") }] });

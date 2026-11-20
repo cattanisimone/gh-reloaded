@@ -1,4 +1,5 @@
-import { getTokenRecords, getDefaultTokenId } from "../lib/github-api.js";
+import { getTokenRecords, getDefaultTokenId, hasAnyToken } from "../lib/github-api.js";
+import { COMMAND_NAME, isMac, rowView } from "./quick-jump-model.js";
 import { parseTargets, runDiagnostics, summarize, STATUS, STATUS_LABEL } from "./token-diagnostics.js";
 import { runTokenTest, readTests, writeTest } from "./token-test.js";
 import { requiredTypes, enabledFeatures, SWITCH_KEYS } from "./token-requirements.js";
@@ -897,6 +898,183 @@ chrome.storage.onChanged.addListener((changes) => {
 loadFeatureToggles();
 loadGhals();
 
+// --- Quick jump ---
+// Its own switch handling: with no token saved the row is off and cannot be
+// switched on, and the stored ghqjEnabled is left alone so adding a token
+// brings the user's last choice back. Shortcut: "browser" (the command, whose
+// current assignment Chrome knows, not us) or "cmdk". The select shows its
+// short labels only where a full one does not fit (A17).
+const qj = {
+  sw: document.getElementById("feature-ghqj"),
+  desc: document.getElementById("qj-desc"),
+  controls: document.getElementById("qj-controls"),
+  select: document.getElementById("qj-shortcut"),
+  line: document.getElementById("qj-line"),
+  notice: document.getElementById("qj-notice"),
+  fallback: document.getElementById("qj-fallback"),
+  cleared: document.getElementById("qj-cleared"),
+  hasToken: false,
+  stored: {},
+  shortcut: "",
+  clearedTimer: 0,
+};
+const SHORTCUTS_URL = "chrome://extensions/shortcuts";
+const platformIsMac = isMac(navigator.userAgentData?.platform || navigator.platform);
+let qjOptionsKey = "";
+let qjView = null;
+
+async function readCommandShortcut() {
+  try {
+    const all = await chrome.commands.getAll();
+    qj.shortcut = (all || []).find((c) => c.name === COMMAND_NAME)?.shortcut || "";
+  } catch {
+    qj.shortcut = "";
+  }
+}
+
+function qjLink(text, cls) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = cls;
+  b.textContent = text;
+  return b;
+}
+
+function renderQuickJump() {
+  const v = rowView({ hasToken: qj.hasToken, stored: qj.stored, mac: platformIsMac, shortcut: qj.shortcut });
+  qjView = v;
+  qj.sw.setAttribute("aria-checked", String(v.checked));
+  if (v.disabled) qj.sw.setAttribute("aria-disabled", "true");
+  else qj.sw.removeAttribute("aria-disabled");
+  // Description: rebuilt only when it changes, so a focused link keeps focus.
+  const descKey = `${v.description}|${v.showControls}`;
+  if (qj.desc.dataset.key !== descKey) {
+    qj.desc.dataset.key = descKey;
+    qj.desc.textContent = "";
+    if (v.disabled) {
+      qj.desc.append("Needs a GitHub token. Add one in ");
+      const a = document.createElement("a");
+      a.href = "#tokens-section";
+      a.textContent = "GitHub tokens";
+      qj.desc.append(a, ".");
+    } else {
+      qj.desc.append(v.description);
+      if (v.showControls) {
+        const clearBtn = qjLink("Clear recent items", "qj-link");
+        clearBtn.id = "qj-clear";
+        qj.desc.append(" ", clearBtn);
+      }
+    }
+  }
+  qj.controls.hidden = !v.showControls;
+  qj.notice.hidden = !v.showControls || !v.unassigned;
+  if (!qj.notice.hidden && !qj.notice.dataset.built) {
+    qj.notice.dataset.built = "1";
+    qj.notice.append("Chrome left the shortcut unassigned. Set it on ");
+    const a = document.createElement("a");
+    a.className = "qj-link qj-addr";
+    a.href = SHORTCUTS_URL;
+    a.append("chrome:/", document.createElement("wbr"), "/", document.createElement("wbr"), "extensions/", document.createElement("wbr"), "shortcuts");
+    qj.notice.append(a, ".");
+  }
+  if (!v.showControls) qj.fallback.hidden = true;
+  // Options: texts are set by the fit step below; rebuild only when they change.
+  const key = JSON.stringify(v.options);
+  if (key !== qjOptionsKey) {
+    qjOptionsKey = key;
+    qj.select.textContent = "";
+    for (const o of v.options) {
+      const opt = document.createElement("option");
+      opt.value = o.value;
+      opt.dataset.full = o.full;
+      opt.dataset.short = o.short;
+      opt.textContent = o.full;
+      qj.select.append(opt);
+    }
+  }
+  qj.select.value = v.choice;
+  if (qj.line.textContent !== v.line) qj.line.textContent = v.line;
+  fitQuickJumpLabels();
+}
+
+// Full label when it fits the row, else the short form. Measured with the
+// select's own font; the room is the controls' width, the select's padding and
+// border included.
+let qjCanvas = null;
+function fitQuickJumpLabels() {
+  const room = qj.controls.clientWidth;
+  if (!room) return;
+  const cs = getComputedStyle(qj.select);
+  qjCanvas ||= document.createElement("canvas").getContext("2d");
+  qjCanvas.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const extra = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
+  for (const opt of qj.select.options) {
+    const fits = Math.ceil(qjCanvas.measureText(opt.dataset.full).width) + extra <= room;
+    const text = fits ? opt.dataset.full : opt.dataset.short;
+    if (opt.textContent !== text) opt.textContent = text;
+  }
+}
+
+async function loadQuickJump() {
+  const [token, st] = await Promise.all([hasAnyToken(), chrome.storage.local.get(["ghqjEnabled", "ghqjShortcut"]), readCommandShortcut()]);
+  qj.hasToken = token;
+  qj.stored = st;
+  renderQuickJump();
+}
+
+qj.sw.addEventListener("click", async () => {
+  if (!qj.hasToken) return;
+  const next = qj.sw.getAttribute("aria-checked") !== "true";
+  qj.stored = { ...qj.stored, ghqjEnabled: next };
+  renderQuickJump();
+  await chrome.storage.local.set({ ghqjEnabled: next });
+});
+
+qj.select.addEventListener("change", async () => {
+  const value = qj.select.value === "cmdk" ? "cmdk" : "browser";
+  qj.stored = { ...qj.stored, ghqjShortcut: value };
+  renderQuickJump();
+  await chrome.storage.local.set({ ghqjShortcut: value });
+});
+
+async function openShortcutsPage(e) {
+  e.preventDefault();
+  try {
+    await chrome.tabs.create({ url: SHORTCUTS_URL });
+    qj.fallback.hidden = true;
+  } catch {
+    // An extension page may not be allowed to open it: show the address to copy.
+    qj.fallback.hidden = false;
+  }
+}
+document.getElementById("qj-change").addEventListener("click", openShortcutsPage);
+qj.notice.addEventListener("click", (e) => { if (e.target.closest("a")) openShortcutsPage(e); });
+
+qj.desc.addEventListener("click", async (e) => {
+  if (!e.target.closest("#qj-clear")) return;
+  await chrome.storage.local.remove("ghqjRecent");
+  qj.cleared.textContent = "Recent items cleared.";
+  clearTimeout(qj.clearedTimer);
+  qj.clearedTimer = setTimeout(() => { qj.cleared.textContent = ""; }, 5000);
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+  if (changes.ghqjEnabled || changes.ghqjShortcut) {
+    for (const k of ["ghqjEnabled", "ghqjShortcut"]) if (changes[k]) qj.stored = { ...qj.stored, [k]: changes[k].newValue };
+  }
+  if (changes.githubTokens || changes.defaultTokenId) {
+    hasAnyToken().then((t) => { qj.hasToken = t; renderQuickJump(); });
+  } else if (changes.ghqjEnabled || changes.ghqjShortcut) renderQuickJump();
+});
+
+// Back from Chrome's shortcut page: the assignment may have changed.
+window.addEventListener("focus", async () => { await readCommandShortcut(); renderQuickJump(); });
+window.addEventListener("resize", fitQuickJumpLabels);
+if (typeof ResizeObserver === "function") new ResizeObserver(fitQuickJumpLabels).observe(qj.controls);
+
+loadQuickJump();
+
 // Notification reason tags live in the notifications engine's module map
 // (ghntModules: { id: boolean }), shared with later modules of that engine:
 // unset means on, and the object is merged, never replaced, so other modules
@@ -1035,7 +1213,7 @@ function route() {
   const active = NAV_LINKS.find((a) => a.dataset.panel === panel.id);
   if (active) active.scrollIntoView({ block: "nearest", inline: "nearest" });
   syncSpace();
-  const focusEl = target && target !== panel ? target.querySelector("h2, h1") || target : panel.querySelector("h1");
+  const focusEl = target && target !== panel ? target.querySelector("h2, h1, [data-route-focus]") || target : panel.querySelector("h1");
   focusEl.scrollIntoView({ block: "start" });
   focusEl.focus({ preventScroll: true });
 }

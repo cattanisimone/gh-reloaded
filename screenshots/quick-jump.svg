@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" font-family="DejaVu Sans, sans-serif">
+<rect x="0" y="0" width="1200" height="620" fill="#fff" stroke="none" rx="0"/>
+<rect x="0" y="0" width="1200" height="58" fill="#f6f8fa" stroke="#d1d9e0" rx="0"/>
+<text x="28" y="35" font-size="19" fill="#1f2328" font-weight="600">◉  acme / web</text>
+<text x="30" y="94" font-size="14" fill="#1f2328" font-weight="400">Code       Issues       Pull requests       Actions       Projects</text>
+<rect x="85" y="110" width="60" height="3" fill="#fd8c73" stroke="none" rx="0"/>
+<text x="36" y="151" font-size="24" fill="#1f2328" font-weight="600">Issues</text>
+<rect x="36" y="175" width="1128" height="38" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<text x="52" y="199" font-size="13" fill="#1f2328" font-weight="400">Filters    is:issue is:open</text>
+<rect x="36" y="213" width="1128" height="52" fill="#fff" stroke="#d1d9e0" rx="0"/>
+<text x="52" y="244" font-size="14" fill="#1f2328" font-weight="600">Export fails on empty projects</text>
+<rect x="36" y="265" width="1128" height="52" fill="#fff" stroke="#d1d9e0" rx="0"/>
+<text x="52" y="296" font-size="14" fill="#1f2328" font-weight="600">Add dark mode to the settings page</text>
+<rect x="0" y="58" width="1200" height="562" fill="#1f2328" fill-opacity="0.35" stroke="none" rx="0"/>
+<rect x="280" y="76" width="640" height="496" fill="#fff" stroke="#d1d9e0" rx="12"/>
+<text x="304" y="112" font-size="15" fill="#59636e" font-weight="400">⌕</text>
+<text x="328" y="112" font-size="14" fill="#59636e" font-weight="400">Filter your work, or search GitHub…</text>
+<rect x="281" y="130" width="638" height="1" fill="#d1d9e0" stroke="none" rx="0"/>
+<text x="304" y="158" font-size="12" fill="#59636e" font-weight="400">Scope</text>
+<rect x="350" y="142" width="268" height="26" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<rect x="352" y="144" width="130" height="22" fill="#fff" stroke="#d1d9e0" rx="5"/>
+<text x="366" y="159" font-size="12" fill="#1f2328" font-weight="600">This repository</text>
+<text x="498" y="159" font-size="12" fill="#59636e" font-weight="400">This owner</text>
+<text x="574" y="159" font-size="12" fill="#59636e" font-weight="400">Everywhere</text>
+<text x="780" y="159" font-size="12" fill="#59636e" font-weight="400">Tab  switch scope</text>
+<rect x="281" y="178" width="638" height="1" fill="#d1d9e0" stroke="none" rx="0"/>
+<text x="304" y="200" font-size="12" fill="#59636e" font-weight="600">Your work</text>
+<rect x="288" y="210" width="624" height="52" fill="#ddf4ff" stroke="none" rx="6"/>
+<text x="304" y="241" font-size="14" fill="#0969da" font-weight="400">⇄</text>
+<text x="330" y="232" font-size="14" fill="#1f2328" font-weight="600">Retry the upload when the worker times out</text>
+<text x="330" y="251" font-size="12" fill="#59636e" font-weight="400">acme/web #61 · Open · Review requested · 4 days ago</text>
+<text x="800" y="236" font-size="12" fill="#59636e" font-weight="400">Pull request  ↵</text>
+<text x="304" y="293" font-size="14" fill="#1a7f37" font-weight="400">◎</text>
+<text x="330" y="284" font-size="14" fill="#1f2328" font-weight="600">Sort by oldest ignores saved items</text>
+<text x="330" y="303" font-size="12" fill="#59636e" font-weight="400">acme/web #54 · Open · Assigned to you · 4 days ago</text>
+<text x="848" y="288" font-size="12" fill="#59636e" font-weight="400">Issue</text>
+<text x="304" y="334" font-size="14" fill="#59636e" font-weight="400">↗</text>
+<text x="330" y="334" font-size="14" fill="#1f2328" font-weight="400">All assigned issues on GitHub</text>
+<text x="304" y="370" font-size="14" fill="#59636e" font-weight="400">↗</text>
+<text x="330" y="370" font-size="14" fill="#1f2328" font-weight="400">All review requests on GitHub</text>
+<rect x="281" y="386" width="638" height="1" fill="#d1d9e0" stroke="none" rx="0"/>
+<text x="304" y="408" font-size="12" fill="#59636e" font-weight="600">Recent</text>
+<text x="304" y="441" font-size="14" fill="#59636e" font-weight="400">◎</text>
+<text x="330" y="436" font-size="14" fill="#1f2328" font-weight="600">Localize the relative dates in the inbox</text>
+<text x="330" y="455" font-size="12" fill="#59636e" font-weight="400">acme/web #52 · Visited 12 minutes ago</text>
+<text x="848" y="440" font-size="12" fill="#59636e" font-weight="400">Issue</text>
+<text x="304" y="493" font-size="14" fill="#59636e" font-weight="400">⇄</text>
+<text x="330" y="488" font-size="14" fill="#1f2328" font-weight="600">Acme fraud check: add rules</text>
+<text x="330" y="507" font-size="12" fill="#59636e" font-weight="400">acme/web #16 · Visited yesterday</text>
+<text x="800" y="492" font-size="12" fill="#59636e" font-weight="400">Pull request</text>
+<rect x="281" y="524" width="638" height="1" fill="#d1d9e0" stroke="none" rx="0"/>
+<rect x="281" y="525" width="638" height="46" fill="#f6f8fa" stroke="none" rx="11"/>
+<text x="304" y="553" font-size="12" fill="#59636e" font-weight="400">↑↓ move · ↵ open · Esc close</text>
+<text x="640" y="553" font-size="12" fill="#59636e" font-weight="400">Shortcut  Alt+Shift+K  ·</text>
+<text x="800" y="553" font-size="12" fill="#0969da" font-weight="600">Change</text>
+</svg>

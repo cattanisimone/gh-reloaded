@@ -43,16 +43,16 @@ Go to [github.com/settings/personal-access-tokens/new](https://github.com/settin
 
 | Scope | Permission | Used for |
 | --- | --- | --- |
-| Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues, confirming a Quick assignment (read-only), Notification reason tags (mentions) |
-| Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage, Linked PR status, Notification reason tags (review requests and mentions) |
+| Repository | **Issues** | sub-issues, dependencies, org-level custom fields (Team / Business Value / Effort), My Issues, confirming a Quick assignment (read-only), Notification reason tags (mentions), Quick jump (lists the issues assigned to you) |
+| Repository | **Pull requests** (and **Commit statuses** or **Checks** for the checks rollup) | PR triage, Linked PR status, Notification reason tags (review requests and mentions), Quick jump (lists the pull requests that ask for your review) |
 | Repository | **Contents** | **HTML preview** and **Image gallery** of files in private repos (public repos work without a token) |
 | Repository | **Actions** (optional) | **Open raw log** of the Actions log shortcuts; without it that button stays hidden and everything else works |
-| Repository | **Metadata** | added by GitHub automatically |
+| Repository | **Metadata** | added by GitHub automatically; Quick jump (lists your most recently active repositories) |
 | Organization | **Projects** | Projects v2 Status, Standup mode, My Issues project memberships |
 
 Click **Generate token** and copy it immediately — GitHub shows it exactly once.
 
-Already have a token? **Notification reason tags** needs no new permission, but a token limited to selected repositories shows *Unverifiable* on inbox rows from other repositories. Open the tag's panel: it names the permission (Pull requests: Read or Issues: Read) and links to Settings → GitHub tokens, where **Check a specific repository** with one of those repositories shows whether the token can read it.
+Already have a token? Quick jump needs no new permission: it reads with Issues, Pull requests and Metadata. A token limited to selected repositories shows only the assigned issues, review requests and repositories it can reach; the two "All … on GitHub" rows open GitHub's complete lists. **Notification reason tags** needs no new permission, but a token limited to selected repositories shows *Unverifiable* on inbox rows from other repositories. Open the tag's panel: it names the permission (Pull requests: Read or Issues: Read) and links to Settings → GitHub tokens, where **Check a specific repository** with one of those repositories shows whether the token can read it.
 
 Two GitHub limitations to know about:
 
@@ -297,6 +297,21 @@ On a repository image file page (PNG, JPEG, WebP, GIF, and SVG in its Preview vi
 
 Needs no new permission: public repositories work without a token, and a private repository uses the token already documented for HTML preview (**Contents: Read-only**, or `repo` for a classic token).
 
+### Quick jump — [features/quick-jump](features/quick-jump)
+
+One shortcut opens a personal jump view from any github.com page, outside text fields: the work that is waiting for you, the things you opened lately and the repositories you are active in, without opening a dashboard first.
+
+![Quick jump mockup: the panel over a repository page, scoped to This repository, with Your work (an assigned issue, a review request and the two All … on GitHub rows), Recent and the footer with the shortcut, fictional repository acme/web.](screenshots/quick-jump.svg)
+
+- **Your work** lists the open issues assigned to you and the pull requests waiting for your review, each with its repository, state and age, and ends with two fixed rows, **All assigned issues on GitHub** and **All review requests on GitHub**, that open GitHub's complete lists. **Recent** lists the issues, pull requests and repositories you opened on GitHub, newest first. **Active repositories** lists the repositories you pushed to lately.
+- A **scope** control narrows the view to **This repository**, **This owner** or **Everywhere**; **Tab** switches it. On a page that belongs to a repository or an owner it starts there, elsewhere (the dashboard, notifications, search) it is Everywhere.
+- Typing filters what is already loaded and stored, locally, with the match highlighted; the last row hands your text to GitHub's search. **Enter** opens the selected row in the same tab, **Ctrl/⌘+Enter** in a new tab, **Esc** closes.
+- **Shortcut.** The default is **Alt+Shift+K** on Windows and Linux and **⌃⇧K** (Control+Shift+K) on Mac, a browser shortcut that you can change at `chrome://extensions/shortcuts` or with **Change** in the panel's footer. **Settings → Features → Quick jump → Shortcut** can switch it to **⌘K / Ctrl+K** instead, by explicit choice: it then replaces GitHub's command palette shortcut outside text fields only, the palette still opens with **⌘⌥K / Ctrl+Alt+K**, inside comment boxes and editors **⌘K** stays GitHub's, and the browser shortcut keeps working. Chrome consumes a browser shortcut's keystroke before the page sees it, so with the browser shortcut GitHub never receives those keys; **⌘K / Ctrl+K** is only taken over when you choose it.
+- Needs a GitHub token saved under **GitHub tokens**: without one the feature does nothing and no request is made. Each list is read with the token mapped to the page's owner, else the default token; **Everywhere** uses the default token only, and no other saved token is ever tried in turn. When a list cannot be read the panel says so and the fixed row opens GitHub's own page instead; it never claims a permission is missing.
+- Reads only three read-only requests to `api.github.com`: your assigned issues, the pull requests that ask for your review and your recently pushed repositories. They are cached in `chrome.storage.session` (memory only) and nothing is ever written to GitHub.
+- **Recent** is kept in `chrome.storage.local` of this browser profile only, never synced and never sent anywhere: up to 50 items for at most 30 days, each with its URL, kind, repository, number, title and visit time. It is recorded only while Quick jump is on and a token is saved, and deleted by **Clear recent items** (Settings → Features → Quick jump), when you switch the feature off and when you remove the last token.
+- On by default once a token is saved; the switch is in **Settings → Features**.
+
 ## Known limitations
 
 - **GitHub's markup changes.** The extension injects into github.com's own pages and anchors on visible text, roles and ARIA attributes rather than class names, but a GitHub redesign can still hide a control until the extension is updated. When an anchor is not found, the feature shows nothing instead of a broken layout.
@@ -312,6 +327,7 @@ Needs no new permission: public repositories work without a token, and a private
 - **A feature does not appear.** Check it is switched on under **Settings → Features**, then reload the GitHub tab. After an extension update, reload open GitHub tabs too.
 - **"Missing token" or empty data.** Add a token under **GitHub tokens** and press **Test**; private repositories and Projects need one.
 - **"Unverifiable" on notifications.** Open the inbox's **Triage ▾** panel, **Coverage and permissions**: it says whether a token is missing, an owner cannot be read, or the optional notifications permission is absent. Counting beyond the loaded page needs a classic default token with the `notifications` permission (optional, from release 1.9.0); see [Optional: the notifications permission](#optional-the-notifications-permission-classic-token).
+- **Quick jump shows only some of my work.** A token limited to selected repositories lists only the assigned issues, review requests and repositories it can reach (and a private repository needs the matching Issues or Pull requests permission): the two "All … on GitHub" rows open GitHub's complete lists. Add an owner token for that owner or widen the token's repositories, then press **Test** on its row. With no token saved the feature does nothing.
 - **Data for one organization is missing.** Add an owner token for that owner, authorize it for SSO if required, then press **Test** on its row.
 - **No Status, Standup signals or project memberships.** The token lacks Projects access: use the organization **Projects** permission, or a classic token with `read:project` for personal-account Projects.
 - **Open raw log is missing.** It needs a concluded job, GitHub's own "View raw logs" link on the page (signed in) and a token that can read the repository's Actions logs: for a fine-grained token add **Actions: Read-only** and the repository, then save it (saving clears the old warning) and reload the job page. **Copy gh command** does not depend on any token. A job whose logs GitHub removed can still show the button; the click then says "Could not open log".
