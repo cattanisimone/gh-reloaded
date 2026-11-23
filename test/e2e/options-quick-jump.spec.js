@@ -19,8 +19,8 @@ const TOKENS_BY_SCHEME = {
 // Opens Settings with the platform and the command's shortcut stubbed. The stub
 // reads window.__qjShortcut each time, so a test can change it and fire "focus"
 // (what returning from Chrome's shortcut page does).
-async function start(context, page, { tokens = true, stored = {}, mac = false, shortcut = "Alt+Shift+K", hash = "", size, scheme } = {}) {
-  await seedStorage(context, { ...(tokens ? TOKENS : { githubTokens: [] }), ...stored });
+async function start(context, page, { tokens = true, stored = {}, mac = false, shortcut = "Alt+Shift+K", hash = "", size, scheme, onByDefault = true } = {}) {
+  await seedStorage(context, { ...(tokens ? TOKENS : { githubTokens: [] }), ...(onByDefault ? { ghqjEnabled: true } : {}), ...stored });
   await page.addInitScript(([isMac, sc]) => {
     Object.defineProperty(navigator, "platform", { get: () => (isMac ? "MacIntel" : "Linux x86_64"), configurable: true });
     Object.defineProperty(navigator, "userAgentData", { get: () => undefined, configurable: true });
@@ -36,7 +36,7 @@ async function start(context, page, { tokens = true, stored = {}, mac = false, s
   if (size) await page.setViewportSize(size);
   if (scheme) await page.emulateMedia({ colorScheme: scheme });
   const worker = await openOptions(context, page, hash);
-  await expect(page.locator(`${ROW} .row-title`)).toHaveText("Quick jump");
+  await expect(page.locator(`${ROW} .row-title`)).toHaveText("Quick jump Experimental");
   return worker;
 }
 
@@ -47,7 +47,24 @@ const clear = (page) => page.locator(ROW).getByText("Clear recent items");
 const line = (page) => page.locator("#qj-line");
 const stored = (worker, keys) => worker.evaluate((k) => chrome.storage.local.get(k), keys);
 
-test("with a token the row is on by default, described, with the Shortcut select and both links", async ({ context, page }) => {
+test("the row is marked Experimental and is off by default: nothing stored, no select, no links; the accessible names stay Quick jump", async ({ context, page }) => {
+  const worker = await start(context, page, { onByDefault: false });
+  await expect(page.locator(`${ROW} .row-title .badge`)).toHaveText("Experimental");
+  await expect(page.locator(ROW)).toHaveAccessibleName("Quick jump");
+  await expect(sw(page)).toHaveAccessibleName("Quick jump");
+  await expect(sw(page)).toHaveAttribute("aria-checked", "false");
+  await expect(sw(page)).not.toHaveAttribute("aria-disabled", "true");
+  expect(await stored(worker, "ghqjEnabled")).toEqual({});
+  await expect(select(page)).toBeHidden();
+  await expect(change(page)).toHaveCount(0);
+  await expect(clear(page)).toHaveCount(0);
+  await sw(page).click();
+  await expect(sw(page)).toHaveAttribute("aria-checked", "true");
+  await expect.poll(() => stored(worker, "ghqjEnabled")).toEqual({ ghqjEnabled: true });
+  await expect(select(page)).toBeVisible();
+});
+
+test("with a token and the switch on, the row is described, with the Shortcut select and both links", async ({ context, page }) => {
   await start(context, page);
   await expect(sw(page)).toHaveAttribute("aria-checked", "true");
   await expect(sw(page)).not.toHaveAttribute("aria-disabled", "true");
@@ -109,7 +126,7 @@ test("switching Quick jump does not touch other stored settings or the tokens (S
 
 test.describe("no token", () => {
   test("the row is off, announced as unavailable with its description, and cannot be switched on", async ({ context, page }) => {
-    const worker = await start(context, page, { tokens: false });
+    const worker = await start(context, page, { tokens: false, onByDefault: false });
     await expect(sw(page)).toHaveAttribute("aria-checked", "false");
     await expect(sw(page)).toHaveAttribute("aria-disabled", "true");
     await expect(page.locator("#qj-desc")).toHaveText("Needs a GitHub token. Add one in GitHub tokens.");
@@ -250,7 +267,7 @@ test.describe("Shortcut selector", () => {
     await expect.poll(() => stored(worker, ["ghqjRecent"])).toEqual({});
     await expect(page.locator("#qj-cleared")).toHaveText("Recent items cleared.");
     await expect(page.locator("#qj-cleared")).toHaveAttribute("role", "status");
-    expect(await stored(worker, ["ghqjShortcut", "ghqjEnabled"])).toEqual({ ghqjShortcut: "cmdk" });
+    expect(await stored(worker, ["ghqjShortcut", "ghqjEnabled"])).toEqual({ ghqjShortcut: "cmdk", ghqjEnabled: true });
   });
 });
 

@@ -19,6 +19,7 @@ const TOKENS = {
     { id: "o", name: "Acme org", token: "SECRET_O", owner: "acme" },
   ],
   defaultTokenId: "d",
+  ghqjEnabled: true,
 };
 
 const issue = (n, repo, mins, extra = {}) => ({ number: n, title: `Issue ${n}`, updated_at: new Date(Date.parse("2026-11-20T12:00:00Z") - mins * 60000).toISOString(), repository_url: `https://api.github.com/repos/${repo}`, ...extra });
@@ -146,7 +147,7 @@ test("a limited or failed list keeps the last good rows, waits at least a minute
 });
 
 test("tokens are saved but none serves the scope: no request at all, not even anonymous", async () => {
-  resetStorage({ githubTokens: [{ id: "o", name: "Acme", token: "SECRET_O", owner: "acme" }], defaultTokenId: null });
+  resetStorage({ githubTokens: [{ id: "o", name: "Acme", token: "SECRET_O", owner: "acme" }], defaultTokenId: null, ghqjEnabled: true });
   let r = await refresh("everywhere", "");
   assert.equal(r.serving, "none");
   assert.equal(r.lists.assigned.status, "none");
@@ -320,4 +321,16 @@ test("a visit accepted just before the feature is switched off never puts the li
   await pending;
   await new Promise((r) => setTimeout(r, 10));
   assert.equal((await chromeStub.storage.local.get("ghqjRecent")).ghqjRecent, undefined);
+});
+
+test("off by default: with a token but no saved switch nothing is active and nothing is recorded; switching it on activates it", async () => {
+  resetStorage({ githubTokens: TOKENS.githubTokens, defaultTokenId: "d" });
+  const ok = { kind: "issue", repo: "acme/web", number: 1, title: "t", url: "https://github.com/acme/web/issues/1" };
+  const st = await bg.state.handleMessage();
+  assert.equal(st.active, false);
+  assert.equal(st.enabled, false);
+  assert.deepEqual(await bg.visit.handleMessage(ok, { url: "https://github.com/acme/web/issues/1" }), { recorded: false });
+  assert.equal((await chromeStub.storage.local.get("ghqjRecent")).ghqjRecent, undefined);
+  await chromeStub.storage.local.set({ ghqjEnabled: true });
+  assert.equal((await bg.state.handleMessage()).active, true);
 });

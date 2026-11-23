@@ -38,8 +38,8 @@ const ANCHORS = new Set(["quick-jump", "tokens-section"]);
 // ---- state ------------------------------------------------------------------
 
 async function flags() {
-  const o = await chrome.storage.local.get({ [KEY_ENABLED]: true, [KEY_CHOICE]: "browser" });
-  return { enabled: o[KEY_ENABLED] !== false, choice: o[KEY_CHOICE] === "cmdk" ? "cmdk" : "browser" };
+  const o = await chrome.storage.local.get({ [KEY_ENABLED]: false, [KEY_CHOICE]: "browser" });
+  return { enabled: o[KEY_ENABLED] === true, choice: o[KEY_CHOICE] === "cmdk" ? "cmdk" : "browser" };
 }
 
 async function isActive() {
@@ -309,7 +309,7 @@ async function purgeSessionFor(ids) {
 
 chrome.storage?.onChanged?.addListener((changes, area) => {
   if (area && area !== "local") return;
-  if (changes[KEY_ENABLED] && changes[KEY_ENABLED].newValue === false) serial(() => chrome.storage.local.remove(KEY_RECENT));
+  if (changes[KEY_ENABLED] && changes[KEY_ENABLED].newValue !== true) serial(() => chrome.storage.local.remove(KEY_RECENT));
   if (changes.githubTokens) {
     const oldList = changes.githubTokens.oldValue || [];
     const newList = changes.githubTokens.newValue || [];

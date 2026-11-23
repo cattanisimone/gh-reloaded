@@ -26,6 +26,7 @@
   async function refreshState() {
     const res = await send("GHQJ_STATE");
     state = res && res.ok ? { active: !!res.active, choice: res.choice, shortcut: res.shortcut || "", platform: res.platform } : { ...state, active: false };
+    syncListeners();
     if (!state.active && handle?.isOpen()) handle.close(false);
     handle?.isOpen() && handle.refreshFooter();
     if (state.active) recordVisit();
@@ -101,7 +102,6 @@
     e.stopImmediatePropagation();
     toggle(true);
   }
-  window.addEventListener("keydown", onKeyDown, true);
 
   // ---- recording visits ---------------------------------------------------------------
 
@@ -145,13 +145,30 @@
     timer = setTimeout(recordVisit, 350);
   }
 
-  window.addEventListener("popstate", schedule);
-  window.addEventListener("pageshow", schedule);
-  document.addEventListener("turbo:load", schedule);
-  document.addEventListener("turbo:render", schedule);
-  window.navigation?.addEventListener?.("navigatesuccess", schedule);
   // GitHub swaps the <title> element on navigation, so watch the head, not one node.
-  new MutationObserver(schedule).observe(document.head, { childList: true, characterData: true, subtree: true });
+  const headObserver = new MutationObserver(schedule);
+  const NAV_EVENTS = [[window, "popstate"], [window, "pageshow"], [document, "turbo:load"], [document, "turbo:render"], [window.navigation, "navigatesuccess"]];
+
+  // Nothing is registered on the page while the feature is off or no token is saved: the navigation hooks
+  // that record visits exist only while it is active, and the key listener only while ⌘K / Ctrl+K is chosen.
+  let hooked = false;
+  let keyed = false;
+  function syncListeners() {
+    const wantHooks = !!state.active;
+    if (wantHooks && !hooked) {
+      for (const [t, n] of NAV_EVENTS) t?.addEventListener?.(n, schedule);
+      headObserver.observe(document.head, { childList: true, characterData: true, subtree: true });
+    } else if (!wantHooks && hooked) {
+      for (const [t, n] of NAV_EVENTS) t?.removeEventListener?.(n, schedule);
+      headObserver.disconnect();
+      clearTimeout(timer);
+    }
+    hooked = wantHooks;
+    const wantKey = wantHooks && state.choice === "cmdk";
+    if (wantKey && !keyed) window.addEventListener("keydown", onKeyDown, true);
+    else if (!wantKey && keyed) window.removeEventListener("keydown", onKeyDown, true);
+    keyed = wantKey;
+  }
 
   // The state follows Settings without a reload: the switch, the shortcut choice and the saved tokens.
   chrome.storage.onChanged.addListener((changes, area) => {

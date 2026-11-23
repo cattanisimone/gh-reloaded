@@ -79,10 +79,12 @@ test("rowView: no token is off, disabled, described, without controls, whatever 
   assert.equal(DESC_NO_TOKEN, "Needs a GitHub token. Add one in GitHub tokens.");
 });
 
-test("rowView: with a token it is on by default and restores the last choice", () => {
+test("rowView: with a token it is off until switched on, then restores the last choice", () => {
   let v = rowView({ hasToken: true, stored: {}, mac: false, shortcut: "Alt+Shift+K" });
-  assert.deepEqual([v.checked, v.disabled, v.showControls, v.choice, v.unassigned], [true, false, true, "browser", false]);
+  assert.deepEqual([v.checked, v.disabled, v.showControls, v.choice, v.unassigned], [false, false, false, "browser", false]);
   assert.equal(v.description, DESC_REMEMBERS);
+  v = rowView({ hasToken: true, stored: { ghqjEnabled: true }, mac: false, shortcut: "Alt+Shift+K" });
+  assert.deepEqual([v.checked, v.disabled, v.showControls], [true, false, true]);
   v = rowView({ hasToken: true, stored: { ghqjEnabled: false, ghqjShortcut: "cmdk" }, mac: false, shortcut: "" });
   assert.deepEqual([v.checked, v.showControls, v.choice, v.unassigned], [false, false, "cmdk", true]);
   v = rowView({ hasToken: true, stored: { ghqjShortcut: "nonsense" }, mac: false, shortcut: "Alt+Shift+K" });

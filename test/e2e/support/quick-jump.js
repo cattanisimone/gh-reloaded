@@ -3,7 +3,7 @@
 // fields), the API mocks of the three reads, and a way to send the browser command to a tab.
 import { backgroundWorker, routeApi, seedStorage } from "./extension.js";
 
-export const TOKENS = { githubTokens: [{ id: "d", name: "Work laptop", token: "ghp_default", owner: "" }], defaultTokenId: "d" };
+export const TOKENS = { githubTokens: [{ id: "d", name: "Work laptop", token: "ghp_default", owner: "" }], defaultTokenId: "d", ghqjEnabled: true };
 export const MAPPED = { githubTokens: [{ id: "d", name: "Work laptop", token: "ghp_default", owner: "" }, { id: "o", name: "Acme org", token: "ghp_org", owner: "acme" }], defaultTokenId: "d" };
 
 const iso = (minsAgo) => new Date(Date.now() - minsAgo * 60_000).toISOString();
@@ -74,7 +74,8 @@ export async function routePages(context, pages, defaults = {}) {
 }
 
 export async function setup(context, { storage = TOKENS, data, pages = { "*": {} }, defaults, log = [], reqs = [], handlers } = {}) {
-  await seedStorage(context, storage);
+  // Quick jump is off by default: specs that exercise it switch it on, unless they set ghqjEnabled themselves.
+  await seedStorage(context, "ghqjEnabled" in storage ? storage : { ...storage, ghqjEnabled: true });
   await routeApi(context, handlers || apiHandlers(data, log));
   context.on("request", (r) => {
     if (r.url().startsWith("https://api.github.com")) reqs.push(`${r.method()} ${new URL(r.url()).pathname}`);

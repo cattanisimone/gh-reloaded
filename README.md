@@ -297,9 +297,11 @@ On a repository image file page (PNG, JPEG, WebP, GIF, and SVG in its Preview vi
 
 Needs no new permission: public repositories work without a token, and a private repository uses the token already documented for HTML preview (**Contents: Read-only**, or `repo` for a classic token).
 
-### Quick jump — [features/quick-jump](features/quick-jump)
+### Quick jump (experimental) — [features/quick-jump](features/quick-jump)
 
-One shortcut opens a personal jump view from any github.com page, outside text fields: the work that is waiting for you, the things you opened lately and the repositories you are active in, without opening a dashboard first.
+One shortcut opens a personal jump view from any github.com page, outside text fields: the work that is waiting for you, the things you opened lately and the repositories you are active in, without opening a dashboard first. **Off by default**: switch it on in Settings → Features (it is marked *Experimental*); nothing is registered or injected until you do, and switching it off removes everything it added, the shortcut listener and the panel included.
+
+Marked experimental: it can take over the page's keyboard shortcut (when you choose ⌘K / Ctrl+K) and its panel anchors on GitHub's own header and search markup, so expect it to need upkeep as GitHub's UI changes.
 
 ![Quick jump mockup: the panel over a repository page, scoped to This repository, with Your work (an assigned issue, a review request and the two All … on GitHub rows), Recent and the footer with the shortcut, fictional repository acme/web.](screenshots/quick-jump.svg)
 
@@ -310,7 +312,7 @@ One shortcut opens a personal jump view from any github.com page, outside text f
 - Needs a GitHub token saved under **GitHub tokens**: without one the feature does nothing and no request is made. Each list is read with the token mapped to the page's owner, else the default token; **Everywhere** uses the default token only, and no other saved token is ever tried in turn. When a list cannot be read the panel says so and the fixed row opens GitHub's own page instead; it never claims a permission is missing.
 - Reads only three read-only requests to `api.github.com`: your assigned issues, the pull requests that ask for your review and your recently pushed repositories. They are cached in `chrome.storage.session` (memory only) and nothing is ever written to GitHub.
 - **Recent** is kept in `chrome.storage.local` of this browser profile only, never synced and never sent anywhere: up to 50 items for at most 30 days, each with its URL, kind, repository, number, title and visit time. It is recorded only while Quick jump is on and a token is saved, and deleted by **Clear recent items** (Settings → Features → Quick jump), when you switch the feature off and when you remove the last token.
-- On by default once a token is saved; the switch is in **Settings → Features**.
+- Off by default; the switch is in **Settings → Features**, and it works only once a token is saved.
 
 ## Known limitations
 
@@ -319,6 +321,7 @@ One shortcut opens a personal jump view from any github.com page, outside text f
 - **One fine-grained token per owner.** Work across several organizations or accounts needs one token per resource owner.
 - **Organizations may restrict tokens.** Approval requirements, SSO authorization or disabled fine-grained tokens make requests come back empty or `404`; **Test** in Settings tells which permission type is affected.
 - **Rate limits.** Without a token, GitHub's anonymous rate limit applies and data may show a temporary error.
+- **Quick jump is experimental** and off by default: it can take over a keyboard shortcut and its panel anchors on GitHub's own markup, so expect upkeep.
 - **HTML preview is experimental** and runs the file's own scripts in an isolated sandbox page with no access to your GitHub session.
 - **Chrome only.** It is a Manifest V3 extension for Chrome and Chromium browsers; the page may need a reload after installing or updating the extension.
 

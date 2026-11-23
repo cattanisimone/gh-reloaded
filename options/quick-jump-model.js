@@ -52,7 +52,7 @@ export function describingLine({ value, mac, shortcut }) {
 // touched, so adding a token restores the last choice).
 export function rowView({ hasToken, stored = {}, mac, shortcut }) {
   const choice = stored.ghqjShortcut === "cmdk" ? "cmdk" : "browser";
-  const on = stored.ghqjEnabled !== false;
+  const on = stored.ghqjEnabled === true;
   return {
     disabled: !hasToken,
     checked: hasToken && on,
