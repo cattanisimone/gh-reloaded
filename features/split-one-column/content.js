@@ -585,7 +585,15 @@
       return;
     }
     observer = new MutationObserver((recs) => {
-      if (!enabled || !M.isRoute(location.pathname)) return; // GitHub's other pages cost nothing
+      if (location.pathname !== lastPath) {
+        lastPath = location.pathname;
+        choices = new Map(); // the choice belongs to the page it was made on, even for a quick A → B → A
+      }
+      if (!enabled) return;
+      if (!M.isRoute(location.pathname)) {
+        if (states.size) queue(); // leaving the route: give back what we changed
+        return; // GitHub's other pages cost nothing
+      }
       queue(recs);
     });
     observer.observe(document.documentElement, {
