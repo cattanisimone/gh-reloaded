@@ -9,7 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const files = ["quick-create/content.js", "full-width-board/content.js", "full-width-board/content.css", "standup-mode/content.js", "standup-mode/content.css", "board-dependencies/content.js", "board-dependencies/content.css", "linked-pr-status/content.js", "linked-pr-status/content.css", "quick-jump/content.js", "quick-jump/panel.js", "quick-jump/model.js", "quick-jump/content.css"];
+const files = ["quick-create/content.js", "full-width-board/content.js", "full-width-board/content.css", "standup-mode/content.js", "standup-mode/content.css", "board-dependencies/content.js", "board-dependencies/content.css", "linked-pr-status/content.js", "linked-pr-status/content.css", "quick-jump/content.js", "quick-jump/panel.js", "quick-jump/model.js", "quick-jump/content.css", "split-one-column/model.js", "split-one-column/content.js", "split-one-column/content.css"];
 
 for (const f of files) {
   test(`${f} has no -module__ class selector`, () => {
