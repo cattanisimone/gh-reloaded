@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.8.1...v1.9.0) (2026-11-24)
+
+
+### Features
+
+* add Quick jump, a personal jump view from any GitHub page ([#141](https://github.com/cattanisimone/gh-reloaded/issues/141)) ([e1f941f](https://github.com/cattanisimone/gh-reloaded/commit/e1f941f56d3201d2b81c1970dc20e77ac38e5c2d))
+
 ## [1.8.1](https://github.com/cattanisimone/gh-reloaded/compare/v1.8.0...v1.8.1) (2026-11-17)
 
 
