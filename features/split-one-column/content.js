@@ -500,13 +500,13 @@
     // 3) what is queued now was written by us: drop it.
     const recs = pending.concat(observer.takeRecords());
     pending = [];
+    if (location.pathname !== lastPath) {
+      lastPath = location.pathname;
+      choices = new Map(); // the choice belongs to the page it was made on
+    }
     if (!M.isRoute(location.pathname)) {
       resetAll();
       return;
-    }
-    if (location.pathname !== lastPath) {
-      lastPath = location.pathname;
-      choices = new Map();
     }
     try {
       process(recs);
@@ -558,11 +558,11 @@
 
   function refresh() {
     if (!extensionAlive()) return;
-    if (!enabled || !M.isRoute(location.pathname)) return resetAll();
     if (location.pathname !== lastPath) {
       lastPath = location.pathname;
       choices = new Map();
     }
+    if (!enabled || !M.isRoute(location.pathname)) return resetAll();
     for (const [table] of states) if (!table.isConnected) states.delete(table);
     scanTables();
   }
@@ -585,7 +585,7 @@
       return;
     }
     observer = new MutationObserver((recs) => {
-      if (!enabled) return;
+      if (!enabled || !M.isRoute(location.pathname)) return; // GitHub's other pages cost nothing
       queue(recs);
     });
     observer.observe(document.documentElement, {

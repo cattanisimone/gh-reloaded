@@ -381,3 +381,51 @@ for (const kind of ["hashed", "classic"]) {
   });
 }
 
+
+test.describe("navigation between the routes of a pull request", () => {
+  test("Files changed → Conversation → Files changed (client-side), then back and forward", async ({ context, page }) => {
+    const files = sampleFiles();
+    const { url } = await setup(context, "hashed", files);
+    await page.goto(url);
+    await expect.poll(() => modes(page)).toEqual(OUT);
+    await page.locator("[data-ghsoc-control]").first().click(); // the user chose Split for file 0
+    expect((await modes(page))[0]).toBeNull();
+    const html = pageHtml("hashed", files);
+    const swap = (path, content) =>
+      page.evaluate(([path, content]) => {
+        history.pushState(null, "", path);
+        const main = document.querySelector("main");
+        if (content) {
+          const doc = new DOMParser().parseFromString(content, "text/html");
+          main.replaceChildren(...[...doc.querySelector("main").children].map((n) => document.importNode(n, true)));
+        } else main.innerHTML = "<p>Conversation</p>";
+      }, [path, content]);
+    await swap("/acme/web/pull/7", null);
+    await expect.poll(() => page.locator("[data-ghsoc-control]").count()).toBe(0);
+    await swap("/acme/web/pull/7/changes", html);
+    // arriving again is automatic: the explicit choice belonged to the page it was made on
+    await expect.poll(() => modes(page)).toEqual(OUT);
+    await expect(page.locator("[data-ghsoc-control]")).toHaveCount(3);
+    // browser back (the path is the Conversation tab; GitHub would swap the DOM, here only the URL changes)
+    await page.evaluate(() => history.back());
+    await expect.poll(() => page.locator("[data-ghsoc-control]").count()).toBe(0);
+    expect(await modes(page)).toEqual([null, null, null, null, null]);
+    await page.evaluate(() => history.forward());
+    await expect.poll(() => modes(page)).toEqual(OUT);
+    await expect(page.locator("[data-ghsoc-control]")).toHaveCount(3);
+  });
+
+  test("a per-file choice survives GitHub re-rendering that file on the same page", async ({ context, page }) => {
+    const { url } = await setup(context, "hashed", sampleFiles());
+    await page.goto(url);
+    await expect.poll(() => modes(page)).toEqual(OUT);
+    await page.locator("[data-ghsoc-control]").first().click();
+    await page.evaluate(() => {
+      const region = document.querySelector("table").closest("[role=region]");
+      region.replaceWith(region.cloneNode(true)); // the whole file is rendered again, its table included
+    });
+    await expect.poll(async () => (await reasons(page))[0]).toBe("additions-only");
+    expect((await modes(page))[0]).toBeNull(); // still the user's Split: an automatic default never overrides it
+    await expect(page.locator("[data-ghsoc-control]").first()).toHaveText("One column");
+  });
+});
