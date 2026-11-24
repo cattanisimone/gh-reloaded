@@ -8,7 +8,7 @@ export const TOKEN = { githubTokens: [{ id: "t1", name: "Default", token: "ghp_v
 
 // The viewed-state read, as GraphQL answers it: pages of 100 files.
 // `states` is { path: "VIEWED" | "UNVIEWED" | "DISMISSED" }.
-export async function routeViewedApi(context, { states = {}, delay = 0, status = 200, log = [], body } = {}) {
+export async function routeViewedApi(context, { states = {}, delay = 0, status = 200, log = [], body, total } = {}) {
   await context.route("https://api.github.com/**", async (route) => {
     const req = route.request();
     const entry = { url: req.url(), method: req.method(), post: req.postData() };
@@ -23,7 +23,7 @@ export async function routeViewedApi(context, { states = {}, delay = 0, status =
       const from = vars.after ? Number(vars.after) : 0;
       const nodes = all.slice(from, from + 100);
       const end = from + nodes.length;
-      json = { data: { repository: { pullRequest: { files: { totalCount: all.length, pageInfo: { hasNextPage: end < all.length, endCursor: String(end) }, nodes } } } } };
+      json = { data: { repository: { pullRequest: { files: { totalCount: total ?? all.length, pageInfo: { hasNextPage: end < all.length, endCursor: String(end) }, nodes } } } } };
     }
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(json) });
   });

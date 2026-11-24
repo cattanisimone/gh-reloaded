@@ -148,6 +148,21 @@ test("Quick assignment switch is experimental, defaults off, has no Configure li
   expect(await worker.evaluate(() => chrome.storage.local.get("ghqaEnabled"))).toEqual({ ghqaEnabled: false });
 });
 
+test("Viewed per folder switch is experimental, defaults on, has no Configure link, and persists", async ({ context, page }) => {
+  const worker = await openOptions(context, page, "#features");
+  const sw = page.locator("#feature-ghvf");
+  const row = page.locator(".row", { has: sw });
+  await expect(row.locator(".badge")).toHaveText("Experimental");
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+  expect(await worker.evaluate(() => chrome.storage.local.get("ghvfEnabled"))).toEqual({});
+  await expect(row.locator("a.cfg")).toHaveCount(0);
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "false");
+  expect(await worker.evaluate(() => chrome.storage.local.get("ghvfEnabled"))).toEqual({ ghvfEnabled: false });
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+});
+
 test("Linked PR status switch defaults on, has no Configure link, and persists", async ({ context, page }) => {
   const worker = await openOptions(context, page, "#features");
   const sw = page.locator("#feature-ghlps");

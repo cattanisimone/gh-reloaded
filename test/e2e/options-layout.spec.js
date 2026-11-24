@@ -2,7 +2,7 @@
 import { test, expect } from "./support/extension.js";
 import { openOptions } from "./support/options.js";
 
-const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt", "ghqa", "ghlps", "ghgs", "ghnt-reason-tags", "ghig", "ghals", "ghrc", "ghqj", "ghsoc"];
+const SWITCHES = ["ghdg", "quick-create", "ghbd", "ghfw", "ghsm", "ghhp", "ghmi", "ghprt", "ghqa", "ghlps", "ghgs", "ghnt-reason-tags", "ghig", "ghals", "ghrc", "ghqj", "ghsoc", "ghvf"];
 
 test("Features lists 17 switches and Configure only for Quick-create, Standup, My Issues, GitHub Status, Image gallery", async ({ context, page }) => {
   await openOptions(context, page);

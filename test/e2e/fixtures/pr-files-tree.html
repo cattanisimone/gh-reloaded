@@ -13,6 +13,7 @@
     viewed=a,b     paths that are already viewed
     paths=a,b      replaces the default file list
     extra=N        adds N generated files under vendor/lib/ (the 108-file folder of the issue's boards)
+    extraDir=a/b   where the generated files go instead of vendor/lib
     pane=PX        width of the tree pane (default 298; GitHub allows 256-700)
     revert=1       GitHub reverts a click on "Viewed" 80 ms later
     counter=none   no "N of M files viewed" text; counter=K says M = K
@@ -130,7 +131,8 @@
   ];
   let paths = q.get("paths") ? q.get("paths").split(",").filter(Boolean) : DEFAULT.slice();
   const extra = Number(q.get("extra") || 0);
-  for (let i = 1; i <= extra; i++) paths.push(`vendor/lib/file-${String(i).padStart(3, "0")}.rs`);
+  const extraDir = q.get("extraDir") || "vendor/lib";
+  for (let i = 1; i <= extra; i++) paths.push(`${extraDir}/file-${String(i).padStart(3, "0")}.rs`);
   paths = [...new Set(paths)].sort();
   const viewed = new Set((q.get("viewed") || "").split(",").filter(Boolean));
   const total = paths.length;
@@ -185,10 +187,6 @@
 
   const visible = (p) => !filterText || p.toLowerCase().includes(filterText.toLowerCase());
   const visibleDir = (d) => d.files.some(visible) || [...d.dirs.values()].some(visibleDir);
-
-  function rowHtml(level, kind, label, glyph, extraAttrs) {
-    return glyph;
-  }
 
   function folderLi(d, level) {
     const li = document.createElement("li");

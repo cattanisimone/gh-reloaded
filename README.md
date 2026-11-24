@@ -294,6 +294,19 @@ In GitHub's **Split** diff, a file whose changes are all on one side (only added
 
 ![Split diff: one column mockup: an additions-only file shown in one column with old and new line numbers and a Side by side button left of Viewed, next to the same file in GitHub's Split, fictional repository acme/web.](screenshots/split-one-column.svg)
 
+### Viewed per folder — [features/viewed-folders](features/viewed-folders) — _Experimental_
+
+On the new **Files changed** page of a pull request, the file tree does not say which folders are finished. This adds one small, read-only indicator at the right edge of every folder row: how many of the changed files below that folder you marked **Viewed** with GitHub's own checkbox. File rows show nothing, and marking stays where it is: the extension never clicks a native control and writes nothing to GitHub.
+
+- A folder counts every changed file below it, at any depth, whether it is open or closed and whatever the native file filters show. A file that was viewed and then changed by a later commit counts as not viewed, as GitHub's own checkbox shows it.
+- States: a green check when every file is viewed (`All 4 files viewed`), a partial ring with `3/7`, an empty ring with `0/3`, a static grey pill while the state is being read, and a dashed ring with a lower bound (`2+/108`, `?/108`) when the state of some files cannot be read. A folder with an unknown file is never shown as all viewed or none viewed, and no folder counts only the files it can see. The same text is the hover bubble and the folder row's accessible description (the row's name stays the folder name).
+- Ticking or unticking GitHub's own "Viewed" button updates every containing folder in the same frame. Collapsing, expanding and filtering change nothing.
+- Where the state comes from: GitHub's own "Viewed" buttons of the diffs that are rendered (on a large pull request only a few are at load), and, when a token is already configured for the repository owner, one read-only GraphQL read of the pull request's files and their viewed state (`PullRequest.files { path viewerViewedState }`, paginated, read at each visit, kept in memory only). That read uses the **Pull requests: Read** permission already listed under [Install](#install); no new permission, no write access, no "Verify access" check. Without a token, or when the read fails, the page alone is used and the folders it cannot prove show the dashed ring instead of a guess. Exact counts on large pull requests therefore need that token.
+- Only the new Files changed page of a pull request is touched: the classic page, a commit range or a single commit, and every other page are left alone. When GitHub's markup is not recognised the indicators are simply absent, with no error.
+- Marked *Experimental*: the read of the viewed state has not been verified with every kind of token, and the indicator anchors on GitHub's own (undocumented, redesign-prone) file tree markup. On by default; switch it off under **Settings → Features**.
+
+![Viewed per folder mockup: the file tree of a pull request with a check, a 4/108 partial ring, 3/4, 0/3 and, in dark mode, the loading pill and dashed rings, fictional repository acme/web.](screenshots/viewed-folders.svg)
+
 ### Image gallery — [features/image-gallery](features/image-gallery)
 
 On a repository image file page (PNG, JPEG, WebP, GIF, and SVG in its Preview view), browse the other images of the same folder in a lightbox, without going back to the folder listing.
