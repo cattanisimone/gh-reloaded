@@ -69,3 +69,15 @@ test("README and PRIVACY name the optional notifications permission and a releas
   assert.match(readme, /^#### Optional: the notifications permission \(classic token\)/m, "the heading the in-product README link points at");
   assert.match(readme, /at most 8 requests in all|at most 8 requests/, "the default token's Test budget");
 });
+
+test("quick jump: README lists it on the Issues, Pull requests and Metadata rows, with the 'Already have a token?' sentence", () => {
+  const row = (perm) => readme.split("\n").find((l) => l.startsWith("| Repository | **" + perm + "**"));
+  assert.match(row("Issues") || "", /Quick jump \(lists the issues assigned to you\)/, "Issues row lists Quick jump");
+  assert.match(row("Pull requests") || "", /Quick jump \(lists the pull requests that ask for your review\)/, "Pull requests row lists Quick jump");
+  assert.match(row("Metadata") || "", /Quick jump \(lists your most recently active repositories\)/, "Metadata row lists Quick jump");
+  for (const perm of ["Issues", "Pull requests", "Metadata"]) assert.doesNotMatch(row(perm), /Check 3/, `${perm} row names no internal check`);
+  assert.ok(readme.includes("Already have a token? Quick jump needs no new permission: it reads with Issues, Pull requests and Metadata. A token limited to selected repositories shows only the assigned issues, review requests and repositories it can reach; the two \"All … on GitHub\" rows open GitHub's complete lists."));
+  assert.ok(readme.includes("screenshots/quick-jump.svg"));
+  assert.match(privacy, /Recent items/);
+  assert.match(privacy, /at most 50 items for at most 30 days/);
+});
