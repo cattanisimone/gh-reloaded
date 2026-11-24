@@ -65,18 +65,19 @@
     const cell = { kind, span: td.colSpan || 1, change: null, text: "", foreign: false };
     if (kind === "text") {
       const inner = td.querySelector("[data-diff-text-inner], .diff-text-inner, .blob-code-inner");
-      const line = inner ? inner.closest("code") || inner : null;
-      const code = td.querySelector("code[data-diff-type], code.diff-text, code");
-      const own = line ? line.textContent : "";
+      const code = inner ? inner.closest("code") : null;
       cell.text = squash(inner ? inner.textContent : "");
-      if (td.querySelector(".no-nl-marker, [aria-label*='No newline' i]")) cell.text += "\u0001nonl";
+      if (td.querySelector(".no-nl-marker, [aria-label^='No newline']")) cell.text += "\u0001nonl";
       const marker = td.querySelector("[data-code-marker], [data-diff-text-marker], .diff-text-marker");
       cell.change = M.changeOf({
         type: code && code.getAttribute("data-diff-type"),
         cls: cls + " " + (code && typeof code.className === "string" ? code.className : ""),
         marker: marker && (marker.getAttribute("data-code-marker") || marker.textContent),
       });
-      cell.foreign = !!td.querySelector(FORM) || squash(td.textContent.replace(own, "")) !== "";
+      // anything but the line's own text and its +/- marker is content (a thread nested in the code too)
+      const markerText = marker && marker.textContent ? marker.textContent : "";
+      const rest = inner ? td.textContent.replace(inner.textContent, "").replace(markerText, "") : td.textContent;
+      cell.foreign = !!td.querySelector(FORM) || squash(rest) !== "";
     } else if (kind === "empty") {
       cell.foreign = !!td.querySelector(FORM) || squash(td.textContent) !== "";
     } else if (kind === "number") {
@@ -429,6 +430,7 @@
         if (r.type === "childList") for (const n of r.addedNodes) if (mayHoldTable(n)) scan = true;
         continue;
       }
+      if (loc.where === "header" && r.type === "childList") for (const n of r.addedNodes) if (mayHoldTable(n)) scan = true;
       const g = group(loc.state);
       if (loc.state.info.declared !== 4 || loc.state.info.rendered !== 4) {
         // already one column: only a structural change matters
