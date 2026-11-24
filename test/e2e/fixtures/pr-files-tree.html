@@ -326,7 +326,8 @@
   window.__setViewed = (p, on) => { if (on) viewed.add(p); else viewed.delete(p); const r = regions.get(p); if (r) paintButton(r.querySelector("button"), p); paintCounter(); };
 
   if (has("classic")) {
-    document.getElementById("pane").innerHTML = `<div class="file-tree"><ul class="ActionList"><li id="file-tree-item-diff-1" class="ActionList-item"><a href="#diff-1">server</a></li></ul></div>`;
+    // The classic page's tree, as served anonymously: the same role and name, rows with ids of their own.
+    document.getElementById("pane").innerHTML = `<div class="file-tree"><ul class="ActionList ActionList--tree ActionList--full" role="tree" aria-label="File Tree"><li id="file-tree-item-diff-ee5d1" class="ActionList-item" role="treeitem" aria-level="1" aria-expanded="true"><a href="#diff-ee5d1">server</a></li><li id="file-tree-item-diff-ab12" class="ActionList-item" role="treeitem" aria-level="2"><a href="#diff-ab12">main.rs</a></li></ul></div>`;
   } else {
     renderTree();
   }

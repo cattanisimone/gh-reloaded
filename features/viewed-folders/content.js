@@ -32,6 +32,7 @@
   let tipFor = null;
   let tipEl = null;
   let resizeObserver = null;
+  let lastPath = location.pathname;
   let observedTree = null;
 
   // What one visit of a pull request's Files changed page remembers: the files the tree has shown
@@ -41,6 +42,7 @@
       key: route ? M.keyOf(route) : null,
       route,
       treePaths: new Set(),
+      seenFiles: new WeakSet(), // file rows already read: a 3000-file tree is not walked again at every scan
       hrefToPath: new Map(),
       page: new Map(), // path -> { viewed, seq }
       api: null, // { seq, states: Map, paths: [], complete }
@@ -78,10 +80,15 @@
     for (const li of tree.querySelectorAll('[role="treeitem"]')) {
       const id = li.id;
       if (!id) continue;
+      // The classic Files changed page has a tree of the same name whose rows are ids of its own
+      // ("file-tree-item-diff-…"), not paths: it is not this page and must not start a read.
+      if (id.startsWith("file-tree-item-")) continue;
       if (li.hasAttribute("aria-expanded")) {
         folders.push(li);
         continue;
       }
+      if (st.seenFiles.has(li)) continue;
+      st.seenFiles.add(li);
       st.treePaths.add(id);
       const link = li.querySelector('a[href^="#diff-"]');
       if (link) st.hrefToPath.set(link.getAttribute("href"), id);
@@ -279,6 +286,7 @@
   function render() {
     const tree = findTree();
     if (!tree) return;
+    if (tipFor && !tipFor.isConnected) hideTip(); // the hovered row was unmounted under the pointer
     const { paths, proven } = listing();
     const counts = M.countFolders(paths, stateOf);
     for (const li of st.folders) if (li.isConnected) renderRow(li, counts, proven);
@@ -352,11 +360,11 @@
   function request() {
     st.requested = true;
     st.pending = true;
-    const key = st.key;
+    const mine = st;
     const seq = ++st.seq;
     const { owner, repo, number } = st.route;
     const done = (res) => {
-      if (st.key !== key) return; // another pull request, or left the page
+      if (st !== mine) return; // another pull request, an earlier visit of this one, or left the page
       st.pending = false;
       if (res && res.ok && Array.isArray(res.files)) {
         const states = new Map(res.files.map((f) => [f.path, !!f.viewed]));
@@ -391,6 +399,7 @@
 
   function scan() {
     if (!extensionAlive()) return;
+    lastPath = location.pathname;
     const route = enabled ? M.parseRoute(location.pathname) : null;
     if (!route) {
       if (st.key !== null) teardown();
@@ -411,7 +420,7 @@
     readTree(tree);
     readButtons();
     readCounter();
-    if (!st.requested && st.treePaths.size) request();
+    if (!st.requested && st.treePaths.size && st.folders.length) request();
     render();
   }
 
@@ -495,12 +504,8 @@
     window.addEventListener("scroll", () => tipFor && hideTip(), true);
     document.addEventListener("keydown", (e) => e.key === "Escape" && tipFor && hideTip());
     // A route change that swaps no DOM (history.pushState alone) fires no mutation: watch the path too.
-    let lastPath = location.pathname;
     setInterval(() => {
-      if (location.pathname !== lastPath) {
-        lastPath = location.pathname;
-        scan();
-      }
+      if (location.pathname !== lastPath) scan();
     }, POLL_PATH_MS);
   }
 

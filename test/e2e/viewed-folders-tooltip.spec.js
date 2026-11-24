@@ -117,3 +117,13 @@ test("route change and switching off remove the bubble element", async ({ contex
   await page.evaluate(() => history.pushState({}, "", "/acme/web/pull/7"));
   await expect(page.locator(".ghvf-tip")).toHaveCount(0);
 });
+
+test("the bubble goes away when the hovered row is unmounted under the pointer", async ({ context, page }) => {
+  await openFiles(context, page);
+  await settled(page);
+  const c = await center(page, "server/api/src/handlers");
+  await page.mouse.move(c.x, c.y);
+  await expect.poll(() => bubble(page)).not.toBeNull();
+  await page.evaluate(() => window.__filter("app.tsx")); // the tree re-renders: the row is gone
+  await expect.poll(() => bubble(page)).toBeNull();
+});

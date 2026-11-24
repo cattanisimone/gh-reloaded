@@ -1,7 +1,7 @@
 // E2E: "Viewed per folder" on the new Files changed page — one indicator per folder row, the states
 // and nested counts, collapsing, the native tick, the switch, and the pages that must stay untouched.
 import { test, expect, backgroundWorker, seedStorage } from "./support/extension.js";
-import { openFiles, indicators, settled, FILES } from "./support/viewed.js";
+import { openFiles, indicators, settled, FILES, TOKEN } from "./support/viewed.js";
 
 const ALL_VIEWED_API = "viewed=server/api/src/handlers/auth.rs,server/api/src/handlers/routes.rs,server/api/src/lib.rs,server/api/Cargo.toml";
 
@@ -137,4 +137,28 @@ test("lifecycle: Files changed to Conversation and back re-reads; another pull r
   await page.evaluate(() => history.pushState({}, "", "/acme/web/pull/8/files"));
   await expect.poll(() => log.length).toBe(4);
   expect(JSON.parse(log[3].post).variables).toMatchObject({ owner: "acme", repo: "web", number: 8 });
+});
+
+test("a stale answer of an earlier visit of the same pull request is ignored", async ({ context, page }) => {
+  const log = [];
+  let n = 0;
+  await context.route("https://api.github.com/**", async (route) => {
+    const mine = ++n;
+    log.push(mine);
+    if (mine === 1) await new Promise((r) => setTimeout(r, 2500)); // the first read answers late, saying UNVIEWED
+    const files = mine === 1 ? [{ path: "docs/guide.md", viewerViewedState: "UNVIEWED" }] : [];
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: { repository: { pullRequest: { files: { totalCount: 1, pageInfo: { hasNextPage: false, endCursor: null }, nodes: files } } } } }) });
+  });
+  const { routeGithub } = await import("./support/extension.js");
+  await routeGithub(context, "pr-files-tree.html");
+  await seedStorage(context, TOKEN);
+  await page.goto(`https://github.com${FILES}`);
+  await expect(page.locator('li[id="docs"] > .row-container .ghvf-ind')).toBeVisible();
+  await page.evaluate(() => [...document.querySelectorAll("#diffs [role=region]")].find((r) => r.querySelector("code").textContent.includes("docs/guide.md")).querySelector("button").click());
+  await page.evaluate(() => history.pushState({}, "", "/acme/web/pull/8/files"));
+  await expect.poll(() => log.length).toBe(2);
+  await page.evaluate(() => history.pushState({}, "", "/acme/web/pull/7/files")); // back before the first read answered
+  await expect.poll(() => log.length).toBe(3);
+  await page.waitForTimeout(3000); // the stale answer arrives
+  await expect(page.locator('li[id="docs"] > .row-container .ghvf-ind')).toHaveAttribute("data-state", "viewed");
 });
