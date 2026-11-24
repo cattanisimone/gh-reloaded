@@ -235,8 +235,52 @@
       for (const stray of state.container.querySelectorAll("[data-ghsoc-control]")) if (stray !== c) stray.remove();
       anchor.el.before(c);
       c.setAttribute("data-ghsoc-anchor", anchor.name);
+      state.fitKey = null;
     }
     paintControl(state);
+    scheduleFit();
+  }
+
+  // The control must sit in GitHub's header the way a native button does, whatever the markup:
+  // - an 8px gap to the previous sibling when the parent does not space its children itself
+  //   (classic markup: no `gap`; React headers have gap 8px, so no margin there: it would double it);
+  // - the actions row keeps the height it had without the control (a `…`-only row is 16px on
+  //   the classic markup, the 28px control would grow the stacked header at ≤ 767px).
+  // Measured from the page, not from a class name; redone when the placement or the width changes.
+  function fitControl(state) {
+    const c = state.control;
+    const parent = c && c.parentElement;
+    if (!parent || !c.isConnected) return;
+    const key = innerWidth + "|" + (c.previousElementSibling ? 1 : 0);
+    if (state.fitKey === key && state.fitParent === parent) return;
+    const cs = getComputedStyle(parent);
+    const spaced = /flex|grid/.test(cs.display) && parseFloat(cs.columnGap) > 0;
+    const glued = !!c.previousElementSibling && !spaced;
+    c.style.marginLeft = glued ? "8px" : "";
+    c.style.marginTop = c.style.marginBottom = "";
+    const withCtrl = parent.getBoundingClientRect().height;
+    c.style.display = "none";
+    const without = parent.getBoundingClientRect().height;
+    c.style.display = "";
+    if (withCtrl === 0 && without === 0) return; // not rendered (collapsed file): measure again later
+    if (without > 0 && withCtrl - without > 0.5) {
+      const m = -(withCtrl - without) / 2 + "px";
+      c.style.marginTop = c.style.marginBottom = m;
+    }
+    state.fitKey = key;
+    state.fitParent = parent;
+  }
+
+  // After the pass that placed it, before the next paint: the measurement forces a layout, which
+  // is not part of what the evaluation itself costs.
+  let fitQueued = false;
+  function scheduleFit() {
+    if (fitQueued) return;
+    fitQueued = true;
+    queueMicrotask(() => {
+      fitQueued = false;
+      for (const st of states.values()) if (st.control && st.control.isConnected && !st.fitKey) fitControl(st);
+    });
   }
 
   function removeControl(state) {
@@ -610,6 +654,14 @@
     });
     for (const ev of ["turbo:render", "turbo:load", "pjax:end"]) document.addEventListener(ev, () => queue());
     window.addEventListener("popstate", () => queue());
+    let fitRaf = 0;
+    window.addEventListener("resize", () => {
+      if (fitRaf) return;
+      fitRaf = requestAnimationFrame(() => {
+        fitRaf = 0;
+        for (const st of states.values()) if (st.control && st.control.isConnected) fitControl(st);
+      });
+    });
     setInterval(() => {
       if (location.pathname !== lastPath) {
         refresh();

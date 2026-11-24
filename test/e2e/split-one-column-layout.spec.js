@@ -28,6 +28,7 @@ function probe(page) {
       hdrH: r(hdr).h,
       ctrl: ctrl ? r(ctrl) : null,
       next: ctrl ? r(ctrl.nextElementSibling) : null,
+      prev: ctrl && ctrl.previousElementSibling ? r(ctrl.previousElementSibling) : null,
       buttons,
       rowOverflow: row ? row.scrollWidth - row.clientWidth : null,
       vis,
@@ -55,8 +56,10 @@ for (const kind of KINDS) {
         expect(after.ctrl.h, msg).toBeLessThanOrEqual(29);
         expect(after.style.radius).toBe("6px");
         expect(after.style.border).toBe("1px");
-        if (kind === "classic") expect(Math.abs(after.ctrl.right - after.next.x), msg).toBeLessThanOrEqual(1);
-        else expect(Math.abs(after.next.x - after.ctrl.right - 8), msg).toBeLessThanOrEqual(1);
+        // classic: the … menu is a 32px box with its own 8px padding, so the visible gap is inside it
+        if (kind !== "classic") expect(Math.abs(after.next.x - after.ctrl.right - 8), msg).toBeLessThanOrEqual(1);
+        // 8px to the previous sibling too (the view toggle), also where the parent has no gap (classic)
+        if (after.prev) expect(Math.abs(after.ctrl.x - after.prev.right - 8), msg).toBeLessThanOrEqual(1);
         // same top as the native neighbour in its row
         expect(Math.abs(after.ctrl.y + after.ctrl.h / 2 - (after.next.y + after.next.h / 2)), msg).toBeLessThanOrEqual(1);
         expect(Math.abs(after.hdrH - before.hdrH), msg).toBeLessThanOrEqual(1);
@@ -208,3 +211,24 @@ test("header ≤ 561px wide: GitHub hides its view buttons and the control stays
   expect(m.ctrl).toBeGreaterThan(28);
   await expect(page.locator("[data-ghsoc-control]").first()).toBeVisible();
 });
+
+// Classic header of a file without the view toggle (new files): the actions row holds only the …
+// menu, 16px high. The 28px control must neither glue to anything nor grow the stacked header.
+for (const w of [1500, 390]) {
+  test(`classic header with only the … menu at ${w}px: the header keeps its height, 8px to the menu`, async ({ context, page }) => {
+    await page.setViewportSize({ width: w, height: 900 });
+    const files = sampleFiles().map((f) => ({ ...f, noToggle: true }));
+    const { url } = await setup(context, "classic", files, { storage: { ghsocEnabled: false } });
+    await page.goto(url);
+    await page.waitForTimeout(300);
+    const before = await probe(page);
+    await context.serviceWorkers()[0].evaluate(() => chrome.storage.local.set({ ghsocEnabled: true }));
+    await expect(page.locator("[data-ghsoc-control]").first()).toBeVisible();
+    const after = await probe(page);
+    const msg = JSON.stringify({ before, after });
+    expect(after.prev, msg).toBeNull();
+    expect(Math.abs(after.hdrH - before.hdrH), msg).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.next.x - after.ctrl.right), msg).toBeLessThanOrEqual(1); // the menu's own padding is the gap
+    expect(after.ctrl.h, msg).toBeGreaterThanOrEqual(27);
+  });
+}
