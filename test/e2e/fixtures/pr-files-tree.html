@@ -15,7 +15,7 @@
     extra=N        adds N generated files under vendor/lib/ (the 108-file folder of the issue's boards)
     extraDir=a/b   where the generated files go instead of vendor/lib
     pane=PX        width of the tree pane (default 298; GitHub allows 256-700)
-    revert=1       GitHub reverts a click on "Viewed" 80 ms later
+    revert=1       GitHub reverts a click on "Viewed" 80 ms later (revert=600: 600 ms)
     counter=none   no "N of M files viewed" text; counter=K says M = K
     filter=text    the tree arrives filtered (counter keeps the total)
     naming=next    CSS-module names as GitHub's newer build writes them (Name__hash, no prc- prefix)
@@ -297,7 +297,7 @@
       const was = viewed.has(p);
       if (was) viewed.delete(p); else viewed.add(p);
       paintButton(b, p); paintCounter();
-      if (has("revert")) setTimeout(() => { if (was) viewed.add(p); else viewed.delete(p); paintButton(b, p); paintCounter(); }, 80);
+      if (has("revert")) setTimeout(() => { if (was) viewed.add(p); else viewed.delete(p); paintButton(b, p); paintCounter(); }, Number(q.get("revert")) > 1 ? Number(q.get("revert")) : 80);
     });
     regions.set(p, r);
     diffs.appendChild(r);

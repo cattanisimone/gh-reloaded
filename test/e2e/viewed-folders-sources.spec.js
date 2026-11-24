@@ -124,6 +124,7 @@ test("a text filter applied after arrival never shrinks a count", async ({ conte
   const before = await indicators(page);
   await page.evaluate(() => window.__filter("auth"));
   await expect(page.locator("#tree li[aria-expanded]")).toHaveCount(4); // server, api, src, handlers
+  await settled(page);
   const after = await indicators(page);
   for (const id of Object.keys(after)) expect(after[id]).toEqual(before[id]);
   expect(after["server/api/src/handlers"]).toMatchObject({ count: "1/2" }); // 2 files below, not the 1 the filter shows

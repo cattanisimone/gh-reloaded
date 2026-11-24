@@ -462,7 +462,15 @@
       const ind = content && [...content.children].find((c) => c.classList.contains("ghvf-ind"));
       if (ind) describeRow(li, ind.querySelector(".ghvf-desc").id);
     }
-    if (structural) queue();
+    if (structural) {
+      // Rows mounted or replaced inside the tree get their indicator before the next paint; anything else
+      // on the page (diffs rendering) is debounced.
+      if (observedTree && records.some((r) => r.type === "childList" && !ours(r.target) && observedTree.contains(r.target))) {
+        if (scanTimer) clearTimeout(scanTimer);
+        scanTimer = null;
+        scan();
+      } else queue();
+    }
   }
 
   function start() {

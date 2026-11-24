@@ -70,7 +70,7 @@ test("tick updates every containing folder before the next frame; untick restore
 });
 
 test("a click GitHub reverts is followed: the indicator shows what the button shows", async ({ context, page }) => {
-  await openFiles(context, page, { query: "revert=1" });
+  await openFiles(context, page, { query: "revert=700" });
   await settled(page);
   await page.evaluate(() => [...document.querySelectorAll("#diffs [role=region]")].find((r) => r.querySelector("code").textContent.includes("docs/guide.md")).querySelector("button").click());
   await expect(page.locator('li[id="docs"] .ghvf-ind')).toHaveAttribute("data-state", "viewed"); // optimistic
