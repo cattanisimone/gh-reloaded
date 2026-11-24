@@ -282,6 +282,18 @@ GitHub used to open or close every resolved conversation of a pull request at on
 
 ![Resolved conversations mockup: the bar above the first resolved conversation on a pull request's Conversation tab, collapsed and expanded, fictional repository acme/web.](screenshots/resolved-conversations.svg)
 
+### Split diff: one column — [features/split-one-column](features/split-one-column)
+
+In GitHub's **Split** diff, a file whose changes are all on one side (only added lines, or only deleted lines) still gets a four-column table: half of it is empty, context lines appear twice and long lines wrap early. This shows such a file in one column, like Unified does, for that file only.
+
+- It acts on a pull request's **Files changed**, a single **commit** and a **compare** page, only in Split, and only on the shape GitHub rendered: a four-column table whose changed lines are all on one side. **Additions-only** keeps both line-number columns (old and new) and shows each context line once; **deletions-only** keeps the old numbers. Files with changes on both sides, tables GitHub already shows in one column (new and deleted files on Files changed) and everything in Unified are never touched and get no button.
+- It only hides cells, never moves, removes or re-creates a node: review threads keep their place, full width, with Reply and Resolve, and GitHub's own comment buttons keep working on every visible line. A file with a thread, a comment form or anything else on the side that would be hidden stays in GitHub's Split.
+- Every file it changed gets a small **Side by side** button in its header, immediately left of **Viewed** (Files changed) or of the file's **…** menu (commit and compare). It restores GitHub's Split for that file only and then reads **One column**. It is keyboard reachable and looks like GitHub's own small button, in light and dark; below 768px it shows the icon only, like Viewed. The choice is kept in memory only: a reload is automatic again.
+- Diffs that appear later ("Load diff", lazy loading, switching Split and Unified, moving between pull request tabs) are evaluated when they appear, and a thread that shows up later on the hidden side returns that file to Split. A file whose markup the extension cannot recognise, or whose header has none of the anchors for the button, is left as GitHub rendered it, with no message and no error.
+- Needs no token and no permission: it reads only the diff already in the page and changes only its presentation (no request, nothing stored but the on/off switch). On by default; switch it off under **Settings → Features**.
+
+![Split diff: one column mockup: an additions-only file shown in one column with old and new line numbers and a Side by side button left of Viewed, next to the same file in GitHub's Split, fictional repository acme/web.](screenshots/split-one-column.svg)
+
 ### Image gallery — [features/image-gallery](features/image-gallery)
 
 On a repository image file page (PNG, JPEG, WebP, GIF, and SVG in its Preview view), browse the other images of the same folder in a lightbox, without going back to the folder listing.
