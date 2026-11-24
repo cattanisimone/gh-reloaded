@@ -1,0 +1,85 @@
+/* Split diff: one column for one-sided files. The table is only hidden, never
+   re-laid out: the cells GitHub rendered empty (additions-only) or the right half
+   (deletions-only) are display:none in four-cell rows, plus the matching col and
+   screen-reader th. Full-width rows get their colspan reduced by the script. */
+
+/* additions-only: hide the left text cell (cell 2) */
+table[data-ghsoc="additions"] > tbody > tr > td:nth-child(2):nth-last-child(3),
+table[data-ghsoc="additions"] > tr > td:nth-child(2):nth-last-child(3),
+table[data-ghsoc="additions"] > colgroup > col:nth-child(2),
+table[data-ghsoc="additions"] > thead > tr > th:nth-child(2) {
+  display: none;
+}
+
+/* deletions-only: hide the right number and text cells (cells 3 and 4) */
+table[data-ghsoc="deletions"] > tbody > tr > td:nth-child(3):nth-last-child(2),
+table[data-ghsoc="deletions"] > tbody > tr > td:nth-child(4):nth-last-child(1),
+table[data-ghsoc="deletions"] > tr > td:nth-child(3):nth-last-child(2),
+table[data-ghsoc="deletions"] > tr > td:nth-child(4):nth-last-child(1),
+table[data-ghsoc="deletions"] > colgroup > col:nth-child(n + 3),
+table[data-ghsoc="deletions"] > thead > tr > th:nth-child(n + 3) {
+  display: none;
+}
+
+/* the visible left text cell loses the divider that separated it from the hidden half */
+table[data-ghsoc="deletions"] > tbody > tr > td:nth-child(2):nth-last-child(3) {
+  border-right-width: 0;
+}
+
+table[data-ghsoc] td[data-ghsoc-hidden] {
+  display: none;
+}
+
+/* The per-file button: the look of GitHub's small default button (Viewed), through
+   Primer's own variables so dark mode follows, with the measured light values as
+   fallbacks. 28px high, 6px radius, 1px border, 12px / 500 / 18px. */
+.ghsoc-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  height: 28px;
+  min-width: 28px;
+  margin: 0;
+  padding: 0 8px;
+  border: 1px solid var(--button-default-borderColor-rest, #d1d9e0);
+  border-radius: 6px;
+  background: var(--button-default-bgColor-rest, #f6f8fa);
+  color: var(--button-default-fgColor-rest, #25292e);
+  box-shadow: var(--button-default-shadow-resting, 0 1px 0 rgba(31, 35, 40, 0.04));
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 80ms cubic-bezier(0.33, 1, 0.68, 1), border-color 80ms cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.ghsoc-btn:hover {
+  background: var(--button-default-bgColor-hover, #eff2f5);
+}
+
+.ghsoc-btn:active {
+  background: var(--button-default-bgColor-active, #e6eaef);
+  box-shadow: none;
+}
+
+.ghsoc-btn:focus-visible {
+  outline: 2px solid var(--focus-outlineColor, #0969da);
+  outline-offset: -2px;
+}
+
+.ghsoc-ico {
+  flex: none;
+  fill: currentColor;
+}
+
+/* GitHub's own breakpoint for the Viewed label (≤ 767px viewport): icon only, name kept by aria-label */
+@media (max-width: 767.98px) {
+  .ghsoc-lbl {
+    display: none;
+  }
+}
