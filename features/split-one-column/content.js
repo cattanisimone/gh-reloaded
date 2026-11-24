@@ -62,7 +62,8 @@
   function readCell(td) {
     const cls = typeof td.className === "string" ? td.className : "";
     const kind = M.cellKind({ cls, dcell: td.getAttribute("data-diff-cell") });
-    const cell = { kind, span: td.colSpan || 1, change: null, text: "", foreign: false };
+    // a colspan we reduced is read as GitHub rendered it
+    const cell = { kind, span: Number(td.getAttribute("data-ghsoc-colspan")) || td.colSpan || 1, change: null, text: "", foreign: false };
     if (kind === "text") {
       const inner = td.querySelector("[data-diff-text-inner], .diff-text-inner, .blob-code-inner");
       const code = inner ? inner.closest("code") : null;
@@ -92,7 +93,7 @@
       return {
         inline: true,
         cells: [...tds].map((td) => ({
-          span: td.colSpan || 1,
+          span: Number(td.getAttribute("data-ghsoc-colspan")) || td.colSpan || 1,
           content: !!td.querySelector(FORM) || squash(td.textContent) !== "" || !!td.querySelector("img, svg, details, form"),
         })),
       };
@@ -297,7 +298,9 @@
   function decideAndApply(state) {
     const anchor = findAnchor(state);
     state.info.hasHeader = !!anchor;
-    const d = M.decide(state.info, state.sum);
+    // a hunk row is required when the table is first read; expanding context may later remove the last one
+    if (state.sum.hunks > 0) state.sawHunk = true;
+    const d = M.decide(state.info, state.sawHunk && state.sum.hunks === 0 ? { ...state.sum, hunks: 1 } : state.sum);
     state.decision = d;
     state.table.setAttribute("data-ghsoc-reason", d.reason);
     if (d.outcome !== "one-column") {
@@ -332,6 +335,7 @@
     revertTable(state); // read the markup as GitHub rendered it, not as we hid it
     state.rows = new WeakMap();
     state.sum = M.zero();
+    state.sawHunk = false;
     const declared = declaredCols(table);
     state.info = { declared, rendered: declared === 4 ? renderedCols(table) : declared, hasHeader: false };
     if (declared === 4 && state.info.rendered === 4) {
@@ -458,6 +462,7 @@
     }
     for (const [state, g] of groups) {
       if (!state.table.isConnected) {
+        removeControl(state); // no diff, no way back to offer
         states.delete(state.table);
         continue;
       }

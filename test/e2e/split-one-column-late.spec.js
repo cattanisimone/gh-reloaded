@@ -429,3 +429,50 @@ test.describe("navigation between the routes of a pull request", () => {
     await expect(page.locator("[data-ghsoc-control]").first()).toHaveText("One column");
   });
 });
+
+// Found by the adversarial review: changes to a row the extension already narrowed, and the last hunk row going away.
+for (const kind of KINDS) {
+  test.describe(`${kind}: after the transform`, () => {
+    test("a change inside a narrowed hunk row (expanding context) keeps the file in one column with its button", async ({ context, page }) => {
+      const { url } = await setup(context, kind, sampleFiles());
+      await page.goto(url);
+      await expect.poll(() => modes(page)).toEqual(OUT);
+      const full0 = await count(page, "ghsoc:full");
+      await page.evaluate(() => {
+        for (const i of [0, 1]) document.querySelectorAll("table")[i].querySelector("[data-ghsoc-colspan]").appendChild(document.createTextNode(" (expanded)"));
+      });
+      await expect.poll(() => count(page, "ghsoc:row")).toBeGreaterThan(0);
+      await page.waitForTimeout(300);
+      expect(await modes(page)).toEqual(OUT);
+      expect((await reasons(page)).slice(0, 2)).toEqual(["additions-only", "deletions-only"]);
+      await expect(page.locator("[data-ghsoc-control]")).toHaveCount(3);
+      expect(await count(page, "ghsoc:full")).toBe(full0);
+    });
+
+    test("the last hunk row going away (context fully expanded) does not send the file back to Split", async ({ context, page }) => {
+      const { url } = await setup(context, kind, sampleFiles());
+      await page.goto(url);
+      await expect.poll(() => modes(page)).toEqual(OUT);
+      await page.evaluate(() => document.querySelectorAll("table")[0].querySelector("[data-ghsoc-colspan]").closest("tr").remove());
+      await expect.poll(() => count(page, "ghsoc:rows")).toBeGreaterThan(0);
+      await page.waitForTimeout(300);
+      expect((await modes(page))[0]).toBe("additions");
+      await expect(page.locator("[data-ghsoc-control]")).toHaveCount(3);
+    });
+
+    test("when a file's table is unmounted its button goes too, and a click on nothing records no choice", async ({ context, page }) => {
+      const { url } = await setup(context, kind, sampleFiles());
+      await page.goto(url);
+      await expect.poll(() => modes(page)).toEqual(OUT);
+      const table = page.locator("table").first();
+      await table.evaluate((t) => {
+        window.__saved = t;
+        t.remove();
+      });
+      await expect.poll(() => page.locator("[data-ghsoc-control]").count()).toBe(2);
+      await page.evaluate(() => document.querySelector("[role=region], [data-tagsearch-path]").appendChild(window.__saved));
+      await expect.poll(async () => (await modes(page)).filter(Boolean).length).toBe(3);
+      await expect(page.locator("[data-ghsoc-control]").first()).toHaveText("Side by side");
+    });
+  });
+}
