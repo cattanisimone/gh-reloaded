@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #145 One-sided files in one column (Split)</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa;--add:#dafbe1;--addn:#aceebb;--del:#ffebe9;--deln:#ffcecb;--empty:#f6f8fa;--hunk:#ddf4ff}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px} h3{font-size:15px;margin:16px 0 6px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:13px} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:2px} .scroll{overflow-x:auto} .muted{color:var(--muted)} .ok{color:var(--ok);font-weight:600} .bad{color:var(--bad);font-weight:600}
+  /* mockup */
+  .mk{border:1px solid var(--line);border-radius:6px;overflow:hidden;min-width:560px;background:#fff;margin:8px 0}
+  .mk-h{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--soft);border-bottom:1px solid var(--line);font-size:12px}
+  .mk-h .path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mk-h .stat{color:var(--ok);font-weight:600}
+  .btn{display:inline-flex;align-items:center;gap:4px;height:28px;box-sizing:border-box;padding:0 8px;border:1px solid #d1d9e0;border-radius:6px;background:#f6f8fa;font-weight:500;font-size:12px;line-height:18px;box-shadow:0 1px 0 rgba(31,35,40,.04);white-space:nowrap}
+  .ico{display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;color:var(--muted)}
+  .dt{border-collapse:collapse;width:100%;table-layout:fixed;font:12px/20px ui-monospace,SFMono-Regular,Menlo,monospace}
+  .dt td{border:0;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dt td.n{width:24px;text-align:right;color:var(--muted)} .dt td.e{background:var(--empty)} .dt tr.h td{background:var(--hunk);color:var(--muted)}
+  .dt .a{background:var(--add)} .dt .an{background:var(--addn)} .dt .d{background:var(--del)} .dt .dn{background:var(--deln)} .dt td.l{border-right:1px solid var(--line)}
+  .cap{font-size:13px;color:var(--muted);margin:4px 0 0}
+  .grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:12px} .grid2>*{min-width:0} td code{word-break:break-word} 
+  .pill{display:inline-block;padding:0 6px;border-radius:10px;font-size:12px;border:1px solid var(--line);background:#fff}
+</style></head><body><main>
+
+<h1>#145 · One-sided files in one column in the Split diff</h1>
+<p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/145">cattanisimone/gh-reloaded#145</a> · Size: <b>normal</b> (new UI surface, new feature, new settings switch) · Goal: in Split, a file whose changes are all on one side reads like Unified for that file only, automatically, with a per-file way back.</p>
+
+<h2>What changes for users</h2>
+<ul>
+  <li>On pull request <b>Files changed</b>, single <b>commit</b> and <b>compare</b> pages in <b>Split</b>, a file with only added lines (or only deleted lines) shows in one column: context lines once, GitHub's own highlight, line numbers kept (old + new for additions, old only for deletions).</li>
+  <li>Files with changes on both sides, tables GitHub already shows in one column, and anything in Unified are never touched.</li>
+  <li>Each transformed file gets a small <b>Side by side</b> button in its header (left of <b>Viewed</b>, or left of the <code>…</code> menu on commit/compare). It restores GitHub's Split for that file only and then reads <b>One column</b>. Not stored: a reload is automatic again.</li>
+  <li>Review threads, comment buttons, Reply and Resolve stay GitHub's: the extension only hides cells, it never moves or re-creates a node. A thread on the side that would be hidden keeps the whole file in Split.</li>
+  <li>New switch <b>Split diff: one column for one-sided files</b> under Settings → Features (on by default). No token, no request, no storage beyond the switch.</li>
+</ul>
+
+<h2>Mockup</h2>
+<p class="muted">Fictional file names. Light theme, pull request Files changed at 1280px. Dashed outline = new.</p>
+<div class="grid2">
+  <div class="scroll"><b>Before</b> (GitHub Split, additions-only file)
+    <div class="mk">
+      <div class="mk-h"><span class="ico">⌄</span><span class="path">docs/guide.md</span><span class="stat">+3</span><span class="btn">☐ Viewed</span><span class="ico">💬</span><span class="ico">⋯</span></div>
+      <table class="dt"><colgroup><col style="width:40px"><col><col style="width:40px"><col></colgroup>
+        <tr class="h"><td colspan="4">@@ -6,6 +6,9 @@</td></tr>
+        <tr><td class="n">8</td><td class="l">Each invoice lists one line per plan.</td><td class="n">8</td><td>Each invoice lists one line per plan.</td></tr>
+        <tr><td class="n e"></td><td class="e l"></td><td class="n an">9</td><td class="a">+ A plan line shows the seat count</td></tr>
+        <tr><td class="n e"></td><td class="e l"></td><td class="n an">10</td><td class="a">+ Taxes are shown in a separate line</td></tr>
+        <tr><td class="n">9</td><td class="l">Customers can download invoices…</td><td class="n">11</td><td>Customers can download invoices…</td></tr>
+      </table>
+    </div>
+    <p class="cap">Half the table is empty; context lines appear twice and wrap or clip.</p>
+  </div>
+  <div class="scroll"><b>After</b> (one column, automatic)
+    <div class="mk">
+      <div class="mk-h"><span class="ico">⌄</span><span class="path">docs/guide.md</span><span class="stat">+3</span><span class="btn new">◫ Side by side</span><span class="btn">☐ Viewed</span><span class="ico">💬</span><span class="ico">⋯</span></div>
+      <table class="dt"><colgroup><col style="width:40px"><col style="width:40px"><col></colgroup>
+        <tr class="h"><td colspan="3">@@ -6,6 +6,9 @@</td></tr>
+        <tr><td class="n">8</td><td class="n">8</td><td>Each invoice lists one line per plan.</td></tr>
+        <tr><td class="n e"></td><td class="n an">9</td><td class="a">+ A plan line shows the seat count and the unit price.</td></tr>
+        <tr><td class="n e"></td><td class="n an">10</td><td class="a">+ Taxes are shown in a separate line at the bottom.</td></tr>
+        <tr><td class="n">9</td><td class="n">11</td><td>Customers can download invoices as PDF files.</td></tr>
+      </table>
+    </div>
+    <p class="cap">Left text column hidden; both number columns stay; a thread in a visible cell takes the full width.</p>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="scroll"><b>Deletions-only</b> (after)
+    <div class="mk">
+      <div class="mk-h"><span class="ico">⌄</span><span class="path">notes/legacy-setup.md</span><span class="stat" style="color:var(--bad)">−3</span><span class="btn new">◫ Side by side</span><span class="btn">☐ Viewed</span><span class="ico">⋯</span></div>
+      <table class="dt"><colgroup><col style="width:40px"><col></colgroup>
+        <tr class="h"><td colspan="2">@@ -4,7 +4,4 @@</td></tr>
+        <tr><td class="n">4</td><td>Install the CLI.</td></tr>
+        <tr><td class="n dn">5</td><td class="d">− Run the legacy migration script.</td></tr>
+        <tr><td class="n dn">6</td><td class="d">− Restart the worker by hand.</td></tr>
+        <tr><td class="n">7</td><td>Open the dashboard.</td></tr>
+      </table>
+    </div>
+    <p class="cap">Right number and text columns hidden; old line numbers only.</p>
+  </div>
+  <div class="scroll"><b>After clicking Side by side</b> (that file only)
+    <div class="mk">
+      <div class="mk-h"><span class="ico">⌄</span><span class="path">docs/guide.md</span><span class="stat">+3</span><span class="btn new">☰ One column</span><span class="btn">☐ Viewed</span><span class="ico">⋯</span></div>
+      <table class="dt"><colgroup><col style="width:40px"><col><col style="width:40px"><col></colgroup>
+        <tr class="h"><td colspan="4">@@ -6,6 +6,9 @@</td></tr>
+        <tr><td class="n">8</td><td class="l">Each invoice lists…</td><td class="n">8</td><td>Each invoice lists…</td></tr>
+        <tr><td class="n e"></td><td class="e l"></td><td class="n an">9</td><td class="a">+ A plan line shows…</td></tr>
+      </table>
+    </div>
+    <p class="cap">GitHub's Split exactly as rendered; the button offers to go back. Reload → one column again.</p>
+  </div>
+</div>
+<div class="scroll"><b>Commit / compare header</b> (no Viewed): the button sits immediately left of the file's <code>…</code> menu, after the view buttons.
+  <div class="mk" style="min-width:520px"><div class="mk-h"><span class="ico">⌄</span><span class="path">src/cart/totals.ts</span><span class="stat">+10</span><span class="btn">&lt;&gt;</span><span class="btn new">◫ Side by side</span><span class="ico">⋯</span></div></div>
+</div>
+
+<h3>Header row by width (space-dependent control)</h3>
+<table>
+  <tr><th>Width / variant</th><th>Shown</th><th>Never</th></tr>
+  <tr><td>≥ 800px, all three pages</td><td>Icon + label (“Side by side” / “One column”), 28px high</td><td rowspan="3">Overlap, clipping or shrinking of Viewed, Comment, <code>…</code>, line counts or view buttons; header height change</td></tr>
+  <tr><td>Below the breakpoint where GitHub hides the <b>Viewed</b> label (its <code>hide-on-mobile</code>, measured live)</td><td>Icon only, same breakpoint and same rule as Viewed; accessible name unchanged</td></tr>
+  <tr><td>Compare page, stacked header (GitHub puts actions under the file name below <code>md</code>)</td><td>Stays in the actions row, left of <code>…</code></td></tr>
+</table>
+<p class="muted">The file path is the only thing allowed to give way, and only through GitHub's own truncation (its path section already has <code>overflow:hidden</code>).</p>
+
+<h2>Visual contract</h2>
+<table id="visual-contract">
+  <tr><th>Reference</th><td>Issue mockups (images 1–4 for the table, image 5 for the header control) and the precise native elements next to it: the <b>Viewed</b> button (Primer small default button) on Files changed, the file's <b>More options</b> button on commit pages and the <code>…</code> <code>details</code> menu on compare. For the table, GitHub's own Unified layout of the same file.</td></tr>
+  <tr><th>Anchor</th><td>Control: its border box's right edge sits 8px (the group's own <code>gap</code>) left of the border box of <b>Viewed</b> (Files changed) or of <b>More options</b> (commit); on compare it ends at the left border edge of the <code>…</code> menu, whose own 8px padding then separates it from the icon, and starts 8px after the view buttons' border box. Vertical: same border-box top and height as Viewed / the view buttons. Table: the visible text column's text start (first glyph after the +/− marker) sits right of the last visible line-number column exactly as in GitHub's Unified, not at the hidden column's former position.</td></tr>
+  <tr><th>Width</th><td>Control hugs its content like Viewed: 28px high, padding 0 8px, 16px icon + label (≈ 100px). Table: total width unchanged; the visible text column fills the table minus the visible number columns (80px for additions-only, 40px for deletions-only), widthShare ≥ 0.9 of the table at 1280px; number columns keep their 40px.</td></tr>
+  <tr><th>Responsive</th><td>1500 / 1100 / 800: icon + label, one header row, nothing native moves except by the control's width + 8px. Below GitHub's Viewed-label breakpoint and at 390: icon only, as Viewed. Table at every width: one text column filling the table; no horizontal scroll introduced. Dark theme: colours come from GitHub's own CSS variables, nothing hard-coded except the measured Primer values.</td></tr>
+  <tr><th>Native controls</th><td>Viewed, Comment on this file, More options / <code>…</code>, the source/rich view buttons and the line counts keep their size and order; none clipped, crushed or hidden. GitHub's comment buttons and every review thread stay in their own cells. Two-sided, already-one-column and Unified tables stay untouched with no control.</td></tr>
+  <tr><th>Evidence</th><td>Live logged-in check on the playground repository (factory account; the pages need a session to be in Split): pull request Files changed with additions-only, deletions-only, two-sided and thread-on-hidden-side files, a single commit and a compare page; before and after at the same state, same viewport (1280, then 800 and 390) and theme. Fixture e2e tests are reported separately and are not live evidence.</td></tr>
+  <tr><th>Expected</th><td>Control: height 28 ±1px, radius 6px, border 1px, gap to Viewed / More options 8 ±1px, header height unchanged ±1px at ≥ 800px. Table: table width unchanged ±1px, visible text cell width = table width − visible number columns ±1px (widthShare ≥ 0.9), number columns 40 ±1px, every review thread's width ≥ its width before.</td></tr>
+</table>
+
+<h2>Route matrix</h2>
+<table>
+  <tr><th>Route / view</th><th>Feature</th><th>Way back</th></tr>
+  <tr><td>Pull request Files changed: <code>/pull/N/files</code>, <code>/pull/N/changes</code> (GitHub now redirects <code>files</code> → <code>changes</code>), and a commit range inside it (<code>/pull/N/changes/&lt;sha&gt;…</code>, <code>/pull/N/commits/&lt;sha&gt;</code>)</td><td>Active in Split; control left of Viewed</td><td>Per-file button; or GitHub's Unified switch</td></tr>
+  <tr><td>Single commit <code>/commit/&lt;sha&gt;</code></td><td>Active in Split; control left of <code>…</code></td><td>Per-file button</td></tr>
+  <tr><td>Compare <code>/compare/a...b</code> (classic markup)</td><td>Active in Split; control left of <code>…</code></td><td>Per-file button</td></tr>
+  <tr><td>Any of the above in Unified</td><td>Nothing (3 columns)</td><td>—</td></tr>
+  <tr><td>Conversation tab, Commits list, blob / blame / raw</td><td>Nothing (no diff table of this kind)</td><td>—</td></tr>
+</table>
+<p>Tested transitions: Conversation → Files changed → Conversation → Files changed (client-side), browser back and forward, Split → Unified → Split on the same page. A per-file <b>Side by side</b> choice survives GitHub re-rendering that file on the same page (an automatic default never overrides it) and is forgotten on reload or on leaving the page.</p>
+
+<h2>How it works</h2>
+<div class="scroll"><svg viewBox="0 0 860 210" width="100%" role="img" aria-label="Flow: page mutation, candidate tables, read shape, classify, apply or skip, header control">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#59636e"/></marker></defs>
+  <g font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2328">
+    <rect x="5" y="20" width="150" height="66" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="15" y="42" font-weight="600">GitHub page</text><text x="15" y="60">diff tables appear,</text><text x="15" y="76">re-render, lazy-load</text>
+    <rect x="185" y="20" width="150" height="66" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="195" y="42" font-weight="600">MutationObserver</text><text x="195" y="60">collect changed tables,</text><text x="195" y="76">one rAF batch</text>
+    <rect x="365" y="20" width="150" height="66" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="375" y="42" font-weight="600">read shape (DOM)</text><text x="375" y="60">cols, rows → cells:</text><text x="375" y="76">num/text/empty/hunk</text>
+    <rect x="545" y="20" width="150" height="66" rx="6" fill="#ddf4ff" stroke="#0969da"/><text x="555" y="42" font-weight="600">model.classify()</text><text x="555" y="60">pure, unit-tested,</text><text x="555" y="76">→ {outcome, reason}</text>
+    <rect x="725" y="5" width="130" height="44" rx="6" fill="#dafbe1" stroke="#1a7f37"/><text x="735" y="24" font-weight="600">apply</text><text x="735" y="40">attr on table + CSS</text>
+    <rect x="725" y="60" width="130" height="44" rx="6" fill="#fff" stroke="#d1d9e0"/><text x="735" y="79" font-weight="600">skip / revert</text><text x="735" y="95">reason logged</text>
+    <rect x="545" y="130" width="310" height="66" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/><text x="555" y="152" font-weight="600">header control</text><text x="555" y="170">left of Viewed, else left of the file's … menu;</text><text x="555" y="186">no header anchor → no transform (never without a way back)</text>
+    <line x1="155" y1="53" x2="183" y2="53" stroke="#59636e" marker-end="url(#ar)"/><line x1="335" y1="53" x2="363" y2="53" stroke="#59636e" marker-end="url(#ar)"/><line x1="515" y1="53" x2="543" y2="53" stroke="#59636e" marker-end="url(#ar)"/>
+    <line x1="695" y1="45" x2="723" y2="30" stroke="#59636e" marker-end="url(#ar)"/><line x1="695" y1="62" x2="723" y2="80" stroke="#59636e" marker-end="url(#ar)"/><line x1="790" y1="49" x2="790" y2="128" stroke="#59636e" marker-end="url(#ar)"/>
+  </g></svg></div>
+
+<h3>Anchors observed live (2026-11-24, playground)</h3>
+<table>
+  <tr><th>Page</th><th>Table</th><th>Cell kinds</th><th>Changed line</th></tr>
+  <tr><td>Files changed (React, hashed)</td><td><code>table[aria-label^="Diff for"]</code>, <code>colgroup</code> 4 cols in Split, 3 in Unified</td><td><code>data-diff-cell</code> = <code>line-number|text|empty|hunk</code>, <code>data-diff-side</code>; classes <code>emptyDiffLine__&lt;hash&gt;</code>, <code>diffHunkCell__&lt;hash&gt;</code></td><td><code>code[data-diff-type=addition|deletion]</code>, marker <code>[data-diff-text-marker]</code></td></tr>
+  <tr><td>Commit (React, unhashed)</td><td>same <code>aria-label</code>, 4 / 3 cols</td><td>no <code>data-diff-cell</code>; classes <code>diff-line-number</code>, <code>diff-text-cell</code>, <code>empty-diff-line</code>, <code>diff-hunk-cell</code></td><td><code>code.addition|.deletion</code>, <code>.diff-text-marker</code></td></tr>
+  <tr><td>Compare (classic)</td><td><code>table.diff-table.file-diff-split</code>, 4 cols</td><td><code>blob-num</code>, <code>blob-code</code>, <code>empty-cell</code>; hunk row = 2 cells (1 + colspan 3)</td><td><code>blob-code-addition|deletion</code>, <code>data-code-marker="+|-"</code></td></tr>
+</table>
+<p><b>Detection is by structure first</b>: column count, four-cell rows (positions 1–2 = left, 3–4 = right), a full-width hunk row. Cell kind comes from <code>data-diff-cell</code> when present, else tolerant class markers (<code>/empty-?diff-?line|empty-cell/i</code>, <code>/hunk/i</code>, <code>/addition|deletion/</code>) that match the hashed, the older <code>X-module__name--hash</code>, the unhashed and the classic names. Review threads live <b>inside</b> the text cell on React pages (<code>ReviewThreadContainer</code>), and in <code>tr.inline-comments</code> rows on classic pages: check 4 treats any element in a hidden-side cell other than the line's own <code>code</code>/marker (and GitHub's transient hover comment button) as content. GitHub still renders one-sided <b>modified</b> files with four columns (re-checked 2026-11-24, open question 7 of the issue): the feature is still needed.</p>
+
+<h3>Rules (the issue's table, as implemented by <code>model.classify</code>)</h3>
+<table>
+  <tr><th>#</th><th>Condition</th><th>Outcome / reason</th></tr>
+  <tr><td>1</td><td>3 declared columns, or fewer than 4 rendered (another extension already hid one)</td><td>untouched · <code>already-one-column</code></td></tr>
+  <tr><td>2</td><td>Missing: table, 4-col structure, four-cell rows, a hunk row, the empty-cell marker; or no header anchor for the control</td><td>untouched · <code>anchor-missing</code></td></tr>
+  <tr><td>3</td><td>Changes on both sides / empties on both sides / no empty half</td><td>untouched · <code>two-sided-change</code> / <code>both-sides-empty</code> / <code>no-empty-half</code></td></tr>
+  <tr><td>4</td><td>Hidden side holds anything but empty cells or a plain copy of the other side's context line</td><td>Split · <code>content-on-hidden-side</code></td></tr>
+  <tr><td>5</td><td>Otherwise</td><td>one column · <code>additions-only</code> / <code>deletions-only</code></td></tr>
+</table>
+<p class="muted">The reason is written to <code>data-ghsoc-reason</code> on the table, for tests and for a quick check in DevTools.</p>
+
+<h3>Layout: hide only, never move</h3>
+<ul>
+  <li><code>data-ghsoc="additions|deletions"</code> on the table; <code>content.css</code> hides, in four-cell rows only, cell 2 (additions) or cells 3–4 (deletions), plus the matching <code>col</code> and screen-reader <code>th</code>. Rows GitHub adds later (expanded context) are covered by the same CSS and re-checked by rule 4.</li>
+  <li>Full-width rows (hunk, classic hunk <code>colspan=3</code>) get <code>colspan</code> reduced to the visible count; the original value is kept in <code>data-ghsoc-colspan</code> and restored on revert. This is the only attribute written on GitHub's nodes.</li>
+  <li>Revert (button, rule 4 on a later evaluation, Unified, feature off) removes the attribute and restores colspans: GitHub's Split exactly as rendered.</li>
+  <li>Per table: one pass over rows, no network, no layout reads beyond the first row's rendered column count. A signature (row count + col count) skips tables that did not change; no scroll listener.</li>
+</ul>
+
+<h3>Per-file state</h3>
+<div class="scroll"><svg viewBox="0 0 860 120" width="100%" role="img" aria-label="States: untouched, one column, split by user">
+  <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#59636e"/></marker></defs>
+  <g font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" fill="#1f2328">
+    <rect x="10" y="35" width="170" height="44" rx="22" fill="#fff" stroke="#d1d9e0"/><text x="30" y="55" font-weight="600">untouched</text><text x="30" y="71">no control</text>
+    <rect x="340" y="35" width="170" height="44" rx="22" fill="#dafbe1" stroke="#1a7f37"/><text x="360" y="55" font-weight="600">one column</text><text x="360" y="71">button: Side by side</text>
+    <rect x="670" y="35" width="180" height="44" rx="22" fill="#f6f8fa" stroke="#0969da"/><text x="690" y="55" font-weight="600">split (user)</text><text x="690" y="71">button: One column</text>
+    <line x1="180" y1="48" x2="338" y2="48" stroke="#59636e" marker-end="url(#a2)"/><text x="200" y="40">rule 5 (auto)</text>
+    <line x1="338" y1="68" x2="182" y2="68" stroke="#59636e" marker-end="url(#a2)"/><text x="190" y="92">rule 1–4 later, Unified, off</text>
+    <line x1="510" y1="48" x2="668" y2="48" stroke="#59636e" marker-end="url(#a2)"/><text x="535" y="40">click Side by side</text>
+    <line x1="668" y1="68" x2="512" y2="68" stroke="#59636e" marker-end="url(#a2)"/><text x="535" y="92">click One column (re-checked)</text>
+  </g></svg></div>
+<p class="muted">The user's choice is kept in memory per page URL + file path, so GitHub re-rendering the file does not undo it; reload or navigation forgets it.</p>
+
+<h2>Changes by file</h2>
+<table>
+  <tr><th>File</th><th>Change</th><th>Why</th></tr>
+  <tr><td><code>features/split-one-column/model.js</code> (new)</td><td>Pure rules: <code>isRoute(pathname)</code>, <code>classify(shape)</code> → <code>{outcome, reason, hide}</code>, cell-kind markers. <code>globalThis.GHSOC_MODEL</code>.</td><td>Unit-testable decision table, no DOM</td></tr>
+  <tr><td><code>features/split-one-column/content.js</code> (new)</td><td>Read each table into a shape (three markups), apply/revert, header control, observer, <code>ghsocEnabled</code> switch (live via <code>storage.onChanged</code>)</td><td>Content-script half; no background half (no request)</td></tr>
+  <tr><td><code>features/split-one-column/content.css</code> (new)</td><td>Hiding rules keyed on <code>data-ghsoc</code>; control styled from the measured Viewed button (28px, 6px radius, 1px <code>#d1d9e0</code>, <code>#f6f8fa</code>, 12px/500/18px, 0 8px, shadow, hover/active darker, 2px <code>#0969da</code> focus ring at −2px), via Primer variables for dark mode</td><td>Native look</td></tr>
+  <tr><td><code>manifest.json</code> ⚑ shared</td><td>Add the three files to the existing <code>https://github.com/*</code> entry (image gallery / resolved conversations)</td><td>Same matches; routes gated in <code>isRoute</code></td></tr>
+  <tr><td><code>options/options.html</code>, <code>options/options.js</code> ⚑ shared</td><td>One Features row + switch <code>feature-ghsoc</code>, <code>{ key: "ghsocEnabled", defaultOn: true }</code>; no Configure link</td><td>Feature can be turned off</td></tr>
+  <tr><td><code>README.md</code>, <code>PRIVACY.md</code></td><td>Features section entry; <code>ghsocEnabled</code> in the stored preferences list (nothing else stored)</td><td>Docs in sync</td></tr>
+  <tr><td><code>screenshots/split-one-column.svg</code> (new)</td><td>Before/after mockup, fictional data</td><td>Visible change</td></tr>
+  <tr><td><code>test/unit/manifest.test.js</code> (only if needed), <code>test/unit/module-classes.test.js</code></td><td>Add the new files to the no-<code>-module__</code> check</td><td>Guard against prefix selectors</td></tr>
+</table>
+
+<h2>Data, permissions, privacy</h2>
+<p>Token permissions: <b>none</b>. No request, no token, no new permission. Reads only the diff already in the page and changes only its presentation. Stored: the on/off switch <code>ghsocEnabled</code> (default on), like every feature; the per-file choice is never stored.</p>
+
+<h2>Test plan</h2>
+<p class="muted">Fixtures (built from the live probe, real class names, fictional content): <code>pr-changes-split.html</code> (React hashed: additions-only, deletions-only, two-sided, 3-col deleted file, additions-only with a thread on a visible line, renamed additions-only with a thread on the hidden left side), <code>commit-split.html</code> (React unhashed: modified + new file), <code>compare-split.html</code> (classic), <code>pr-changes-unified.html</code>. Specs: <code>split-one-column.spec.js</code>, <code>split-one-column-layout.spec.js</code>, <code>split-one-column-late.spec.js</code>; unit: <code>split-one-column-model.test.js</code>.</p>
+<div class="scroll"><table>
+  <tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
+  <tr><td>1 Additions-only → one column, old+new numbers, context once, highlight kept</td><td>unit + e2e</td><td><code>classify: additions-only</code>; <code>Files changed: additions-only file in one column</code></td></tr>
+  <tr><td>2 Deletions-only → old numbers only</td><td>unit + e2e</td><td><code>classify: deletions-only</code>; <code>Files changed: deletions-only file keeps old numbers only</code></td></tr>
+  <tr><td>3 Commit + compare, modified and new files</td><td>e2e</td><td><code>commit page: one-sided and new files</code>; <code>compare page (classic): one-sided and new files</code></td></tr>
+  <tr><td>4 Thread on a visible line keeps position, full width, Reply, Resolve</td><td>e2e (layout)</td><td><code>thread stays in its cell, is at least as wide, Reply/Resolve visible</code></td></tr>
+  <tr><td>5 Control placement, toggle, reload resets</td><td>e2e (layout)</td><td><code>control left of Viewed with 8px gap</code>; <code>control left of … on commit/compare</code>; <code>Side by side restores Split for that file only, One column goes back</code>; <code>reload is automatic again</code>; <code>keyboard: Tab reaches it, focus ring, name and description</code>; <code>size/radius/border/hover match Viewed</code></td></tr>
+  <tr><td>6 Late diffs (Load diff, lazy, Split↔Unified, SPA)</td><td>e2e (late)</td><td><code>table inserted later is evaluated</code>; <code>Unified then Split re-evaluates</code>; <code>Conversation → Files changed → back/forward</code>; <code>thread appearing on hidden side reverts</code>; <code>user's Split survives a re-render</code></td></tr>
+  <tr><td>7 Feature off → GitHub's diff</td><td>e2e</td><td><code>switch off: nothing changes</code>; <code>switching off live reverts</code></td></tr>
+  <tr><td>8 Two-sided → Split, no control</td><td>unit + e2e</td><td><code>classify: two-sided-change</code></td></tr>
+  <tr><td>9 Already one column / Unified → untouched</td><td>unit + e2e</td><td><code>classify: already-one-column</code>; <code>Unified page untouched</code>; <code>table with a column already hidden is untouched</code></td></tr>
+  <tr><td>10 Anchor missing → untouched</td><td>unit + e2e</td><td><code>classify: anchor-missing</code> (empty marker renamed, no hunk row, 3-cell rows); <code>no header anchor → no transform</code></td></tr>
+  <tr><td>11 Content on hidden side → Split, no control</td><td>unit + e2e</td><td><code>classify: content-on-hidden-side</code> (thread, form, differing text); <code>renamed file with thread on left stays in Split</code></td></tr>
+  <tr><td>12 No node moved/removed/re-created; comment buttons work</td><td>e2e</td><td>MutationObserver in the test records childList changes on the table: none by the extension; node identity of every cell and thread before = after; comment button clickable on a visible line</td></tr>
+  <tr><td>13 No request, token or storage</td><td>e2e</td><td>All requests logged: none from the extension; storage diff: nothing written</td></tr>
+  <tr><td>14 2,500-line file ≤ 100 ms, no long task on scroll</td><td>unit + e2e + manual</td><td><code>classify 2,500 rows</code> (budget); e2e reads the feature's own <code>performance.measure</code> for a generated 2,500-row table (≤ 100 ms) and asserts no evaluation runs while scrolling; manual check in the performance panel on a laptop</td></tr>
+  <tr><td>Anchors in every naming</td><td>unit + e2e</td><td>Same fixture in hashed <code>Name__hash</code>, older <code>X-module__name--hash</code>, unhashed and classic naming; assert the primary anchor (<code>data-diff-cell</code> / structure) is used on current markup and the Viewed anchor (not the <code>…</code> one) on Files changed</td></tr>
+</table></div>
+<p><b>Live check:</b> probed 2026-11-24 with the factory account on the playground (pages need a session for Split): Files changed of four seed pull requests, one commit and one compare page. Found the three markups above, threads inside text cells (React) and <code>tr.inline-comments</code> (classic), the Viewed button (28px small default) and the header rows (gap 8px), and that one-sided modified files are still four-column. Deleted files on Files changed are already three-column. The same pages are re-measured after implementation (contract above).</p>
+
+<h2>Assumptions (product choices the issue left open)</h2>
+<ul>
+  <li>On by default, like the other no-permission features — rejected: opt-in, because the issue calls one column “automatic”.</li>
+  <li>Button text is the action (“Side by side” / “One column”, with a columns / rows icon); state exposed by <code>aria-describedby</code> (“Shown in one column” / “Shown side by side”) — rejected: <code>aria-pressed</code> with a changing label, because a pressed state on a label that flips reads backwards to screen readers.</li>
+  <li>A commit range inside a pull request (<code>/pull/N/changes/&lt;sha&gt;</code>, <code>/pull/N/commits/&lt;sha&gt;</code>) counts as Files changed — rejected: excluding it, because it is the same view and markup.</li>
+  <li>No header anchor → no transform (<code>anchor-missing</code>) — rejected: one column without the button, because the user must always have the way back.</li>
+  <li>Below GitHub's Viewed-label breakpoint the control shows its icon only, as Viewed does — rejected: hiding it, because the way back must stay.</li>
+</ul>
+
+<h2>Risks and open questions</h2>
+<ul>
+  <li>Hiding a <code>col</code> plus cells in a fixed-layout table must not shift cells into the wrong column (default: <code>display:none</code> on cell, <code>col</code> and <code>th</code> plus colspan; the layout test asserts every column's x and width).</li>
+  <li>React may reset a <code>colspan</code> we changed when it re-renders (default: re-evaluate on mutation; signature includes the hunk colspans).</li>
+  <li>Refined GitHub's same feature hides cells without changing <code>col</code> count (default: rule 1 also counts rendered columns; verified manually with both installed, issue open question 4).</li>
+  <li>Reply/Resolve clicked on a transformed file and the 100 ms budget are live/manual checks (default: report in the PR's Live check; a CI timing assertion carries its measurement in the failure message).</li>
+  <li>GitHub may make modified files one-column natively (default: rule 1 then leaves every table alone; the feature becomes a no-op).</li>
+</ul>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Changing GitHub's Split/Unified preference or the layout of two-sided files.</li>
+  <li>Changing the comments interface; any persistence of the per-file choice.</li>
+  <li>Pages other than pull request Files changed, single commit and compare (Conversation-tab snippets, blob, blame).</li>
+</ul>
+
+</main></body></html>
