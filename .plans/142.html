@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan · #142 Viewed per folder</title>
+<style>
+  :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--accent:#0969da;--ok:#1a7f37;--bad:#d1242f;--bg:#fff;--soft:#f6f8fa}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:24px 16px}
+  main{max-width:900px;margin:0 auto} h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+  h3{font-size:15px;margin:16px 0 6px}
+  .meta{color:var(--muted)} table{border-collapse:collapse;width:100%;font-size:14px} th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  td code{word-break:break-word} th{background:var(--soft)} code{background:var(--soft);padding:1px 4px;border-radius:4px;font-size:13px} .box{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--soft)}
+  .new{outline:2px dashed var(--accent);outline-offset:1px;border-radius:3px} .scroll{overflow-x:auto}
+  .tag{display:inline-block;font-size:12px;border-radius:2em;padding:0 8px;border:1px solid var(--line);color:var(--muted)}
+  /* mockup of GitHub's file tree (new Files changed page) */
+  .boards{display:flex;gap:16px;flex-wrap:wrap}
+  .pane{width:290px;border:1px solid var(--line);border-radius:6px;padding:8px 4px;background:#fff;color:#1f2328;font-size:14px;line-height:21px}
+  .pane.dark{background:#0d1117;border-color:#3d444d;color:#f0f6fc}
+  .cap{font-size:12px;color:var(--muted);margin:0 0 4px}
+  .row{display:grid;grid-template-columns:16px 1fr;height:32px;align-items:center;border-radius:6px}
+  .row.sel{background:#818b981f}
+  .chev{color:#59636e;font-size:10px;text-align:center} .dark .chev{color:#9198a1}
+  .cnt{display:flex;align-items:center;gap:8px;padding:0 8px;min-width:0}
+  .ico{width:16px;height:16px;flex:none}
+  .lbl{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ind{flex:none;display:flex;align-items:center;gap:4px;font-size:12px;line-height:16px;font-variant-numeric:tabular-nums;color:#59636e}
+  .dark .ind{color:#9198a1}
+  .pill{width:28px;height:8px;border-radius:4px;background:#d1d9e0} .dark .pill{background:#3d444d}
+  .tip{position:relative}
+  .tip::after{content:attr(data-tip);position:absolute;right:0;top:22px;white-space:nowrap;background:#25292e;color:#fff;font-size:12px;padding:2px 8px;border-radius:6px;z-index:1}
+  .dark .tip::after{background:#f0f6fc;color:#1f2328}
+  .l1{padding-left:0}.l2{padding-left:16px}.l3{padding-left:32px}
+  svg.g{display:block}
+  .legend td:first-child{white-space:nowrap}
+  @media (max-width:640px){.pane{width:100%}}
+</style></head><body><main>
+
+<h1>#142 · Viewed count per folder in the Files changed file tree</h1>
+<p class="meta"><a href="https://github.com/cattanisimone/gh-reloaded/issues/142">cattanisimone/gh-reloaded#142</a> · Size: <b>normal</b> (new UI surface, new background read) · Goal: every folder row of the new Files changed tree says, read-only, how many of the changed files below it the signed-in user marked “Viewed”.</p>
+
+<h2>What changes for users</h2>
+<ul>
+  <li>Each folder row in the file tree gets a small indicator at its right edge: <b>✓</b> all viewed, a <b>partial ring + 3/7</b>, an <b>empty ring + 0/3</b>. A parent counts every file below it at any depth.</li>
+  <li>Ticking GitHub’s own “Viewed” button updates every containing folder at once; collapsing, expanding and filtering change nothing.</li>
+  <li>With a token already configured, one read-only GraphQL read makes counts exact on large pull requests; without one, the rendered “Viewed” buttons are used and folders that cannot be proven show a <b>dashed ring</b> (<code>2+/108</code>) instead of a guess.</li>
+  <li>Nothing is written to GitHub, no native control is clicked, no token permission is added. A new <b>Viewed per folder</b> switch in Settings → Features (on by default).</li>
+</ul>
+
+<h2>Mockup</h2>
+<p class="cap">Follows the issue’s boards (variant A). Fictional repository <code>acme/web</code>. New parts are outlined in blue; file rows and every native element stay as they are.</p>
+<div class="boards">
+  <div>
+    <p class="cap"><b>Light</b> · exact states (API read or all diffs rendered)</p>
+    <div class="pane">
+      <div class="row l1"><span class="chev">⌄</span><span class="cnt"><svg class="ico" viewBox="0 0 16 16"><path fill="#54aeff" d="M0 2.75C0 1.78.78 1 1.75 1H5c.55 0 1.07.26 1.4.7l.9 1.2c.05.06.12.1.2.1h6.75c.97 0 1.75.78 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Z"/></svg><span class="lbl">server</span><span class="ind new" role="img" aria-label="4 of 108 files viewed"><svg class="g" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#d1d9e0" stroke-width="2"/><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2" stroke-dasharray="1.4 37.7" transform="rotate(-90 8 8)"/></svg>4/108</span></span></div>
+      <div class="row l2"><span class="chev">⌄</span><span class="cnt"><svg class="ico" viewBox="0 0 16 16"><path fill="#54aeff" d="M0 2.75C0 1.78.78 1 1.75 1H5c.55 0 1.07.26 1.4.7l.9 1.2c.05.06.12.1.2.1h6.75c.97 0 1.75.78 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Z"/></svg><span class="lbl">api/src</span><span class="ind new tip" data-tip="3 of 4 files viewed"><svg class="g" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#d1d9e0" stroke-width="2"/><circle cx="8" cy="8" r="6" fill="none" stroke="#1a7f37" stroke-width="2" stroke-dasharray="28.3 37.7" transform="rotate(-90 8 8)"/></svg>3/4</span></span></div>
+      <div class="row l3 sel"><span class="chev">⌄</span><span class="cnt"><svg class="ico" viewBox="0 0 16 16"><path fill="#54aeff" d="M0 2.75C0 1.78.78 1 1.75 1H5c.55 0 1.07.26 1.4.7l.9 1.2c.05.06.12.1.2.1h6.75c.97 0 1.75.78 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Z"/></svg><span class="lbl">handlers</span><span class="ind new"><svg class="g" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#1a7f37"/><path d="M4.8 8.2 7 10.3l4.2-4.4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span></div>
+      <div class="row l3"><span></span><span class="cnt" style="padding-left:24px"><svg class="ico" viewBox="0 0 16 16"><rect x="2.5" y="1.5" width="11" height="13" rx="1.5" fill="none" stroke="#1a7f37"/></svg><span class="lbl">auth.rs</span></span></div>
+      <div class="row l3"><span></span><span class="cnt" style="padding-left:24px"><svg class="ico" viewBox="0 0 16 16"><rect x="2.5" y="1.5" width="11" height="13" rx="1.5" fill="none" stroke="#9a6700"/></svg><span class="lbl">routes.rs</span></span></div>
+      <div class="row l2"><span class="chev">›</span><span class="cnt"><svg class="ico" viewBox="0 0 16 16"><path fill="#54aeff" d="M0 2.75C0 1.78.78 1 1.75 1H5c.55 0 1.07.26 1.4.7l.9 1.2c.05.06.12.1.2.1h6.75c.97 0 1.75.78 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Z"/></svg><span class="lbl">storage_backend_migrations</span><span class="ind new"><svg class="g" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#d1d9e0" stroke-width="2"/></svg>0/3</span></span></div>
+    </div>
+  </div>
+  <div>
+    <p class="cap"><b>Dark</b> · loading, then degraded (no token, 9 of 210 diffs rendered)</p>
+    <div class="pane dark">
+      <div class="row l1"><span class="chev">⌄</span><span class="cnt"><svg class="ico" viewBox="0 0 16 16"><path fill="#54aeff" d="M0 2.75C0 1.78.78 1 1.75 1H5c.55 0 1.07.26 1.4.7l.9 1.2c.05.06.12.1.2.1h6.75c.97 0 1.75.78 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Z"/></svg><span class="lbl">server</span><span class="ind new"><span class="pill"></span></span></span></div>
+      <div class="row l2"><span class="chev">⌄</span><span class="cnt"><svg class="ico" viewBox="0 0 16 16"><path fill="#54aeff" d="M0 2.75C0 1.78.78 1 1.75 1H5c.55 0 1.07.26 1.4.7l.9 1.2c.05.06.12.1.2.1h6.75c.97 0 1.75.78 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Z"/></svg><span class="lbl">api/src</span><span class="ind new"><span class="pill"></span></span></span></div>
+      <div class="row l1" style="margin-top:6px;border-top:1px dashed #3d444d;border-radius:0"><span class="chev">⌄</span><span class="cnt"><svg class="ico" viewBox="0 0 16 16"><path fill="#54aeff" d="M0 2.75C0 1.78.78 1 1.75 1H5c.55 0 1.07.26 1.4.7l.9 1.2c.05.06.12.1.2.1h6.75c.97 0 1.75.78 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Z"/></svg><span class="lbl">server</span><span class="ind new tip" data-tip="At least 2 of 108 files viewed; …"><svg class="g" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#9198a1" stroke-width="1.5" stroke-dasharray="2.2 2"/></svg>2+/108</span></span></div>
+      <div class="row l2" style="margin-top:14px"><span class="chev">⌄</span><span class="cnt"><svg class="ico" viewBox="0 0 16 16"><path fill="#54aeff" d="M0 2.75C0 1.78.78 1 1.75 1H5c.55 0 1.07.26 1.4.7l.9 1.2c.05.06.12.1.2.1h6.75c.97 0 1.75.78 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Z"/></svg><span class="lbl">api/src</span><span class="ind new"><svg class="g" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#3d444d" stroke-width="2"/><circle cx="8" cy="8" r="6" fill="none" stroke="#3fb950" stroke-width="2" stroke-dasharray="18.8 37.7" transform="rotate(-90 8 8)"/></svg>2/4</span></span></div>
+      <div class="row l2"><span class="chev">⌄</span><span class="cnt"><svg class="ico" viewBox="0 0 16 16"><path fill="#54aeff" d="M0 2.75C0 1.78.78 1 1.75 1H5c.55 0 1.07.26 1.4.7l.9 1.2c.05.06.12.1.2.1h6.75c.97 0 1.75.78 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Z"/></svg><span class="lbl">vendor</span><span class="ind new"><svg class="g" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#9198a1" stroke-width="1.5" stroke-dasharray="2.2 2"/></svg>?/99</span></span></div>
+    </div>
+  </div>
+</div>
+
+<h3>States (exactly the issue’s table)</h3>
+<table class="legend">
+  <tr><th>State</th><th>When</th><th>Shown</th><th>Tooltip = accessible description</th></tr>
+  <tr><td>Viewed</td><td>all files below known and viewed</td><td>filled check circle, success</td><td>All 4 files viewed</td></tr>
+  <tr><td>Partial</td><td>all known, 1 ≤ viewed &lt; total</td><td>ring with arc ∝ share + <code>3/7</code></td><td>3 of 7 files viewed</td></tr>
+  <tr><td>To view</td><td>all known, none viewed</td><td>empty muted ring + <code>0/3</code></td><td>0 of 3 files viewed</td></tr>
+  <tr><td>Loading</td><td>API read in flight and the folder is not fully known</td><td>static grey pill</td><td>Reading viewed state of 108 files</td></tr>
+  <tr><td>Unknown part</td><td>≥ 1 file below unknown</td><td>dashed ring + <code>2+/108</code>, <code>?/108</code>; <code>2+/?</code> or <code>?</code> when the folder’s file list itself is not proven</td><td>At least 2 of 108 files viewed; the state of 99 files cannot be read</td></tr>
+</table>
+
+<h2>Visual contract</h2>
+<table id="visual-contract">
+  <tr><th>Reference</th><td>The issue’s approved mockup boards (variant A, <code>142-image-viewed-per-folder-states.png</code> and <code>…-loading-unknown.png</code>): indicator at the right edge of each folder row, vertically centred. Measured against the native folder row of the new Files changed tree (Primer TreeView), probed live on 2026-11-24: row 32px, content element padding <code>0 8px</code>, <code>gap: 8px</code>, label 14px/21px, flex <code>1 1 auto</code>, truncated with an ellipsis.</td></tr>
+  <tr><th>Anchor</th><td>The indicator is the last child of the row’s content element (the element the folder <code>treeitem</code>’s <code>aria-labelledby</code> names; class part <code>TreeView-item-content</code> as second choice). Its <b>right border box edge</b> sits on the content element’s inner right edge (8px from the row’s right border edge); its border box is centred on the label’s text line (same vertical centre as the first glyph of the folder name). Not the <code>li</code> box, which is 64px+ tall when expanded because it holds the nested group.</td></tr>
+  <tr><th>Width</th><td>Hugs its content: glyph 16px + 4px + count (12px tabular numbers, about 22–50px), so 16px for Viewed, about 38–70px otherwise. The folder label keeps the rest of the row (flex 1) and truncates first with GitHub’s own ellipsis; the gap between label and indicator is the row’s own 8px gap, no margin added.</td></tr>
+  <tr><th>Responsive</th><td>1500 / 1100 px: tree pane visible, indicator on every folder row. 800 px and 390 px: the tree is a drawer/hidden pane; when opened it shows the same indicators. At every width and every nesting depth: row height stays 32px, the indicator never wraps or overlaps the label, the label truncates instead; a resized (narrower) tree pane behaves the same.</td></tr>
+  <tr><th>Native controls</th><td>Kept unchanged: chevron, folder icon, label left edge (0 ±1px before/after), row height, selected/hover background, file rows (no indicator), the “N of M files viewed” counter, per-file “Viewed” buttons, the filter box and the “Viewed files” filter. Unacceptable: a clipped or hidden chevron/icon, a label pushed or overlapped, a taller row.</td></tr>
+  <tr><th>Evidence</th><td>Before (done, live logged-in, read-only, 1280×900, light and dark): public pull requests rust-lang/rust#166114 (210 files) and cattanisimone/gh-reloaded#141 (35 files). After (IMPLEMENT): the same pages and the same viewport and state with the extension loaded unpacked; ticking “Viewed” live only on the factory account’s own playground pull request. The API path and private repositories are <i>Not verified on live github.com</i> (no user token in the probe browser). Fixture tests separately: <code>viewed-folders-layout.spec.js</code> on <code>pr-files-tree.html</code>.</td></tr>
+  <tr><th>Expected</th><td>Indicator right edge − content inner right edge: 0 ±1px on every folder row; vertical centre − label text centre: 0 ±1px; row height 32 ±0px; label first-glyph x unchanged 0 ±1px; label right → indicator left ≥ 8 −1px; glyph 16×16 ±0px; count 12px, <code>tabular-nums</code>; success <code>#1a7f37</code> / <code>#3fb950</code>; glyph and count contrast ≥ 3:1 on the row in rest, hover and selected states, light and dark.</td></tr>
+</table>
+
+<h2>Route matrix</h2>
+<table>
+  <tr><th>Route / view</th><th>Indicator</th><th>Back</th></tr>
+  <tr><td><code>/pull/N/files</code> and <code>/pull/N/changes</code> (new Files changed page)</td><td>yes, every folder row</td><td>tab bar</td></tr>
+  <tr><td>Commit-range or single-commit views (<code>/files/a..b</code>, <code>/changes/&lt;sha&gt;</code>, <code>/commits/&lt;sha&gt;</code>)</td><td>none (assumption 5)</td><td>“All commits” / tab bar</td></tr>
+  <tr><td>Conversation, Commits, Checks</td><td>none; indicators removed, state dropped</td><td>tab bar</td></tr>
+  <tr><td>Classic Files changed page (tree items with <code>file-tree-item-diff-…</code> ids, no <code>li[aria-expanded]</code>)</td><td>none, no error</td><td>—</td></tr>
+  <tr><td>Another pull request</td><td>fresh state; nothing carried over</td><td>back / forward re-reads</td></tr>
+</table>
+
+<h2>How it works</h2>
+<div class="scroll"><svg viewBox="0 0 860 250" width="100%" role="img" aria-label="Data flow: page tree and native Viewed buttons plus an optional GraphQL read feed a per-file state map, folders are counted from it and rendered">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#59636e"/></marker></defs>
+  <g font-size="12" font-family="system-ui,sans-serif" fill="#1f2328">
+    <rect x="10" y="10" width="220" height="64" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="20" y="30" font-weight="600">File tree (role=tree “File Tree”)</text>
+    <text x="20" y="47">file li id = path, a[href=#diff-…]</text><text x="20" y="63">folders li[aria-expanded][id]</text>
+    <rect x="10" y="90" width="220" height="64" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="20" y="110" font-weight="600">Native “Viewed” buttons</text>
+    <text x="20" y="127">region#diff-… button[aria-pressed]</text><text x="20" y="143">aria-label “Viewed” / “Not Viewed”</text>
+    <rect x="10" y="170" width="220" height="64" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="20" y="190" font-weight="600">Native counter</text><text x="20" y="207">“N of M files viewed” → total M</text><text x="20" y="223">(proves the tree list is complete)</text>
+    <rect x="300" y="60" width="230" height="120" rx="6" fill="#ddf4ff" stroke="#0969da"/>
+    <text x="312" y="82" font-weight="600">content.js + model.js</text>
+    <text x="312" y="100">paths (remembered per PR,</text><text x="312" y="115">survive collapse and filters)</text>
+    <text x="312" y="134">state[path] = viewed | not | unknown</text><text x="312" y="150">newest observation wins</text>
+    <text x="312" y="168">count per folder prefix → state</text>
+    <rect x="600" y="10" width="250" height="80" rx="6" fill="#f6f8fa" stroke="#d1d9e0"/>
+    <text x="612" y="30" font-weight="600">background/viewed-folders.js</text>
+    <text x="612" y="48">GHVF_FETCH; only if a token resolves</text><text x="612" y="64">for the owner, else no request</text><text x="612" y="80">files(first:100) paginated, fresh</text>
+    <rect x="600" y="110" width="250" height="40" rx="6" fill="#fff" stroke="#d1d9e0"/>
+    <text x="612" y="134">api.github.com/graphql (query only)</text>
+    <rect x="600" y="170" width="250" height="64" rx="6" fill="#dafbe1" stroke="#1a7f37"/>
+    <text x="612" y="190" font-weight="600">Render on folder rows</text><text x="612" y="207">span.ghvf role=img aria-hidden, id</text><text x="612" y="223">+ id appended to aria-describedby</text>
+    <g stroke="#59636e" fill="none" marker-end="url(#a)"><path d="M230 42 C265 42 265 90 298 95"/><path d="M230 122 L298 122"/><path d="M230 202 C265 202 265 160 298 155"/><path d="M530 85 L598 55"/><path d="M725 90 L725 108"/><path d="M600 70 C570 70 560 100 532 105" stroke-dasharray="4 3"/><path d="M530 160 L598 195"/></g>
+    <text x="540" y="110" font-size="11" fill="#59636e">{path, viewed}[]</text>
+  </g>
+</svg></div>
+<div class="scroll"><svg viewBox="0 0 860 120" width="100%" role="img" aria-label="Timeline: page load, API read in flight shows Loading, API result merged, tick updates in the same frame">
+  <g font-size="12" font-family="system-ui,sans-serif" fill="#1f2328">
+    <line x1="20" y1="40" x2="840" y2="40" stroke="#d1d9e0" stroke-width="2"/>
+    <circle cx="40" cy="40" r="5" fill="#0969da"/><text x="20" y="64">arrive on /files</text><text x="20" y="80" fill="#59636e">scan tree + buttons</text>
+    <circle cx="230" cy="40" r="5" fill="#0969da"/><text x="200" y="64">token? send read (t0)</text><text x="200" y="80" fill="#59636e">not fully known → Loading</text>
+    <circle cx="450" cy="40" r="5" fill="#1a7f37"/><text x="410" y="64">API result</text><text x="410" y="80" fill="#59636e">applies unless a button changed after t0</text>
+    <circle cx="650" cy="40" r="5" fill="#1a7f37"/><text x="610" y="64">aria-pressed flips</text><text x="610" y="80" fill="#59636e">MutationObserver → render now, no debounce</text>
+    <circle cx="820" cy="40" r="5" fill="#59636e"/><text x="740" y="100">leave route: remove, reset</text>
+    <text x="20" y="22" fill="#59636e">Tree/diff mutations: debounced scan (150ms). No token or read failed (401/403/404/empty/timeout 20s): silent, page source only.</text>
+  </g>
+</svg></div>
+<ul>
+  <li><b>Live markup (probed 2026-11-24, signed in, read-only):</b> <code>ul[role=tree][aria-label="File Tree"]</code>; folder <code>li[role=treeitem][aria-expanded]</code> with <code>id</code> = full path (compacted chains such as <code>features/quick-jump</code> are one row) and <code>aria-labelledby</code> → content element; file <code>li</code> with <code>id</code> = path, <code>aria-label</code> = file name and <code>a[href^="#diff-"]</code>. Collapsing a folder <b>unmounts</b> its descendants (161 of 331 items left after collapsing <code>compiler</code>), so paths are remembered from the first full view. Diffs: <code>div[role=region][id^="diff-"]</code> with <code>button[aria-pressed][aria-label="Not Viewed"]</code>; 41 of 210 rendered at load, 70 after scrolling. Counter text “0 of 210 files viewed”. Anonymous visitors get the classic page.</li>
+  <li><b>Path of a button:</b> its region <code>id</code> → the tree link with the same <code>#diff-…</code> href (exact, rename-safe); second choice the region heading text with bidi marks stripped.</li>
+  <li><b>File list:</b> the API list when the read succeeded; otherwise the remembered tree list, proven complete only when its size equals the counter’s M. Not proven → every folder is Unknown part (no folder can be shown exact, AC 11/12).</li>
+  <li><b>Query:</b> <code>repository(owner,name){pullRequest(number){files(first:100,after){totalCount pageInfo{hasNextPage endCursor} nodes{path viewerViewedState}}}}</code>, up to 30 pages (GitHub’s 3000-file limit). <code>VIEWED</code> = viewed; <code>UNVIEWED</code>, <code>DISMISSED</code> = not viewed. Checked on 2026-11-24 with a read token on a public pull request: the query is accepted and returns <code>UNVIEWED</code> per file.</li>
+</ul>
+
+<h2>Changes by file</h2>
+<table>
+  <tr><th>File</th><th>Change</th><th>Why</th></tr>
+  <tr><td><code>features/viewed-folders/model.js</code> (new)</td><td>Pure rules on <code>globalThis.GHVF_MODEL</code>: route match, folder counting by path prefix, state, count text, tooltip copy, merge rule (API vs page by time)</td><td>Unit-testable logic</td></tr>
+  <tr><td><code>features/viewed-folders/content.js</code> (new)</td><td>Scan tree/buttons/counter, remember paths per PR, message the background, render, observers, lifecycle, <code>ghvfEnabled</code></td><td>Content-script half</td></tr>
+  <tr><td><code>features/viewed-folders/content.css</code> (new)</td><td>Indicator, glyphs, pill, Primer-style tooltip bubble, dark tokens</td><td>Native look</td></tr>
+  <tr><td><code>background/viewed-folders.js</code> (new)</td><td><code>GHVF_FETCH</code>: paginated read via <code>ghGraphQL(…, {owner, fresh:true})</code>; no token → no request</td><td>Background half; fresh so a 60s-old cache cannot undo a tick</td></tr>
+  <tr><td><code>background.js</code> <span class="tag">shared</span></td><td>Import and add to <code>FEATURES</code></td><td>Message routing</td></tr>
+  <tr><td><code>manifest.json</code> <span class="tag">shared</span></td><td>Add the 2 scripts + CSS to the existing <code>https://github.com/*</code> group (image-gallery / resolved-conversations)</td><td>No new match pattern or permission</td></tr>
+  <tr><td><code>options/options.html</code>, <code>options/options.js</code> <span class="tag">shared</span></td><td>“Viewed per folder” switch row, <code>ghvfEnabled</code>, default on; no Configure link</td><td>Per-feature convention</td></tr>
+  <tr><td><code>options/token-requirements.js</code> <span class="tag">shared</span></td><td><b>Not changed</b></td><td>Issue: no permission row, no Verify access, no token warning</td></tr>
+  <tr><td><code>README.md</code>, <code>PRIVACY.md</code>, <code>screenshots/viewed-folders.svg</code> (new)</td><td>Features entry and mockup; PRIVACY: the <code>ghvfEnabled</code> key and the read of the viewed state (kept in memory only)</td><td>Docs in the same pass</td></tr>
+  <tr><td><code>test/e2e/fixtures/pr-files-tree.html</code> (new) + fixtures README row</td><td>New Files changed page from live markup, fictional <code>acme/web</code>: nested + compacted folders, stub TreeView (collapse unmounts), stub Viewed buttons (<code>?revert</code>), counter, <code>?rendered=</code>, <code>?filter=</code>, <code>?dark</code>, <code>?naming=next</code>, <code>?classic</code>, and click counters on native controls</td><td>Deterministic e2e</td></tr>
+  <tr><td><code>test/unit/viewed-folders-*.test.js</code>, <code>test/e2e/viewed-folders*.spec.js</code>, <code>test/e2e/options-layout.spec.js</code></td><td>New tests; add <code>ghvf</code> to the switch list</td><td>Test plan below</td></tr>
+</table>
+
+<h2>Data, permissions, privacy</h2>
+<ul>
+  <li><b>Token permissions: none.</b> The read uses the token already mapped to the repository owner (or the default one), only if one exists. Any failure is silent and falls back to the page.</li>
+  <li><b>Sent:</b> one paginated GraphQL <i>query</i> per Files changed visit (owner, repository, number). No mutation, no other request.</li>
+  <li><b>Stored:</b> only <code>ghvfEnabled</code>. Paths and viewed states live in the tab’s memory and are dropped on leaving the pull request.</li>
+</ul>
+
+<h2>Test plan</h2>
+<table>
+  <tr><th>Acceptance criterion</th><th>Test</th><th>Name</th></tr>
+  <tr><td>1 one indicator per folder row, none on files</td><td>e2e</td><td><code>viewed-folders.spec.js</code> “every folder row has one indicator, file rows none”</td></tr>
+  <tr><td>2 viewed / partial / to view / nested counts</td><td>unit + e2e</td><td><code>viewed-folders-model.test.js</code> “counts all descendants”, “states”; e2e “states and nested 4/108-style counts”</td></tr>
+  <tr><td>3 collapse/expand changes nothing</td><td>e2e</td><td>“collapsing and expanding keeps every indicator” (stub unmounts children)</td></tr>
+  <tr><td>4 tick updates in the same frame; untick restores; revert followed</td><td>e2e</td><td>“tick updates all ancestors before the next frame”, “untick restores”, “?revert follows GitHub”</td></tr>
+  <tr><td>5 Loading, Unknown part, exact folders stay exact</td><td>unit + e2e</td><td><code>viewed-folders-sources.spec.js</code> “loading pill while the read is pending”, “dashed ring with lower bound, complete folders exact”</td></tr>
+  <tr><td>6 accessible description</td><td>e2e (CDP AX tree)</td><td>“row name unchanged, description ‘N of M files viewed’”, “indicator not focusable, click reaches the row”</td></tr>
+  <tr><td>7 contrast ≥ 3:1 light and dark</td><td>unit + e2e</td><td>“contrast of glyph and count on rest/hover/selected”</td></tr>
+  <tr><td>8 reads only</td><td>unit + e2e</td><td>background “query has no mutation”; e2e “only GET pages and a GraphQL query; no native click” (request log + click counters)</td></tr>
+  <tr><td>9 native counter, buttons, filter unchanged</td><td>e2e</td><td>“native controls identical with and without the feature”</td></tr>
+  <tr><td>10 no token works, no error</td><td>e2e</td><td>“no token: page source, no request, no dialog”</td></tr>
+  <tr><td>11 unknown never Viewed / To view</td><td>unit</td><td>“any unknown file → unknown part”</td></tr>
+  <tr><td>12 filter never shrinks counts</td><td>e2e</td><td>“text filter and Viewed-files filter keep full counts”, “arrived filtered, no token → unknown part”</td></tr>
+  <tr><td>13 classic and other pages unchanged</td><td>e2e</td><td>“classic tree: nothing, no error”, “Conversation / commit range: nothing”</td></tr>
+  <tr><td>Anchors</td><td>e2e</td><td>“primary anchor is the aria-labelledby content” on live Primer names (<code>prc-TreeView-TreeViewItemContent-RKsCI</code>) and on <code>?naming=next</code> (<code>TreeViewItemContent__hash</code>); “no content element → no indicator, no other container”</td></tr>
+  <tr><td>Lifecycle / API</td><td>unit + e2e</td><td>background “paginates, DISMISSED = not viewed, 401/403/404/empty → null, no token → no fetch”; e2e “A → B → A, back/forward, other PR resets, disabled switch removes all”, “API result does not undo a tick made during the read”</td></tr>
+  <tr><td>Layout (visual contract)</td><td>e2e</td><td><code>viewed-folders-layout.spec.js</code>: right edge, centre, row height, label edge before/after, depth 1–4, narrow pane, 390px drawer</td></tr>
+</table>
+<p><b>Live check:</b> before — done (see How it works; rust-lang/rust#166114 and cattanisimone/gh-reloaded#141, signed in, read-only). After — same pages with the extension unpacked, Probe 4 measurements per the contract; ticking only on the factory account’s playground pull request. Not verified on live github.com: the API path with a user’s token, private repositories, pull requests above 300 files.</p>
+
+<h2>Risks and open questions</h2>
+<ul>
+  <li><b>Appending into a React-owned row.</b> React may re-render or remount the row and drop the indicator or the <code>aria-describedby</code> addition. Default: idempotent rescan on mutations restores both; tested by remounting rows in the fixture.</li>
+  <li><b>Description via <code>aria-describedby</code> on an <code>aria-hidden</code> <code>role=img</code>.</b> Default: verified in the CDP accessibility tree; if Chrome does not expose it, the indicator stays visible to AT inside the row label (count read with the name) and the PR says so.</li>
+  <li><b>Counter text not found</b> (wording change). Default: the tree list is not proven complete without a token → Unknown part (honest, less useful); with a token the API list decides.</li>
+  <li><b>Which user tokens can read <code>viewerViewedState</code></b> (fine-grained vs classic). Default: whatever fails falls back silently; nothing is requested.</li>
+  <li><b>Very large pull requests</b> (300+ files, tree truncated). Default: API list wins; without it the counter mismatch makes folders Unknown part.</li>
+</ul>
+
+<h2>Assumptions (product choices the issue left open)</h2>
+<ol>
+  <li>Count read as the row’s <b>description</b> (id added to <code>aria-describedby</code>, indicator <code>aria-hidden</code>) — rejected: count inside the row name, because AC 6 reads it after “expanded” and the row name should stay GitHub’s.</li>
+  <li>Tooltip is a Primer-style bubble below the indicator, right-aligned, on hover — rejected: native <code>title</code>, because the mockup shows the bubble and <code>title</code> is delayed and unstyled.</li>
+  <li>While the read is in flight, every folder not fully known shows Loading — rejected: dashed ring during the read, because it would claim “cannot be read” and then flip.</li>
+  <li>When the file list itself is not proven (no token, tree size ≠ counter total), every folder is Unknown part with <code>k+/?</code> or <code>?</code> — rejected: counting the listed files, because a folder could miss files (AC 12).</li>
+  <li>Commit-range and single-commit views show nothing — rejected: range tree with PR-wide state, because counts would mix two scopes.</li>
+  <li>Switch “Viewed per folder”, on by default — rejected: opt-in, because the feature is read-only and quiet like Resolved conversations.</li>
+</ol>
+
+<h2>Out of scope</h2>
+<ul>
+  <li>Marking or unmarking anything (no bulk mark, no click on native checkboxes, no <code>markFileAsViewed</code>).</li>
+  <li>Changes to the native counter, per-file buttons, “Viewed files” filter; indicators on file rows; click-to-filter; keyboard focus on the indicator.</li>
+  <li>The classic Files changed page; new token permissions, Verify access checks, README permission rows.</li>
+</ul>
+</main></body></html>
