@@ -1,0 +1,71 @@
+/* Viewed per folder: the indicator at the right edge of every folder row of the
+   file tree, and its hover bubble. Colours are Primer's own variables with the
+   light values as fallbacks; the state is always carried by shape and number
+   as well as colour. The indicator sits at the end of the row's flex content
+   (the row's own 8px gap spaces it: no margin), and GitHub's label truncates
+   first. */
+.ghvf-ind {
+  flex: none;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--fgColor-muted, #59636e);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ghvf-ind[data-state="viewed"],
+.ghvf-ind[data-state="partial"] .ghvf-count {
+  color: var(--fgColor-success, #1a7f37);
+}
+
+.ghvf-glyph {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+.ghvf-track {
+  stroke: var(--borderColor-emphasis, #818b98);
+}
+
+.ghvf-arc {
+  stroke: var(--fgColor-success, #1a7f37);
+}
+
+.ghvf-dashed {
+  stroke: var(--fgColor-muted, #59636e);
+}
+
+.ghvf-pill {
+  fill: var(--borderColor-default, #d1d9e0);
+}
+
+.ghvf-count:empty,
+.ghvf-ind.ghvf-compact .ghvf-count,
+.ghvf-desc {
+  display: none;
+}
+
+.ghvf-tip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--bgColor-emphasis, #25292e);
+  color: var(--fgColor-onEmphasis, #ffffff);
+  font: 12px/18px -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  max-width: min(320px, calc(100vw - 16px));
+  width: max-content;
+  box-sizing: border-box;
+  overflow: visible;
+  pointer-events: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

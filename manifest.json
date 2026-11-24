@@ -214,13 +214,16 @@
         "features/resolved-conversations/model.js",
         "features/resolved-conversations/content.js",
         "features/split-one-column/model.js",
-        "features/split-one-column/content.js"
+        "features/split-one-column/content.js",
+        "features/viewed-folders/model.js",
+        "features/viewed-folders/content.js"
       ],
       "css": [
         "features/image-gallery/content.css",
         "features/actions-log-shortcuts/content.css",
         "features/resolved-conversations/content.css",
-        "features/split-one-column/content.css"
+        "features/split-one-column/content.css",
+        "features/viewed-folders/content.css"
       ],
       "run_at": "document_idle"
     }

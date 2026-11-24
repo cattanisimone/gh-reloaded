@@ -21,8 +21,9 @@ import * as linkedPrStatus from "./background/linked-pr-status.js";
 import * as imageGallery from "./background/image-gallery.js";
 import * as actionsLogShortcuts from "./background/actions-log-shortcuts.js";
 import * as quickJump from "./background/quick-jump.js";
+import * as viewedFolders from "./background/viewed-folders.js";
 
-const FEATURES = [dependencyGraph, boardDependencies, standupMode, htmlPreview, myIssues, prTriage, githubStatus, notifications, notifications.settings, notifications.fillPage, linkedPrStatus, linkedPrStatus.detail, linkedPrStatus.settings, quickAssign, imageGallery, imageGallery.probeFile, imageGallery.suppression, imageGallery.consumption, actionsLogShortcuts, actionsLogShortcuts.open, quickJump, quickJump.state, quickJump.visit, quickJump.openSettings];
+const FEATURES = [dependencyGraph, boardDependencies, standupMode, htmlPreview, myIssues, prTriage, githubStatus, notifications, notifications.settings, notifications.fillPage, linkedPrStatus, linkedPrStatus.detail, linkedPrStatus.settings, quickAssign, imageGallery, imageGallery.probeFile, imageGallery.suppression, imageGallery.consumption, actionsLogShortcuts, actionsLogShortcuts.open, quickJump, quickJump.state, quickJump.visit, quickJump.openSettings, viewedFolders];
 
 chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage();
