@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.9.0...v1.10.0) (2026-11-25)
+
+
+### Features
+
+* show a read-only Viewed count on each folder of the Files changed tree ([#143](https://github.com/cattanisimone/gh-reloaded/issues/143)) ([dde77f6](https://github.com/cattanisimone/gh-reloaded/commit/dde77f63634f28fe976986838947f4289cad5baf))
+* show one-sided files in one column in the Split diff ([#146](https://github.com/cattanisimone/gh-reloaded/issues/146)) ([b9408af](https://github.com/cattanisimone/gh-reloaded/commit/b9408af62ee2d2010fd8542476204e62ac0be07e))
+
 ## [1.9.0](https://github.com/cattanisimone/gh-reloaded/compare/v1.8.1...v1.9.0) (2026-11-24)
 
 
