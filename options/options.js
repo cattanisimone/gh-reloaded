@@ -869,6 +869,7 @@ const FEATURE_TOGGLES = [
   { key: "ghalsEnabled", id: "feature-ghals", defaultOn: true },
   { key: "ghrcEnabled", id: "feature-ghrc", defaultOn: true },
   { key: "ghsocEnabled", id: "feature-ghsoc", defaultOn: true },
+  { key: "ghvfEnabled", id: "feature-ghvf", defaultOn: true },
 ];
 
 async function loadFeatureToggles() {

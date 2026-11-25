@@ -91,7 +91,7 @@ test("with a token and the switch on, the row is described, with the Shortcut se
 test("the row sits in the Features list as one more row with its switch", async ({ context, page }) => {
   await start(context, page);
   await expect(page.locator(`#features .card.list > ${ROW}`)).toHaveCount(1);
-  await expect(page.locator("#features").getByRole("switch")).toHaveCount(17);
+  await expect(page.locator("#features").getByRole("switch")).toHaveCount(18);
   await expect(page.locator("#features").getByRole("switch", { name: "Quick jump" })).toHaveCount(1);
 });
 

@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" font-family="DejaVu Sans, sans-serif">
+<rect width="1200" height="520" fill="#fff"/>
+<text x="32" y="28" font-size="14" fill="#59636e" text-anchor="start" >acme / web / Pull requests / Add retry to the API client #7 / Files changed</text>
+<rect x="32" y="56" width="560" height="440" fill="#ffffff" stroke="#d1d9e0" rx="6"/>
+<text x="48" y="40" font-size="12" fill="#59636e" text-anchor="start" >Light · exact: check = all viewed, ring + 3/4 = partial, empty ring 0/3</text>
+<text x="48" y="96" font-size="12" fill="#59636e" text-anchor="start" >⌄</text>
+<path d="M70 87 h4 l1.5 2 h6.5 v8 h-12z" fill="#59636e"/>
+<text x="92" y="97" font-size="13" fill="#1f2328" text-anchor="start" >server</text>
+<text x="576" y="96" font-size="12" fill="#1a7f37" text-anchor="end" font-variant-numeric="tabular-nums">4/108</text>
+<circle cx="528.0" cy="92" r="6" fill="none" stroke="#818b98" stroke-width="2"/>
+<circle cx="528.0" cy="92" r="6" fill="none" stroke="#1a7f37" stroke-width="2" stroke-linecap="round" stroke-dasharray="38" stroke-dashoffset="36.6" transform="rotate(-90 528.0 92)"/>
+<rect x="514.0" y="81" width="64.0" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<text x="64" y="128" font-size="12" fill="#59636e" text-anchor="start" >⌄</text>
+<path d="M86 119 h4 l1.5 2 h6.5 v8 h-12z" fill="#59636e"/>
+<text x="108" y="129" font-size="13" fill="#1f2328" text-anchor="start" >api/src</text>
+<text x="576" y="128" font-size="12" fill="#1a7f37" text-anchor="end" font-variant-numeric="tabular-nums">3/4</text>
+<circle cx="542.4" cy="124" r="6" fill="none" stroke="#818b98" stroke-width="2"/>
+<circle cx="542.4" cy="124" r="6" fill="none" stroke="#1a7f37" stroke-width="2" stroke-linecap="round" stroke-dasharray="38" stroke-dashoffset="9.5" transform="rotate(-90 542.4 124)"/>
+<rect x="528.4" y="113" width="49.6" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<text x="80" y="160" font-size="12" fill="#59636e" text-anchor="start" >⌄</text>
+<path d="M102 151 h4 l1.5 2 h6.5 v8 h-12z" fill="#59636e"/>
+<text x="124" y="161" font-size="13" fill="#1f2328" text-anchor="start" >handlers</text>
+<circle cx="568" cy="156" r="8" fill="#1a7f37"/><path d="M564.4 156.2 L567 158.8 L571.8 153.4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="550" y="145" width="28" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<rect x="118" y="182" width="10" height="12" rx="1.5" fill="none" stroke="#59636e"/>
+<text x="140" y="193" font-size="13" fill="#1f2328" text-anchor="start" >auth.rs</text>
+<rect x="118" y="214" width="10" height="12" rx="1.5" fill="none" stroke="#59636e"/>
+<text x="140" y="225" font-size="13" fill="#1f2328" text-anchor="start" >routes.rs</text>
+<text x="64" y="256" font-size="12" fill="#59636e" text-anchor="start" >›</text>
+<path d="M86 247 h4 l1.5 2 h6.5 v8 h-12z" fill="#59636e"/>
+<text x="108" y="257" font-size="13" fill="#1f2328" text-anchor="start" >storage_backend_migrations</text>
+<text x="576" y="256" font-size="12" fill="#59636e" text-anchor="end" font-variant-numeric="tabular-nums">0/3</text>
+<circle cx="542.4" cy="252" r="6" fill="none" stroke="#818b98" stroke-width="2"/>
+<rect x="528.4" y="241" width="49.6" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<text x="48" y="288" font-size="12" fill="#59636e" text-anchor="start" >⌄</text>
+<path d="M70 279 h4 l1.5 2 h6.5 v8 h-12z" fill="#59636e"/>
+<text x="92" y="289" font-size="13" fill="#1f2328" text-anchor="start" >docs</text>
+<circle cx="568" cy="284" r="8" fill="#1a7f37"/><path d="M564.4 284.2 L567 286.8 L571.8 281.4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="550" y="273" width="28" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<rect x="86" y="310" width="10" height="12" rx="1.5" fill="none" stroke="#59636e"/>
+<text x="108" y="321" font-size="13" fill="#1f2328" text-anchor="start" >guide.md</text>
+<rect x="608" y="56" width="560" height="440" fill="#0d1117" stroke="#3d444d" rx="6"/>
+<text x="624" y="40" font-size="12" fill="#59636e" text-anchor="start" >Dark · read pending (pill), then some files unreadable (dashed ring)</text>
+<text x="624" y="96" font-size="12" fill="#9198a1" text-anchor="start" >⌄</text>
+<path d="M646 87 h4 l1.5 2 h6.5 v8 h-12z" fill="#9198a1"/>
+<text x="668" y="97" font-size="13" fill="#f0f6fc" text-anchor="start" >server</text>
+<rect x="1124" y="88" width="28" height="8" rx="4" fill="#3d444d"/>
+<rect x="1118" y="81" width="36" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<text x="640" y="128" font-size="12" fill="#9198a1" text-anchor="start" >⌄</text>
+<path d="M662 119 h4 l1.5 2 h6.5 v8 h-12z" fill="#9198a1"/>
+<text x="684" y="129" font-size="13" fill="#f0f6fc" text-anchor="start" >api/src</text>
+<rect x="1124" y="120" width="28" height="8" rx="4" fill="#3d444d"/>
+<rect x="1118" y="113" width="36" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<text x="624" y="160" font-size="12" fill="#9198a1" text-anchor="start" >⌄</text>
+<path d="M646 151 h4 l1.5 2 h6.5 v8 h-12z" fill="#9198a1"/>
+<text x="668" y="161" font-size="13" fill="#f0f6fc" text-anchor="start" >web</text>
+<text x="1152" y="160" font-size="12" fill="#9198a1" text-anchor="end" font-variant-numeric="tabular-nums">2+/108</text>
+<circle cx="1096.8" cy="156" r="6" fill="none" stroke="#9198a1" stroke-width="2" stroke-dasharray="3 2.2"/>
+<rect x="1082.8" y="145" width="71.2" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<text x="640" y="192" font-size="12" fill="#9198a1" text-anchor="start" >⌄</text>
+<path d="M662 183 h4 l1.5 2 h6.5 v8 h-12z" fill="#9198a1"/>
+<text x="684" y="193" font-size="13" fill="#f0f6fc" text-anchor="start" >api/src</text>
+<text x="1152" y="192" font-size="12" fill="#3fb950" text-anchor="end" font-variant-numeric="tabular-nums">2/4</text>
+<circle cx="1118.4" cy="188" r="6" fill="none" stroke="#656c76" stroke-width="2"/>
+<circle cx="1118.4" cy="188" r="6" fill="none" stroke="#3fb950" stroke-width="2" stroke-linecap="round" stroke-dasharray="38" stroke-dashoffset="19.0" transform="rotate(-90 1118.4 188)"/>
+<rect x="1104.4" y="177" width="49.6" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<text x="624" y="224" font-size="12" fill="#9198a1" text-anchor="start" >⌄</text>
+<path d="M646 215 h4 l1.5 2 h6.5 v8 h-12z" fill="#9198a1"/>
+<text x="668" y="225" font-size="13" fill="#f0f6fc" text-anchor="start" >vendor</text>
+<text x="1152" y="224" font-size="12" fill="#9198a1" text-anchor="end" font-variant-numeric="tabular-nums">?/99</text>
+<circle cx="1111.2" cy="220" r="6" fill="none" stroke="#9198a1" stroke-width="2" stroke-dasharray="3 2.2"/>
+<rect x="1097.2" y="209" width="56.8" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<text x="624" y="256" font-size="12" fill="#9198a1" text-anchor="start" >⌄</text>
+<path d="M646 247 h4 l1.5 2 h6.5 v8 h-12z" fill="#9198a1"/>
+<text x="668" y="257" font-size="13" fill="#f0f6fc" text-anchor="start" >docs</text>
+<circle cx="1144" cy="252" r="8" fill="#3fb950"/><path d="M1140.4 252.2 L1143 254.8 L1147.8 249.4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1126" y="241" width="28" height="22" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="5"/>
+<rect x="662" y="278" width="10" height="12" rx="1.5" fill="none" stroke="#9198a1"/>
+<text x="684" y="289" font-size="13" fill="#f0f6fc" text-anchor="start" >guide.md</text>
+<text x="32" y="510" font-size="12" fill="#59636e" text-anchor="start" >Fictional repository acme/web. Read-only: nothing is written to GitHub. New parts are outlined in blue; file rows and every native control stay as they are.</text>
+</svg>

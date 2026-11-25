@@ -1,0 +1,339 @@
+<!doctype html>
+<!--
+  The new "Files changed" page of a pull request (fictional repository acme/web), trimmed to what
+  "Viewed per folder" reads and writes: the file tree (real Primer TreeView markup and class names,
+  probed signed-in on 2026-11-24: folder li[role=treeitem][aria-expanded] with the path as id,
+  aria-labelledby -> the content element, aria-describedby -> an empty aria-hidden node inside it),
+  the diffs with GitHub's own per-file "Viewed" button (button[aria-pressed]) and the toolbar's
+  "N of M files viewed" counter (a .sr-only span). It behaves like React for the parts that matter:
+  collapsing a folder unmounts its descendants, a row can be re-rendered or remounted.
+
+  URL options (all optional):
+    rendered=N     only the first N diffs are rendered (default: all); window.__renderMore(n) adds more
+    viewed=a,b     paths that are already viewed
+    paths=a,b      replaces the default file list
+    extra=N        adds N generated files under vendor/lib/ (the 108-file folder of the issue's boards)
+    extraDir=a/b   where the generated files go instead of vendor/lib
+    pane=PX        width of the tree pane (default 298; GitHub allows 256-700)
+    revert=1       GitHub reverts a click on "Viewed" 80 ms later (revert=600: 600 ms)
+    counter=none   no "N of M files viewed" text; counter=K says M = K
+    filter=text    the tree arrives filtered (counter keeps the total)
+    naming=next    CSS-module names as GitHub's newer build writes them (Name__hash, no prc- prefix)
+    nolabelledby=1 the folder rows have no aria-labelledby (second-choice anchor by class)
+    noanchor=1     neither aria-labelledby nor a content class
+    decoy=1        an extra element with a content-like class sits before the real content
+    dark=1         dark theme variables
+    classic=1      the classic Files changed page (no file tree of treeitems)
+  Test hooks: window.__native (untrusted clicks, "Viewed" clicks), __rerender(path), __reactRewrite(),
+  __filter(text), __renderMore(n), __setPane(px).
+-->
+<html lang="en" data-color-mode="light">
+<head>
+<meta charset="utf-8">
+<title>Files changed · acme/web#7</title>
+<style>
+  :root {
+    --fgColor-default: #1f2328; --fgColor-muted: #59636e; --fgColor-success: #1a7f37; --borderColor-default: #d1d9e0;
+    --borderColor-emphasis: #818b98; --bgColor-default: #ffffff; --bgColor-muted: #f6f8fa; --bgColor-emphasis: #25292e;
+    --fgColor-onEmphasis: #ffffff; --fgColor-done: #8250df;
+  }
+  html[data-color-mode="dark"] {
+    --fgColor-default: #f0f6fc; --fgColor-muted: #9198a1; --fgColor-success: #3fb950; --borderColor-default: #3d444d;
+    --borderColor-emphasis: #656c76; --bgColor-default: #0d1117; --bgColor-muted: #151b23; --bgColor-emphasis: #3d444d;
+    --fgColor-onEmphasis: #ffffff; --fgColor-done: #ab7df8;
+  }
+  html, body { margin: 0; background: var(--bgColor-default); color: var(--fgColor-default); font: 14px/21px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .prc-PageLayout-PageLayoutWrapper-2BhU2 { display: block; }
+  .stickyHeader__OQ39Id { position: sticky; top: 0; z-index: 5; display: flex; gap: 16px; align-items: center; padding: 8px 16px; background: var(--bgColor-default); border-bottom: 1px solid var(--borderColor-default); height: 48px; box-sizing: border-box; }
+  .layout { display: flex; align-items: flex-start; }
+  #pane { flex: none; width: var(--pane, 298px); position: sticky; top: 48px; height: calc(100vh - 48px); border-right: 1px solid var(--borderColor-default); box-sizing: border-box; }
+  .FileTreeScrollable__jjz6Or { height: 100%; overflow: auto; }
+  #diffs { flex: 1 1 auto; min-width: 0; padding: 16px; }
+  @media (max-width: 1074px) { #pane { display: none; } }
+
+  /* Primer TreeView, as probed */
+  ul[role=tree], ul[role=group] { list-style: none; margin: 0; padding: 0; }
+  ul[role=tree] { padding: 8px; }
+  .prc-TreeView-TreeViewItem-Ter5f, .file-tree-row__nVsQSE, .TreeViewItem__k3j2h1 { display: block; outline: none; }
+  .row-container { display: grid; grid-template-columns: calc((var(--level) - 1) * 8px) 16px minmax(0, 1fr); height: 32.1875px; align-items: stretch; border-radius: 6px; cursor: pointer; }
+  li[aria-selected="true"] > .row-container { background: rgba(129,139,152,.12); }
+  li > .row-container:hover { background: rgba(129,139,152,.1); }
+  .row-spacer { grid-column: 1; }
+  .PRIVATE_TreeView-item-toggle { grid-column: 2; display: flex; align-items: center; justify-content: center; color: var(--fgColor-muted); }
+  .row-container > .content-slot { grid-column: 3; min-width: 0; display: flex; }
+  .PRIVATE_TreeView-item-content, .TreeViewItemContent__x9y8z7, .TreeViewItemContent__decoy { display: flex; flex: 1 1 auto; min-width: 0; gap: 8px; padding: 5.5px 8px; box-sizing: border-box; }
+  .TreeViewItemContent__decoy { padding: 0; flex: none; width: 4px; }
+  .PRIVATE_VisuallyHidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  .PRIVATE_TreeView-item-visual { display: flex; width: 16px; height: 21px; align-items: center; justify-content: center; color: var(--fgColor-muted); flex: none; }
+  .PRIVATE_TreeView-item-content-text, .TreeViewItemContentText__q1w2e3 { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 21px; }
+  .PRIVATE_TreeView-item-content-text a { color: inherit; text-decoration: none; }
+
+  /* diffs */
+  [role=region] { border: 1px solid var(--borderColor-default); border-radius: 6px; margin-bottom: 16px; }
+  .diff-file-header__CV6GPS { display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bgColor-muted); }
+  .diff-file-header__CV6GPS h3 { margin: 0; font-size: 12px; flex: 1; }
+  .diff-body { height: 40px; }
+  .viewed-btn { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid var(--borderColor-default); border-radius: 6px; cursor: pointer; }
+  .viewed-btn[aria-pressed="true"] { background: #ddf4ff; }
+  .FilesCountText__QkVEDj { font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="prc-PageLayout-PageLayoutWrapper-2BhU2" data-width="full">
+  <section class="stickyHeader__OQ39Id toolbar__UgdeAp">
+    <div class="d-flex file-controls__C6Wwfn">
+      <div class="d-flex flex-row flex-items-center hide-viewed-progress-on-small__u9jCpF" id="counter-box">
+        <svg data-circumference="38" height="16" role="presentation" width="16" style="transform: rotate(-90deg)"><circle cx="50%" cy="50%" fill="transparent" r="6" stroke="var(--borderColor-default)" stroke-width="2"></circle></svg>
+        <span aria-hidden="true" class="ml-1 ProgressContainer__b1ofBm"><span class="FilesCountText__QkVEDj" id="cnt-v">0</span> / <span class="FilesCountText__QkVEDj" id="cnt-m">0</span> <span class="ViewedText__2SeNUb">viewed</span></span>
+        <span class="sr-only" id="cnt-sr"></span>
+      </div>
+    </div>
+    <input id="filter-box" aria-label="Filter changed files" placeholder="Filter changed files">
+    <button type="button" id="viewed-files-filter" aria-pressed="false">Viewed files</button>
+  </section>
+  <div class="layout">
+    <div id="pane">
+      <div class="d-flex flex-column min-height-0 sidebar__186iat Pa" id="pr-file-tree">
+        <div class="FileTreeScrollable__jjz6Or" id="scroller">
+          <h2 class="sr-only">File tree</h2>
+          <ul role="tree" aria-label="File Tree" data-truncate-text="true" class="tmp-pr-lg-3 prc-TreeView-TreeViewRootUlStyles-Mzrmj" id="tree"></ul>
+        </div>
+      </div>
+    </div>
+    <div id="diffs"></div>
+  </div>
+</div>
+<script>
+(() => {
+  const q = new URLSearchParams(location.search);
+  const has = (k) => q.has(k);
+  const next = q.get("naming") === "next";
+  if (q.get("dark")) document.documentElement.dataset.colorMode = "dark";
+  if (q.get("pane")) document.documentElement.style.setProperty("--pane", q.get("pane") + "px");
+
+  const DEFAULT = [
+    "README.md",
+    "docs/guide.md",
+    "features/quick-jump/content.js",
+    "features/quick-jump/model.js",
+    "server/Cargo.toml",
+    "server/main.rs",
+    "server/api/Cargo.toml",
+    "server/api/src/lib.rs",
+    "server/api/src/handlers/auth.rs",
+    "server/api/src/handlers/routes.rs",
+    "server/storage_backend_migrations/0001_init.sql",
+    "server/storage_backend_migrations/0002_users.sql",
+    "server/storage_backend_migrations/0003_index.sql",
+    "web/src/app.tsx",
+    "web/src/index.tsx",
+  ];
+  let paths = q.get("paths") ? q.get("paths").split(",").filter(Boolean) : DEFAULT.slice();
+  const extra = Number(q.get("extra") || 0);
+  const extraDir = q.get("extraDir") || "vendor/lib";
+  for (let i = 1; i <= extra; i++) paths.push(`${extraDir}/file-${String(i).padStart(3, "0")}.rs`);
+  paths = [...new Set(paths)].sort();
+  const viewed = new Set((q.get("viewed") || "").split(",").filter(Boolean));
+  const total = paths.length;
+  let rendered = q.has("rendered") ? Number(q.get("rendered")) : total;
+  let filterText = q.get("filter") || "";
+
+  const native = (window.__native = { untrusted: [], viewedClicks: 0, requests: 0 });
+  document.addEventListener("click", (e) => { if (!e.isTrusted) native.untrusted.push((e.target.tagName || "") + (e.target.id ? "#" + e.target.id : "")); }, true);
+
+  const idOf = (p) => {
+    let h = 2166136261, out = "";
+    for (let r = 0; r < 8; r++) { for (const c of p + r) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } out += h.toString(16).padStart(8, "0"); }
+    return "diff-" + out;
+  };
+  const SVG = (cls, d, size) => `<svg data-component="Octicon" aria-hidden="true" focusable="false" class="octicon ${cls}" viewBox="0 0 16 16" width="${size}" height="${size}" fill="currentColor" display="inline-block" overflow="visible" style="vertical-align:text-bottom"><path d="${d}"></path></svg>`;
+  const FOLDER = "M.513 1.513A1.75 1.75 0 0 1 1.75 1h3.5c.55 0 1.07.26 1.4.7l.9 1.2a.25.25 0 0 0 .2.1H13a1 1 0 0 1 1 1v.5H2.75a.75.75 0 0 0 0 1.5h11.978a1 1 0 0 1 .994 1.117L15 13.25A1.75 1.75 0 0 1 13.25 15H1.75A1.75 1.75 0 0 1 0 13.25V2.75c0-.464.184-.91.513-1.237Z";
+  const FILE = "M2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16h-9.5A1.75 1.75 0 0 1 2 14.25Z";
+
+  // --- the tree model: folders compacted like GitHub does (a folder whose only child is a folder) ---
+  function build(list) {
+    const root = { name: "", path: "", dirs: new Map(), files: [] };
+    for (const p of list) {
+      const parts = p.split("/"); let n = root;
+      for (let i = 0; i < parts.length - 1; i++) {
+        const path = parts.slice(0, i + 1).join("/");
+        if (!n.dirs.has(parts[i])) n.dirs.set(parts[i], { name: parts[i], path, dirs: new Map(), files: [] });
+        n = n.dirs.get(parts[i]);
+      }
+      n.files.push(p);
+    }
+    const compact = (n) => {
+      for (const [k, d] of [...n.dirs]) {
+        let cur = d;
+        while (cur.files.length === 0 && cur.dirs.size === 1) { const only = [...cur.dirs.values()][0]; only.name = cur.name + "/" + only.name; cur = only; }
+        n.dirs.delete(k); n.dirs.set(cur.name, cur); compact(cur);
+      }
+    };
+    compact(root);
+    return root;
+  }
+
+  const collapsed = new Set();
+  let uid = 0;
+  const nid = () => "_r_" + (++uid).toString(36) + "_";
+  const cls = {
+    li: next ? "TreeViewItem__k3j2h1" : "PRIVATE_TreeView-item prc-TreeView-TreeViewItem-Ter5f",
+    fileLi: next ? "TreeViewItem__k3j2h1" : "PRIVATE_TreeView-item file-tree-row__nVsQSE prc-TreeView-TreeViewItem-Ter5f",
+    content: next ? "TreeViewItemContent__x9y8z7" : "PRIVATE_TreeView-item-content prc-TreeView-TreeViewItemContent-RKsCI",
+    text: next ? "TreeViewItemContentText__q1w2e3" : "PRIVATE_TreeView-item-content-text prc-TreeView-TreeViewItemContentText-FFaKp",
+    hidden: "PRIVATE_VisuallyHidden prc-TreeView-TreeViewVisuallyHidden-1N8xK",
+  };
+
+  const visible = (p) => !filterText || p.toLowerCase().includes(filterText.toLowerCase());
+  const visibleDir = (d) => d.files.some(visible) || [...d.dirs.values()].some(visibleDir);
+
+  function folderLi(d, level) {
+    const li = document.createElement("li");
+    const cid = nid(), did = nid();
+    li.className = cls.li; li.id = d.path; li.setAttribute("role", "treeitem");
+    li.tabIndex = -1; li.setAttribute("aria-level", String(level));
+    li.setAttribute("aria-expanded", String(!collapsed.has(d.path)));
+    li.setAttribute("aria-selected", "false");
+    li.setAttribute("aria-describedby", did);
+    if (!has("nolabelledby") && !has("noanchor")) li.setAttribute("aria-labelledby", cid);
+    const decoy = has("decoy") ? `<div class="prc-TreeView-TreeViewItemContent-decoy TreeViewItemContent__decoy"></div>` : "";
+    const contentCls = has("noanchor") ? "x-row-body" : cls.content;
+    li.innerHTML =
+      `<div class="PRIVATE_TreeView-item-container prc-TreeView-TreeViewItemContainer-9aK2x row-container" style="--level:${level}">` +
+      `<div class="row-spacer" style="grid-area:auto"></div>` +
+      `<div class="PRIVATE_TreeView-item-toggle PRIVATE_TreeView-item-toggle--end">${SVG("octicon-chevron-down", "M12.78 5.22a.749.749 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.06 0L3.22 6.28a.749.749 0 1 1 1.06-1.06L8 8.939l3.72-3.719a.749.749 0 0 1 1.06 0Z", 12)}</div>` +
+      `<div class="content-slot">${decoy}<div id="${cid}" class="${contentCls}" style="${has("noanchor") ? "display:flex;flex:1 1 auto;min-width:0;gap:8px;padding:5.5px 8px" : ""}">` +
+      `<div class="${cls.hidden}" aria-hidden="true" id="${did}"></div>` +
+      `<div class="PRIVATE_TreeView-item-visual prc-TreeView-TreeViewItemVisual-nLw9d" aria-hidden="true">${SVG("octicon-file-directory-open-fill", FOLDER, 16)}</div>` +
+      `<span class="${has("noanchor") ? "x-text" : cls.text}"${has("noanchor") ? ' style="flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"' : ""}><span>${d.name}</span></span>` +
+      `</div></div></div>`;
+    li.querySelector(".row-container").addEventListener("click", () => toggle(d, li));
+    return li;
+  }
+
+  function fileLi(p, level) {
+    const li = document.createElement("li");
+    const cid = nid(), did = nid();
+    li.className = cls.fileLi; li.id = p; li.setAttribute("role", "treeitem"); li.tabIndex = -1;
+    li.setAttribute("aria-level", String(level)); li.setAttribute("aria-label", p.split("/").pop());
+    li.setAttribute("aria-describedby", did); li.setAttribute("aria-selected", "false");
+    li.innerHTML =
+      `<div class="PRIVATE_TreeView-item-container prc-TreeView-TreeViewItemContainer-9aK2x row-container" style="--level:${level}">` +
+      `<div class="row-spacer"></div><div></div>` +
+      `<div class="content-slot"><div id="${cid}" class="${cls.content}">` +
+      `<div class="${cls.hidden}" aria-hidden="true" id="${did}"></div>` +
+      `<div class="PRIVATE_TreeView-item-visual prc-TreeView-TreeViewItemVisual-nLw9d" aria-hidden="true">${SVG("octicon-file-added fgColor-success", FILE, 16)}</div>` +
+      `<span class="${cls.text}"><a class="fgColor-default prc-Link-Link-9ZwDx" data-component="Link" href="#${idOf(p)}" role="presentation" tabindex="-1">${p.split("/").pop()}</a></span>` +
+      `</div></div></div>`;
+    li.querySelector(".row-container").addEventListener("click", () => { document.querySelectorAll("li[aria-selected=true]").forEach((x) => x.setAttribute("aria-selected", "false")); li.setAttribute("aria-selected", "true"); });
+    return li;
+  }
+
+  function group(d, level) {
+    const ul = document.createElement("ul");
+    ul.setAttribute("role", "group");
+    ul.style.cssText = "list-style:none;padding:0;margin:0";
+    fill(ul, d, level);
+    return ul;
+  }
+
+  function fill(ul, d, level) {
+    for (const sub of d.dirs.values()) {
+      if (!visibleDir(sub)) continue;
+      const li = folderLi(sub, level);
+      li._dir = sub; li._level = level;
+      ul.appendChild(li);
+      if (!collapsed.has(sub.path)) { const g = group(sub, level + 1); g.setAttribute("aria-labelledby", li.querySelector("[id^=_r_]").id); li.appendChild(g); }
+    }
+    for (const f of d.files) if (visible(f)) ul.appendChild(fileLi(f, level));
+  }
+
+  function toggle(d, li) {
+    const open = collapsed.has(d.path);
+    if (open) collapsed.delete(d.path); else collapsed.add(d.path);
+    li.setAttribute("aria-expanded", String(open));
+    const g = li.querySelector(":scope > ul[role=group]");
+    if (g) g.remove(); // collapsing unmounts every descendant, like React
+    if (open) { const ng = group(d, li._level + 1); li.appendChild(ng); }
+  }
+
+  const root = build(paths);
+  const tree = document.getElementById("tree");
+  function renderTree() {
+    tree.textContent = "";
+    fill(tree, root, 1);
+  }
+
+  // --- diffs and the native "Viewed" button ---
+  const diffs = document.getElementById("diffs");
+  const regions = new Map();
+  function paintCounter() {
+    if (q.get("counter") === "none") { document.getElementById("counter-box").hidden = true; return; }
+    const m = q.get("counter") && /^\d+$/.test(q.get("counter")) ? Number(q.get("counter")) : total;
+    document.getElementById("cnt-v").textContent = String(viewed.size);
+    document.getElementById("cnt-m").textContent = String(m);
+    document.getElementById("cnt-sr").textContent = `${viewed.size} of ${m} files viewed`;
+  }
+  function paintButton(b, p) {
+    const on = viewed.has(p);
+    b.setAttribute("aria-pressed", String(on));
+    b.setAttribute("aria-label", on ? "Viewed" : "Not Viewed");
+  }
+  function renderRegion(p) {
+    if (regions.has(p)) return;
+    const r = document.createElement("div");
+    r.setAttribute("role", "region"); r.id = idOf(p);
+    r.className = "diffTargetable__jbrCub diff__GZFl4M";
+    r.innerHTML =
+      `<div class="diffHeaderWrapper__INiK1j"><div class="diff-file-header__CV6GPS">` +
+      `<h3 class="file-name__8GKEHg"><a class="Link--primary prc-Link-Link-9ZwDx" href="#${idOf(p)}"><code>‎${p}‎</code></a></h3>` +
+      `<button type="button" class="viewed-btn prc-Button-ButtonBase-9n-Xk iconOnly__kjZ2po" data-component="Button" aria-pressed="false" aria-label="Not Viewed"><span aria-hidden="true">&#10003;</span></button>` +
+      `</div></div><div class="diff-body"></div>`;
+    const b = r.querySelector("button");
+    paintButton(b, p);
+    b.addEventListener("click", () => {
+      native.viewedClicks++;
+      const was = viewed.has(p);
+      if (was) viewed.delete(p); else viewed.add(p);
+      paintButton(b, p); paintCounter();
+      if (has("revert")) setTimeout(() => { if (was) viewed.add(p); else viewed.delete(p); paintButton(b, p); paintCounter(); }, Number(q.get("revert")) > 1 ? Number(q.get("revert")) : 80);
+    });
+    regions.set(p, r);
+    diffs.appendChild(r);
+  }
+  function renderRegions() { paths.slice(0, rendered).forEach(renderRegion); }
+  window.__renderMore = (n) => { rendered = Math.min(total, rendered + n); renderRegions(); };
+
+  // --- the native filter box and "Viewed files" toggle (inert here, counted when clicked) ---
+  document.getElementById("viewed-files-filter").addEventListener("click", () => { native.viewedFilterClicks = (native.viewedFilterClicks || 0) + 1; });
+  window.__filter = (text) => { filterText = text; renderTree(); };
+
+  // --- what React does to a row ---
+  window.__rerender = (path) => { // remount: a brand new li for the same folder, with GitHub's own attributes only
+    const old = document.getElementById(path); if (!old) return false;
+    const fresh = folderLi(old._dir, old._level); fresh._dir = old._dir; fresh._level = old._level;
+    const g = old.querySelector(":scope > ul[role=group]"); if (g) fresh.appendChild(g);
+    old.replaceWith(fresh); return true;
+  };
+  window.__reactRewrite = () => { // React rewrites aria-describedby on every folder row to its own id
+    for (const li of tree.querySelectorAll("li[aria-expanded]")) {
+      const own = li.querySelector("[aria-hidden=true][id^=_r_]");
+      if (own) li.setAttribute("aria-describedby", own.id);
+    }
+  };
+  window.__setPane = (px) => document.documentElement.style.setProperty("--pane", px + "px");
+  window.__setViewed = (p, on) => { if (on) viewed.add(p); else viewed.delete(p); const r = regions.get(p); if (r) paintButton(r.querySelector("button"), p); paintCounter(); };
+
+  if (has("classic")) {
+    // The classic page's tree, as served anonymously: the same role and name, rows with ids of their own.
+    document.getElementById("pane").innerHTML = `<div class="file-tree"><ul class="ActionList ActionList--tree ActionList--full" role="tree" aria-label="File Tree"><li id="file-tree-item-diff-ee5d1" class="ActionList-item" role="treeitem" aria-level="1" aria-expanded="true"><a href="#diff-ee5d1">server</a></li><li id="file-tree-item-diff-ab12" class="ActionList-item" role="treeitem" aria-level="2"><a href="#diff-ab12">main.rs</a></li></ul></div>`;
+  } else {
+    renderTree();
+  }
+  renderRegions();
+  paintCounter();
+})();
+</script>
+</body>
+</html>
