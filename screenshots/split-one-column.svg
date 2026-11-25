@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" font-family="DejaVu Sans, sans-serif">
+<rect width="1200" height="520" fill="#fff"/>
+<text x="32" y="40" font-size="15" fill="#59636e">acme / web / Pull requests / <tspan font-weight="600" fill="#1f2328">Show seat counts on invoices #7</tspan> / Files changed</text>
+<text x="32" y="80" font-size="12" fill="#59636e">Before: GitHub's Split, an additions-only file</text>
+<rect x="32" y="92" width="1136" height="150" fill="#fff" stroke="#d1d9e0" rx="6"/>
+<path d="M32 98a6 6 0 0 1 6-6h1124a6 6 0 0 1 6 6v36H32z" fill="#f6f8fa" stroke="#d1d9e0"/>
+<text x="52" y="119" font-size="12" font-weight="600" font-family="monospace" fill="#1f2328">docs/guide.md</text>
+<text x="1000" y="119" font-size="12" font-weight="600" fill="#1a7f37">+3</text>
+<rect x="1040" y="100" width="82" height="28" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<text x="1081" y="118" font-size="12" font-weight="500" fill="#25292e" text-anchor="middle">Viewed</text>
+<text x="1140" y="119" font-size="14" fill="#59636e">⋯</text>
+<rect x="33" y="135" width="1134" height="22" fill="#ddf4ff"/>
+<text x="90" y="150" font-size="11" font-family="monospace" fill="#59636e">@@ -6,6 +6,9 @@</text>
+<line x1="600" y1="157" x2="600" y2="241" stroke="#d1d9e0"/>
+<text x="60" y="176" font-size="11" font-family="monospace" fill="#59636e">8</text><text x="100" y="176" font-size="11" font-family="monospace" fill="#1f2328">Each invoice lists one line per plan.</text>
+<text x="628" y="176" font-size="11" font-family="monospace" fill="#59636e">8</text><text x="668" y="176" font-size="11" font-family="monospace" fill="#1f2328">Each invoice lists one line per plan.</text>
+<rect x="33" y="184" width="567" height="22" fill="#f6f8fa"/>
+<rect x="600" y="184" width="567" height="22" fill="#e6ffec"/><rect x="600" y="184" width="40" height="22" fill="#ccffd8"/>
+<text x="628" y="199" font-size="11" font-family="monospace" fill="#59636e">9</text><text x="668" y="199" font-size="11" font-family="monospace" fill="#1f2328">+ A plan line shows the seat count and the unit price.</text>
+<rect x="33" y="206" width="567" height="22" fill="#f6f8fa"/>
+<rect x="600" y="206" width="567" height="22" fill="#e6ffec"/><rect x="600" y="206" width="40" height="22" fill="#ccffd8"/>
+<text x="628" y="221" font-size="11" font-family="monospace" fill="#59636e">10</text><text x="668" y="221" font-size="11" font-family="monospace" fill="#1f2328">+ Taxes are shown in a separate line.</text>
+<text x="400" y="266" font-size="12" fill="#59636e">Half of the table is empty and every context line appears twice.</text>
+<text x="32" y="300" font-size="12" fill="#59636e">After: one column, automatic</text>
+<rect x="32" y="312" width="1136" height="160" fill="#fff" stroke="#d1d9e0" rx="6"/>
+<path d="M32 318a6 6 0 0 1 6-6h1124a6 6 0 0 1 6 6v36H32z" fill="#f6f8fa" stroke="#d1d9e0"/>
+<text x="52" y="339" font-size="12" font-weight="600" font-family="monospace" fill="#1f2328">docs/guide.md</text>
+<text x="880" y="339" font-size="12" font-weight="600" fill="#1a7f37">+3</text>
+<rect x="920" y="320" width="112" height="28" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<rect x="31" y="319" width="114" height="30" fill="none" stroke="#54aeff" stroke-dasharray="4 3" rx="7" transform="translate(889 0)"/>
+<rect x="929" y="328" width="14" height="12" fill="none" stroke="#25292e" rx="2"/><line x1="936" y1="328" x2="936" y2="340" stroke="#25292e"/>
+<text x="985" y="338" font-size="12" font-weight="500" fill="#25292e" text-anchor="middle">Side by side</text>
+<rect x="1040" y="320" width="82" height="28" fill="#f6f8fa" stroke="#d1d9e0" rx="6"/>
+<text x="1081" y="338" font-size="12" font-weight="500" fill="#25292e" text-anchor="middle">Viewed</text>
+<text x="1140" y="339" font-size="14" fill="#59636e">⋯</text>
+<rect x="33" y="355" width="1134" height="22" fill="#ddf4ff"/>
+<text x="90" y="370" font-size="11" font-family="monospace" fill="#59636e">@@ -6,6 +6,9 @@</text>
+<text x="52" y="396" font-size="11" font-family="monospace" fill="#59636e">8</text><text x="92" y="396" font-size="11" font-family="monospace" fill="#59636e">8</text><text x="132" y="396" font-size="11" font-family="monospace" fill="#1f2328">Each invoice lists one line per plan.</text>
+<rect x="33" y="404" width="1134" height="22" fill="#e6ffec"/><rect x="33" y="404" width="80" height="22" fill="#ccffd8"/>
+<text x="92" y="419" font-size="11" font-family="monospace" fill="#59636e">9</text><text x="132" y="419" font-size="11" font-family="monospace" fill="#1f2328">+ A plan line shows the seat count and the unit price.</text>
+<rect x="33" y="426" width="1134" height="22" fill="#e6ffec"/><rect x="33" y="426" width="80" height="22" fill="#ccffd8"/>
+<text x="92" y="441" font-size="11" font-family="monospace" fill="#59636e">10</text><text x="132" y="441" font-size="11" font-family="monospace" fill="#1f2328">+ Taxes are shown in a separate line.</text>
+<text x="32" y="498" font-size="12" fill="#59636e">Old and new numbers stay, context lines appear once, the text fills the row. The button restores GitHub's Split for this file only.</text>
+</svg>
